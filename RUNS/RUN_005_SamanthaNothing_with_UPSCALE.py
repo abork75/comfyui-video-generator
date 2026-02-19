@@ -1062,10 +1062,10 @@ POSTPROCESSING = {
     # === Individual processors (executed in order) ===
     
     # Step 1: Copy to numbered FLOW folder
-    'numbered_flow': True,  # Creates FLOW_[project]_[timestamp]/ with f0001, f0002, ...
+    'numbered_flow': False,  # Creates FLOW_[project]_[timestamp]/ with f0001, f0002, ...
     
     # Step 2: Concatenate all clips into single movie
-    'full_concat': True,  # Creates FULL_MOVIE_[project]_[timestamp].mp4
+    'full_concat': False,  # Creates FULL_MOVIE_[project]_[timestamp].mp4
     
     # Step 3: Upscale (NEW!)
     'upscale': True,  # Batch GAN upscaling with interactive source selection

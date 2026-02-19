@@ -205,6 +205,10 @@ def validate_and_prepare_config(config):
         if pp_config.get('numbered_flow'):
             enabled_processors.append('numbered_flow')
         
+        # ✅ NEW: Check for upscale processor
+        if pp_config.get('upscale'):
+            enabled_processors.append('upscale')
+        
         if not enabled_processors:
             result.add_warning("Postprocessing enabled but no processors selected")
         else:
