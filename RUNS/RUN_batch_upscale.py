@@ -27,6 +27,8 @@ SOURCE_MODE = 'source'
 # Settings
 TARGET_RESOLUTION = (1024, 1024)
 UPSCALE_MODEL = 'RealESRGAN_x4plus.pth'
+INTERPOLATION = 'lanczos'  # lanczos (best), bicubic, bilinear, nearest
+METHOD = 'stretch'  # stretch, crop, fit
 COMFYUI_SERVER = 'http://127.0.0.1:8100'
 COMFYUI_OUTPUT_FOLDER = 'D:/ComfyUI/output'
 
@@ -41,6 +43,8 @@ if __name__ == '__main__':
             'source_mode': SOURCE_MODE,
             'target_resolution': TARGET_RESOLUTION,
             'upscale_model': UPSCALE_MODEL,
+            'interpolation': INTERPOLATION,
+            'method': METHOD,
             'comfyui_server': COMFYUI_SERVER,
             'comfyui_output_folder': COMFYUI_OUTPUT_FOLDER,
         }

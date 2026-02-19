@@ -242,8 +242,12 @@ def _upscale_directory(backend, source_dir, output_dir, upscale_config, suffix='
     print(f"{Fore.CYAN}Found {len(video_files)} videos{Style.RESET_ALL}\n")
     
     # Settings
-    target_resolution = tuple(upscale_config.get('target_resolution', [1024, 1024]))
+    target_resolution = upscale_config.get('target_resolution', [1024, 1024])
+    target_width = target_resolution[0]
+    target_height = target_resolution[1]
     upscale_model = upscale_config.get('upscale_model', 'RealESRGAN_x4plus.pth')
+    interpolation = upscale_config.get('interpolation', 'lanczos')
+    method = upscale_config.get('method', 'stretch')
     
     upscaled = 0
     skipped = 0
@@ -262,16 +266,24 @@ def _upscale_directory(backend, source_dir, output_dir, upscale_config, suffix='
         
         print(f"{Fore.YELLOW}⚙{Style.RESET_ALL} [{i:03d}/{len(video_files)}] Upscaling: {video_file.name}")
         
-        # Upscale
+        # Upscale - FIXED METHOD CALL!
         try:
-            backend.upscale(
-                input_video=str(video_file),
-                output_video=str(output_path),
-                target_resolution=target_resolution,
-                upscale_model=upscale_model
+            success = backend.upscale_video(
+                input_video=video_file,
+                output_path=output_path,
+                target_width=target_width,
+                target_height=target_height,
+                interpolation=interpolation,
+                method=method,
+                model_name=upscale_model
             )
-            print(f"{Fore.GREEN}✓{Style.RESET_ALL} [{i:03d}/{len(video_files)}] Done: {output_name}")
-            upscaled += 1
+            
+            if success:
+                print(f"{Fore.GREEN}✓{Style.RESET_ALL} [{i:03d}/{len(video_files)}] Done: {output_name}")
+                upscaled += 1
+            else:
+                print(f"{Fore.RED}✗{Style.RESET_ALL} [{i:03d}/{len(video_files)}] FAILED: {video_file.name}")
+                failed += 1
             
         except Exception as e:
             print(f"{Fore.RED}✗{Style.RESET_ALL} [{i:03d}/{len(video_files)}] FAILED: {video_file.name}")
