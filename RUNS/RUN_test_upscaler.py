@@ -48,7 +48,7 @@ CONFIG = {
     'workflows_path': r"D:\streamlit_project\comfyui_integration\workflows",
     'workflow_configs_path': r"D:\streamlit_project\comfyui_integration\workflow_configs",
     'comfyui_output_folder': r"D:\ComfyUI\output",
-    'comfyui_server': 'http://127.0.0.1:8188',
+    'comfyui_server': 'http://127.0.0.1:8100',
     
     # Utility type
     'utility_workflow': 'gan_upscaler',
