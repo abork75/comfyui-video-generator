@@ -79,7 +79,7 @@ class UtilityBackend(WorkflowBase):
     
     def _load_workflow_template(self) -> Dict[str, Any]:
         """Load workflow JSON template"""
-        workflow_file = self.workflows_path / f"workflow-{self.utility_type}.json"
+        workflow_file = self.workflows_path / f"utility-{self.utility_type}.json"
         
         if not workflow_file.exists():
             raise FileNotFoundError(
