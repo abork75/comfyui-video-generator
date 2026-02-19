@@ -22,10 +22,10 @@ init(autoreset=True)
 #  CONFIGURATION
 # =============================================================================
 
-PROJECT_PATH = r"C:\Users\abork\AppData\Local\CapCut\Videos\klub_pliki\girl_in_nightclub"
+PROJECT_PATH = r"C:\Users\abork\AppData\Local\CapCut\Videos\Samantha Fox\NothingGonnaStopMeNow"
 
 # Upscale Settings
-TARGET_RESOLUTION = (1024, 1024)
+TARGET_RESOLUTION = (624, 468)
 UPSCALE_MODEL = 'RealESRGAN_x4plus.pth'
 INTERPOLATION = 'lanczos'  # lanczos (best), bicubic, bilinear, nearest
 METHOD = 'stretch'  # stretch, crop, fit
