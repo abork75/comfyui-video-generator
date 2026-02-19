@@ -54,7 +54,7 @@ class UtilityBackend:
         self.configs_path = Path(config.get('workflow_configs_path', 'workflow_configs'))
         self.output_folder = Path(config.get('comfyui_output_folder', 'D:/ComfyUI/output'))
         self.utility_type = config.get('utility_workflow', 'gan_upscaler')
-        self.comfyui_server = config.get('comfyui_server', 'http://127.0.0.1:8188')
+        self.comfyui_server = config.get('comfyui_server', 'http://127.0.0.1:8100')
         
         # Load workflow config
         self.workflow_config = self._load_workflow_config()
