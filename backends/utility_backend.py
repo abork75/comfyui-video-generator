@@ -7,19 +7,23 @@ Architecture:
 - Separate from transition generation
 - Reusable for various video utilities
 - Local ComfyUI only (no cloud support needed)
+- Uses WorkflowRunner pattern (same as LocalBackend)
 """
 
 import os
 import json
 import time
 import yaml
+import copy
+import shutil
+import requests
 from pathlib import Path
 from typing import Optional, Dict, Any, List
 
-from workflow_base import WorkflowBase
+from workflow_base import Logger
 
 
-class UtilityBackend(WorkflowBase):
+class UtilityBackend:
     """
     Utility backend for video processing tasks
     
@@ -41,26 +45,22 @@ class UtilityBackend(WorkflowBase):
                 - workflows_path: Path to workflows folder
                 - workflow_configs_path: Path to YAML configs
                 - comfyui_output_folder: ComfyUI output folder
+                - comfyui_server: ComfyUI API URL
                 - utility_workflow: Which utility to use (e.g., 'gan_upscaler')
         """
-        super().__init__(config)
+        self.logger = Logger()
         
         self.workflows_path = Path(config.get('workflows_path', 'workflows'))
         self.configs_path = Path(config.get('workflow_configs_path', 'workflow_configs'))
         self.output_folder = Path(config.get('comfyui_output_folder', 'D:/ComfyUI/output'))
         self.utility_type = config.get('utility_workflow', 'gan_upscaler')
+        self.comfyui_server = config.get('comfyui_server', 'http://127.0.0.1:8188')
         
         # Load workflow config
         self.workflow_config = self._load_workflow_config()
         
         # Load workflow JSON template
         self.workflow_template = self._load_workflow_template()
-        
-        # Initialize ComfyUI client
-        from utils.comfyui_api import ComfyUIClient
-        self.client = ComfyUIClient(
-            server_address=config.get('comfyui_server', 'http://127.0.0.1:8188')
-        )
     
     def _load_workflow_config(self) -> Dict[str, Any]:
         """Load YAML workflow config"""
@@ -117,20 +117,18 @@ class UtilityBackend(WorkflowBase):
         Returns:
             True if successful, False otherwise
         """
-        from utils.logger import Logger
-        logger = Logger()
         
         # ========================================
         # VALIDATION
         # ========================================
         
         if not input_video.exists():
-            logger.error(f"Input video not found: {input_video}")
+            self.logger.error(f"Input video not found: {input_video}")
             return False
         
         if input_video.suffix.lower() not in self.workflow_config['input']['supported_formats']:
-            logger.error(f"Unsupported format: {input_video.suffix}")
-            logger.error(f"Supported: {self.workflow_config['input']['supported_formats']}")
+            self.logger.error(f"Unsupported format: {input_video.suffix}")
+            self.logger.error(f"Supported: {self.workflow_config['input']['supported_formats']}")
             return False
         
         # Warn for large files
@@ -139,8 +137,8 @@ class UtilityBackend(WorkflowBase):
             size_mb = input_video.stat().st_size / (1024 * 1024)
             
             if size_mb > threshold_mb:
-                logger.warning(f"Large file detected: {size_mb:.1f} MB")
-                logger.warning(f"Processing may take significant time/memory")
+                self.logger.warning(f"Large file detected: {size_mb:.1f} MB")
+                self.logger.warning(f"Processing may take significant time/memory")
         
         # ========================================
         # APPLY DEFAULTS
@@ -168,24 +166,23 @@ class UtilityBackend(WorkflowBase):
         # LOG SETTINGS
         # ========================================
         
-        logger.info("")
-        logger.info("="*70)
-        logger.info("  GAN UPSCALER")
-        logger.info("="*70)
-        logger.info("")
-        logger.info(f"Input:  {input_video.name}")
-        logger.info(f"Size:   {input_video.stat().st_size / (1024*1024):.1f} MB")
-        logger.info(f"Output: {output_path.name}")
-        logger.info(f"Target: {target_width}x{target_height}")
-        logger.info(f"Model:  {model_name}")
-        logger.info(f"Resize: {method}, {interpolation}")
-        logger.info("")
+        self.logger.info("")
+        self.logger.info("="*70)
+        self.logger.info("  GAN UPSCALER")
+        self.logger.info("="*70)
+        self.logger.info("")
+        self.logger.info(f"Input:  {input_video.name}")
+        self.logger.info(f"Size:   {input_video.stat().st_size / (1024*1024):.1f} MB")
+        self.logger.info(f"Output: {output_path.name}")
+        self.logger.info(f"Target: {target_width}x{target_height}")
+        self.logger.info(f"Model:  {model_name}")
+        self.logger.info(f"Resize: {method}, {interpolation}")
+        self.logger.info("")
         
         # ========================================
         # PREPARE WORKFLOW
         # ========================================
         
-        import copy
         workflow = copy.deepcopy(self.workflow_template)
         
         nodes = self.workflow_config['nodes']
@@ -227,18 +224,18 @@ class UtilityBackend(WorkflowBase):
         # QUEUE WORKFLOW
         # ========================================
         
-        logger.info("Queuing workflow to ComfyUI...")
-        logger.info("")
+        self.logger.info("Queuing workflow to ComfyUI...")
+        self.logger.info("")
         
-        success = self._queue_and_wait(workflow, logger)
+        success = self._queue_and_wait(workflow)
         
         # ========================================
         # RETRIEVE OUTPUT
         # ========================================
         
         if success:
-            logger.info("")
-            logger.info("Retrieving output from ComfyUI...")
+            self.logger.info("")
+            self.logger.info("Retrieving output from ComfyUI...")
             
             # Determine search folder
             if output_settings.get('use_subfolder', True):
@@ -256,105 +253,142 @@ class UtilityBackend(WorkflowBase):
                 output_path.parent.mkdir(parents=True, exist_ok=True)
                 
                 # Copy to target location
-                import shutil
                 shutil.copy2(comfyui_output, output_path)
                 
                 output_size_mb = output_path.stat().st_size / (1024 * 1024)
                 
-                logger.success("")
-                logger.success("="*70)
-                logger.success("  UPSCALE COMPLETE!")
-                logger.success("="*70)
-                logger.success("")
-                logger.success(f"Output: {output_path}")
-                logger.success(f"Size:   {output_size_mb:.1f} MB")
-                logger.success("")
+                self.logger.success("")
+                self.logger.success("="*70)
+                self.logger.success("  UPSCALE COMPLETE!")
+                self.logger.success("="*70)
+                self.logger.success("")
+                self.logger.success(f"Output: {output_path}")
+                self.logger.success(f"Size:   {output_size_mb:.1f} MB")
+                self.logger.success("")
                 
                 return True
             else:
-                logger.error("")
-                logger.error("Output file not found in ComfyUI output folder!")
-                logger.error(f"Expected in: {self.output_folder / search_folder}")
-                logger.error(f"Pattern: {output_path.stem}*.mp4")
-                logger.error("")
+                self.logger.error("")
+                self.logger.error("Output file not found in ComfyUI output folder!")
+                self.logger.error(f"Expected in: {self.output_folder / search_folder}")
+                self.logger.error(f"Pattern: {output_path.stem}*.mp4")
+                self.logger.error("")
                 return False
         else:
-            logger.error("")
-            logger.error("Workflow execution failed!")
-            logger.error("")
+            self.logger.error("")
+            self.logger.error("Workflow execution failed!")
+            self.logger.error("")
             return False
     
-    def _queue_and_wait(self, workflow: Dict[str, Any], logger) -> bool:
+    def _queue_and_wait(self, workflow: Dict[str, Any]) -> bool:
         """
         Queue workflow to ComfyUI and wait for completion
         
+        Uses WorkflowRunner pattern (same as LocalBackend)
+        
         Args:
             workflow: Workflow JSON
-            logger: Logger instance
         
         Returns:
             True if successful, False otherwise
         """
         try:
-            # Queue prompt
-            prompt_id = self.client.queue_prompt(workflow)
+            # Queue prompt (WorkflowRunner.run() pattern)
+            url = f"{self.comfyui_server}/prompt"
+            payload = {
+                "prompt": workflow,
+                "client_id": f"utility_{self.utility_type}_{int(time.time())}"
+            }
             
-            if not prompt_id:
-                logger.error("Failed to queue prompt!")
+            response = requests.post(url, json=payload, timeout=30)
+            
+            if response.status_code != 200:
+                self.logger.error(f"Failed to queue prompt: HTTP {response.status_code}")
+                self.logger.error(f"Response: {response.text}")
                 return False
             
-            logger.info(f"Queued: {prompt_id}")
-            logger.info("")
-            logger.info("Processing... (this may take several minutes)")
-            logger.info("")
+            result = response.json()
+            prompt_id = result.get('prompt_id')
+            
+            if not prompt_id:
+                self.logger.error("No prompt_id in response!")
+                return False
+            
+            self.logger.info(f"Queued: {prompt_id}")
+            self.logger.info("")
+            self.logger.info("Processing... (this may take several minutes)")
+            self.logger.info("")
             
             # Wait for completion
-            start_time = time.time()
-            last_update = start_time
-            
-            while True:
-                # Check history
-                history = self.client.get_history(prompt_id)
+            return self._wait_for_completion(prompt_id)
+        
+        except Exception as e:
+            self.logger.error(f"Error during workflow execution: {e}")
+            import traceback
+            traceback.print_exc()
+            return False
+    
+    def _wait_for_completion(self, prompt_id: str) -> bool:
+        """
+        Wait for ComfyUI to finish processing
+        
+        Adapted from WorkflowRunner._wait_for_completion()
+        
+        Args:
+            prompt_id: Prompt ID from queue response
+        
+        Returns:
+            True if successful, False otherwise
+        """
+        url = f"{self.comfyui_server}/history/{prompt_id}"
+        
+        max_time = self.workflow_config['advanced'].get('max_processing_time_minutes', 60) * 60
+        start_time = time.time()
+        last_update = start_time
+        
+        while True:
+            try:
+                response = requests.get(url, timeout=10)
                 
-                if prompt_id in history:
-                    entry = history[prompt_id]
+                if response.status_code == 200:
+                    history = response.json()
                     
-                    # Check if completed
-                    if 'outputs' in entry:
-                        elapsed = time.time() - start_time
-                        logger.info(f"✓ Completed in {elapsed:.0f}s")
-                        return True
-                    
-                    # Check for errors
-                    status = entry.get('status', {})
-                    if status.get('status_str') == 'error':
-                        logger.error("Workflow execution error!")
-                        if 'messages' in status:
-                            for msg in status['messages']:
-                                logger.error(f"  {msg}")
-                        return False
+                    if prompt_id in history:
+                        entry = history[prompt_id]
+                        
+                        # Check if completed
+                        if 'outputs' in entry:
+                            elapsed = time.time() - start_time
+                            self.logger.info(f"✓ Completed in {elapsed:.0f}s")
+                            return True
+                        
+                        # Check for errors
+                        status = entry.get('status', {})
+                        if status.get('status_str') == 'error':
+                            self.logger.error("Workflow execution error!")
+                            if 'messages' in status:
+                                for msg in status['messages']:
+                                    self.logger.error(f"  {msg}")
+                            return False
                 
                 # Progress indicator
                 current_time = time.time()
                 if current_time - last_update > 10:  # Every 10 seconds
                     elapsed = current_time - start_time
-                    logger.info(f"  Still processing... ({elapsed:.0f}s)")
+                    self.logger.info(f"  Still processing... ({elapsed:.0f}s)")
                     last_update = current_time
                 
                 # Check timeout
-                max_time = self.workflow_config['advanced'].get('max_processing_time_minutes', 60) * 60
                 if current_time - start_time > max_time:
-                    logger.error(f"Timeout! ({max_time/60:.0f} min)")
+                    self.logger.error(f"Timeout! ({max_time/60:.0f} min)")
                     return False
                 
                 # Wait before next check
                 time.sleep(2)
-        
-        except Exception as e:
-            logger.error(f"Error during workflow execution: {e}")
-            import traceback
-            traceback.print_exc()
-            return False
+            
+            except Exception as e:
+                self.logger.warning(f"Check failed: {e}")
+                time.sleep(2)
     
     def _find_latest_output(self, folder: str, prefix: str) -> Optional[Path]:
         """
@@ -406,7 +440,6 @@ def upscale_video_batch(
     Returns:
         Dict mapping input filename to success status
     """
-    from utils.logger import Logger
     logger = Logger()
     
     backend = UtilityBackend(config)
