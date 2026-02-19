@@ -1,6 +1,11 @@
 # -*- coding: utf-8 -*-
 """
 Postprocessing Engine - Main logic for final output
+
+Supported processors (executed in order):
+1. numbered_flow - Copy files to FLOW_* folder with dense numbering
+2. full_concat - Concatenate all clips into single movie
+3. upscale - Batch GAN upscaling (NEW!)
 """
 
 import os
@@ -23,20 +28,28 @@ init(autoreset=True)
 # ============================================================
 
 def run_postprocessing(config):
-    """Main postprocessing entry point"""
+    """Main postprocessing entry point
+    
+    Executes enabled processors in order:
+    1. numbered_flow (creates FLOW folder)
+    2. full_concat (creates FULL_MOVIE from FLOW)
+    3. upscale (upscales from any source - interactive)
+    """
     
     pp_config = config['postprocessing']
     
     # Check which processors are enabled
     enabled_processors = []
-    if pp_config.get('full_concat', False):
-        enabled_processors.append('full_concat')
     if pp_config.get('numbered_flow', False):
         enabled_processors.append('numbered_flow')
+    if pp_config.get('full_concat', False):
+        enabled_processors.append('full_concat')
+    if pp_config.get('upscale', False):
+        enabled_processors.append('upscale')
     
     if not enabled_processors:
         print(f"{Fore.RED}❌ No processors enabled!{Style.RESET_ALL}")
-        print(f"{Fore.YELLOW}Set 'full_concat': True or 'numbered_flow': True{Style.RESET_ALL}")
+        print(f"{Fore.YELLOW}Set 'numbered_flow', 'full_concat', or 'upscale' to True{Style.RESET_ALL}")
         return
     
     print(f"\n{Fore.CYAN}{'='*70}")
@@ -45,20 +58,29 @@ def run_postprocessing(config):
     print(f"{Fore.CYAN}Enabled processors: {', '.join(enabled_processors)}{Style.RESET_ALL}")
     print(f"{Fore.CYAN}{'='*70}{Style.RESET_ALL}\n")
     
-    # Run enabled processors (numbered_flow BEFORE full_concat)
+    # Run enabled processors IN ORDER (numbered_flow → full_concat → upscale)
     results = {}
     
+    # Step 1: Numbered flow (creates FLOW folder)
     if 'numbered_flow' in enabled_processors:
         print(f"\n{Fore.YELLOW}{'─'*70}")
-        print(f"📌 Running: NUMBERED FLOW")
+        print(f"📌 Step 1: NUMBERED FLOW")
         print(f"{'─'*70}{Style.RESET_ALL}\n")
         results['numbered_flow'] = run_numbered_flow(config)
     
+    # Step 2: Full concat (creates FULL_MOVIE from FLOW)
     if 'full_concat' in enabled_processors:
         print(f"\n{Fore.YELLOW}{'─'*70}")
-        print(f"📌 Running: FULL CONCAT")
+        print(f"📌 Step 2: FULL CONCAT")
         print(f"{'─'*70}{Style.RESET_ALL}\n")
         results['full_concat'] = run_full_concat(config)
+    
+    # Step 3: Upscale (can use output from steps 1 or 2)
+    if 'upscale' in enabled_processors:
+        print(f"\n{Fore.YELLOW}{'─'*70}")
+        print(f"📌 Step 3: BATCH UPSCALE")
+        print(f"{'─'*70}{Style.RESET_ALL}\n")
+        results['upscale'] = run_batch_upscale_postproc(config)
     
     # Summary
     print(f"\n{Fore.CYAN}{'='*70}")
@@ -70,6 +92,48 @@ def run_postprocessing(config):
         print(f"{status} {processor}: {'SUCCESS' if result else 'FAILED'}")
     
     print()
+
+
+# ============================================================
+# UPSCALE PROCESSOR (NEW!)
+# ============================================================
+
+def run_batch_upscale_postproc(config):
+    """Run batch upscale as postprocessing step
+    
+    Wrapper that converts postprocessing config to batch_upscale config format
+    
+    Interactive source selection allows choosing:
+    - Project source files (main/chain/transitions)
+    - FLOW folder (from numbered_flow step)
+    - Full movie (from full_concat step)
+    """
+    
+    try:
+        from postprocessing.batch_upscale import run_batch_upscale
+        
+        # Extract upscale settings from postprocessing config
+        upscale_settings = config['postprocessing'].get('upscale_settings', {})
+        
+        # Build batch_upscale config
+        upscale_config = {
+            'project_folder': config['project_folder'],
+            'batch_upscale': upscale_settings
+        }
+        
+        # Run batch upscale (with interactive source selection if enabled)
+        return run_batch_upscale(upscale_config)
+        
+    except ImportError as e:
+        print(f"{Fore.RED}❌ Error: batch_upscale module not found!{Style.RESET_ALL}")
+        print(f"{Fore.YELLOW}   Make sure postprocessing/batch_upscale.py exists{Style.RESET_ALL}")
+        print(f"{Fore.YELLOW}   Error: {e}{Style.RESET_ALL}")
+        return False
+    except Exception as e:
+        print(f"{Fore.RED}❌ Error in upscale: {e}{Style.RESET_ALL}")
+        import traceback
+        traceback.print_exc()
+        return False
 
 
 # ============================================================
