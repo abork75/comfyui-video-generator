@@ -2,6 +2,16 @@
 """
 Batch Upscale Engine - GAN Upscaling for video batches
 Analogous to postprocess_engine.py structure
+
+Modes:
+- SOURCE: Upscale from project source (main, chain, transitions)
+- NUMBERED_FLOW: Upscale from FLOW_* folders
+- FULL_MOVIE: Upscale single full movie file
+
+Structure support:
+- main: videos in root folder OR main/ subfolder
+- chain: videos in transitions/chains/ subfolder
+- transitions: videos in transitions/ folder (excluding subfolders)
 """
 
 import os
@@ -23,15 +33,19 @@ init(autoreset=True)
 # ============================================================
 
 def run_batch_upscale(config):
-    """Main batch upscale entry point
+    """Main batch upscale entry point with INTERACTIVE source selection"""
     
-    Modes:
-    - 'source': Upscale from project source files (main, chain, transitions)
-    - 'numbered_flow': Upscale from FLOW_* folders (interactive selection)
-    """
+    project_folder = Path(config['project_folder'])
     
-    upscale_config = config['batch_upscale']
-    source_mode = upscale_config.get('source_mode', 'source')
+    # Interactive source selection
+    source_mode, source_path = select_source_interactive(project_folder)
+    
+    if source_mode is None:
+        print(f"{Fore.RED}✗ No source selected{Style.RESET_ALL}")
+        return False
+    
+    # Update config with selected mode
+    config['batch_upscale']['source_mode'] = source_mode
     
     print(f"\n{Fore.CYAN}{'='*70}")
     print(f"{'':20}BATCH UPSCALE")
@@ -42,11 +56,157 @@ def run_batch_upscale(config):
     if source_mode == 'source':
         return run_upscale_source(config)
     elif source_mode == 'numbered_flow':
-        return run_upscale_numbered_flow(config)
+        return run_upscale_numbered_flow_direct(config, source_path)
+    elif source_mode == 'full_movie':
+        return run_upscale_full_movie(config, source_path)
     else:
         print(f"{Fore.RED}❌ Invalid source_mode: {source_mode}{Style.RESET_ALL}")
-        print(f"{Fore.YELLOW}Use 'source' or 'numbered_flow'{Style.RESET_ALL}")
         return False
+
+
+# ============================================================
+# INTERACTIVE SOURCE SELECTION
+# ============================================================
+
+def select_source_interactive(project_folder):
+    """Interactive source selection
+    
+    Detects:
+    - main: root folder videos OR main/ subfolder
+    - chain: transitions/chains/ subfolder
+    - transitions: transitions/ folder (direct files only)
+    - FLOW folders
+    - Full movie files
+    
+    Returns:
+        tuple: (source_mode, source_path)
+            source_mode: 'source', 'numbered_flow', or 'full_movie'
+            source_path: Path to source (or None for 'source' mode)
+    """
+    
+    project_folder = Path(project_folder)
+    final_outputs = project_folder / 'final_outputs'
+    
+    sources = []
+    
+    # Option 1: Project source files (main/chain/transitions)
+    source_dirs = {}
+    
+    # Check for 'main' - root folder OR main/ subfolder
+    main_folder = project_folder / 'main'
+    if main_folder.exists() and main_folder.is_dir():
+        source_dirs['main'] = main_folder
+    else:
+        # No 'main' folder - check root for videos
+        root_videos = [f for f in project_folder.iterdir() 
+                      if f.is_file() and f.suffix.lower() in ['.mp4', '.avi', '.mov', '.mkv']]
+        if root_videos:
+            source_dirs['main (root)'] = project_folder
+    
+    # Check for 'chain' - transitions/chains/ subfolder
+    chains_folder = project_folder / 'transitions' / 'chains'
+    if chains_folder.exists() and chains_folder.is_dir():
+        source_dirs['chain'] = chains_folder
+    
+    # Check for 'transitions' - transitions/ direct files (no subfolders)
+    transitions_folder = project_folder / 'transitions'
+    if transitions_folder.exists() and transitions_folder.is_dir():
+        source_dirs['transitions'] = transitions_folder
+    
+    # Count videos in each source
+    source_video_count = 0
+    source_details = []
+    for category, path in source_dirs.items():
+        if category == 'main (root)':
+            # Root: only video files, skip images/folders
+            count = len([f for f in path.iterdir() 
+                        if f.is_file() and f.suffix.lower() in ['.mp4', '.avi', '.mov', '.mkv']])
+        elif category == 'transitions':
+            # Transitions: only direct files, skip subfolders (like chains/)
+            count = len([f for f in path.iterdir() 
+                        if f.is_file() and f.suffix.lower() in ['.mp4', '.avi', '.mov', '.mkv']])
+        else:
+            # Other: all videos in folder
+            count = len([f for f in path.iterdir() 
+                        if f.is_file() and f.suffix.lower() in ['.mp4', '.avi', '.mov', '.mkv']])
+        
+        if count > 0:
+            source_video_count += count
+            source_details.append(f"{category}: {count}")
+    
+    if source_video_count > 0:
+        sources.append({
+            'type': 'source',
+            'label': f"Project source files ({', '.join(source_details)} videos)",
+            'path': None
+        })
+    
+    # Option 2: FLOW folders
+    if final_outputs.exists():
+        for folder in sorted(final_outputs.iterdir(), key=lambda p: p.stat().st_mtime, reverse=True):
+            if folder.is_dir() and folder.name.startswith('FLOW_') and not folder.name.endswith('_UPSCALED'):
+                video_count = len([
+                    f for f in folder.iterdir()
+                    if f.suffix.lower() in ['.mp4', '.avi', '.mov', '.mkv']
+                ])
+                
+                if video_count > 0:
+                    sources.append({
+                        'type': 'numbered_flow',
+                        'label': f"FLOW folder: {folder.name} ({video_count} files)",
+                        'path': folder
+                    })
+    
+    # Option 3: Full movie files
+    if final_outputs.exists():
+        for file in sorted(final_outputs.glob("FULL_MOVIE_*.mp4"), key=lambda p: p.stat().st_mtime, reverse=True):
+            size_mb = file.stat().st_size / (1024 * 1024)
+            sources.append({
+                'type': 'full_movie',
+                'label': f"Full movie: {file.name} ({size_mb:.1f} MB)",
+                'path': file
+            })
+    
+    # Show menu
+    if not sources:
+        print(f"\n{Fore.RED}❌ No video sources found!{Style.RESET_ALL}")
+        print(f"\n{Fore.YELLOW}Check:{Style.RESET_ALL}")
+        print(f"  - Project has videos in root or main/ folder")
+        print(f"  - Or transitions/ and transitions/chains/ folders")
+        print(f"  - Or run numbered_flow postprocessing first")
+        print(f"  - Or create full movie with concat postprocessing")
+        return None, None
+    
+    print(f"\n{Fore.CYAN}{'='*70}")
+    print(f"{'':20}SELECT SOURCE")
+    print(f"{'='*70}{Style.RESET_ALL}\n")
+    print(f"{Fore.CYAN}Available sources:{Style.RESET_ALL}\n")
+    
+    for i, source in enumerate(sources, 1):
+        print(f"  [{i}] {source['label']}")
+    
+    print(f"\n  [0] Cancel")
+    
+    while True:
+        try:
+            choice = input(f"\n{Fore.YELLOW}Select source [1-{len(sources)}]: {Style.RESET_ALL}").strip()
+            
+            if not choice:
+                continue
+            
+            choice_num = int(choice)
+            
+            if choice_num == 0:
+                return None, None
+            
+            if 1 <= choice_num <= len(sources):
+                selected = sources[choice_num - 1]
+                return selected['type'], selected['path']
+            else:
+                print(f"{Fore.RED}Invalid choice. Try again.{Style.RESET_ALL}")
+                
+        except (ValueError, KeyboardInterrupt):
+            return None, None
 
 
 # ============================================================
@@ -55,6 +215,11 @@ def run_batch_upscale(config):
 
 def run_upscale_source(config):
     """Upscale plików źródłowych (main, chain, transitions)
+    
+    Supports:
+    - main: root folder videos OR main/ subfolder
+    - chain: transitions/chains/ subfolder
+    - transitions: transitions/ direct files (excluding subfolders)
     
     Output structure:
     final_outputs/source_UPSCALED/
@@ -73,12 +238,29 @@ def run_upscale_source(config):
         
         print(f"{Fore.CYAN}📁 Output: {output_base.relative_to(project_folder)}{Style.RESET_ALL}\n")
         
-        # Source categories
-        source_dirs = {
-            'main': project_folder / 'main',
-            'chain': project_folder / 'chain',
-            'transitions': project_folder / 'transitions'
-        }
+        # Determine source directories with proper structure
+        source_dirs = {}
+        
+        # 1. Check for 'main' - root OR main/ subfolder
+        main_folder = project_folder / 'main'
+        if main_folder.exists() and main_folder.is_dir():
+            source_dirs['main'] = main_folder
+        else:
+            # No 'main' folder - check root for videos
+            root_videos = [f for f in project_folder.iterdir() 
+                          if f.is_file() and f.suffix.lower() in ['.mp4', '.avi', '.mov', '.mkv']]
+            if root_videos:
+                source_dirs['main'] = project_folder
+        
+        # 2. Check for 'chain' - transitions/chains/
+        chains_folder = project_folder / 'transitions' / 'chains'
+        if chains_folder.exists() and chains_folder.is_dir():
+            source_dirs['chain'] = chains_folder
+        
+        # 3. Check for 'transitions' - transitions/ direct files
+        transitions_folder = project_folder / 'transitions'
+        if transitions_folder.exists() and transitions_folder.is_dir():
+            source_dirs['transitions'] = transitions_folder
         
         # Initialize backend
         backend = _create_backend(upscale_config)
@@ -89,23 +271,41 @@ def run_upscale_source(config):
         
         # Upscale each category
         for category, source_dir in source_dirs.items():
-            if not source_dir.exists():
-                print(f"{Fore.YELLOW}⚠ Skipping {category} - directory not found{Style.RESET_ALL}")
-                continue
-            
             output_dir = output_base / category
             output_dir.mkdir(exist_ok=True)
             
             print(f"\n{Fore.YELLOW}{'─'*70}")
             print(f"📌 Category: {category.upper()}")
+            print(f"   Source: {source_dir}")
             print(f"{'─'*70}{Style.RESET_ALL}\n")
             
-            stats = _upscale_directory(
-                backend=backend,
-                source_dir=source_dir,
-                output_dir=output_dir,
-                upscale_config=upscale_config
-            )
+            # Special handling based on category
+            if category == 'main' and source_dir == project_folder:
+                # Root folder - only videos, skip images/folders
+                stats = _upscale_directory(
+                    backend=backend,
+                    source_dir=source_dir,
+                    output_dir=output_dir,
+                    upscale_config=upscale_config,
+                    filter_files_only=True  # Skip subfolders/images
+                )
+            elif category == 'transitions':
+                # Transitions - only direct files, skip subfolders like chains/
+                stats = _upscale_directory(
+                    backend=backend,
+                    source_dir=source_dir,
+                    output_dir=output_dir,
+                    upscale_config=upscale_config,
+                    filter_files_only=True  # Skip subfolders
+                )
+            else:
+                # Other - normal processing
+                stats = _upscale_directory(
+                    backend=backend,
+                    source_dir=source_dir,
+                    output_dir=output_dir,
+                    upscale_config=upscale_config
+                )
             
             total_upscaled += stats['upscaled']
             total_skipped += stats['skipped']
@@ -131,11 +331,11 @@ def run_upscale_source(config):
 
 
 # ============================================================
-# MODE 2: UPSCALE NUMBERED FLOW
+# MODE 2: UPSCALE NUMBERED FLOW (DIRECT)
 # ============================================================
 
-def run_upscale_numbered_flow(config):
-    """Upscale z FLOW_* folders (interactive selection)
+def run_upscale_numbered_flow_direct(config, flow_folder):
+    """Upscale konkretnego FLOW folder (już wybranego przez interactive selection)
     
     Output structure:
     final_outputs/FLOW_{project}_{timestamp}_UPSCALED/
@@ -145,31 +345,15 @@ def run_upscale_numbered_flow(config):
     """
     
     try:
-        project_folder = Path(config['project_folder'])
         upscale_config = config['batch_upscale']
-        
-        # Find FLOW folders
-        print(f"\n{Fore.CYAN}🔍 Searching for FLOW folders in final_outputs/...{Style.RESET_ALL}")
-        flow_folders = _find_flow_folders(project_folder)
-        
-        if not flow_folders:
-            print(f"\n{Fore.RED}❌ No FLOW folders found!{Style.RESET_ALL}")
-            print(f"{Fore.YELLOW}Run numbered_flow postprocessing first{Style.RESET_ALL}")
-            return False
-        
-        # Interactive selection
-        selected_flow = _select_flow_folder_interactive(flow_folders)
-        
-        if not selected_flow:
-            print(f"{Fore.RED}✗ Cancelled by user{Style.RESET_ALL}")
-            return False
+        flow_folder = Path(flow_folder)
         
         # Output folder
-        flow_name = selected_flow.name
-        output_folder = selected_flow.parent / f"{flow_name}_UPSCALED"
+        flow_name = flow_folder.name
+        output_folder = flow_folder.parent / f"{flow_name}_UPSCALED"
         output_folder.mkdir(exist_ok=True)
         
-        print(f"\n{Fore.CYAN}📁 Source: {flow_name}{Style.RESET_ALL}")
+        print(f"{Fore.CYAN}📁 Source: {flow_name}{Style.RESET_ALL}")
         print(f"{Fore.CYAN}📁 Output: {output_folder.name}{Style.RESET_ALL}\n")
         
         # Initialize backend
@@ -178,7 +362,7 @@ def run_upscale_numbered_flow(config):
         # Upscale directory
         stats = _upscale_directory(
             backend=backend,
-            source_dir=selected_flow,
+            source_dir=flow_folder,
             output_dir=output_folder,
             upscale_config=upscale_config,
             suffix='_upscaled'
@@ -204,6 +388,82 @@ def run_upscale_numbered_flow(config):
 
 
 # ============================================================
+# MODE 3: UPSCALE FULL MOVIE (SINGLE FILE)
+# ============================================================
+
+def run_upscale_full_movie(config, movie_path):
+    """Upscale pojedynczego pliku (full concat movie)
+    
+    Output:
+    final_outputs/FULL_MOVIE_*_UPSCALED.mp4
+    """
+    
+    try:
+        movie_path = Path(movie_path)
+        upscale_config = config['batch_upscale']
+        
+        # Output path
+        output_name = movie_path.stem + "_UPSCALED" + movie_path.suffix
+        output_path = movie_path.parent / output_name
+        
+        print(f"\n{Fore.CYAN}📁 Source: {movie_path.name}{Style.RESET_ALL}")
+        print(f"{Fore.CYAN}   Size:   {movie_path.stat().st_size / (1024*1024):.1f} MB{Style.RESET_ALL}")
+        print(f"{Fore.CYAN}📁 Output: {output_name}{Style.RESET_ALL}\n")
+        
+        # Check if already exists
+        if output_path.exists():
+            print(f"{Fore.YELLOW}⚠ Output already exists!{Style.RESET_ALL}")
+            response = input("Overwrite? [y/N]: ").strip().lower()
+            if response != 'y':
+                print(f"{Fore.RED}✗ Cancelled{Style.RESET_ALL}")
+                return False
+        
+        # Initialize backend
+        backend = _create_backend(upscale_config)
+        
+        # Settings
+        target_resolution = upscale_config.get('target_resolution', [1024, 1024])
+        target_width = target_resolution[0]
+        target_height = target_resolution[1]
+        upscale_model = upscale_config.get('upscale_model', 'RealESRGAN_x4plus.pth')
+        interpolation = upscale_config.get('interpolation', 'lanczos')
+        method = upscale_config.get('method', 'stretch')
+        
+        # Upscale
+        print(f"{Fore.YELLOW}⚙ Upscaling full movie...{Style.RESET_ALL}\n")
+        print(f"{Fore.YELLOW}This may take significant time (large file)!{Style.RESET_ALL}\n")
+        
+        success = backend.upscale_video(
+            input_video=movie_path,
+            output_path=output_path,
+            target_width=target_width,
+            target_height=target_height,
+            interpolation=interpolation,
+            method=method,
+            model_name=upscale_model
+        )
+        
+        # Summary
+        if success:
+            print(f"\n{Fore.CYAN}{'='*70}")
+            print(f"{'':20}UPSCALE SUMMARY")
+            print(f"{'='*70}{Style.RESET_ALL}\n")
+            print(f"{Fore.GREEN}✅ Success!{Style.RESET_ALL}")
+            print(f"\n{Fore.GREEN}Output: {output_path}{Style.RESET_ALL}")
+            print(f"{Fore.GREEN}Size:   {output_path.stat().st_size / (1024*1024):.1f} MB{Style.RESET_ALL}\n")
+            return True
+        else:
+            print(f"\n{Fore.RED}❌ Failed to upscale full movie{Style.RESET_ALL}\n")
+            return False
+        
+    except Exception as e:
+        print(f"{Fore.RED}❌ Error in upscale_full_movie: {e}{Style.RESET_ALL}")
+        import traceback
+        traceback.print_exc()
+        return False
+
+
+# ============================================================
 # HELPER FUNCTIONS
 # ============================================================
 
@@ -221,8 +481,11 @@ def _create_backend(upscale_config):
     return UtilityBackend(backend_config)
 
 
-def _upscale_directory(backend, source_dir, output_dir, upscale_config, suffix=''):
+def _upscale_directory(backend, source_dir, output_dir, upscale_config, suffix='', filter_files_only=False):
     """Upscale all videos in directory
+    
+    Args:
+        filter_files_only: If True, only process direct files (skip subfolders)
     
     Returns:
         dict: {'upscaled': int, 'skipped': int, 'failed': int}
@@ -230,13 +493,22 @@ def _upscale_directory(backend, source_dir, output_dir, upscale_config, suffix='
     
     # Get video files
     video_extensions = ['.mp4', '.avi', '.mov', '.mkv']
-    video_files = sorted([
-        f for f in source_dir.iterdir()
-        if f.suffix.lower() in video_extensions
-    ])
+    
+    if filter_files_only:
+        # Only direct files, skip subfolders
+        video_files = sorted([
+            f for f in source_dir.iterdir()
+            if f.is_file() and f.suffix.lower() in video_extensions
+        ])
+    else:
+        # All video files
+        video_files = sorted([
+            f for f in source_dir.iterdir()
+            if f.is_file() and f.suffix.lower() in video_extensions
+        ])
     
     if not video_files:
-        print(f"{Fore.YELLOW}⚠ No video files found in {source_dir.name}{Style.RESET_ALL}")
+        print(f"{Fore.YELLOW}⚠ No video files found{Style.RESET_ALL}")
         return {'upscaled': 0, 'skipped': 0, 'failed': 0}
     
     print(f"{Fore.CYAN}Found {len(video_files)} videos{Style.RESET_ALL}\n")
@@ -266,7 +538,7 @@ def _upscale_directory(backend, source_dir, output_dir, upscale_config, suffix='
         
         print(f"{Fore.YELLOW}⚙{Style.RESET_ALL} [{i:03d}/{len(video_files)}] Upscaling: {video_file.name}")
         
-        # Upscale - FIXED METHOD CALL!
+        # Upscale
         try:
             success = backend.upscale_video(
                 input_video=video_file,
@@ -291,74 +563,3 @@ def _upscale_directory(backend, source_dir, output_dir, upscale_config, suffix='
             failed += 1
     
     return {'upscaled': upscaled, 'skipped': skipped, 'failed': failed}
-
-
-def _find_flow_folders(project_folder):
-    """Find all FLOW_* folders in final_outputs/, sorted by timestamp (newest first)
-    
-    Analogous to postprocess_engine.find_flow_folders()
-    """
-    
-    final_outputs = project_folder / 'final_outputs'
-    
-    if not final_outputs.exists():
-        return []
-    
-    flow_folders = []
-    
-    for folder in final_outputs.iterdir():
-        if folder.is_dir() and folder.name.startswith('FLOW_') and not folder.name.endswith('_UPSCALED'):
-            # Count video files
-            video_count = len([
-                f for f in folder.iterdir()
-                if f.suffix.lower() in ['.mp4', '.avi', '.mov', '.mkv']
-            ])
-            
-            flow_folders.append({
-                'path': folder,
-                'name': folder.name,
-                'timestamp': folder.stat().st_mtime,
-                'file_count': video_count,
-            })
-    
-    # Sort by timestamp (newest first)
-    flow_folders.sort(key=lambda x: x['timestamp'], reverse=True)
-    
-    return flow_folders
-
-
-def _select_flow_folder_interactive(flow_folders):
-    """Interactive selection of FLOW folder
-    
-    Analogous to postprocess_engine.select_flow_folder_interactive()
-    """
-    
-    print(f"\n{Fore.CYAN}Available FLOW folders:{Style.RESET_ALL}\n")
-    
-    for i, flow in enumerate(flow_folders, 1):
-        timestamp_str = datetime.fromtimestamp(flow['timestamp']).strftime("%Y-%m-%d %H:%M:%S")
-        print(f"  [{i}] {flow['name']}")
-        print(f"      Files: {flow['file_count']}, Modified: {timestamp_str}")
-    
-    print(f"\n  [0] Cancel")
-    
-    while True:
-        try:
-            choice = input(f"\n{Fore.YELLOW}Select FLOW folder [1-{len(flow_folders)}]: {Style.RESET_ALL}").strip()
-            
-            if not choice:
-                continue
-            
-            choice_num = int(choice)
-            
-            if choice_num == 0:
-                return None
-            
-            if 1 <= choice_num <= len(flow_folders):
-                selected = flow_folders[choice_num - 1]
-                return selected['path']
-            else:
-                print(f"{Fore.RED}Invalid choice. Try again.{Style.RESET_ALL}")
-                
-        except (ValueError, KeyboardInterrupt):
-            return None

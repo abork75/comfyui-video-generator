@@ -1,7 +1,12 @@
 # -*- coding: utf-8 -*-
 """
 Batch Upscale - Entry Point
-Upscale wielu filmów z projektu (source lub numbered_flow)
+Upscale wielu filmów z projektu - INTERACTIVE source selection
+
+Available modes (automatic detection):
+- Project source files (main, chain, transitions)
+- FLOW folders (numbered_flow from postprocessing)
+- Full movie files (FULL_MOVIE_*.mp4 from concat)
 """
 
 import sys
@@ -19,16 +24,13 @@ init(autoreset=True)
 
 PROJECT_PATH = r"C:\Users\abork\AppData\Local\CapCut\Videos\klub_pliki\girl_in_nightclub"
 
-# Wybierz tryb:
-# 'source' - upscale plików źródłowych (main, chain, transitions)
-# 'numbered_flow' - upscale z FLOW_* folders (interactive selection)
-SOURCE_MODE = 'source'
-
-# Settings
+# Upscale Settings
 TARGET_RESOLUTION = (1024, 1024)
 UPSCALE_MODEL = 'RealESRGAN_x4plus.pth'
 INTERPOLATION = 'lanczos'  # lanczos (best), bicubic, bilinear, nearest
 METHOD = 'stretch'  # stretch, crop, fit
+
+# ComfyUI Settings
 COMFYUI_SERVER = 'http://127.0.0.1:8100'
 COMFYUI_OUTPUT_FOLDER = 'D:/ComfyUI/output'
 
@@ -40,7 +42,6 @@ if __name__ == '__main__':
     config = {
         'project_folder': PROJECT_PATH,
         'batch_upscale': {
-            'source_mode': SOURCE_MODE,
             'target_resolution': TARGET_RESOLUTION,
             'upscale_model': UPSCALE_MODEL,
             'interpolation': INTERPOLATION,
@@ -58,18 +59,18 @@ if __name__ == '__main__':
 {'='*70}{Style.RESET_ALL}
 
 Project: {Fore.YELLOW}{project_name}{Style.RESET_ALL}
-Mode:    {Fore.YELLOW}{SOURCE_MODE.upper()}{Style.RESET_ALL}
 Target:  {Fore.YELLOW}{TARGET_RESOLUTION[0]}x{TARGET_RESOLUTION[1]}{Style.RESET_ALL}
 Model:   {Fore.YELLOW}{UPSCALE_MODEL}{Style.RESET_ALL}
+Method:  {Fore.YELLOW}{METHOD}, {INTERPOLATION}{Style.RESET_ALL}
 
 {Fore.CYAN}{'='*70}{Style.RESET_ALL}
 """)
     
-    # Confirmation
-    response = input(f"{Fore.YELLOW}Start batch upscaling? [Y/n]: {Style.RESET_ALL}").strip().lower()
-    if response and response != 'y':
-        print(f"{Fore.RED}✗ Cancelled{Style.RESET_ALL}")
-        sys.exit(0)
+    # Interactive source selection happens inside run_batch_upscale()
+    # User will be asked to choose:
+    # [1] Project source files (main/chain/transitions)
+    # [2] FLOW folder (from numbered_flow postprocessing)
+    # [3] Full movie (FULL_MOVIE_*.mp4 from concat)
     
     # Run
     success = run_batch_upscale(config)
