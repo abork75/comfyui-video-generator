@@ -1,0 +1,21 @@
+Mamy napisaną pod Comfyui aplikację do zautomatyzowanego (przez API) generowania filmów z obrazów i innych filmów robienia tranzycji a także sekwencji I2V bez podanej klatki końcowej.
+Celem jest rozbudowa tego narzędzia.
+Narzędzia składa  się w uproszczeniu z:
+punktu wejścia - skrypt RUN (katalog RUNS)gdzie przekazujemy podstawowe informacje o generowanej sekwencji fimowej.
+W katalogu głównym mamy:
+batch_validator - główny skrypt wywołujący narzędzie (orkiestrator?)
+flow_parser - funkcje do d sprawdzania poprawności plików (m.in)
+workflow_base
+config_validator - skrypt który sprawdza poprawność przygotowanych materiałów (czy sa wszystkie pliki czy formaty x:y ok...)
+Kolejne katalogi:
+workflows - katalog do przechowywania workflwo w .json 
+workflow_configs - configi workflow w yaml
+helpers - funkcje pomocnicze
+RUNS - katalog gdzie przechowuję skrypty dla konkretnych projektów
+helpers - helpery
+backends - tu pliki dla konkretnych backendów na razie korzystamy głównie z 'local'
+logs - tu zbieramy logi
+postprocessing - tu funkce do postprocessingu (takie jak kopowioanie wszystkich filmów do jednego katalogu, tworzenie jednego filmu etc.)
+utils - narzędzie dodatkowe
+backupery - skrypty w powe shelle do tworzenia backupow stabilnych wersji
+stabilne_wersje - tu .zip files ze stabilnymi wersjami 

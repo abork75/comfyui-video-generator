@@ -1,0 +1,216 @@
+# -*- coding: utf-8 -*-
+"""
+ORCHESTRATOR TEST 001: Mixed cloud + local backends
+First transition: CLOUD (01→02)
+Second transition: LOCAL (03→04)
+
+Total cost: ~$0.10 (only first transition)
+Total time: ~1 min cloud + ~4 min local = ~5 min
+"""
+
+# ============================================================
+# IMPORTANT: Add parent directory to path (RUNS/ subfolder)
+# ============================================================
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).parent.parent))
+
+# ============================================================
+# Import orchestrator
+# ============================================================
+from batch_transitions import run_batch_generation
+
+# ============================================================
+# PROJECT CONFIG
+# ============================================================
+
+PROJECT_FOLDER = r"C:\Users\abork\AppData\Local\CapCut\Videos\klub_pliki\mixed_story"
+
+# ============================================================
+# FLOW - Mixed backends!
+# ============================================================
+
+FLOW = [
+    # === Transition 1: Image→Video (CLOUD) ===
+    {
+        "file": "01_ewelina_sit.jpg",
+        "backend": "local",  # ← CLOUD (fast, paid) "cloud"
+        "duration": 2,
+        "pos": "[image_to_video]",
+        "neg": "[image_to_video]",
+    },
+    
+    # === File B ===
+    {"file": "02_ewelina_braOFF.mp4"},
+    
+    {"break": True},  # Hard cut
+    
+    # === Transition 2: Video→Image (LOCAL) ===
+    {
+        "file": "03._ewlina_panties_off.mp4",
+        "backend": "local",  # ← LOCAL (slow, FREE)
+        "duration": 4,
+        "pos": "[video_to_image]",
+        "neg": "[video_to_image]",
+    },
+    
+    # === File D ===
+    {"file": "04_ewlina_out.png"},
+]
+
+# ============================================================
+# GENERIC PROMPTS
+# ============================================================
+
+GENERIC_PROMPTS = {
+    "image_to_video": {
+        "pos": "photograph springs to life, motion begins smoothly, gradual acceleration",
+        "neg": "static photo, no motion, stays frozen, sudden jump",
+    },
+    
+    "video_to_image": {
+        "pos": "motion gradually slows down, freeze into photograph, cinematic stop",
+        "neg": "sudden stop, abrupt freeze, jerky motion",
+    },
+}
+
+# ============================================================
+# RESOLUTION
+# ============================================================
+
+MIN_WIDTH = 336
+MIN_HEIGHT = 448
+MAX_WIDTH = 336
+MAX_HEIGHT = 448
+DEFAULT_RESOLUTION = (336, 448)
+FORCE_RESOLUTION = None
+
+# ============================================================
+# GENERATION SETTINGS
+# ============================================================
+
+DEFAULT_DURATION = 4
+DEFAULT_FPS = 16
+DEFAULT_STEPS = 15
+DEFAULT_CFG = 4.0
+DEFAULT_SEED = None
+
+DEFAULT_POSITIVE_PROMPT = "smooth motion, high quality"
+DEFAULT_NEGATIVE_PROMPT = "blurry, distorted, artifacts"
+
+SKIP_MISSING = True
+SKIP_EXISTED = True  # Always regenerate for test
+IMAGE_QUALITY = 95
+ASPECT_RATIO_TOLERANCE = 0.10
+ASPECT_RATIO_STRATEGY = "most_common"
+
+# ============================================================
+# BACKEND-SPECIFIC SETTINGS
+# ============================================================
+
+# Cloud (Comfy.icu)
+COMFY_ICU_WORKFLOW_ID = "fv9kYUtmjLzC5I8tRR49y"
+WORKFLOW_TEMPLATE_PATH = r"D:\streamlit_project\comfyui_integration\workflows\workflow-api-fv9kYUtmjLzC5I8tRR49y.json"
+
+# Local (ComfyUI)
+CONFIG_PATH = r"D:\streamlit_project\comfyui_integration\workflow_configs\wan_i2v_config.yaml"
+WORKFLOWS_PATH = r"D:\streamlit_project\comfyui_integration\workflows"
+COMFYUI_OUTPUT_FOLDER = r"D:\ComfyUI\output\video"
+
+# ============================================================
+# POSTPROCESSING CONFIG (opcjonalne)
+# ============================================================
+
+POSTPROCESSING = {
+    'enabled': False,  # ← Master switch - Zmień na True aby uruchomić postprocessing
+    
+    # === Individual processors (można włączyć kilka naraz) ===
+    
+    'full_concat': False,  # Tworzy FULL_MOVIE_[project]_[timestamp].mp4
+    
+    'numbered_flow': False,  # Kopiuje pliki do FLOW_[project]_[timestamp]/
+    
+    # (Rozwojowo - na później)
+    # 'upscale': False,
+    # 'color_grade': False,
+    # 'audio_overlay': False,
+    # 'watermark': False,
+    
+    # === Settings per processor ===
+    
+    'full_concat_settings': {
+        'output_name': None,  # None = auto: FULL_MOVIE_[project]_[timestamp].mp4
+        'check_missing': True,  # Sprawdź kompletność FLOW
+        'confirm_if_missing': True,  # Pytaj jeśli brakuje plików
+        'video_codec': 'libx264',
+        'crf': 18,
+        'preset': 'medium',
+    },
+    
+    'numbered_flow_settings': {
+        'output_folder': None,  # None = auto: FLOW_[project]_[timestamp]
+        'number_format': 'f{:04d}',  # f0001, f0002, ... (max 9999)
+        'copy_only_from_flow': True,  # Tylko pliki z FLOW (ignore stare wersje)
+    },
+}
+
+# ============================================================
+# RUN
+# ============================================================
+
+if __name__ == "__main__":
+    import os
+    
+    # Validate environment variables
+    if not os.getenv('COMFY_ICU_API_KEY'):
+        print("❌ ERROR: COMFY_ICU_API_KEY not set!")
+        print("   Set: $env:COMFY_ICU_API_KEY = 'your_key'")
+        exit(1)
+    
+    if not os.getenv('IMGBB_API_KEY'):
+        print("❌ ERROR: IMGBB_API_KEY not set!")
+        exit(1)
+    
+    print("\n" + "="*70)
+    print("🎭 ORCHESTRATOR TEST - Mixed Backends")
+    print("="*70)
+    print(f"Transition 1 (01→02): CLOUD (☁️  ~$0.10, ~1 min)")
+    print(f"Transition 2 (03→04): LOCAL (💻 FREE, ~4 min)")
+    print(f"Total: ~$0.10, ~5 min")
+    print("="*70 + "\n")
+    
+    config = {
+        'project_folder': PROJECT_FOLDER,
+        'flow': FLOW,
+        'generic_prompts': GENERIC_PROMPTS,
+        'default_duration': DEFAULT_DURATION,
+        'default_fps': DEFAULT_FPS,
+        'default_steps': DEFAULT_STEPS,
+        'default_cfg': DEFAULT_CFG,
+        'default_seed': DEFAULT_SEED,
+        'default_positive_prompt': DEFAULT_POSITIVE_PROMPT,
+        'default_negative_prompt': DEFAULT_NEGATIVE_PROMPT,
+        'min_width': MIN_WIDTH,
+        'min_height': MIN_HEIGHT,
+        'max_width': MAX_WIDTH,
+        'max_height': MAX_HEIGHT,
+        'default_resolution': DEFAULT_RESOLUTION,
+        'force_resolution': FORCE_RESOLUTION,
+        'skip_missing': SKIP_MISSING,
+        'skip_existed': SKIP_EXISTED,
+        'image_quality': IMAGE_QUALITY,
+        'aspect_ratio_tolerance': ASPECT_RATIO_TOLERANCE,
+        'aspect_ratio_strategy': ASPECT_RATIO_STRATEGY,
+        
+        # Cloud backend
+        'comfy_icu_workflow_id': COMFY_ICU_WORKFLOW_ID,
+        'workflow_template_path': WORKFLOW_TEMPLATE_PATH,
+        
+        # Local backend
+        'config_path': CONFIG_PATH,
+        'workflows_path': WORKFLOWS_PATH,
+        'comfyui_output_folder': COMFYUI_OUTPUT_FOLDER,
+        'postprocessing': POSTPROCESSING,
+    }
+    
+    run_batch_generation(config)

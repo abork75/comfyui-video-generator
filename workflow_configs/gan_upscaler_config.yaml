@@ -1,0 +1,121 @@
+# =================================================================
+# GAN Upscaler Workflow Configuration
+# =================================================================
+# For: RealESRGAN video upscaling (local ComfyUI)
+# Workflow: LoadVideo → GetComponents → Upscale → Resize → SaveVideo
+
+workflow_name: "gan_upscaler"
+workflow_type: "utility"
+description: "Upscale existing videos using RealESRGAN + optional resize"
+
+# =================================================================
+# Model Settings
+# =================================================================
+model:
+  upscale_model: "RealESRGAN_x4plus.pth"
+  location: "models/upscale_models/"
+  
+  # Alternative models (switch by changing upscale_model)
+  alternatives:
+    - "RealESRGAN_x4plus.pth"        # 4x upscale (default)
+    - "RealESRGAN_x2plus.pth"        # 2x upscale
+    - "RealESRGAN_x4plus_anime_6B.pth"  # 4x anime
+
+# =================================================================
+# Input/Output
+# =================================================================
+input:
+  type: "video"
+  supported_formats: [".mp4", ".avi", ".mov", ".mkv", ".webm"]
+  
+  # Default folder for batch processing (optional)
+  default_folder: null  # or "D:/ComfyUI/output"
+  
+  # Example file (for documentation)
+  example_file: "example_512x512.mp4"
+
+output:
+  folder: "output/upscaled"
+  filename_prefix: "upscaled"
+  format: "auto"  # auto, h264-mp4, hevc-mp4
+  codec: "auto"   # auto, h264, hevc, vp9
+  
+  # Output subfolder structure
+  use_subfolder: true  # true = output/video/, false = output/
+
+# =================================================================
+# Processing Settings
+# =================================================================
+processing:
+  # Target resolution (after upscale + resize)
+  # null = no resize (keep upscaled resolution)
+  target_width: 1024
+  target_height: 1024
+  
+  # Resize settings
+  interpolation: "lanczos"  # lanczos, bicubic, bilinear, nearest
+  method: "stretch"         # stretch, crop, fit, keep_proportion
+  condition: "always"       # always, downscale_only, upscale_only
+  multiple_of: 0            # 0 = disabled, 8/16 = ensure divisible by N
+  
+  # Performance
+  batch_size: 1             # Process N frames at once (1 = safer)
+  tile_size: null           # null = no tiling, 512/1024 for >4K videos
+  
+  # Memory optimization
+  offload_model: false      # Offload model to CPU when not in use
+  precision: "fp16"         # fp32, fp16, bf16
+
+# =================================================================
+# Node Mapping (to workflow JSON)
+# =================================================================
+# These map to node IDs in workflow-gan-upscaler.json
+nodes:
+  load_video: "9"
+  get_video_components: "10"
+  load_upscale_model: "1"
+  upscale_image: "2"
+  image_resize: "13"
+  create_video: "11"
+  save_video: "12"
+
+# =================================================================
+# Defaults (used if not specified in function call)
+# =================================================================
+defaults:
+  width: 1024
+  height: 1024
+  interpolation: "lanczos"
+  method: "stretch"
+  model_name: "RealESRGAN_x4plus.pth"
+
+# =================================================================
+# Validation
+# =================================================================
+validation:
+  # Check input file exists
+  check_input_exists: true
+  
+  # Check input format
+  check_format: true
+  
+  # Check output folder writable
+  check_output_writable: true
+  
+  # Warn if file >1GB
+  warn_large_files: true
+  large_file_threshold_mb: 1000
+
+# =================================================================
+# Advanced
+# =================================================================
+advanced:
+  # Retry on failure
+  max_retries: 2
+  retry_delay_seconds: 5
+  
+  # Timeout
+  max_processing_time_minutes: 60
+  
+  # Cleanup temp files
+  cleanup_temp: true

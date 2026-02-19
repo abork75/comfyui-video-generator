@@ -1,0 +1,54 @@
+# Logi
+logs/
+*.log
+
+# Pliki tymczasowe
+temp/
+tmp/
+*.tmp
+
+# Output i wygenerowane pliki
+output/
+generated/
+zobaczymy czy potrzebne/
+liveportrait/
+
+# Stare backupy (już nie potrzebne z Git)
+backupery/
+stabilne_wersje/
+
+# Credentials i secrets
+*.env
+.env.local
+secrets/
+credentials/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Virtual environments
+venv/
+env/
+ENV/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Duże pliki modeli (jeśli są)
+models/
+checkpoints/
+*.safetensors
+*.ckpt
+*.pt
