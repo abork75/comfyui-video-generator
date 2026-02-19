@@ -1,4 +1,3 @@
-```python
 # -*- coding: utf-8 -*-
 """
 Batch Upscale - Entry Point
