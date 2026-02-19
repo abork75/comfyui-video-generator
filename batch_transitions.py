@@ -58,6 +58,7 @@ def run_batch_generation(config):
         enabled = []
         if postprocessing_config.get('full_concat'): enabled.append('full_concat')
         if postprocessing_config.get('numbered_flow'): enabled.append('numbered_flow')
+        if postprocessing_config.get('upscale'): enabled.append('upscale')
         
         print(f"Processors enabled: {', '.join(enabled) if enabled else 'NONE'}")
         print("="*70 + "\n")
