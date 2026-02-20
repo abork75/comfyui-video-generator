@@ -1102,7 +1102,7 @@ POSTPROCESSING = {
         'source_mode': 'interactive',
         
         # Upscale parameters
-        'target_resolution': (1024, 1024),
+        'target_resolution': (1920, 1440),
         'upscale_model': 'RealESRGAN_x4plus.pth',
         'interpolation': 'lanczos',  # lanczos (best), bicubic, bilinear, nearest
         'method': 'stretch',  # stretch, crop, fit
