@@ -387,6 +387,36 @@ def run_batch_generation(config):
         to_config = trans.get('to_config', {})
         from_config = trans.get('from_config', {})
         to_file = trans.get('to_file')
+
+    # 🐛 DEBUG - TYLKO DLA TRANSITION DO CHAIN
+        if 'koniec' in trans_name:
+            print(f"\n🔍 VALIDATOR DEBUG: {trans_name}")
+            print(f"   to_file: {to_file}")
+            print(f"   from_config keys: {list(from_config.keys())}")
+            print(f"   to_config keys: {list(to_config.keys())}")
+            print(f"   from_config._is_chain: {from_config.get('_is_chain', 'KEY NOT FOUND')}")
+            print(f"   to_config._is_chain: {to_config.get('_is_chain', 'KEY NOT FOUND')}")
+        
+        # ✅ Apply same logic as generation
+        is_from_chain = from_config.get('_is_chain', False)
+        is_to_chain = to_config.get('_is_chain', False)
+        
+        # 🐛 DEBUG - TYLKO DLA TRANSITION DO CHAIN
+        if 'koniec' in trans_name:
+            print(f"   is_from_chain: {is_from_chain}")
+            print(f"   is_to_chain: {is_to_chain}")
+        
+        # TRUE chain step = both from and to are chain
+        is_chain_step = is_to_chain and is_from_chain
+        
+        # Transition TO chain = only to is chain
+        is_transition_to_chain = is_to_chain and not is_from_chain
+        
+        # 🐛 DEBUG - TYLKO DLA TRANSITION DO CHAIN
+        if 'koniec' in trans_name:
+            print(f"   is_chain_step: {is_chain_step}")
+            print(f"   is_transition_to_chain: {is_transition_to_chain}")
+            print(f"   → Should check chain file: {is_transition_to_chain}")
         
         # ✅ Apply same logic as generation
         is_from_chain = from_config.get('_is_chain', False)
