@@ -192,7 +192,7 @@ class ChainHandler:
             List of generation tasks: [
                 {
                     'step': int,
-                    'mode': 'i2v' or 'i2v2i',
+                    'mode': 'i2v', 'i2v2i', or 'i2v_only',
                     'start_source': filename or 'entry_point',
                     'end_source': filename or None,
                     'depends_on': step_idx or None
@@ -278,14 +278,27 @@ class ChainHandler:
                         'depends_on': None
                     })
                 else:
-                    # I2V mode (no next or last step in chain)
-                    tasks.append({
-                        'step': step,
-                        'mode': 'i2v',
-                        'start_source': prev_file if prev_file else 'entry_point',
-                        'end_source': None,
-                        'depends_on': None
-                    })
+                    # ✅ NEW: Check if this is the LAST step in chain
+                    is_last_step = (step == total_steps)
+                    
+                    if is_last_step:
+                        # ✅ TRUE I2V - pure forward generation (no end frame)
+                        tasks.append({
+                            'step': step,
+                            'mode': 'i2v_only',  # ← New mode!
+                            'start_source': prev_file if prev_file else 'entry_point',
+                            'end_source': None,
+                            'depends_on': None
+                        })
+                    else:
+                        # Standard I2V (middle of chain, next doesn't exist yet)
+                        tasks.append({
+                            'step': step,
+                            'mode': 'i2v',
+                            'start_source': prev_file if prev_file else 'entry_point',
+                            'end_source': None,
+                            'depends_on': None
+                        })
             
             else:
                 # ===== CONSECUTIVE GAPS → I2V forward =====
@@ -297,14 +310,23 @@ class ChainHandler:
                         start_source = prev_file if prev_file else 'entry_point'
                         depends_on = None
                     else:
-                        # Use previous in this range (DEPENDENCY!)
-                        prev_in_range = gap_range[i - 1]
-                        start_source = f"{prefix}_{prev_in_range:03d}.mp4"
-                        depends_on = prev_in_range
+                        # Depends on previous in range
+                        start_source = f"{prefix}_{gap_range[i-1]:03d}.mp4"
+                        depends_on = gap_range[i-1]
+                    
+                    # ✅ NEW: Check if this is the LAST step in chain
+                    is_last_step = (step == total_steps)
+                    
+                    if is_last_step:
+                        # ✅ TRUE I2V for last step
+                        mode = 'i2v_only'
+                    else:
+                        # Standard I2V for middle steps
+                        mode = 'i2v'
                     
                     tasks.append({
                         'step': step,
-                        'mode': 'i2v',
+                        'mode': mode,
                         'start_source': start_source,
                         'end_source': None,
                         'depends_on': depends_on

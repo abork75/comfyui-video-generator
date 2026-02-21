@@ -599,6 +599,7 @@ def run_batch_generation(config):
         
         # --- END FRAME ---
         
+        # NEW CODE:
         if is_chain_step:
             # This IS a chain step
             task = next((t for t in chain_tasks if t['step'] == chain_step), None)
@@ -617,8 +618,14 @@ def run_batch_generation(config):
                 if not end_frame:
                     logger.error(f"Cannot extract first frame from {next_file} for gap filling")
                     continue
+            
+            elif task and task['mode'] == 'i2v_only':
+                # ✅ NEW: TRUE I2V - last chain step, no end frame
+                end_frame = None
+                logger.info(f"⛓️  Last chain step - I2V continuation (no end frame required)")
+            
             else:
-                # Normal I2V - no end frame
+                # Standard I2V - no end frame
                 end_frame = None
             
             # Output to chains folder

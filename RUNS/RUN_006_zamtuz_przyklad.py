@@ -220,7 +220,7 @@ FLOW_FULL = [
         "chain": [
             {
                 "duration": 5, 
-                "pos": "Woman stands still in that position"
+                "pos": "Woman sits still in that position"
             },
         ],
         "chain_prefix": "koniec",
@@ -229,7 +229,16 @@ FLOW_FULL = [
         "steps": 20,  # ← Zwiększone z 15 (hi-res quality!)
         "cfg": 5.0,   # ← Zwiększone z 4.0 (stronger guidance)
         "neg": "static, frozen, no movement, distorted, walking towards camera, facing camera, approaching viewer, coming closer, teleporting, jumping, blurry, low quality",        
-    }
+
+        # "transition_to_next": {
+            # "duration": 4,
+            # "steps": 20,
+            # "pos": "Woman is slowly standing up"
+        # }
+    
+    },
+    # {"file": "END2_przyklad.mp4"}
+    
 
 ]
 
@@ -300,7 +309,7 @@ COMFYUI_OUTPUT_FOLDER = r"D:\ComfyUI\output\video"
 
 POSTPROCESSING = {
     # Master switch
-    'enabled': True,  # ← Set to True to enable postprocessing
+    'enabled': False,  # ← Set to True to enable postprocessing
     
     # === Individual processors (executed in order) ===
     
