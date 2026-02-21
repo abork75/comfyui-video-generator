@@ -410,39 +410,46 @@ def run_batch_generation(config):
             output_path = transitions_folder / trans_name
         
         # ============================================================
-        # SPRAWDŹ CZY FILE ISTNIEJE
+        # ✅ POPRAWKA: Sprawdź oba pliki (transition + chain) PRZED decyzją
         # ============================================================
         
-        if not output_path.exists():
-            # File nie istnieje - dodaj do missing
-            missing_transitions.append(trans)
-            continue
+        transition_exists = output_path.exists()
         
-        # ============================================================
-        # ✅ DODATKOWA WALIDACJA: Jeśli transition TO chain, sprawdź chain file
-        # ============================================================
+        # Sprawdź chain file (jeśli applicable)
+        chain_file_exists = True  # Default dla non-chain transitions
         
         if is_transition_to_chain:
-            # Transition TO chain exists, but does the actual chain file exist?
+            # Transition TO chain - sprawdź czy chain file istnieje
             chain_file_path = chain_handler.get_chain_output_path(to_file)
+            chain_file_exists = chain_file_path.exists()
             
-            if not chain_file_path.exists():
-                # ⚠️ PROBLEM: Transition istnieje, ale chain file NIE!
-                logger.warning(f"⚠️  Transition to chain exists but chain file missing: {to_file}")
-                logger.warning(f"    Transition: {trans_name} (exists in transitions/)")
+            if not chain_file_exists:
+                # ⚠️ PROBLEM: Chain file NIE istnieje!
+                logger.warning(f"⚠️  Target chain file missing: {to_file}")
                 logger.warning(f"    Target chain: {to_file} (MISSING in chains/!)")
-                logger.warning(f"    → Will regenerate both")
                 
-                # Usuń "uszkodzony" transition
-                try:
-                    output_path.unlink()
-                    logger.info(f"    ✓ Removed orphaned transition: {trans_name}")
-                except Exception as e:
-                    logger.error(f"    ✗ Failed to remove: {e}")
-                
-                # Dodaj do missing (wymusi regenerację)
-                missing_transitions.append(trans)
-                continue
+                if transition_exists:
+                    # Transition istnieje ale chain NIE - usuń transition
+                    logger.warning(f"    Transition: {trans_name} (exists but orphaned)")
+                    logger.warning(f"    → Will regenerate both")
+                    try:
+                        output_path.unlink()
+                        logger.info(f"    ✓ Removed orphaned transition: {trans_name}")
+                    except Exception as e:
+                        logger.error(f"    ✗ Failed to remove: {e}")
+                else:
+                    # Oba brakują
+                    logger.warning(f"    Transition: {trans_name} (also missing)")
+                    logger.warning(f"    → Will generate both")
+        
+        # ============================================================
+        # DECYZJA: Dodaj do missing jeśli COKOLWIEK brakuje
+        # ============================================================
+        
+        if not transition_exists or not chain_file_exists:
+            # Coś brakuje - dodaj do missing
+            missing_transitions.append(trans)
+            continue
         
         # ============================================================
         # Wszystko OK - file istnieje (i chain file jeśli applicable)
