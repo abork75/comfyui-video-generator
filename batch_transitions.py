@@ -372,41 +372,65 @@ def run_batch_generation(config):
             'name': trans_name,
             'from_file': pair_config['from_file'],
             'to_file': pair_config['to_file'],
+            'from_config': pair_config.get('from_config', {}),
             'to_config': pair_config.get('to_config', {}),
             'config': pair_config
         })
     
+    # ============================================================
+    # ✅ FIX: VALIDATOR USES SAME LOGIC AS GENERATION
+    # ============================================================
+    
     # Now validate each transition
     for trans in all_transitions:
         trans_name = trans['name']
-        output_path = transitions_folder / trans_name
+        to_config = trans.get('to_config', {})
+        from_config = trans.get('from_config', {})
+        to_file = trans.get('to_file')
+        
+        # ✅ Apply same logic as generation
+        is_from_chain = from_config.get('_is_chain', False)
+        is_to_chain = to_config.get('_is_chain', False)
+        
+        # TRUE chain step = both from and to are chain
+        is_chain_step = is_to_chain and is_from_chain
+        
+        # Transition TO chain = only to is chain
+        is_transition_to_chain = is_to_chain and not is_from_chain
         
         # ============================================================
-        # SPRAWDŹ CZY TRANSITION ISTNIEJE
+        # Determine correct output path based on type
+        # ============================================================
+        
+        if is_chain_step:
+            # TRUE chain step - should be in chains/ folder
+            output_path = chain_handler.get_chain_output_path(to_file)
+        else:
+            # Normal transition OR transition TO chain - both in transitions/
+            output_path = transitions_folder / trans_name
+        
+        # ============================================================
+        # SPRAWDŹ CZY FILE ISTNIEJE
         # ============================================================
         
         if not output_path.exists():
-            # Transition nie istnieje - dodaj do missing
+            # File nie istnieje - dodaj do missing
             missing_transitions.append(trans)
             continue
         
         # ============================================================
-        # ✅ NOWA LOGIKA: Sprawdź czy TARGET FILE istnieje (jeśli chain)
+        # ✅ DODATKOWA WALIDACJA: Jeśli transition TO chain, sprawdź chain file
         # ============================================================
         
-        to_config = trans.get('to_config', {})
-        is_target_chain = to_config.get('_is_chain', False)
-        
-        if is_target_chain:
-            # Target jest chain - sprawdź czy chain file istnieje
-            to_file = trans['to_file']
+        if is_transition_to_chain:
+            # Transition TO chain exists, but does the actual chain file exist?
             chain_file_path = chain_handler.get_chain_output_path(to_file)
             
             if not chain_file_path.exists():
                 # ⚠️ PROBLEM: Transition istnieje, ale chain file NIE!
-                logger.warning(f"⚠️  Transition exists but target chain file missing: {to_file}")
-                logger.warning(f"    Transition: {trans_name} (exists)")
-                logger.warning(f"    Target chain: {to_file} (MISSING!)")
+                logger.warning(f"⚠️  Transition to chain exists but chain file missing: {to_file}")
+                logger.warning(f"    Transition: {trans_name} (exists in transitions/)")
+                logger.warning(f"    Target chain: {to_file} (MISSING in chains/!)")
                 logger.warning(f"    → Will regenerate both")
                 
                 # Usuń "uszkodzony" transition
@@ -421,17 +445,31 @@ def run_batch_generation(config):
                 continue
         
         # ============================================================
-        # Wszystko OK - transition i chain file istnieją
+        # Wszystko OK - file istnieje (i chain file jeśli applicable)
         # ============================================================
         existing_transitions.append(trans)
     
-    # Wyświetl podsumowanie (jak było)
+    # Wyświetl podsumowanie
     logger.section("Transition Status")
     
     if existing_transitions:
         logger.success(f"\n✓ EXISTING ({len(existing_transitions)}):")
         for trans in existing_transitions:
-            size_mb = (transitions_folder / trans['name']).stat().st_size / (1024 * 1024)
+            # Determine correct path for size check
+            trans_config = trans['config']
+            from_config = trans_config.get('from_config', {})
+            to_config = trans_config.get('to_config', {})
+            
+            is_from_chain = from_config.get('_is_chain', False)
+            is_to_chain = to_config.get('_is_chain', False)
+            is_chain_step = is_to_chain and is_from_chain
+            
+            if is_chain_step:
+                file_path = chain_handler.get_chain_output_path(trans['to_file'])
+            else:
+                file_path = transitions_folder / trans['name']
+            
+            size_mb = file_path.stat().st_size / (1024 * 1024)
             logger.info(f"    • {trans['name']} ({size_mb:.1f} MB)")
     
     if missing_transitions:
@@ -534,12 +572,6 @@ def run_batch_generation(config):
         backends['local'] = LocalBackend(config)
     
     # ============================================================
-    # Initialize Chain Handler
-    # ============================================================
-    
-    chain_handler = ChainHandler(project_folder, logger=logger)
-    
-    # ============================================================
     # PRE-PROCESS CHAINS
     # ============================================================
     
@@ -583,10 +615,17 @@ def run_batch_generation(config):
         to_config = trans_config.get('to_config', {})
         
         # ============================================================
-        # CHAIN FILE DETECTION
+        # ✅ FIX: DISTINGUISH TRANSITION TO CHAIN vs CHAIN STEP
         # ============================================================
         
-        is_chain_step = chain_handler.is_chain_file(to_config)
+        is_from_chain = chain_handler.is_chain_file(from_config)
+        is_to_chain = chain_handler.is_chain_file(to_config)
+        
+        # TRUE chain step = both from AND to are chain (sequential chain generation)
+        is_chain_step = is_to_chain and is_from_chain
+        
+        # Transition TO chain = from is NOT chain, to IS chain
+        is_transition_to_chain = is_to_chain and not is_from_chain
         
         if is_chain_step:
             chain_prefix = to_config['_chain_prefix']
@@ -620,7 +659,7 @@ def run_batch_generation(config):
         
         # --- START FRAME ---
         
-        if chain_handler.is_chain_file(from_config):
+        if is_from_chain:
             # Previous was chain step - use cached last frame
             start_frame = chain_frame_cache.get(from_file)
             
@@ -652,9 +691,8 @@ def run_batch_generation(config):
         
         # --- END FRAME ---
         
-        # NEW CODE:
         if is_chain_step:
-            # This IS a chain step
+            # ===== TRUE CHAIN STEP =====
             task = next((t for t in chain_tasks if t['step'] == chain_step), None)
             
             if task and task['mode'] == 'i2v2i':
@@ -673,7 +711,7 @@ def run_batch_generation(config):
                     continue
             
             elif task and task['mode'] == 'i2v_only':
-                # ✅ NEW: TRUE I2V - last chain step, no end frame
+                # ✅ TRUE I2V - last chain step, no end frame
                 end_frame = None
                 logger.info(f"⛓️  Last chain step - I2V continuation (no end frame required)")
             
@@ -681,11 +719,24 @@ def run_batch_generation(config):
                 # Standard I2V - no end frame
                 end_frame = None
             
-            # Output to chains folder
+            # ✅ Output to chains folder
             output_path = chain_handler.get_chain_output_path(to_file)
+            
+        elif is_transition_to_chain:
+            # ===== ✅ FIX: TRANSITION TO CHAIN (NOT CHAIN STEP!) =====
+            # This is a normal transition that TARGETS a chain entry point
+            # Output goes to transitions/ folder, NOT chains/
+            
+            logger.info(f"🔗 Transition to chain entry point: {from_file} → {to_file}")
+            
+            # For transition TO chain - this is I2V mode (no end frame)
+            end_frame = None
+            
+            # ✅ Output to TRANSITIONS folder (normal transition naming)
+            output_path = transitions_folder / trans['name']
         
         else:
-            # Normal transition
+            # ===== NORMAL TRANSITION =====
             to_file_path = project_folder / to_file
             
             if to_file_path.suffix.lower() in ['.mp4', '.avi', '.mov', '.mkv', '.webm']:
@@ -705,6 +756,8 @@ def run_batch_generation(config):
         if is_chain_step:
             mode_str = task['mode'].upper() if task else 'I2V'
             logger.section(f"⛓️  Chain Step {chain_step}/{chain_total}: {to_file} ({mode_str}, {backend_type.upper()})")
+        elif is_transition_to_chain:
+            logger.section(f"🔗 Transition to Chain {i}/{len(to_generate)}: {trans['name']} (I2V, {backend_type.upper()})")
         else:
             logger.section(f"Transition {i}/{len(to_generate)}: {trans['name']} ({backend_type.upper()})")
         
