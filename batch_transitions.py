@@ -355,9 +355,28 @@ def run_batch_generation(config):
     
     logger.header("CHECKING EXISTING TRANSITIONS")
     
+    transitions_folder = project_folder / 'transitions'
+    transitions_folder.mkdir(exist_ok=True)
+    
+    # ✅ Initialize chain handler for validation
+    chain_handler = ChainHandler(project_folder, logger=logger)
+    
     existing_transitions = []
     missing_transitions = []
     
+    # ✅ Build transition list from pairs
+    all_transitions = []
+    for pair_config in pairs:
+        trans_name = f"{Path(pair_config['from_file']).stem}_{Path(pair_config['to_file']).stem}_transition.mp4"
+        all_transitions.append({
+            'name': trans_name,
+            'from_file': pair_config['from_file'],
+            'to_file': pair_config['to_file'],
+            'to_config': pair_config.get('to_config', {}),
+            'config': pair_config
+        })
+    
+    # Now validate each transition
     for trans in all_transitions:
         trans_name = trans['name']
         output_path = transitions_folder / trans_name
