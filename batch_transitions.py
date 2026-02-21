@@ -348,64 +348,98 @@ def run_batch_generation(config):
     
     logger.success(f"\nFrames ready!")
     
+   
     # ============================================================
     # CHECK EXISTING TRANSITIONS
     # ============================================================
     
     logger.header("CHECKING EXISTING TRANSITIONS")
     
-    transitions_folder = project_folder / 'transitions'
-    transitions_folder.mkdir(exist_ok=True)
-    
     existing_transitions = []
     missing_transitions = []
     
-    for pair_config in pairs:
-        trans_name = f"{Path(pair_config['from_file']).stem}_{Path(pair_config['to_file']).stem}_transition.mp4"
+    for trans in all_transitions:
+        trans_name = trans['name']
+        output_path = transitions_folder / trans_name
         
-        # Check if it's a chain transition (output in chains/ folder)
-        to_config = pair_config['to_config']
+        # ============================================================
+        # SPRAWDŹ CZY TRANSITION ISTNIEJE
+        # ============================================================
         
-        if to_config.get('_is_chain'):
-            # Chain file - check chains folder
-            chain_handler_temp = ChainHandler(project_folder)
-            trans_path = chain_handler_temp.get_chain_output_path(pair_config['to_file'])
-        else:
-            # Normal transition
-            trans_path = transitions_folder / trans_name
+        if not output_path.exists():
+            # Transition nie istnieje - dodaj do missing
+            missing_transitions.append(trans)
+            continue
         
-        if trans_path.exists():
-            size_mb = trans_path.stat().st_size / (1024 * 1024)
-            existing_transitions.append({
-                'name': trans_name,
-                'size': size_mb,
-                'config': pair_config
-            })
-        else:
-            missing_transitions.append({
-                'name': trans_name,
-                'config': pair_config
-            })
+        # ============================================================
+        # ✅ NOWA LOGIKA: Sprawdź czy TARGET FILE istnieje (jeśli chain)
+        # ============================================================
+        
+        to_config = trans.get('to_config', {})
+        is_target_chain = to_config.get('_is_chain', False)
+        
+        if is_target_chain:
+            # Target jest chain - sprawdź czy chain file istnieje
+            to_file = trans['to_file']
+            chain_file_path = chain_handler.get_chain_output_path(to_file)
+            
+            if not chain_file_path.exists():
+                # ⚠️ PROBLEM: Transition istnieje, ale chain file NIE!
+                logger.warning(f"⚠️  Transition exists but target chain file missing: {to_file}")
+                logger.warning(f"    Transition: {trans_name} (exists)")
+                logger.warning(f"    Target chain: {to_file} (MISSING!)")
+                logger.warning(f"    → Will regenerate both")
+                
+                # Usuń "uszkodzony" transition
+                try:
+                    output_path.unlink()
+                    logger.info(f"    ✓ Removed orphaned transition: {trans_name}")
+                except Exception as e:
+                    logger.error(f"    ✗ Failed to remove: {e}")
+                
+                # Dodaj do missing (wymusi regenerację)
+                missing_transitions.append(trans)
+                continue
+        
+        # ============================================================
+        # Wszystko OK - transition i chain file istnieją
+        # ============================================================
+        existing_transitions.append(trans)
     
+    # Wyświetl podsumowanie (jak było)
     logger.section("Transition Status")
     
     if existing_transitions:
-        logger.info(f"\n✓ EXISTING ({len(existing_transitions)}):")
-        for t in existing_transitions:
-            logger.info(f"  • {t['name']} ({t['size']:.1f} MB)")
+        logger.success(f"\n✓ EXISTING ({len(existing_transitions)}):")
+        for trans in existing_transitions:
+            size_mb = (transitions_folder / trans['name']).stat().st_size / (1024 * 1024)
+            logger.info(f"    • {trans['name']} ({size_mb:.1f} MB)")
     
     if missing_transitions:
-        logger.info(f"\n✗ MISSING ({len(missing_transitions)}):")
-        for t in missing_transitions:
-            logger.info(f"  • {t['name']}")
+        logger.warning(f"\n⚠ MISSING ({len(missing_transitions)}):")
+        for trans in missing_transitions:
+            logger.info(f"    • {trans['name']}")
     
-    logger.info(f"\nTotal: {len(pairs)} transitions")
-    logger.info(f"Existing: {len(existing_transitions)}")
-    logger.info(f"Missing: {len(missing_transitions)}")
+    logger.info(f"\nTotal: {len(all_transitions)} transitions")
+    logger.info(f"  Existing: {len(existing_transitions)}")
+    logger.info(f"  Missing: {len(missing_transitions)}")
     
-    if not missing_transitions:
-        logger.success("\nAll transitions already exist! Nothing to do.")
-        return
+    if len(missing_transitions) == 0 and not config.get('skip_existed', True):
+        logger.success(f"\n✓\nAll transitions already exist!")
+    elif len(missing_transitions) == 0:
+        logger.success(f"\n✓\nAll transitions already exist! Nothing to do.")
+        
+        # ============================================================
+        # ✅ KONIEC - jeśli SKIP_EXISTED=True i brak missing
+        # ============================================================
+        if config.get('skip_existed', True):
+            return {
+                'success': True,
+                'total': len(all_transitions),
+                'generated': 0,
+                'skipped': len(existing_transitions),
+                'failed': 0
+            }
     
     # Check skip_existed flag
     if config.get('skip_existed', True):
