@@ -36,7 +36,7 @@ PROJECT_FOLDER = r"C:\Users\abork\AppData\Local\CapCut\Videos\muszelka_pliki\EM\
 # FLOW - Select test or full production
 # ============================================================
 
-USE_TEST_FLOW = True  # ← Change to False for full production run
+USE_TEST_FLOW = False  # ← Change to False for full production run
 
 FLOW_TEST = [
     # ============================================================
@@ -71,7 +71,7 @@ FLOW_FULL = [
         "file": "Start1_przyklad.mp4",
         "backend": "local",
         "duration": 2,
-        "pos": "Smooth transition",
+        "pos": "Smooth transition totaly naked woman approachesy",
         "neg": "blurry, low quality, sudden movements, pose changes, moving background, waving windows, motion outside, cars moving, people moving, wind, ripples, dynamic scene, any movement",
     },
   
@@ -300,18 +300,18 @@ COMFYUI_OUTPUT_FOLDER = r"D:\ComfyUI\output\video"
 
 POSTPROCESSING = {
     # Master switch
-    'enabled': False,  # ← Set to True to enable postprocessing
+    'enabled': True,  # ← Set to True to enable postprocessing
     
     # === Individual processors (executed in order) ===
     
     # Step 1: Copy to numbered FLOW folder
-    'numbered_flow': False,  # Creates FLOW_[project]_[timestamp]/ with f0001, f0002, ...
+    'numbered_flow': True,  # Creates FLOW_[project]_[timestamp]/ with f0001, f0002, ...
     
     # Step 2: Concatenate all clips into single movie
     'full_concat': False,  # Creates FULL_MOVIE_[project]_[timestamp].mp4
     
     # Step 3: Upscale (NEW!)
-    'upscale': True,  # Batch GAN upscaling with interactive source selection
+    'upscale': False,  # Batch GAN upscaling with interactive source selection
     
     # Future processors (disabled for now)
     # 'color_grade': False,
