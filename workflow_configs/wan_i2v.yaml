@@ -61,6 +61,12 @@ parameters:
     type: int
     param_name: seed
 
+  blocks_to_swap:
+    node_id: 39
+    type: int
+    param_name: blocks_to_swap
+    description: "WanVideo Block Swap - liczba bloków do swapowania (20=domyślne, 35=1024x1024)"
+
   frame_rate:
     node_id: 60
     type: int

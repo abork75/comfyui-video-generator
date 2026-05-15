@@ -236,6 +236,7 @@ def build_config_from_globals(global_vars):
         'DEFAULT_SEED': 'default_seed',
         'DEFAULT_POSITIVE_PROMPT': 'default_positive_prompt',
         'DEFAULT_NEGATIVE_PROMPT': 'default_negative_prompt',
+        'DEFAULT_BLOCKS_TO_SWAP': 'default_blocks_to_swap',
         
         # Resolution
         'MIN_WIDTH': 'min_width',

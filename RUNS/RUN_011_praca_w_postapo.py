@@ -96,7 +96,7 @@ FLOW_FULL = [
     {
         "file": "15.51. bedroom_2.png",
         "backend": "linux",
-        "duration": 2,
+        "duration": 5,
         "pos": "Camera slowly and smoothly zooms in from a medium shot to a close-up on the woman's face while she is sitting seductively on the bed. The final framing clearly shows her breasts at the top, belly in the center, and upper thighs at the bottom. Slow continuous zoom-in, elegant and sensual movement, cinematic lighting, intimate atmosphere, 5 seconds, high detail, photorealistic, woman slighlty moves her head smiles a little, move her hand and finger.",
         "neg": """camera shake, shaky cam, jitter, stuttering, sudden movements, fast motion, quick pan, rapid zoom, jerky movement, 
 woman moving, breathing, blinking, hair moving, body twitching, leg movement, arm movement, 
@@ -131,7 +131,7 @@ unnatural camera movement, orbiting too quickly, spinning camera""",
     {
         "chain": [
             {
-                "duration": 2, 
+                "duration": 5, 
                 "pos": "Camera slowly and smoothly zooms in from a medium shot to a close-up on the woman's face while she is sitting seductively on the bed. The final framing clearly shows her breasts at the top, belly in the center, and upper thighs at the bottom. Slow continuous zoom-in, elegant and sensual movement, cinematic lighting, intimate atmosphere, 5 seconds, high detail, photorealistic, woman slighlty moves her head smiles a little, move her hand and finger.",
                 "neg": """camera shake, shaky cam, jitter, stuttering, sudden movements, fast motion, quick pan, rapid zoom, jerky movement, 
 woman moving, breathing, blinking, hair moving, body twitching, leg movement, arm movement, 
@@ -141,8 +141,9 @@ text, watermark, logo, overlay,
 overexposed, underexposed, wrong lighting, warm colors, 
 multiple angles, split screen, changing camera angle too fast, 
 unnatural camera movement, orbiting too quickly, spinning camera""",
-                "width": 460,
-                "height": 460,
+                "width": 1024,
+                "height": 1024,
+                "blocks_to_swap": 35,
             },
             # {
                 # "duration": 2, 
@@ -375,6 +376,7 @@ DEFAULT_FPS = 16
 DEFAULT_STEPS = 6
 DEFAULT_CFG = 2.0
 DEFAULT_SEED = None
+DEFAULT_BLOCKS_TO_SWAP = 20
 
 DEFAULT_POSITIVE_PROMPT = "smooth motion, high quality"
 DEFAULT_NEGATIVE_PROMPT = "blurry, distorted, artifacts"

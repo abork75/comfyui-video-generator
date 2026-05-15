@@ -256,6 +256,9 @@ class LinuxBackend(BaseBackend):
             runner.set_parameter('cfg_start', params['cfg'])
             runner.set_parameter('cfg_end', params['cfg'])
 
+        if 'blocks_to_swap' in params:
+            runner.set_parameter('blocks_to_swap', params['blocks_to_swap'])
+
     def _set_seed(self, seed=None):
         """Ustawia unikalny seed (zapobiega cache ComfyUI)"""
         import random

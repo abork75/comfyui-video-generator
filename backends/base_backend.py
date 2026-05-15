@@ -130,17 +130,17 @@ class BaseBackend(ABC):
         """Get backend name"""
         return self.__class__.__name__.replace('Backend', '').lower()
         
-    def generate_transition(self, start_frame, end_frame, output_path, 
+    def generate_transition(self, start_frame, end_frame, output_path,
                       duration, fps, steps, cfg, seed,
                       positive_prompt, negative_prompt,
-                      width, height):
+                      width, height, blocks_to_swap=None):
         """
         High-level wrapper for transition generation
-        
+
         This method wraps the lower-level interface for compatibility
         with batch_transitions.py orchestrator:
             prepare_inputs() → execute() → cleanup()
-        
+
         Args:
             start_frame: Path to start frame image
             end_frame: Path to end frame image (or None for I2V mode)
@@ -154,26 +154,27 @@ class BaseBackend(ABC):
             negative_prompt: Negative prompt
             width: Video width
             height: Video height
-        
+            blocks_to_swap: WanVideo Block Swap count (None = workflow default)
+
         Returns:
             bool: True if successful, False otherwise
         """
-        
+
         from pathlib import Path
-        
+
         try:
             # ============================================================
             # DETECT MODE: I2V (chain) vs V2V (normal)
             # ============================================================
-            
+
             is_i2v_mode = end_frame is None
-            
+
             # Build pair dict (matches old interface)
             pair = {
                 'start_frame': Path(start_frame),
                 'end_frame': Path(end_frame) if end_frame is not None else None,  # ✅ Allow None
             }
-            
+
             # Build params dict (matches old interface)
             params = {
                 'output_path': Path(output_path),
@@ -189,6 +190,9 @@ class BaseBackend(ABC):
                 'length': calculate_optimal_frames(duration, fps),  # Total frames
                 'is_i2v_mode': is_i2v_mode,  # ✅ Flag for subclasses
             }
+
+            if blocks_to_swap is not None:
+                params['blocks_to_swap'] = blocks_to_swap
             
             # Use existing interface (implemented by subclasses)
             inputs = self.prepare_inputs(pair, workflow=None)
