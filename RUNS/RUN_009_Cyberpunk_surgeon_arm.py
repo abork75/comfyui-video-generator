@@ -30,7 +30,7 @@ from batch_transitions import run_batch_generation
 # PROJECT CONFIG
 # ============================================================
 
-PROJECT_FOLDER = r"C:\Users\abork\AppData\Local\CapCut\Videos\muszelka_pliki\EM\zamtuz\przyklad_kary"
+PROJECT_FOLDER = r"C:\Users\abork\AppData\Local\CapCut\Videos\cyberpunk\stol_operacyjny\produkcja\FLOW"
 
 # ============================================================
 # FLOW - Select test or full production
@@ -44,16 +44,16 @@ FLOW_TEST = [
     # ============================================================
     
      {
-        "file": "Start1_przyklad.mp4",
-        "backend": "local",
+        "file": "05.05. ZOOM_1.png",
+        "backend": "linux",
         "duration": 2,
         "pos": "Smooth transition",
         "neg": "blurry, low quality, sudden movements, pose changes, moving background, waving windows, motion outside, cars moving, people moving, wind, ripples, dynamic scene, any movement",
     },
   
     {
-        "file": "Start2_przyklad.mp4",
-        "backend": "local",
+        "file": "05.09. ZOOM_2.png",
+        "backend": "linux",
         "duration": 2,
         "pos": "NONE",
         "neg": "blurry, low quality, sudden movements, pose changes, moving background, waving windows, motion outside, cars moving, people moving, wind, ripples, dynamic scene, any movement",
@@ -68,177 +68,58 @@ FLOW_FULL = [
     # SEQUENCE 1: Scena na jachcie
     # ============================================================
      {
-        "file": "Start1_przyklad.mp4",
-        "backend": "local",
-        "duration": 2,
-        "pos": "Smooth transition totaly naked woman approachesy",
+        "file": "05.05. ZOOM_1.png",
+        "backend": "linux",
+        "duration": 5,
+        "pos": "Smooth transition",
         "neg": "blurry, low quality, sudden movements, pose changes, moving background, waving windows, motion outside, cars moving, people moving, wind, ripples, dynamic scene, any movement",
     },
   
     {
-        "file": "Start2_przyklad.mp4",
-        "backend": "local",
-        "duration": 2,
+        "file": "05.09. ZOOM_2.png",
+        "backend": "linux",
+        "duration": 3,
         "pos": "NONE",
         "neg": "blurry, low quality, sudden movements, pose changes, moving background, waving windows, motion outside, cars moving, people moving, wind, ripples, dynamic scene, any movement",
     },
 
     {
-        "file": "01_przyklad.mp4",
-        "backend": "local",
-        "duration": 2,
-        "neg": "blurry, low quality, sudden movements, pose changes, moving background, waving windows, motion outside, cars moving, people moving, wind, ripples, dynamic scene, any movement",
-    },
-
-    {
-        "file": "03_przyklad.mp4",
-        "backend": "local",
-        "duration": 2,
-        "neg": "blurry, low quality, sudden movements, pose changes, moving background, waving windows, motion outside, cars moving, people moving, wind, ripples, dynamic scene, any movement",
-    },
-
-    {
-        "file": "02_przyklad.mp4",
-        "backend": "local",
-        "duration": 2,
-        "neg": "blurry, low quality, sudden movements, pose changes, moving background, waving windows, motion outside, cars moving, people moving, wind, ripples, dynamic scene, any movement",
-    },
-
-    {"break": True},
-
-    {
-        "file": "05_przyklad.mp4",
-        "backend": "local",
-        "duration": 2,
-        "neg": "blurry, low quality, sudden movements, pose changes, moving background, waving windows, motion outside, cars moving, people moving, wind, ripples, dynamic scene, any movement",
-    },
-
-    {
-        "file": "06_przyklad.mp4",
-        "backend": "local",
-        "duration": 2,
-        "neg": "blurry, low quality, sudden movements, pose changes, moving background, waving windows, motion outside, cars moving, people moving, wind, ripples, dynamic scene, any movement",
-    },
-
-    {
-        "file": "07_przyklad.mp4",
-        "backend": "local",
-        "duration": 2,
-        "neg": "blurry, low quality, sudden movements, pose changes, moving background, waving windows, motion outside, cars moving, people moving, wind, ripples, dynamic scene, any movement",
-    },
-
-    {"break": True},
-
-    {
-        "file": "04_przyklad.mp4",
-        "backend": "local",
-        "duration": 2,
-        "neg": "blurry, low quality, sudden movements, pose changes, moving background, waving windows, motion outside, cars moving, people moving, wind, ripples, dynamic scene, any movement",
-    },
-
-
-    {
-        "file": "08_przyklad.mp4",
-        "backend": "local",
-        "duration": 2,
-        "neg": "blurry, low quality, sudden movements, pose changes, moving background, waving windows, motion outside, cars moving, people moving, wind, ripples, dynamic scene, any movement",
-    },
-
-    {
-        "file": "09_przyklad.mp4",
-        "backend": "local",
-        "duration": 2,
-        "neg": "blurry, low quality, sudden movements, pose changes, moving background, waving windows, motion outside, cars moving, people moving, wind, ripples, dynamic scene, any movement",
-    },
-
-    {
-        "file": "10_przyklad.mp4",
-        "backend": "local",
-        "duration": 2,
-        "neg": "blurry, low quality, sudden movements, pose changes, moving background, waving windows, motion outside, cars moving, people moving, wind, ripples, dynamic scene, any movement",
-    },
-
-    {
-        "file": "11_przyklad.mp4",
-        "backend": "local",
-        "duration": 2,
-        "neg": "blurry, low quality, sudden movements, pose changes, moving background, waving windows, motion outside, cars moving, people moving, wind, ripples, dynamic scene, any movement",
-    },
-
-    {
-        "file": "13_przyklad.mp4",
-        "backend": "local",
-        "duration": 2,
-        "neg": "blurry, low quality, sudden movements, pose changes, moving background, waving windows, motion outside, cars moving, people moving, wind, ripples, dynamic scene, any movement",
-    },
-
-    {
-        "file": "12_przyklad.mp4",
-        "backend": "local",
-        "duration": 2,
-        "neg": "blurry, low quality, sudden movements, pose changes, moving background, waving windows, motion outside, cars moving, people moving, wind, ripples, dynamic scene, any movement",
-    },
-
-    {"break": True},
-
-    {
-        "file": "14_przyklad.mp4",
-        "backend": "local",
-        "duration": 2,
-        "neg": "blurry, low quality, sudden movements, pose changes, moving background, waving windows, motion outside, cars moving, people moving, wind, ripples, dynamic scene, any movement",
-    },
-
-    {
-        "file": "15_przyklad.mp4",
-        "backend": "local",
-        "duration": 2,
-        "neg": "blurry, low quality, sudden movements, pose changes, moving background, waving windows, motion outside, cars moving, people moving, wind, ripples, dynamic scene, any movement",
-    },
-
-    {
-        "file": "16_przyklad.mp4",
-        "backend": "local",
-        "duration": 0.5,
-        "neg": "blurry, low quality, sudden movements, pose changes, moving background, waving windows, motion outside, cars moving, people moving, wind, ripples, dynamic scene, any movement",
-    },
-
-    {
-        "file": "17_przyklad.mp4",
-        "backend": "local",
-        "duration": 2,
-        "neg": "blurry, low quality, sudden movements, pose changes, moving background, waving windows, motion outside, cars moving, people moving, wind, ripples, dynamic scene, any movement",
-    },
-
-    {
-        "file": "END_przyklad.mp4",
-        "backend": "local",
-        "duration": 0,
-        "pos": "NOT GENERATAD BEFORE CHAIN",
-        "neg": "blurry, low quality, sudden movements, pose changes, moving background, waving windows, motion outside, cars moving, people moving, wind, ripples, dynamic scene, any movement",
-    },
-
-    {    
         "chain": [
             {
-                "duration": 5, 
-                "pos": "Woman sits still in that position"
+                "duration": 2, 
+                "pos": "Camera slowly turns around woman showing her spread legs"
+            },
+            {
+                "duration": 2, 
+                "pos": "zoom in woman's legs"
             },
         ],
-        "chain_prefix": "koniec",
-        "backend": "local",
+        "chain_prefix": "around_woman",
+        "backend": "linux",
         "fps": 16,
-        "steps": 20,  # ← Zwiększone z 15 (hi-res quality!)
-        "cfg": 5.0,   # ← Zwiększone z 4.0 (stronger guidance)
-        "neg": "static, frozen, no movement, distorted, walking towards camera, facing camera, approaching viewer, coming closer, teleporting, jumping, blurry, low quality",        
+        "steps": 6,  # ← Zwiększone z 15 (hi-res quality!)
+        "cfg": 2.0,   # ← Zwiększone z 4.0 (stronger guidance)
+        "neg": "static, frozen, no movement, distorted, walking towards camera, facing camera, approaching viewer, coming closer, teleporting, jumping, blurry, low quality",
+        
+        # ============================================================
+        # Optional: Transition to next (jeśli dodasz następny plik)
+        # ============================================================
+        # "transition_to_next": {
+        #     "duration": 4,
+        #     "steps": 20,
+        #     "pos": "woman gradually slows walking pace, steps decelerating smoothly, comes to gentle stop, feet settling into standing position, smooth continuous deceleration, natural halt"
+        # }
 
-        "transition_to_next": {
-            "duration": 4,
-            "steps": 20,
-            "pos": "Woman is slowly standing up"
-        }
-    
+    # {
+        # "file": "05.41 koniec.png",
+        # "backend": "local",
+        # "duration": 3,
+        # "pos": "dominant woman slowly turns 180 degrees with perfect elegant posture, chin high, dignified walk away from camera into dark shadows, slow confident swaying steps, glossy latex reflecting red and green lights. Static camera, shallow depth of field, focus stays on empty space where she stood and the motionless submissive woman facing wall.",
+        # "neg": "blurry, low quality, sudden movements, pose changes, moving background, waving windows, motion outside, cars moving, people moving, wind, ripples, dynamic scene, any movement",
     },
-    {"file": "END2_przyklad.mp4"}
+
+    # {"file": "05.41 koniec_2.png"},
+  
 
 ]
 
@@ -268,16 +149,16 @@ MIN_HEIGHT = 448
 MAX_WIDTH = 336
 MAX_HEIGHT = 448
 DEFAULT_RESOLUTION = (336, 448)
-FORCE_RESOLUTION = (464, 688)  # None for auto
+FORCE_RESOLUTION = (544, 960)  # None for auto
 
 # ============================================================
 # GENERATION SETTINGS
 # ============================================================
 
-DEFAULT_DURATION = 4
+DEFAULT_DURATION = 2
 DEFAULT_FPS = 16
-DEFAULT_STEPS = 20
-DEFAULT_CFG = 5.0
+DEFAULT_STEPS = 6
+DEFAULT_CFG = 2.0
 DEFAULT_SEED = None
 
 DEFAULT_POSITIVE_PROMPT = "smooth motion, high quality"
@@ -295,13 +176,13 @@ ASPECT_RATIO_STRATEGY = "most_common"
 
 # Cloud (Comfy.icu)
 COMFY_ICU_WORKFLOW_ID = "fv9kYUtmjLzC5I8tRR49y"
-WORKFLOW_TEMPLATE_PATH = r"D:\streamlit_project\comfyui_integration\workflows\workflow-api-fv9kYUtmjLzC5I8tRR49y.json"
+WORKFLOW_TEMPLATE_PATH = r"D:\streamlit_project\comfyui_integration\workflows\_IMAGE2VIDEO_FULL_wan2.2.json"
 
 # Local (ComfyUI)
-CONFIG_PATH = r"D:\streamlit_project\comfyui_integration\workflow_configs\wan_i2v_config.yaml"
+CONFIG_PATH = r"D:\streamlit_project\comfyui_integration\workflow_configs\wan_i2v.yaml"
 WORKFLOWS_PATH = r"D:\streamlit_project\comfyui_integration\workflows"
-COMFYUI_OUTPUT_FOLDER = r"D:\ComfyUI\output\video"
-
+COMFYUI_OUTPUT_FOLDER = r"D:\ComfyUI\output"
+API_URL = "http://127.0.0.1:8188"
 # ============================================================
 # POSTPROCESSING CONFIG
 # Sequential execution: numbered_flow → full_concat → upscale
@@ -309,7 +190,7 @@ COMFYUI_OUTPUT_FOLDER = r"D:\ComfyUI\output\video"
 
 POSTPROCESSING = {
     # Master switch
-    'enabled': True,  # ← Set to True to enable postprocessing
+    'enabled': False,  # ← Set to True to enable postprocessing
     
     # === Individual processors (executed in order) ===
     

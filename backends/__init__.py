@@ -6,5 +6,6 @@ Backends package
 from .base_backend import BaseBackend
 from .cloud_backend import CloudBackend
 from .local_backend import LocalBackend
+from .linux_backend import LinuxBackend
 
-__all__ = ['BaseBackend', 'CloudBackend', 'LocalBackend']
+__all__ = ['BaseBackend', 'CloudBackend', 'LocalBackend', 'LinuxBackend']

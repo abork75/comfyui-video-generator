@@ -1,0 +1,270 @@
+{
+  "97": {
+    "inputs": {
+      "image": "model_scianacorr2.png"
+    },
+    "class_type": "LoadImage",
+    "_meta": {
+      "title": "Start Frame Image"
+    }
+  },
+  "108": {
+    "inputs": {
+      "filename_prefix": "video/Wan2.2_image_to_video",
+      "format": "auto",
+      "codec": "auto",
+      "video-preview": "",
+      "video": [
+        "130",
+        0
+      ]
+    },
+    "class_type": "SaveVideo",
+    "_meta": {
+      "title": "Save Video"
+    }
+  },
+  "122": {
+    "inputs": {
+      "clip_name": "umt5_xxl_fp8_e4m3fn_scaled.safetensors",
+      "type": "wan",
+      "device": "default"
+    },
+    "class_type": "CLIPLoader",
+    "_meta": {
+      "title": "Load CLIP"
+    }
+  },
+  "123": {
+    "inputs": {
+      "vae_name": "wan_2.1_vae.safetensors"
+    },
+    "class_type": "VAELoader",
+    "_meta": {
+      "title": "Load VAE"
+    }
+  },
+  "124": {
+    "inputs": {
+      "unet_name": "wan2.2_i2v_high_noise_14B_fp8_scaled.safetensors",
+      "weight_dtype": "default"
+    },
+    "class_type": "UNETLoader",
+    "_meta": {
+      "title": "Load Diffusion Model"
+    }
+  },
+  "125": {
+    "inputs": {
+      "unet_name": "wan2.2_i2v_low_noise_14B_fp8_scaled.safetensors",
+      "weight_dtype": "default"
+    },
+    "class_type": "UNETLoader",
+    "_meta": {
+      "title": "Load Diffusion Model"
+    }
+  },
+  "126": {
+    "inputs": {
+      "shift": 4.5,
+      "model": [
+        "128",
+        0
+      ]
+    },
+    "class_type": "ModelSamplingSD3",
+    "_meta": {
+      "title": "ModelSamplingSD3"
+    }
+  },
+  "127": {
+    "inputs": {
+      "lora_name": "wan2.2_i2v_lightx2v_4steps_lora_v1_high_noise.safetensors",
+      "strength_model": 1.0000000000000002,
+      "model": [
+        "124",
+        0
+      ]
+    },
+    "class_type": "LoraLoaderModelOnly",
+    "_meta": {
+      "title": "Load LoRA"
+    }
+  },
+  "128": {
+    "inputs": {
+      "lora_name": "wan2.2_i2v_lightx2v_4steps_lora_v1_low_noise.safetensors",
+      "strength_model": 1.0000000000000002,
+      "model": [
+        "125",
+        0
+      ]
+    },
+    "class_type": "LoraLoaderModelOnly",
+    "_meta": {
+      "title": "Load LoRA"
+    }
+  },
+  "129": {
+    "inputs": {
+      "shift": 3,
+      "model": [
+        "127",
+        0
+      ]
+    },
+    "class_type": "ModelSamplingSD3",
+    "_meta": {
+      "title": "ModelSamplingSD3"
+    }
+  },
+  "130": {
+    "inputs": {
+      "fps": 24,
+      "images": [
+        "131",
+        0
+      ]
+    },
+    "class_type": "CreateVideo",
+    "_meta": {
+      "title": "Create Video"
+    }
+  },
+  "131": {
+    "inputs": {
+      "samples": [
+        "133",
+        0
+      ],
+      "vae": [
+        "123",
+        0
+      ]
+    },
+    "class_type": "VAEDecode",
+    "_meta": {
+      "title": "VAE Decode"
+    }
+  },
+  "132": {
+    "inputs": {
+      "add_noise": "enable",
+      "noise_seed": 905851879586682,
+      "steps": 16,
+      "cfg": 1.9,
+      "sampler_name": "euler",
+      "scheduler": "simple",
+      "start_at_step": 0,
+      "end_at_step": 10,
+      "return_with_leftover_noise": "enable",
+      "model": [
+        "129",
+        0
+      ],
+      "positive": [
+        "136",
+        0
+      ],
+      "negative": [
+        "136",
+        1
+      ],
+      "latent_image": [
+        "136",
+        2
+      ]
+    },
+    "class_type": "KSamplerAdvanced",
+    "_meta": {
+      "title": "KSampler (Advanced)"
+    }
+  },
+  "133": {
+    "inputs": {
+      "add_noise": "disable",
+      "noise_seed": 0,
+      "steps": 16,
+      "cfg": 1.2,
+      "sampler_name": "euler",
+      "scheduler": "simple",
+      "start_at_step": 10,
+      "end_at_step": 16,
+      "return_with_leftover_noise": "disable",
+      "model": [
+        "126",
+        0
+      ],
+      "positive": [
+        "136",
+        0
+      ],
+      "negative": [
+        "136",
+        1
+      ],
+      "latent_image": [
+        "132",
+        0
+      ]
+    },
+    "class_type": "KSamplerAdvanced",
+    "_meta": {
+      "title": "KSampler (Advanced)"
+    }
+  },
+  "134": {
+    "inputs": {
+      "text": "A dominant woman in tight black latex dress stands behind, holding a very thin long rattan cane, preparing to punish. Another fully nude woman stands facing the plain dark wall, hands flat against it at shoulder height, legs slightly apart, bare bottom presented and arched outward.\n\nSequence over 3 seconds, fast dynamic single whipping action, no slow motion:\n\n(0.0s–0.7s: dominant woman pulls arm far back slowly and deliberately, cane raised high behind her head, very thin cane clearly visible, precise aiming, tension in muscles)\n\n(0.7s–1.1s: sudden violent acceleration, arm swings forward in sharp downward arc, extremely thin cane blurs only from high speed, no thickening, no volume increase during motion)\n\n(1.1s–1.5s: exact moment of hard impact – very thin cane strikes across bare buttocks with full force, flesh compresses and ripples realistically, no glowing red, no color shift, no unnatural shine, subtle fresh mark appears without redness glow)\n\n(1.5s–3.0s: cane rebounds quickly upward in follow-through, remains consistently thin throughout entire motion, punished woman flinches sharply forward against wall, body tenses, thighs tremble slightly)\n\nextremely thin rattan cane remains thin and consistent thickness in every frame, no thickening, no swelling from motion blur, natural skin tones preserved, no red glow, no shining red buttocks, no over-saturated skin, no color bleeding, no artificial highlight on impact area, realistic flesh deformation only, subtle welt without glowing, high velocity whip, strong directional motion blur only on cane and arm, photorealistic anatomy, detailed sweat and muscle strain, dramatic side lighting, raw intense \nsharp sudden flinch, strong body jolt on impact, immediate tense reaction\nBDSM corporal punishment atmosphere, cinematic, ultra detailed, 8k",
+      "clip": [
+        "122",
+        0
+      ]
+    },
+    "class_type": "CLIPTextEncode",
+    "_meta": {
+      "title": "CLIP Text Encode (Positive Prompt)"
+    }
+  },
+  "135": {
+    "inputs": {
+      "text": "色调艳丽，过曝，静态，细节模糊不清，字幕，风格，作品，画作，画面，静止，整体发灰，最差质量，低质量，JPEG压缩残留，丑陋的，残缺的，多余的手指，画得不好的手部，画得不好的脸部，畸形的，毁容的，形态畸形的肢体，手指融合，静止不动的画面，杂乱的背景，三条腿，背景人很多，倒着走 皮肤发红发光, 臀部不自然发红, 打击后红色辉光, 皮肤颜色突变, 过度饱和红色, 发光的鞭痕, 人工高光在臀部, 红色溢出, 不自然的皮肤光泽, 冲击区发亮, 色调偏移, 红色bloom, 皮肤变色, 打击后红色泛光, 虚假红晕, 过曝红色区域, 色差畸变, 不真实皮肤着色, 高光过度在屁股, 红色闪光, 卡通式红痕",
+      "clip": [
+        "122",
+        0
+      ]
+    },
+    "class_type": "CLIPTextEncode",
+    "_meta": {
+      "title": "CLIP Text Encode (Negative Prompt)"
+    }
+  },
+  "136": {
+    "inputs": {
+      "width": 960,
+      "height": 720,
+      "length": 73,
+      "batch_size": 1,
+      "positive": [
+        "134",
+        0
+      ],
+      "negative": [
+        "135",
+        0
+      ],
+      "vae": [
+        "123",
+        0
+      ],
+      "start_image": [
+        "97",
+        0
+      ]
+    },
+    "class_type": "WanImageToVideo",
+    "_meta": {
+      "title": "WanImageToVideo"
+    }
+  }
+}

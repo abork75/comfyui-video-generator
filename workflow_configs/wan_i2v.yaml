@@ -1,0 +1,115 @@
+workflow_name: "IMAGE2VIDEO FULL wan2.2"
+workflow_file: "_IMAGE2VIDEO_FULL_wan2.2.json"
+description: "WanVideo 2.2 I2V - dual sampler (high+low noise), RIFE 2x interpolation, Color Match"
+
+parameters:
+
+  start_image:
+    node_id: 67
+    type: image
+    param_name: image
+    description: "Start frame - LoadImage node"
+
+  end_image:
+    node_id: 98
+    type: image
+    param_name: image
+    description: "End frame LoadImage (opcjonalny - tylko tryb I2V2I)"
+
+  positive_prompt:
+    node_id: 16
+    type: string
+    param_name: positive_prompt
+
+  negative_prompt:
+    node_id: 16
+    type: string
+    param_name: negative_prompt
+
+  width:
+    node_id: 68
+    type: int
+    param_name: width
+
+  height:
+    node_id: 68
+    type: int
+    param_name: height
+
+  num_frames:
+    node_id: 89
+    type: int
+    param_name: num_frames
+
+  steps:
+    node_id: 94
+    type: int
+    param_name: value
+
+  cfg_start:
+    node_id: 95
+    type: float
+    param_name: cfg_scale_start
+
+  cfg_end:
+    node_id: 95
+    type: float
+    param_name: cfg_scale_end
+
+  seed:
+    node_id: 109
+    type: int
+    param_name: seed
+
+  frame_rate:
+    node_id: 60
+    type: int
+    param_name: frame_rate
+
+  filename_prefix:
+    node_id: 60
+    type: string
+    param_name: filename_prefix
+
+constraints:
+  width:
+    min: 256
+    max: 1280
+    divisible_by: 32
+  height:
+    min: 256
+    max: 1280
+    divisible_by: 32
+  num_frames:
+    min: 9
+    max: 161
+  steps:
+    min: 1
+    max: 50
+  frame_rate:
+    min: 8
+    max: 30
+
+defaults:
+  width: 672
+  height: 992
+  num_frames: 81
+  steps: 6
+  cfg_start: 2.0
+  cfg_end: 2.0
+  frame_rate: 16
+  filename_prefix: "Wan22_I2V/vid"
+  positive_prompt: ""
+  negative_prompt: "色调艳丽，过曝，静态，细节模糊不清，字幕，风格，作品，画作，画面，静止，整体发灰，最差质量，低质量"
+
+# WORKFLOW NOTES:
+# Dual sampler: node 27 (HIGH noise model 22) → node 90 (LOW noise model 71)
+# Split step: node 91 INTConstant = 3 (first 3 steps = high, rest = low)
+# Steps shared: node 94 INTConstant feeds both samplers
+# RIFE VFI (node 106): 2x frame interpolation before output
+# LoRA nodes 56+97: lightx2v_I2V_14B_480p_cfg_step_distill_rank64_bf16
+# Color Match (node 112): image_ref ← Any Switch (node 116)
+#   Any Switch any_01 ← node 98 (end frame LoadImage)  → I2V2I mode
+#   Any Switch any_02 ← node 67 (start frame LoadImage) → I2V mode (fallback)
+# I2V mode:   usuń any_01 z node 116 → Switch używa any_02 (start frame)
+# I2V2I mode: any_01 wskazuje na node 98 (end frame) → Switch używa any_01

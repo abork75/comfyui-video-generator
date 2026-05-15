@@ -164,6 +164,10 @@ FLOW_FULL = [
                 "duration": 5, 
                 "pos": "Woman and man lying on back next to each other on bed. She slowly gets on top of him, lies fully on his body, intense eye contact, then deep passionate kissing. Intimate, sensual, close-up on faces, cinematic, warm evening light, 5 sec."
             },
+          {
+                "duration": 5, 
+                "pos": "Woman and man lying on back next to each other on bed. She slowly gets on top of him, lies fully on his body, intense eye contact, then deep passionate kissing. Intimate, sensual, close-up on faces, cinematic, warm evening light, 5 sec."
+            },            
         ],
         "chain_prefix": "girl_leaves",
         "backend": "local",
