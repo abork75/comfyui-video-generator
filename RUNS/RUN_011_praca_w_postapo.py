@@ -96,7 +96,7 @@ FLOW_FULL = [
     {
         "file": "15.51. bedroom_2.png",
         "backend": "linux",
-        "duration": 5,
+        "duration": 2,
         "pos": "Camera slowly and smoothly zooms in from a medium shot to a close-up on the woman's face while she is sitting seductively on the bed. The final framing clearly shows her breasts at the top, belly in the center, and upper thighs at the bottom. Slow continuous zoom-in, elegant and sensual movement, cinematic lighting, intimate atmosphere, 5 seconds, high detail, photorealistic, woman slighlty moves her head smiles a little, move her hand and finger.",
         "neg": """camera shake, shaky cam, jitter, stuttering, sudden movements, fast motion, quick pan, rapid zoom, jerky movement, 
 woman moving, breathing, blinking, hair moving, body twitching, leg movement, arm movement, 
@@ -106,12 +106,14 @@ text, watermark, logo, overlay,
 overexposed, underexposed, wrong lighting, warm colors, 
 multiple angles, split screen, changing camera angle too fast, 
 unnatural camera movement, orbiting too quickly, spinning camera""",
+        "width": 512,
+        "height": 512,
     },
 
     {
         "file": "15.53. bedroom_2zoom.png",
         "backend": "linux",
-        "duration": 5,
+        "duration": 0,
         "pos": "NONE",
         "neg": "bra disappearing, clothes morphing, teleporting bra, blurry hands, unnatural motion, blurry, low quality, sudden movements, pose changes, moving background, waving windows, motion outside, cars moving, people moving, wind, ripples, dynamic scene, any movement",
     },
@@ -129,7 +131,7 @@ unnatural camera movement, orbiting too quickly, spinning camera""",
     {
         "chain": [
             {
-                "duration": 5, 
+                "duration": 2, 
                 "pos": "Camera slowly and smoothly zooms in from a medium shot to a close-up on the woman's face while she is sitting seductively on the bed. The final framing clearly shows her breasts at the top, belly in the center, and upper thighs at the bottom. Slow continuous zoom-in, elegant and sensual movement, cinematic lighting, intimate atmosphere, 5 seconds, high detail, photorealistic, woman slighlty moves her head smiles a little, move her hand and finger.",
                 "neg": """camera shake, shaky cam, jitter, stuttering, sudden movements, fast motion, quick pan, rapid zoom, jerky movement, 
 woman moving, breathing, blinking, hair moving, body twitching, leg movement, arm movement, 
@@ -138,14 +140,16 @@ low quality, blurry motion, motion blur, artifact, glitch, flickering,
 text, watermark, logo, overlay, 
 overexposed, underexposed, wrong lighting, warm colors, 
 multiple angles, split screen, changing camera angle too fast, 
-unnatural camera movement, orbiting too quickly, spinning camera"""
+unnatural camera movement, orbiting too quickly, spinning camera""",
+                "width": 460,
+                "height": 460,
             },
             # {
                 # "duration": 2, 
                 # "pos": "Woman continue walking down the street",
             # },
         ],
-        "chain_prefix": "around_woman",
+        "chain_prefix": "zoom_in",
         "backend": "linux",
         "fps": 16,
         "steps": 6,  # ← Zwiększone z 15 (hi-res quality!)
@@ -360,7 +364,7 @@ MAX_WIDTH = 336
 MAX_HEIGHT = 448
 DEFAULT_RESOLUTION = (336, 448)
 # FORCE_RESOLUTION = (544, 960)  # None for auto
-FORCE_RESOLUTION = (512, 512)  # None for auto
+FORCE_RESOLUTION = (768, 768)  # None for auto
 
 # ============================================================
 # GENERATION SETTINGS
