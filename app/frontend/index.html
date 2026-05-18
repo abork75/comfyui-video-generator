@@ -37,7 +37,7 @@
             <span class="text-2xl">🎬</span>
             <div>
                 <h1 class="font-bold text-base leading-tight">ComfyUI Video Generator</h1>
-                <p class="text-xs text-gray-500 leading-tight">v0.4 — Etap 4</p>
+                <p class="text-xs text-gray-500 leading-tight">v0.4 — Etap 4b</p>
             </div>
         </div>
         <div class="flex items-center gap-3">
@@ -347,6 +347,26 @@
 
             </div>
 
+            <!-- ─── INPUT NEEDED BANNER ──────────────── -->
+            <div x-show="awaitingInput" x-cloak
+                 class="flex-shrink-0 border-t-2 border-yellow-500 bg-yellow-950 px-5 py-3 flex items-center gap-4">
+                <span class="text-yellow-400 text-lg flex-shrink-0">❓</span>
+                <div class="flex-1 min-w-0">
+                    <p class="text-xs text-yellow-300 font-semibold mb-0.5">Skrypt czeka na potwierdzenie:</p>
+                    <p class="text-sm text-yellow-100 font-mono truncate" x-text="inputPrompt"></p>
+                </div>
+                <div class="flex gap-2 flex-shrink-0">
+                    <button @click="answerInput('y')"
+                            class="bg-green-700 hover:bg-green-600 text-white text-sm font-bold px-5 py-2 rounded-lg transition">
+                        ✅ Tak (Y)
+                    </button>
+                    <button @click="answerInput('n')"
+                            class="bg-red-800 hover:bg-red-700 text-white text-sm font-bold px-5 py-2 rounded-lg transition">
+                        ❌ Nie (N)
+                    </button>
+                </div>
+            </div>
+
             <!-- ─── LOG PANEL ─────────────────────────── -->
             <div class="flex-shrink-0 border-t border-gray-700" style="height:160px;background:#030712">
                 <div class="px-4 py-1.5 border-b border-gray-800 flex items-center justify-between">
@@ -397,6 +417,8 @@
             wsConnected: false,
             genStatus: 'idle',   // idle | running | finished | failed | stopped
             genFile: null,
+            awaitingInput: false,
+            inputPrompt: '',
 
             // ─── Computed ──────────────────────────
             get isRunning() {
@@ -460,6 +482,15 @@
                     if (msg.type === 'status') {
                         this.genStatus = msg.status || 'idle';
                         if (msg.file) this.genFile = msg.file;
+                        if (typeof msg.awaiting_input === 'boolean') {
+                            this.awaitingInput = msg.awaiting_input;
+                        }
+                        return;
+                    }
+
+                    if (msg.type === 'input_needed') {
+                        this.awaitingInput = true;
+                        this.inputPrompt = msg.prompt || '';
                         return;
                     }
 
@@ -493,6 +524,24 @@
                     if (!res.ok) {
                         const err = await res.json();
                         this.logLine('sys', `❌ ${err.detail || 'Błąd stopu'}`);
+                    }
+                } catch(e) {
+                    this.logLine('sys', `❌ Błąd: ${e.message}`);
+                }
+            },
+
+            async answerInput(answer) {
+                this.awaitingInput = false;
+                this.logLine('sys', `→ Wysyłam odpowiedź: ${answer.toUpperCase()}`);
+                try {
+                    const res = await fetch('/api/generate/stdin', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ text: answer }),
+                    });
+                    if (!res.ok) {
+                        const err = await res.json();
+                        this.logLine('sys', `❌ ${err.detail || 'Błąd wysyłania odpowiedzi'}`);
                     }
                 } catch(e) {
                     this.logLine('sys', `❌ Błąd: ${e.message}`);
