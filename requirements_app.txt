@@ -1,0 +1,11 @@
+# ============================================================
+# Zależności aplikacji webowej (FastAPI)
+# Instalacja: pip install -r requirements_app.txt
+# ============================================================
+
+fastapi>=0.110.0
+uvicorn[standard]>=0.29.0
+python-multipart>=0.0.9
+itsdangerous>=2.1.2
+pydantic-settings>=2.2.0
+python-dotenv>=1.0.0
