@@ -2,32 +2,31 @@
 """
 ProcessService — singleton managing one generation subprocess at a time.
 
-Streams stdout/stderr line-by-line to subscribed asyncio Queues
-(one per WebSocket client).
+Uses subprocess.Popen + threads (NOT asyncio subprocess) to work correctly
+on Windows where asyncio.create_subprocess_exec requires ProactorEventLoop,
+which is incompatible with uvicorn's default SelectorEventLoop.
 
-Handles interactive input() prompts by:
-  1. Detecting known prompt strings in stdout
-  2. Broadcasting {"type": "input_needed", "prompt": "..."} to all WS clients
-  3. Waiting for provide_input(text) to be called (via POST /api/generate/stdin)
-  4. Writing the user's answer to subprocess stdin
+Streams stdout/stderr to subscribed asyncio.Queues (one per WebSocket client).
+Handles interactive input() prompts via threading.Event synchronisation.
 """
 
 import os
 import re
+import sys
 import asyncio
+import threading
+import traceback
+import subprocess
 from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).parent.parent.parent
+PYTHON_EXE   = sys.executable   # same .streamlit_env that runs FastAPI
 
-# Same Python interpreter that runs the FastAPI app (.streamlit_env)
-import sys
-PYTHON_EXE = sys.executable
-
-# Strip ANSI color codes from output before processing/displaying
+# Strip ANSI colour codes before sending to the browser
 ANSI_ESCAPE = re.compile(r"\x1b\[[0-9;]*[mK]")
 
-# Prompt strings that require user confirmation.
-# Matched against the ANSI-stripped partial stdout buffer (no trailing newline).
+# Partial stdout patterns that indicate an interactive input() prompt.
+# Matched against the ANSI-stripped content of the read buffer (no trailing newline).
 PROMPT_PATTERNS = [
     "Proceed with generation? [Y/n]:",
     "Continue with postprocessing? (yes/no):",
@@ -35,22 +34,19 @@ PROMPT_PATTERNS = [
 
 
 class ProcessService:
-    def __init__(self):
-        self._proc: asyncio.subprocess.Process | None = None
-        self._task: asyncio.Task | None = None
-        self._status: str = "idle"
+    def __init__(self) -> None:
+        self._proc:         subprocess.Popen | None = None
+        self._task:         asyncio.Task     | None = None
+        self._status:       str  = "idle"
         self._current_file: str | None = None
-        self._log_queues: set[asyncio.Queue] = set()
+        self._log_queues:   set[asyncio.Queue] = set()
 
-        # Interactive stdin support
-        self._input_event: asyncio.Event | None = None
+        # Thread-safe input synchronisation
+        self._input_event:   threading.Event = threading.Event()
         self._pending_input: str | None = None
+        self._awaiting:      bool = False
 
-    # ── Public properties ────────────────────────────────────────────
-
-    @property
-    def status(self) -> str:
-        return self._status
+    # ── Properties ───────────────────────────────────────────────────
 
     @property
     def is_running(self) -> bool:
@@ -58,13 +54,9 @@ class ProcessService:
 
     @property
     def awaiting_input(self) -> bool:
-        """True when subprocess is blocked waiting for user input."""
-        return (
-            self._input_event is not None
-            and not self._input_event.is_set()
-        )
+        return self._awaiting
 
-    # ── Pub/sub for WebSocket clients ────────────────────────────────
+    # ── Pub/sub ──────────────────────────────────────────────────────
 
     def subscribe(self) -> asyncio.Queue:
         q: asyncio.Queue = asyncio.Queue(maxsize=2000)
@@ -75,13 +67,14 @@ class ProcessService:
         self._log_queues.discard(q)
 
     def _push(self, msg: dict) -> None:
+        """Thread-safe: put message into every subscribed queue."""
         for q in list(self._log_queues):
             try:
                 q.put_nowait(msg)
             except asyncio.QueueFull:
                 pass
 
-    # ── Control ──────────────────────────────────────────────────────
+    # ── Public control API (called from async context) ───────────────
 
     async def start(self, filename: str) -> dict:
         if self.is_running:
@@ -93,14 +86,17 @@ class ProcessService:
         if not filename.startswith("RUN_") or not filename.endswith(".py"):
             return {"ok": False, "error": f"Nieprawidłowa nazwa pliku: {filename}"}
 
-        self._status = "running"
+        self._status       = "running"
         self._current_file = filename
-        self._push({"type": "status", "status": "running", "file": filename,
-                    "awaiting_input": False})
+        self._push({"type": "status", "status": "running",
+                    "file": filename, "awaiting_input": False})
         self._push({"type": "log", "stream": "sys",
                     "text": f"▶ Uruchamiam: {filename}"})
+        self._push({"type": "log", "stream": "sys",
+                    "text": f"  Python: {PYTHON_EXE}"})
 
-        self._task = asyncio.create_task(self._run(run_path))
+        loop = asyncio.get_running_loop()
+        self._task = asyncio.create_task(self._run_in_thread(run_path, loop))
         return {"ok": True}
 
     async def stop(self) -> dict:
@@ -110,22 +106,21 @@ class ProcessService:
         self._status = "stopped"
         self._push({"type": "log", "stream": "sys", "text": "⏹ Zatrzymuję proces..."})
 
-        # If process is waiting for input, unblock it so the task can finish
-        if self.awaiting_input and self._input_event:
+        # Unblock any waiting input prompt so the thread can exit cleanly
+        if self._awaiting:
             self._pending_input = "n"
             self._input_event.set()
 
         try:
             self._proc.terminate()
-            await asyncio.wait_for(self._proc.wait(), timeout=6.0)
-        except asyncio.TimeoutError:
-            self._proc.kill()
+        except Exception:
+            pass
 
         return {"ok": True}
 
     async def provide_input(self, text: str) -> dict:
-        """Called by POST /api/generate/stdin — unblocks the waiting input() prompt."""
-        if not self.awaiting_input or self._input_event is None:
+        """Called by POST /api/generate/stdin — unblocks the waiting prompt."""
+        if not self._awaiting:
             return {"ok": False, "error": "Brak oczekującego pytania."}
         self._pending_input = text.strip() or "y"
         self._input_event.set()
@@ -133,140 +128,161 @@ class ProcessService:
 
     def get_status(self) -> dict:
         return {
-            "status": self._status,
-            "is_running": self.is_running,
-            "current_file": self._current_file,
-            "awaiting_input": self.awaiting_input,
+            "status":        self._status,
+            "is_running":    self.is_running,
+            "current_file":  self._current_file,
+            "awaiting_input": self._awaiting,
         }
 
-    # ── Internal subprocess runner ───────────────────────────────────
+    # ── Internal: async wrapper ───────────────────────────────────────
 
-    async def _run(self, run_path: Path) -> None:
+    async def _run_in_thread(
+        self, run_path: Path, loop: asyncio.AbstractEventLoop
+    ) -> None:
+        """Offload blocking Popen work to a thread-pool thread."""
         try:
-            env = {**os.environ, "PYTHONUNBUFFERED": "1"}
-
-            self._proc = await asyncio.create_subprocess_exec(
-                PYTHON_EXE,
-                str(run_path),
-                stdin=asyncio.subprocess.PIPE,
-                stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE,
-                cwd=str(PROJECT_ROOT),
-                env=env,
-            )
-
-            await asyncio.gather(
-                self._read_stdout_interactive(self._proc.stdout),
-                self._read_stderr(self._proc.stderr),
-            )
-
-            await self._proc.wait()
-            rc = self._proc.returncode
-
-            if self._status == "stopped":
-                self._push({"type": "log", "stream": "sys", "text": "⏹ Zatrzymano."})
-            elif rc == 0:
-                self._status = "finished"
-                self._push({"type": "log", "stream": "sys",
-                            "text": "✅ Generowanie zakończone pomyślnie!"})
-            else:
-                self._status = "failed"
-                self._push({"type": "log", "stream": "sys",
-                            "text": f"❌ Błąd — kod wyjścia: {rc}"})
-
+            await loop.run_in_executor(None, self._run_sync, run_path, loop)
         except Exception as exc:
             self._status = "failed"
-            self._push({"type": "log", "stream": "sys", "text": f"❌ Wyjątek: {exc}"})
+            tb = traceback.format_exc()
+            self._push({"type": "log", "stream": "sys",
+                        "text": f"❌ Wyjątek [{type(exc).__name__}]: {exc}"})
+            for line in tb.splitlines():
+                if line.strip():
+                    self._push({"type": "log", "stream": "stderr", "text": line})
         finally:
             self._push({"type": "status", "status": self._status,
                         "file": self._current_file, "awaiting_input": False})
-            self._proc = None
-            self._task = None
-            self._input_event = None
-            self._pending_input = None
+            self._proc    = None
+            self._task    = None
+            self._awaiting = False
 
-    async def _read_stdout_interactive(
-        self, stream: asyncio.StreamReader | None
+    # ── Internal: synchronous subprocess runner (runs in thread) ─────
+
+    def _run_sync(
+        self, run_path: Path, loop: asyncio.AbstractEventLoop
     ) -> None:
-        """
-        Read stdout, emit complete lines as log messages, and detect interactive
-        prompts (lines without a trailing newline matching PROMPT_PATTERNS).
-        When a prompt is detected, wait for provide_input() before continuing.
-        """
-        if stream is None:
-            return
+        env = {**os.environ, "PYTHONUNBUFFERED": "1"}
 
+        proc = subprocess.Popen(
+            [str(PYTHON_EXE), str(run_path)],
+            stdin=subprocess.PIPE,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            cwd=str(PROJECT_ROOT),
+            env=env,
+        )
+        self._proc = proc
+
+        # Read stdout (with prompt detection) and stderr in parallel threads
+        t_out = threading.Thread(
+            target=self._read_stdout_sync, args=(proc, loop), daemon=True
+        )
+        t_err = threading.Thread(
+            target=self._read_stderr_sync, args=(proc, loop), daemon=True
+        )
+        t_out.start()
+        t_err.start()
+        t_out.join()
+        t_err.join()
+
+        proc.wait()
+        rc = proc.returncode
+
+        if self._status == "stopped":
+            loop.call_soon_threadsafe(
+                self._push, {"type": "log", "stream": "sys", "text": "⏹ Zatrzymano."})
+        elif rc == 0:
+            self._status = "finished"
+            loop.call_soon_threadsafe(
+                self._push, {"type": "log", "stream": "sys",
+                             "text": "✅ Generowanie zakończone pomyślnie!"})
+        else:
+            self._status = "failed"
+            loop.call_soon_threadsafe(
+                self._push, {"type": "log", "stream": "sys",
+                             "text": f"❌ Błąd — kod wyjścia: {rc}"})
+
+    # ── Internal: stdout reader with prompt detection ─────────────────
+
+    def _read_stdout_sync(
+        self, proc: subprocess.Popen, loop: asyncio.AbstractEventLoop
+    ) -> None:
         buf = ""
-
         while True:
-            raw = await stream.read(512)
+            raw = proc.stdout.read(256)
             if not raw:
-                # EOF — flush remaining buffer
+                # EOF — flush leftover
                 if buf.strip():
                     clean = ANSI_ESCAPE.sub("", buf).strip()
                     if clean:
-                        self._push({"type": "log", "stream": "stdout", "text": clean})
+                        loop.call_soon_threadsafe(
+                            self._push, {"type": "log", "stream": "stdout", "text": clean})
                 break
 
             buf += raw.decode("utf-8", errors="replace")
 
-            # Emit all complete lines
+            # Emit every complete line
             while "\n" in buf:
                 line, buf = buf.split("\n", 1)
                 clean = ANSI_ESCAPE.sub("", line).rstrip("\r").rstrip()
                 if clean:
-                    self._push({"type": "log", "stream": "stdout", "text": clean})
+                    loop.call_soon_threadsafe(
+                        self._push, {"type": "log", "stream": "stdout", "text": clean})
 
-            # Check if the partial buffer is a known prompt (no trailing newline)
+            # Check if partial buffer is a known interactive prompt
             clean_partial = ANSI_ESCAPE.sub("", buf)
             for pattern in PROMPT_PATTERNS:
                 if pattern in clean_partial:
                     display = clean_partial.strip()
-                    # Show prompt text in log
-                    self._push({"type": "log", "stream": "stdout", "text": display})
-                    # Notify UI that user input is required
-                    self._push({"type": "input_needed", "prompt": display})
-                    self._push({"type": "status", "status": self._status,
-                                "file": self._current_file, "awaiting_input": True})
 
-                    answer = await self._wait_for_user_input(timeout=600.0)
+                    loop.call_soon_threadsafe(
+                        self._push, {"type": "log", "stream": "stdout", "text": display})
+                    loop.call_soon_threadsafe(
+                        self._push, {"type": "input_needed", "prompt": display})
+                    self._awaiting = True
+                    loop.call_soon_threadsafe(
+                        self._push, {"type": "status", "status": self._status,
+                                     "file": self._current_file, "awaiting_input": True})
 
-                    # Echo the answer to logs
-                    self._push({"type": "log", "stream": "sys",
-                                "text": f"→ Odpowiedź: {answer}"})
-                    self._push({"type": "status", "status": self._status,
-                                "file": self._current_file, "awaiting_input": False})
+                    # Block thread until user clicks TAK/NIE (or 10-min timeout)
+                    self._input_event.clear()
+                    answered = self._input_event.wait(timeout=600.0)
+                    self._awaiting = False
 
-                    # Write to stdin
-                    if self._proc and self._proc.stdin:
-                        self._proc.stdin.write((answer + "\n").encode())
-                        await self._proc.stdin.drain()
+                    answer = (self._pending_input or "n") if answered else "n"
+                    if not answered:
+                        loop.call_soon_threadsafe(
+                            self._push, {"type": "log", "stream": "sys",
+                                         "text": "⏰ Timeout (10 min) — automatycznie: n"})
+
+                    loop.call_soon_threadsafe(
+                        self._push, {"type": "log", "stream": "sys",
+                                     "text": f"→ Odpowiedź: {answer}"})
+                    loop.call_soon_threadsafe(
+                        self._push, {"type": "status", "status": self._status,
+                                     "file": self._current_file, "awaiting_input": False})
+
+                    if proc.stdin:
+                        proc.stdin.write((answer + "\n").encode())
+                        proc.stdin.flush()
 
                     buf = ""
                     break
 
-    async def _read_stderr(self, stream: asyncio.StreamReader | None) -> None:
-        if stream is None:
-            return
-        async for raw_line in stream:
+    # ── Internal: stderr reader ───────────────────────────────────────
+
+    def _read_stderr_sync(
+        self, proc: subprocess.Popen, loop: asyncio.AbstractEventLoop
+    ) -> None:
+        for raw_line in proc.stderr:
             text = ANSI_ESCAPE.sub(
                 "", raw_line.decode("utf-8", errors="replace").rstrip()
             )
             if text:
-                self._push({"type": "log", "stream": "stderr", "text": text})
-
-    async def _wait_for_user_input(self, timeout: float = 600.0) -> str:
-        """Block until provide_input() is called, or timeout (default 10 min)."""
-        self._input_event = asyncio.Event()
-        self._pending_input = None
-        try:
-            await asyncio.wait_for(self._input_event.wait(), timeout=timeout)
-            return self._pending_input or "n"
-        except asyncio.TimeoutError:
-            self._push({"type": "log", "stream": "sys",
-                        "text": "⏰ Timeout (10 min) — automatycznie anulowano."})
-            return "n"
+                loop.call_soon_threadsafe(
+                    self._push, {"type": "log", "stream": "stderr", "text": text})
 
 
-# ── Module-level singleton ───────────────────────────────────────────
+# ── Module-level singleton ────────────────────────────────────────────
 process_service = ProcessService()
