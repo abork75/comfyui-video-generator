@@ -106,13 +106,27 @@ class ProcessService:
 
     async def _run(self, run_path: Path) -> None:
         try:
+            # Pass 'y\n' automatically to all input() prompts.
+            # The user already confirmed by clicking "Generuj" in the UI.
+            # PYTHONUNBUFFERED=1 ensures stdout/stderr are not buffered.
+            env = {**__import__('os').environ, "PYTHONUNBUFFERED": "1"}
+
             self._proc = await asyncio.create_subprocess_exec(
                 PYTHON_EXE,
                 str(run_path),
+                stdin=asyncio.subprocess.PIPE,
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE,
                 cwd=str(PROJECT_ROOT),
+                env=env,
             )
+
+            # Auto-answer all input() prompts with 'y'
+            # (covers "Proceed with generation? [Y/n]" and postprocessing confirm)
+            if self._proc.stdin:
+                self._proc.stdin.write(b"y\ny\ny\n")
+                await self._proc.stdin.drain()
+                self._proc.stdin.close()
 
             # Read stdout and stderr concurrently
             await asyncio.gather(
