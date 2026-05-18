@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ComfyUI Video Generator</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <style>
         [x-cloak] { display: none !important; }
         ::-webkit-scrollbar { width: 6px; height: 6px; }
@@ -29,7 +29,7 @@
 </head>
 
 <body class="bg-gray-900 text-white h-screen flex flex-col overflow-hidden"
-      x-data="app()" x-init="init()">
+      x-data="app()">
 
     <!-- ═══════════════════════════════════════════ TOP BAR -->
     <header class="bg-gray-800 border-b border-gray-700 px-5 py-3 flex items-center justify-between flex-shrink-0">
