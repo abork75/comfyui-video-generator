@@ -3,17 +3,21 @@
 ComfyUI Video Generator — FastAPI application entry point
 """
 
+import json
+import asyncio
 from pathlib import Path
 
 import uvicorn
-from fastapi import FastAPI, Form
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi import FastAPI, Form, WebSocket, WebSocketDisconnect
+from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from starlette.middleware.base import BaseHTTPMiddleware
 
-from app.core.auth import auth_middleware, create_session_cookie
+from app.core.auth import auth_middleware, create_session_cookie, verify_session_cookie
 from app.core.config import settings
 from app.api.runs import router as runs_router
+from app.api.generation import router as generation_router
+from app.services.process_service import process_service
 
 # ============================================================
 # App setup
@@ -21,17 +25,18 @@ from app.api.runs import router as runs_router
 
 app = FastAPI(
     title="ComfyUI Video Generator",
-    docs_url=None,   # disable /docs (not needed for end users)
+    docs_url=None,
     redoc_url=None,
 )
 
-# Auth middleware — runs on every request
+# Auth middleware — runs on every HTTP request (WebSocket /ws/* skipped via SKIP_PREFIXES)
 app.add_middleware(BaseHTTPMiddleware, dispatch=auth_middleware)
 
 # Routers
 app.include_router(runs_router)
+app.include_router(generation_router)
 
-# Static files (CSS, JS, images)
+# Static files
 FRONTEND_DIR = Path(__file__).parent / "frontend"
 app.mount("/static", StaticFiles(directory=FRONTEND_DIR), name="static")
 
@@ -70,10 +75,60 @@ async def logout():
 
 @app.get("/api/config")
 async def get_public_config():
-    """Returns non-sensitive config for the frontend"""
-    return {
-        "comfyui_url": settings.comfyui_url,
-    }
+    """Returns non-sensitive config for the frontend."""
+    return {"comfyui_url": settings.comfyui_url}
+
+
+# ============================================================
+# WebSocket — live generation logs
+# ============================================================
+
+@app.websocket("/ws/logs")
+async def ws_logs(websocket: WebSocket):
+    """
+    Stream generation logs to connected clients.
+
+    Auth: verified via session cookie (same mechanism as HTTP routes).
+    Sends JSON messages:
+        {"type": "status", "status": "running"|"idle"|..., "file": "..."}
+        {"type": "log",    "stream": "stdout"|"stderr"|"sys", "text": "..."}
+        {"type": "ping"}
+    """
+    # Authenticate via cookie before accepting
+    user = verify_session_cookie(dict(websocket.cookies))
+    if not user:
+        await websocket.close(code=4401)
+        return
+
+    await websocket.accept()
+
+    # Subscribe to process log stream
+    q = process_service.subscribe()
+
+    # Send current status immediately on connect
+    try:
+        await websocket.send_text(json.dumps({
+            "type": "status",
+            **process_service.get_status(),
+        }))
+    except Exception:
+        process_service.unsubscribe(q)
+        return
+
+    try:
+        while True:
+            try:
+                msg = await asyncio.wait_for(q.get(), timeout=25.0)
+                await websocket.send_text(json.dumps(msg))
+            except asyncio.TimeoutError:
+                # Heartbeat to keep connection alive
+                await websocket.send_text(json.dumps({"type": "ping"}))
+    except WebSocketDisconnect:
+        pass
+    except Exception:
+        pass
+    finally:
+        process_service.unsubscribe(q)
 
 
 # ============================================================

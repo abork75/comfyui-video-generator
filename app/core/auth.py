@@ -11,7 +11,7 @@ from .config import settings
 
 # Paths that don't require authentication
 SKIP_PATHS = {"/login", "/favicon.ico", "/api/config"}
-SKIP_PREFIXES = ("/static/",)
+SKIP_PREFIXES = ("/static/", "/ws/")
 
 
 def _get_serializer() -> URLSafeTimedSerializer:
@@ -30,9 +30,9 @@ def create_session_cookie(response, username: str) -> None:
     )
 
 
-def verify_session(request: Request) -> str | None:
-    """Return username from valid session cookie, or None"""
-    token = request.cookies.get("session")
+def verify_session_cookie(cookies: dict) -> str | None:
+    """Return username from valid session cookie dict, or None."""
+    token = cookies.get("session")
     if not token:
         return None
     try:
@@ -42,6 +42,11 @@ def verify_session(request: Request) -> str | None:
         return data.get("user")
     except (BadSignature, SignatureExpired):
         return None
+
+
+def verify_session(request: Request) -> str | None:
+    """Return username from valid session cookie on a Request, or None."""
+    return verify_session_cookie(dict(request.cookies))
 
 
 async def auth_middleware(request: Request, call_next):
