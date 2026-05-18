@@ -162,7 +162,7 @@ class ProcessService:
     def _run_sync(
         self, run_path: Path, loop: asyncio.AbstractEventLoop
     ) -> None:
-        env = {**os.environ, "PYTHONUNBUFFERED": "1"}
+        env = {**os.environ, "PYTHONUNBUFFERED": "1", "PYTHONUTF8": "1"}
 
         proc = subprocess.Popen(
             [str(PYTHON_EXE), str(run_path)],
