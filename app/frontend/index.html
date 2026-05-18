@@ -18,53 +18,87 @@
 <body class="bg-gray-900 text-white h-screen flex flex-col overflow-hidden"
       x-data="app()" x-init="init()">
 
-    <!-- ============================================================ -->
-    <!-- TOP BAR                                                       -->
-    <!-- ============================================================ -->
+    <!-- TOP BAR -->
     <header class="bg-gray-800 border-b border-gray-700 px-5 py-3 flex items-center justify-between flex-shrink-0 z-10">
-
         <div class="flex items-center gap-3">
             <span class="text-2xl">🎬</span>
             <div>
                 <h1 class="font-bold text-base leading-tight">ComfyUI Video Generator</h1>
-                <p class="text-xs text-gray-500 leading-tight">v0.1 — Etap 1</p>
+                <p class="text-xs text-gray-500 leading-tight">v0.2 — Etap 2</p>
             </div>
         </div>
-
         <div class="flex items-center gap-3">
-            <!-- ComfyUI link — URL dynamically loaded from /api/config -->
             <a :href="comfyuiUrl" target="_blank"
                class="flex items-center gap-2 bg-purple-700 hover:bg-purple-600 px-3 py-1.5 rounded-lg text-sm font-medium transition">
-                <span>⚡</span> Open ComfyUI
+                ⚡ Open ComfyUI
             </a>
-
             <div class="h-5 w-px bg-gray-600"></div>
-
-            <a href="/logout"
-               class="text-gray-400 hover:text-white text-sm transition px-2 py-1 rounded hover:bg-gray-700">
+            <a href="/logout" class="text-gray-400 hover:text-white text-sm transition px-2 py-1 rounded hover:bg-gray-700">
                 Wyloguj ↩
             </a>
         </div>
-
     </header>
 
-    <!-- ============================================================ -->
-    <!-- MAIN LAYOUT                                                   -->
-    <!-- ============================================================ -->
+    <!-- MAIN LAYOUT -->
     <div class="flex flex-1 overflow-hidden">
 
         <!-- SIDEBAR -->
-        <aside class="w-60 bg-gray-800 border-r border-gray-700 flex flex-col flex-shrink-0">
+        <aside class="w-64 bg-gray-800 border-r border-gray-700 flex flex-col flex-shrink-0">
 
             <div class="px-4 py-3 border-b border-gray-700 flex items-center justify-between">
                 <span class="text-xs text-gray-400 uppercase font-semibold tracking-wider">Projekty</span>
-                <button class="text-gray-600 hover:text-gray-400 transition text-lg leading-none" title="Dodaj projekt">+</button>
+                <button @click="loadRuns()"
+                        class="text-gray-500 hover:text-gray-300 transition text-sm"
+                        title="Odśwież listę">↻</button>
             </div>
 
-            <!-- Placeholder -->
-            <div class="flex-1 flex flex-col items-center justify-center gap-2 text-center p-4">
-                <span class="text-3xl opacity-30">📁</span>
-                <p class="text-xs text-gray-600">Lista projektów<br>dostępna w Etapie 2</p>
+            <!-- Loading -->
+            <div x-show="runsLoading" class="flex items-center justify-center py-8 text-gray-600 text-sm gap-2">
+                <span class="animate-spin">⟳</span> Ładowanie...
+            </div>
+
+            <!-- Error -->
+            <div x-show="runsError && !runsLoading"
+                 class="px-4 py-3 text-red-400 text-xs">
+                ❌ <span x-text="runsError"></span>
+            </div>
+
+            <!-- Run list -->
+            <div x-show="!runsLoading" class="flex-1 overflow-y-auto py-1">
+
+                <template x-if="runs.length === 0 && !runsError">
+                    <div class="flex flex-col items-center justify-center py-8 text-center px-4 gap-2">
+                        <span class="text-3xl opacity-30">📁</span>
+                        <p class="text-xs text-gray-600">Brak plików RUN_*.py<br>w folderze RUNS/</p>
+                    </div>
+                </template>
+
+                <template x-for="run in runs" :key="run.filename">
+                    <button
+                        @click="selectRun(run)"
+                        class="w-full text-left px-3 py-2.5 hover:bg-gray-700 transition flex items-start gap-2 group"
+                        :class="selectedRun?.filename === run.filename ? 'bg-gray-700 border-l-2 border-blue-500' : 'border-l-2 border-transparent'">
+
+                        <!-- Badge -->
+                        <span class="mt-0.5 flex-shrink-0 text-xs"
+                              :title="compatibilityTitle(run.compatibility)"
+                              x-text="compatibilityIcon(run.compatibility)">
+                        </span>
+
+                        <!-- Name -->
+                        <div class="flex-1 min-w-0">
+                            <p class="text-sm text-gray-200 truncate leading-snug"
+                               x-text="run.display_name"></p>
+                            <p class="text-xs text-gray-600 truncate mt-0.5"
+                               x-text="run.filename"></p>
+                        </div>
+                    </button>
+                </template>
+            </div>
+
+            <!-- Legend -->
+            <div class="px-4 py-2 border-t border-gray-700 text-xs text-gray-600 space-y-0.5">
+                <div>✅ aktualny &nbsp; ⚠️ stary &nbsp; ❓ nieznany</div>
             </div>
 
         </aside>
@@ -72,82 +106,227 @@
         <!-- CONTENT AREA -->
         <main class="flex-1 flex flex-col overflow-hidden">
 
-            <!-- TOOLBAR (nad flow editorem) -->
-            <div class="bg-gray-850 border-b border-gray-700 px-5 py-2 flex items-center gap-3 flex-shrink-0"
-                 style="background-color: #111827;">
-                <button class="bg-green-700 hover:bg-green-600 text-white text-sm font-medium px-4 py-1.5 rounded-lg transition opacity-50 cursor-not-allowed" disabled>
+            <!-- TOOLBAR -->
+            <div class="border-b border-gray-700 px-5 py-2 flex items-center gap-3 flex-shrink-0 bg-gray-900">
+                <button
+                    :disabled="!canGenerate"
+                    :class="canGenerate
+                        ? 'bg-green-700 hover:bg-green-600 cursor-pointer'
+                        : 'bg-gray-700 opacity-40 cursor-not-allowed'"
+                    class="text-white text-sm font-medium px-4 py-1.5 rounded-lg transition">
                     ▶ Generuj
                 </button>
-                <button class="bg-gray-700 hover:bg-gray-600 text-white text-sm px-3 py-1.5 rounded-lg transition opacity-50 cursor-not-allowed" disabled>
+                <button
+                    disabled
+                    class="bg-gray-700 opacity-40 cursor-not-allowed text-white text-sm px-3 py-1.5 rounded-lg">
                     ⏹ Stop
                 </button>
                 <div class="h-4 w-px bg-gray-700"></div>
-                <span class="text-xs text-gray-500">Wybierz projekt aby zacząć</span>
+                <span class="text-xs text-gray-500" x-text="toolbarStatus"></span>
             </div>
 
-            <!-- FLOW EDITOR PLACEHOLDER -->
-            <div class="flex-1 flex items-center justify-center overflow-auto p-8">
-                <div class="text-center max-w-sm">
-                    <div class="text-6xl mb-4 opacity-20">🎞</div>
-                    <h2 class="text-lg font-semibold text-gray-500 mb-2">Flow Editor</h2>
-                    <p class="text-sm text-gray-600 leading-relaxed">
-                        Tu będzie wizualny edytor sekwencji FLOW —
-                        lista klatek, parametry per-element, miniatury start/end frame.
-                    </p>
-                    <p class="text-xs text-gray-700 mt-3">Etap 2 → 3 → 5</p>
-                </div>
+            <!-- PROJECT INFO / FLOW EDITOR AREA -->
+            <div class="flex-1 overflow-auto p-6">
+
+                <!-- No selection -->
+                <template x-if="!selectedRun">
+                    <div class="flex items-center justify-center h-full">
+                        <div class="text-center max-w-sm">
+                            <div class="text-6xl mb-4 opacity-20">🎞</div>
+                            <h2 class="text-lg font-semibold text-gray-500 mb-2">Wybierz projekt</h2>
+                            <p class="text-sm text-gray-600">Kliknij plik RUN na liście po lewej</p>
+                        </div>
+                    </div>
+                </template>
+
+                <!-- Project info card -->
+                <template x-if="selectedRun">
+                    <div class="max-w-2xl space-y-4">
+
+                        <!-- Header -->
+                        <div class="flex items-center gap-3 mb-6">
+                            <span class="text-2xl" x-text="compatibilityIcon(selectedRun.compatibility)"></span>
+                            <div>
+                                <h2 class="text-xl font-bold" x-text="selectedRun.display_name"></h2>
+                                <p class="text-sm text-gray-500" x-text="selectedRun.filename"></p>
+                            </div>
+                            <span class="ml-auto px-3 py-1 rounded-full text-xs font-medium"
+                                  :class="compatibilityClass(selectedRun.compatibility)"
+                                  x-text="compatibilityLabel(selectedRun.compatibility)">
+                            </span>
+                        </div>
+
+                        <!-- Compatibility warning for non-current files -->
+                        <template x-if="selectedRun.compatibility !== 'current'">
+                            <div class="bg-yellow-900/30 border border-yellow-700 rounded-lg px-4 py-3 text-sm text-yellow-300">
+                                ⚠️ Ten plik używa starego formatu i nie może być uruchomiony przez GUI.
+                                Aby go uruchomić — uruchom bezpośrednio z terminala lub zmigruj do nowego formatu.
+                            </div>
+                        </template>
+
+                        <!-- Config grid -->
+                        <div class="grid grid-cols-2 gap-3">
+
+                            <div class="bg-gray-800 rounded-lg p-4 col-span-2">
+                                <p class="text-xs text-gray-500 mb-1">📁 Folder projektu</p>
+                                <p class="text-sm font-mono text-gray-200 break-all"
+                                   x-text="selectedRun.project_folder || '—'"></p>
+                            </div>
+
+                            <div class="bg-gray-800 rounded-lg p-4">
+                                <p class="text-xs text-gray-500 mb-1">📐 Force resolution</p>
+                                <p class="text-sm font-mono text-gray-200"
+                                   x-text="formatResolution(selectedRun.force_resolution)"></p>
+                            </div>
+
+                            <div class="bg-gray-800 rounded-lg p-4">
+                                <p class="text-xs text-gray-500 mb-1">📐 Default resolution</p>
+                                <p class="text-sm font-mono text-gray-200"
+                                   x-text="formatResolution(selectedRun.default_resolution)"></p>
+                            </div>
+
+                            <div class="bg-gray-800 rounded-lg p-4">
+                                <p class="text-xs text-gray-500 mb-1">⚙️ Backend</p>
+                                <p class="text-sm font-mono text-gray-200"
+                                   x-text="selectedRun.default_backend || '—'"></p>
+                            </div>
+
+                            <div class="bg-gray-800 rounded-lg p-4">
+                                <p class="text-xs text-gray-500 mb-1">🔲 Blocks to swap</p>
+                                <p class="text-sm font-mono text-gray-200"
+                                   x-text="selectedRun.default_blocks_to_swap ?? '—'"></p>
+                            </div>
+
+                            <div class="bg-gray-800 rounded-lg p-4">
+                                <p class="text-xs text-gray-500 mb-1">🎞 FPS</p>
+                                <p class="text-sm font-mono text-gray-200"
+                                   x-text="selectedRun.default_fps ?? '—'"></p>
+                            </div>
+
+                            <div class="bg-gray-800 rounded-lg p-4">
+                                <p class="text-xs text-gray-500 mb-1">🪜 Steps</p>
+                                <p class="text-sm font-mono text-gray-200"
+                                   x-text="selectedRun.default_steps ?? '—'"></p>
+                            </div>
+
+                        </div>
+
+                        <!-- Flow editor placeholder -->
+                        <div class="bg-gray-800 rounded-lg p-6 text-center border border-dashed border-gray-700 mt-2">
+                            <p class="text-gray-600 text-sm">Flow Editor — Etap 3</p>
+                        </div>
+
+                    </div>
+                </template>
+
             </div>
 
             <!-- LOG PANEL -->
-            <div class="flex-shrink-0 border-t border-gray-700" style="height: 180px; background-color: #030712;">
-
+            <div class="flex-shrink-0 border-t border-gray-700" style="height: 160px; background-color: #030712;">
                 <div class="px-4 py-2 border-b border-gray-800 flex items-center justify-between">
                     <div class="flex items-center gap-2">
-                        <span class="w-2 h-2 rounded-full bg-gray-600" id="log-status-dot"></span>
+                        <span class="w-2 h-2 rounded-full bg-gray-600"></span>
                         <span class="text-xs text-gray-500 uppercase font-semibold tracking-wider">Logi generowania</span>
                     </div>
                     <div class="flex items-center gap-3">
                         <span class="text-xs text-gray-700">WebSocket — Etap 4</span>
-                        <button onclick="document.getElementById('log-output').innerHTML = ''"
-                                class="text-xs text-gray-600 hover:text-gray-400 transition">
-                            Wyczyść
-                        </button>
+                        <button @click="clearLog()" class="text-xs text-gray-600 hover:text-gray-400 transition">Wyczyść</button>
                     </div>
                 </div>
-
                 <div id="log-output"
-                     class="h-full overflow-y-auto px-4 py-3 font-mono text-xs text-gray-500 leading-relaxed">
-                    <span class="text-gray-600">●</span> Serwer uruchomiony. Gotowy do pracy.
+                     class="overflow-y-auto px-4 py-2 font-mono text-xs text-gray-500 leading-relaxed"
+                     style="height: calc(100% - 33px)">
                 </div>
-
             </div>
 
         </main>
-
     </div>
 
-    <!-- ============================================================ -->
-    <!-- Alpine.js app logic                                           -->
-    <!-- ============================================================ -->
     <script>
         function app() {
             return {
-                comfyuiUrl: 'http://127.0.0.1:8189',  // default, overridden by /api/config
+                // State
+                comfyuiUrl: 'http://127.0.0.1:8189',
+                runs: [],
+                runsLoading: true,
+                runsError: null,
+                selectedRun: null,
 
+                // Computed
+                get canGenerate() {
+                    return this.selectedRun?.compatibility === 'current';
+                },
+                get toolbarStatus() {
+                    if (!this.selectedRun) return 'Wybierz projekt aby zacząć';
+                    if (this.selectedRun.compatibility !== 'current') return '⚠️ Plik w starym formacie — nie można uruchomić przez GUI';
+                    return `Projekt: ${this.selectedRun.display_name}`;
+                },
+
+                // Init
                 async init() {
+                    await this.loadConfig();
+                    await this.loadRuns();
+                },
+
+                async loadConfig() {
                     try {
                         const res = await fetch('/api/config');
                         const cfg = await res.json();
-                        if (cfg.comfyui_url) {
-                            this.comfyuiUrl = cfg.comfyui_url;
-                        }
-                    } catch (e) {
-                        console.warn('Could not load /api/config:', e);
+                        if (cfg.comfyui_url) this.comfyuiUrl = cfg.comfyui_url;
+                    } catch(e) {
+                        console.warn('Config load failed:', e);
                     }
-
-                    this.log('Aplikacja załadowana ✓');
                 },
 
+                async loadRuns() {
+                    this.runsLoading = true;
+                    this.runsError = null;
+                    try {
+                        const res = await fetch('/api/runs');
+                        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                        this.runs = await res.json();
+                        this.log(`Załadowano ${this.runs.length} projektów`);
+                    } catch(e) {
+                        this.runsError = e.message;
+                        this.log(`❌ Błąd ładowania projektów: ${e.message}`);
+                    } finally {
+                        this.runsLoading = false;
+                    }
+                },
+
+                selectRun(run) {
+                    this.selectedRun = run;
+                    this.log(`Wybrano: ${run.display_name} [${run.compatibility}]`);
+                },
+
+                // Helpers
+                compatibilityIcon(c) {
+                    return { current: '✅', legacy: '⚠️', unknown: '❓' }[c] ?? '❓';
+                },
+                compatibilityTitle(c) {
+                    return {
+                        current: 'Aktualny format — można uruchomić',
+                        legacy:  'Stary format — wymaga migracji',
+                        unknown: 'Nieznany format'
+                    }[c] ?? '';
+                },
+                compatibilityLabel(c) {
+                    return { current: 'aktualny', legacy: 'stary format', unknown: 'nieznany' }[c] ?? c;
+                },
+                compatibilityClass(c) {
+                    return {
+                        current: 'bg-green-900 text-green-300',
+                        legacy:  'bg-yellow-900 text-yellow-300',
+                        unknown: 'bg-gray-700 text-gray-400'
+                    }[c] ?? 'bg-gray-700 text-gray-400';
+                },
+                formatResolution(r) {
+                    if (!r) return '—';
+                    if (Array.isArray(r) && r.length === 2) return `${r[0]} × ${r[1]}`;
+                    return String(r);
+                },
+
+                // Log
                 log(msg) {
                     const out = document.getElementById('log-output');
                     if (!out) return;
@@ -156,7 +335,11 @@
                     line.innerHTML = `<span class="text-gray-700">[${time}]</span> ${msg}`;
                     out.appendChild(line);
                     out.scrollTop = out.scrollHeight;
-                }
+                },
+                clearLog() {
+                    const out = document.getElementById('log-output');
+                    if (out) out.innerHTML = '';
+                },
             }
         }
     </script>

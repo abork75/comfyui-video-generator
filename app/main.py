@@ -13,6 +13,7 @@ from starlette.middleware.base import BaseHTTPMiddleware
 
 from app.core.auth import auth_middleware, create_session_cookie
 from app.core.config import settings
+from app.api.runs import router as runs_router
 
 # ============================================================
 # App setup
@@ -26,6 +27,9 @@ app = FastAPI(
 
 # Auth middleware — runs on every request
 app.add_middleware(BaseHTTPMiddleware, dispatch=auth_middleware)
+
+# Routers
+app.include_router(runs_router)
 
 # Static files (CSS, JS, images)
 FRONTEND_DIR = Path(__file__).parent / "frontend"
