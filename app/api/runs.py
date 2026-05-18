@@ -4,7 +4,7 @@ API router for RUN file operations.
 """
 
 from fastapi import APIRouter, HTTPException
-from app.services.run_file_service import scan_runs_folder, get_run_details, get_run_content
+from app.services.run_file_service import scan_runs_folder, get_run_details, get_run_content, get_run_flow
 
 router = APIRouter(prefix="/api/runs", tags=["runs"])
 
@@ -22,6 +22,15 @@ async def get_run(filename: str):
     if info is None:
         raise HTTPException(status_code=404, detail=f"RUN file not found: {filename}")
     return info
+
+
+@router.get("/{filename}/flow")
+async def get_flow(filename: str):
+    """Get parsed FLOW list from a RUN file."""
+    data = get_run_flow(filename)
+    if data is None:
+        raise HTTPException(status_code=404, detail=f"FLOW not found in: {filename}")
+    return data
 
 
 @router.get("/{filename}/source")

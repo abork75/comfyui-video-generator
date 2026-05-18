@@ -166,3 +166,71 @@ def get_run_content(filename: str) -> str | None:
     if not path.exists() or not path.name.startswith("RUN_"):
         return None
     return path.read_text(encoding="utf-8", errors="replace")
+
+
+def get_run_flow(filename: str) -> dict | None:
+    """
+    Extract and return the active FLOW list from a RUN file.
+
+    Handles the common pattern:
+        USE_TEST_FLOW = False
+        FLOW_TEST = [...]
+        FLOW_FULL = [...]
+        FLOW = FLOW_TEST if USE_TEST_FLOW else FLOW_FULL
+
+    Returns dict with:
+        flow          — list of FLOW items
+        flow_type     — 'test' | 'full' | 'default'
+        use_test      — bool
+        has_test_flow — bool
+        has_full_flow — bool
+        item_count    — int
+    """
+    path = RUNS_FOLDER / filename
+    if not path.exists() or not path.name.startswith("RUN_"):
+        return None
+
+    content = path.read_text(encoding="utf-8", errors="replace")
+    g = extract_globals(content)
+
+    use_test     = bool(g.get("USE_TEST_FLOW", False))
+    has_test     = "FLOW_TEST" in g and isinstance(g.get("FLOW_TEST"), list)
+    has_full     = "FLOW_FULL" in g and isinstance(g.get("FLOW_FULL"), list)
+    has_default  = "FLOW"      in g and isinstance(g.get("FLOW"),      list)
+
+    # Resolve active FLOW
+    if use_test and has_test:
+        flow      = g["FLOW_TEST"]
+        flow_type = "test"
+    elif has_full:
+        flow      = g["FLOW_FULL"]
+        flow_type = "full"
+    elif has_test:
+        flow      = g["FLOW_TEST"]
+        flow_type = "test"
+    elif has_default:
+        flow      = g["FLOW"]
+        flow_type = "default"
+    else:
+        return None
+
+    # Sanitize: make all items JSON-serializable (tuples → lists)
+    def sanitize(obj):
+        if isinstance(obj, tuple):
+            return list(obj)
+        if isinstance(obj, list):
+            return [sanitize(i) for i in obj]
+        if isinstance(obj, dict):
+            return {k: sanitize(v) for k, v in obj.items()}
+        return obj
+
+    flow = sanitize(flow)
+
+    return {
+        "flow":          flow,
+        "flow_type":     flow_type,
+        "use_test":      use_test,
+        "has_test_flow": has_test,
+        "has_full_flow": has_full,
+        "item_count":    len(flow),
+    }

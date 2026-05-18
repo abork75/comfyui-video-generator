@@ -9,22 +9,22 @@
     <style>
         [x-cloak] { display: none !important; }
         ::-webkit-scrollbar { width: 6px; height: 6px; }
-        ::-webkit-scrollbar-track { background: #1f2937; }
-        ::-webkit-scrollbar-thumb { background: #4b5563; border-radius: 3px; }
-        ::-webkit-scrollbar-thumb:hover { background: #6b7280; }
+        ::-webkit-scrollbar-track { background: #111827; }
+        ::-webkit-scrollbar-thumb { background: #374151; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #4b5563; }
     </style>
 </head>
 
 <body class="bg-gray-900 text-white h-screen flex flex-col overflow-hidden"
       x-data="app()" x-init="init()">
 
-    <!-- TOP BAR -->
-    <header class="bg-gray-800 border-b border-gray-700 px-5 py-3 flex items-center justify-between flex-shrink-0 z-10">
+    <!-- ═══════════════════════════════════════════ TOP BAR -->
+    <header class="bg-gray-800 border-b border-gray-700 px-5 py-3 flex items-center justify-between flex-shrink-0">
         <div class="flex items-center gap-3">
             <span class="text-2xl">🎬</span>
             <div>
                 <h1 class="font-bold text-base leading-tight">ComfyUI Video Generator</h1>
-                <p class="text-xs text-gray-500 leading-tight">v0.2 — Etap 2</p>
+                <p class="text-xs text-gray-500 leading-tight">v0.3 — Etap 3</p>
             </div>
         </div>
         <div class="flex items-center gap-3">
@@ -39,309 +39,418 @@
         </div>
     </header>
 
-    <!-- MAIN LAYOUT -->
+    <!-- ═══════════════════════════════════════════ MAIN -->
     <div class="flex flex-1 overflow-hidden">
 
-        <!-- SIDEBAR -->
+        <!-- ─── SIDEBAR ─────────────────────────────── -->
         <aside class="w-64 bg-gray-800 border-r border-gray-700 flex flex-col flex-shrink-0">
 
             <div class="px-4 py-3 border-b border-gray-700 flex items-center justify-between">
                 <span class="text-xs text-gray-400 uppercase font-semibold tracking-wider">Projekty</span>
-                <button @click="loadRuns()"
-                        class="text-gray-500 hover:text-gray-300 transition text-sm"
-                        title="Odśwież listę">↻</button>
+                <button @click="loadRuns()" class="text-gray-500 hover:text-gray-300 transition text-sm" title="Odśwież">↻</button>
             </div>
 
-            <!-- Loading -->
             <div x-show="runsLoading" class="flex items-center justify-center py-8 text-gray-600 text-sm gap-2">
-                <span class="animate-spin">⟳</span> Ładowanie...
+                <span class="animate-spin inline-block">⟳</span> Ładowanie...
             </div>
 
-            <!-- Error -->
-            <div x-show="runsError && !runsLoading"
-                 class="px-4 py-3 text-red-400 text-xs">
+            <div x-show="runsError && !runsLoading" class="px-4 py-3 text-red-400 text-xs">
                 ❌ <span x-text="runsError"></span>
             </div>
 
-            <!-- Run list -->
             <div x-show="!runsLoading" class="flex-1 overflow-y-auto py-1">
-
                 <template x-if="runs.length === 0 && !runsError">
                     <div class="flex flex-col items-center justify-center py-8 text-center px-4 gap-2">
                         <span class="text-3xl opacity-30">📁</span>
-                        <p class="text-xs text-gray-600">Brak plików RUN_*.py<br>w folderze RUNS/</p>
+                        <p class="text-xs text-gray-600">Brak plików RUN_*.py</p>
                     </div>
                 </template>
 
                 <template x-for="run in runs" :key="run.filename">
-                    <button
-                        @click="selectRun(run)"
-                        class="w-full text-left px-3 py-2.5 hover:bg-gray-700 transition flex items-start gap-2 group"
-                        :class="selectedRun?.filename === run.filename ? 'bg-gray-700 border-l-2 border-blue-500' : 'border-l-2 border-transparent'">
-
-                        <!-- Badge -->
-                        <span class="mt-0.5 flex-shrink-0 text-xs"
-                              :title="compatibilityTitle(run.compatibility)"
-                              x-text="compatibilityIcon(run.compatibility)">
-                        </span>
-
-                        <!-- Name -->
+                    <button @click="selectRun(run)"
+                            class="w-full text-left px-3 py-2.5 hover:bg-gray-700 transition flex items-start gap-2"
+                            :class="selectedRun?.filename === run.filename
+                                ? 'bg-gray-700 border-l-2 border-blue-500'
+                                : 'border-l-2 border-transparent'">
+                        <span class="mt-0.5 flex-shrink-0 text-xs" :title="compatibilityTitle(run.compatibility)"
+                              x-text="compatibilityIcon(run.compatibility)"></span>
                         <div class="flex-1 min-w-0">
-                            <p class="text-sm text-gray-200 truncate leading-snug"
-                               x-text="run.display_name"></p>
-                            <p class="text-xs text-gray-600 truncate mt-0.5"
-                               x-text="run.filename"></p>
+                            <p class="text-sm text-gray-200 truncate leading-snug" x-text="run.display_name"></p>
+                            <p class="text-xs text-gray-600 truncate mt-0.5" x-text="run.filename"></p>
                         </div>
                     </button>
                 </template>
             </div>
 
-            <!-- Legend -->
-            <div class="px-4 py-2 border-t border-gray-700 text-xs text-gray-600 space-y-0.5">
-                <div>✅ aktualny &nbsp; ⚠️ stary &nbsp; ❓ nieznany</div>
+            <div class="px-4 py-2 border-t border-gray-700 text-xs text-gray-600">
+                ✅ aktualny &nbsp; ⚠️ stary &nbsp; ❓ nieznany
             </div>
-
         </aside>
 
-        <!-- CONTENT AREA -->
+        <!-- ─── CONTENT ──────────────────────────────── -->
         <main class="flex-1 flex flex-col overflow-hidden">
 
             <!-- TOOLBAR -->
             <div class="border-b border-gray-700 px-5 py-2 flex items-center gap-3 flex-shrink-0 bg-gray-900">
-                <button
-                    :disabled="!canGenerate"
-                    :class="canGenerate
-                        ? 'bg-green-700 hover:bg-green-600 cursor-pointer'
-                        : 'bg-gray-700 opacity-40 cursor-not-allowed'"
-                    class="text-white text-sm font-medium px-4 py-1.5 rounded-lg transition">
+                <button :disabled="!canGenerate"
+                        :class="canGenerate ? 'bg-green-700 hover:bg-green-600 cursor-pointer' : 'bg-gray-700 opacity-40 cursor-not-allowed'"
+                        class="text-white text-sm font-medium px-4 py-1.5 rounded-lg transition">
                     ▶ Generuj
                 </button>
-                <button
-                    disabled
-                    class="bg-gray-700 opacity-40 cursor-not-allowed text-white text-sm px-3 py-1.5 rounded-lg">
+                <button disabled class="bg-gray-700 opacity-40 cursor-not-allowed text-white text-sm px-3 py-1.5 rounded-lg">
                     ⏹ Stop
                 </button>
                 <div class="h-4 w-px bg-gray-700"></div>
                 <span class="text-xs text-gray-500" x-text="toolbarStatus"></span>
+
+                <!-- FLOW type badge -->
+                <template x-if="flowData">
+                    <div class="ml-auto flex items-center gap-2">
+                        <span class="text-xs text-gray-500" x-text="`${flowData.item_count} elementów`"></span>
+                        <span class="px-2 py-0.5 rounded text-xs font-medium"
+                              :class="flowData.flow_type === 'test'
+                                  ? 'bg-yellow-900 text-yellow-300'
+                                  : 'bg-blue-900 text-blue-300'"
+                              x-text="flowData.flow_type === 'test' ? '🧪 TEST FLOW' : '📽 FULL FLOW'">
+                        </span>
+                    </div>
+                </template>
             </div>
 
-            <!-- PROJECT INFO / FLOW EDITOR AREA -->
-            <div class="flex-1 overflow-auto p-6">
+            <!-- ─── MAIN SCROLL AREA ─── -->
+            <div class="flex-1 overflow-y-auto">
 
-                <!-- No selection -->
+                <!-- No run selected -->
                 <template x-if="!selectedRun">
                     <div class="flex items-center justify-center h-full">
-                        <div class="text-center max-w-sm">
+                        <div class="text-center">
                             <div class="text-6xl mb-4 opacity-20">🎞</div>
-                            <h2 class="text-lg font-semibold text-gray-500 mb-2">Wybierz projekt</h2>
-                            <p class="text-sm text-gray-600">Kliknij plik RUN na liście po lewej</p>
+                            <p class="text-gray-500">Wybierz projekt z listy po lewej</p>
                         </div>
                     </div>
                 </template>
 
-                <!-- Project info card -->
-                <template x-if="selectedRun">
-                    <div class="max-w-2xl space-y-4">
-
-                        <!-- Header -->
-                        <div class="flex items-center gap-3 mb-6">
-                            <span class="text-2xl" x-text="compatibilityIcon(selectedRun.compatibility)"></span>
+                <!-- Legacy / unknown run -->
+                <template x-if="selectedRun && selectedRun.compatibility !== 'current'">
+                    <div class="p-6 max-w-xl">
+                        <div class="flex items-center gap-3 mb-4">
+                            <span x-text="compatibilityIcon(selectedRun.compatibility)" class="text-2xl"></span>
                             <div>
-                                <h2 class="text-xl font-bold" x-text="selectedRun.display_name"></h2>
+                                <h2 class="text-lg font-bold" x-text="selectedRun.display_name"></h2>
                                 <p class="text-sm text-gray-500" x-text="selectedRun.filename"></p>
                             </div>
-                            <span class="ml-auto px-3 py-1 rounded-full text-xs font-medium"
-                                  :class="compatibilityClass(selectedRun.compatibility)"
-                                  x-text="compatibilityLabel(selectedRun.compatibility)">
+                        </div>
+                        <div class="bg-yellow-900/30 border border-yellow-700 rounded-lg px-4 py-3 text-sm text-yellow-300">
+                            ⚠️ Plik używa starego formatu i nie może być uruchomiony przez GUI.<br>
+                            Uruchom bezpośrednio z terminala lub zmigruj do nowego formatu.
+                        </div>
+                    </div>
+                </template>
+
+                <!-- Current run — project header + FLOW -->
+                <template x-if="selectedRun && selectedRun.compatibility === 'current'">
+                    <div class="flex flex-col h-full">
+
+                        <!-- Compact project info bar -->
+                        <div class="px-5 py-2 bg-gray-800 border-b border-gray-700 flex flex-wrap items-center gap-x-5 gap-y-1 text-xs text-gray-400 flex-shrink-0">
+                            <span title="Folder projektu">
+                                📁 <span class="text-gray-300" x-text="projectFolderName()"></span>
                             </span>
+                            <span>📐 <span class="text-gray-300 font-mono" x-text="formatRes(selectedRun.force_resolution)"></span></span>
+                            <span>⚙️ <span class="text-gray-300" x-text="selectedRun.default_backend || '—'"></span></span>
+                            <span x-show="selectedRun.default_fps">🎞 <span class="text-gray-300" x-text="selectedRun.default_fps + ' fps'"></span></span>
+                            <span x-show="selectedRun.default_steps">🪜 <span class="text-gray-300" x-text="selectedRun.default_steps + ' steps'"></span></span>
+                            <span x-show="selectedRun.default_blocks_to_swap != null">🔲 <span class="text-gray-300" x-text="'bts:' + selectedRun.default_blocks_to_swap"></span></span>
                         </div>
 
-                        <!-- Compatibility warning for non-current files -->
-                        <template x-if="selectedRun.compatibility !== 'current'">
-                            <div class="bg-yellow-900/30 border border-yellow-700 rounded-lg px-4 py-3 text-sm text-yellow-300">
-                                ⚠️ Ten plik używa starego formatu i nie może być uruchomiony przez GUI.
-                                Aby go uruchomić — uruchom bezpośrednio z terminala lub zmigruj do nowego formatu.
-                            </div>
-                        </template>
+                        <!-- FLOW list -->
+                        <div class="flex-1 overflow-y-auto p-4 space-y-2">
 
-                        <!-- Config grid -->
-                        <div class="grid grid-cols-2 gap-3">
+                            <!-- Loading -->
+                            <template x-if="flowLoading">
+                                <div class="flex items-center gap-2 text-gray-500 text-sm py-4">
+                                    <span class="animate-spin">⟳</span> Ładowanie FLOW...
+                                </div>
+                            </template>
 
-                            <div class="bg-gray-800 rounded-lg p-4 col-span-2">
-                                <p class="text-xs text-gray-500 mb-1">📁 Folder projektu</p>
-                                <p class="text-sm font-mono text-gray-200 break-all"
-                                   x-text="selectedRun.project_folder || '—'"></p>
-                            </div>
+                            <!-- Error -->
+                            <template x-if="flowError && !flowLoading">
+                                <div class="text-red-400 text-sm py-4">❌ <span x-text="flowError"></span></div>
+                            </template>
 
-                            <div class="bg-gray-800 rounded-lg p-4">
-                                <p class="text-xs text-gray-500 mb-1">📐 Force resolution</p>
-                                <p class="text-sm font-mono text-gray-200"
-                                   x-text="formatResolution(selectedRun.force_resolution)"></p>
-                            </div>
+                            <!-- FLOW items -->
+                            <template x-if="flowData && !flowLoading">
+                                <div class="space-y-2">
+                                    <template x-for="(item, idx) in flowData.flow" :key="idx">
+                                        <div>
 
-                            <div class="bg-gray-800 rounded-lg p-4">
-                                <p class="text-xs text-gray-500 mb-1">📐 Default resolution</p>
-                                <p class="text-sm font-mono text-gray-200"
-                                   x-text="formatResolution(selectedRun.default_resolution)"></p>
-                            </div>
+                                            <!-- ─ BREAK ─ -->
+                                            <template x-if="item.break">
+                                                <div class="flex items-center gap-3 py-1">
+                                                    <div class="flex-1 border-t border-dashed border-gray-700"></div>
+                                                    <span class="text-xs text-gray-600 flex-shrink-0">✂ break</span>
+                                                    <div class="flex-1 border-t border-dashed border-gray-700"></div>
+                                                </div>
+                                            </template>
 
-                            <div class="bg-gray-800 rounded-lg p-4">
-                                <p class="text-xs text-gray-500 mb-1">⚙️ Backend</p>
-                                <p class="text-sm font-mono text-gray-200"
-                                   x-text="selectedRun.default_backend || '—'"></p>
-                            </div>
+                                            <!-- ─ CHAIN ─ -->
+                                            <template x-if="item.chain">
+                                                <div class="bg-gray-800 border border-gray-600 rounded-lg overflow-hidden">
+                                                    <!-- Chain header -->
+                                                    <div class="px-4 py-2.5 bg-gray-750 border-b border-gray-700 flex flex-wrap items-center gap-2"
+                                                         style="background-color:#1a2332">
+                                                        <span class="text-sm">⛓</span>
+                                                        <span class="font-mono text-sm text-blue-300" x-text="item.chain_prefix || 'chain'"></span>
+                                                        <div class="flex flex-wrap gap-1.5 ml-1">
+                                                            <template x-if="item.backend">
+                                                                <span class="px-1.5 py-0.5 bg-gray-700 rounded text-xs text-gray-300" x-text="item.backend"></span>
+                                                            </template>
+                                                            <template x-if="item.fps">
+                                                                <span class="px-1.5 py-0.5 bg-gray-700 rounded text-xs text-gray-400" x-text="item.fps + ' fps'"></span>
+                                                            </template>
+                                                            <template x-if="item.steps">
+                                                                <span class="px-1.5 py-0.5 bg-gray-700 rounded text-xs text-gray-400" x-text="item.steps + ' steps'"></span>
+                                                            </template>
+                                                            <template x-if="item.cfg">
+                                                                <span class="px-1.5 py-0.5 bg-gray-700 rounded text-xs text-gray-400" x-text="'cfg ' + item.cfg"></span>
+                                                            </template>
+                                                            <template x-if="item.blocks_to_swap != null">
+                                                                <span class="px-1.5 py-0.5 bg-indigo-900 rounded text-xs text-indigo-300" x-text="'bts:' + item.blocks_to_swap"></span>
+                                                            </template>
+                                                            <template x-if="item.width && item.height">
+                                                                <span class="px-1.5 py-0.5 bg-gray-700 rounded text-xs text-yellow-400"
+                                                                      x-text="item.width + '×' + item.height"></span>
+                                                            </template>
+                                                        </div>
+                                                        <span class="ml-auto text-xs text-gray-600"
+                                                              x-text="item.chain.length + ' step' + (item.chain.length !== 1 ? 's' : '')"></span>
+                                                    </div>
 
-                            <div class="bg-gray-800 rounded-lg p-4">
-                                <p class="text-xs text-gray-500 mb-1">🔲 Blocks to swap</p>
-                                <p class="text-sm font-mono text-gray-200"
-                                   x-text="selectedRun.default_blocks_to_swap ?? '—'"></p>
-                            </div>
+                                                    <!-- Chain steps -->
+                                                    <div class="divide-y divide-gray-700">
+                                                        <template x-for="(step, si) in item.chain" :key="si">
+                                                            <div class="px-4 py-2.5">
+                                                                <div class="flex items-start gap-2">
+                                                                    <span class="text-xs text-gray-600 mt-0.5 flex-shrink-0"
+                                                                          x-text="'Step ' + (si+1)"></span>
+                                                                    <div class="flex flex-wrap gap-1.5">
+                                                                        <template x-if="step.duration">
+                                                                            <span class="px-1.5 py-0.5 bg-gray-700 rounded text-xs text-gray-300" x-text="step.duration + 's'"></span>
+                                                                        </template>
+                                                                        <template x-if="step.blocks_to_swap != null">
+                                                                            <span class="px-1.5 py-0.5 bg-indigo-900 rounded text-xs text-indigo-300" x-text="'bts:' + step.blocks_to_swap"></span>
+                                                                        </template>
+                                                                        <template x-if="step.width && step.height">
+                                                                            <span class="px-1.5 py-0.5 bg-gray-700 rounded text-xs text-yellow-400"
+                                                                                  x-text="step.width + '×' + step.height"></span>
+                                                                        </template>
+                                                                    </div>
+                                                                </div>
+                                                                <p class="text-xs text-gray-400 mt-1 ml-12 line-clamp-2"
+                                                                   x-text="step.pos || '—'"></p>
+                                                            </div>
+                                                        </template>
+                                                    </div>
+                                                </div>
+                                            </template>
 
-                            <div class="bg-gray-800 rounded-lg p-4">
-                                <p class="text-xs text-gray-500 mb-1">🎞 FPS</p>
-                                <p class="text-sm font-mono text-gray-200"
-                                   x-text="selectedRun.default_fps ?? '—'"></p>
-                            </div>
+                                            <!-- ─ FILE ─ -->
+                                            <template x-if="item.file">
+                                                <div class="bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 hover:border-gray-600 transition">
+                                                    <!-- File header row -->
+                                                    <div class="flex flex-wrap items-center gap-2">
+                                                        <span x-text="fileIcon(item.file)" class="text-base flex-shrink-0"></span>
+                                                        <span class="font-mono text-sm text-gray-200 flex-shrink-0" x-text="item.file"></span>
 
-                            <div class="bg-gray-800 rounded-lg p-4">
-                                <p class="text-xs text-gray-500 mb-1">🪜 Steps</p>
-                                <p class="text-sm font-mono text-gray-200"
-                                   x-text="selectedRun.default_steps ?? '—'"></p>
-                            </div>
+                                                        <!-- Pills -->
+                                                        <div class="flex flex-wrap gap-1.5 ml-1">
+                                                            <template x-if="item.backend">
+                                                                <span class="px-1.5 py-0.5 bg-gray-700 rounded text-xs text-gray-300" x-text="item.backend"></span>
+                                                            </template>
+                                                            <template x-if="item.duration">
+                                                                <span class="px-1.5 py-0.5 bg-gray-700 rounded text-xs text-gray-300" x-text="item.duration + 's'"></span>
+                                                            </template>
+                                                            <template x-if="item.fps">
+                                                                <span class="px-1.5 py-0.5 bg-gray-700 rounded text-xs text-gray-400" x-text="item.fps + ' fps'"></span>
+                                                            </template>
+                                                            <template x-if="item.steps">
+                                                                <span class="px-1.5 py-0.5 bg-gray-700 rounded text-xs text-gray-400" x-text="item.steps + ' steps'"></span>
+                                                            </template>
+                                                            <template x-if="item.cfg">
+                                                                <span class="px-1.5 py-0.5 bg-gray-700 rounded text-xs text-gray-400" x-text="'cfg ' + item.cfg"></span>
+                                                            </template>
+                                                            <template x-if="item.blocks_to_swap != null">
+                                                                <span class="px-1.5 py-0.5 bg-indigo-900 rounded text-xs text-indigo-300" x-text="'bts:' + item.blocks_to_swap"></span>
+                                                            </template>
+                                                            <template x-if="item.width && item.height">
+                                                                <span class="px-1.5 py-0.5 bg-gray-700 rounded text-xs text-yellow-400"
+                                                                      x-text="item.width + '×' + item.height"></span>
+                                                            </template>
+                                                        </div>
+                                                    </div>
+
+                                                    <!-- Positive prompt -->
+                                                    <template x-if="item.pos && item.pos !== 'NONE'">
+                                                        <p class="text-xs text-green-400/80 mt-2 line-clamp-2 leading-relaxed"
+                                                           x-text="item.pos"></p>
+                                                    </template>
+
+                                                    <!-- Negative prompt (collapsible) -->
+                                                    <template x-if="item.neg && item.neg !== 'NONE'">
+                                                        <div class="mt-1" x-data="{ open: false }">
+                                                            <button @click="open = !open"
+                                                                    class="text-xs text-gray-600 hover:text-gray-400 transition">
+                                                                <span x-text="open ? '▲ neg' : '▼ neg'"></span>
+                                                            </button>
+                                                            <p x-show="open"
+                                                               class="text-xs text-red-400/60 mt-1 leading-relaxed line-clamp-4"
+                                                               x-text="item.neg"></p>
+                                                        </div>
+                                                    </template>
+
+                                                </div>
+                                            </template>
+
+                                        </div>
+                                    </template>
+                                </div>
+                            </template>
 
                         </div>
-
-                        <!-- Flow editor placeholder -->
-                        <div class="bg-gray-800 rounded-lg p-6 text-center border border-dashed border-gray-700 mt-2">
-                            <p class="text-gray-600 text-sm">Flow Editor — Etap 3</p>
-                        </div>
-
                     </div>
                 </template>
 
             </div>
 
-            <!-- LOG PANEL -->
-            <div class="flex-shrink-0 border-t border-gray-700" style="height: 160px; background-color: #030712;">
-                <div class="px-4 py-2 border-b border-gray-800 flex items-center justify-between">
-                    <div class="flex items-center gap-2">
-                        <span class="w-2 h-2 rounded-full bg-gray-600"></span>
-                        <span class="text-xs text-gray-500 uppercase font-semibold tracking-wider">Logi generowania</span>
-                    </div>
+            <!-- ─── LOG PANEL ─────────────────────────── -->
+            <div class="flex-shrink-0 border-t border-gray-700" style="height:150px;background:#030712">
+                <div class="px-4 py-1.5 border-b border-gray-800 flex items-center justify-between">
+                    <span class="text-xs text-gray-500 uppercase font-semibold tracking-wider">Logi generowania</span>
                     <div class="flex items-center gap-3">
                         <span class="text-xs text-gray-700">WebSocket — Etap 4</span>
                         <button @click="clearLog()" class="text-xs text-gray-600 hover:text-gray-400 transition">Wyczyść</button>
                     </div>
                 </div>
-                <div id="log-output"
-                     class="overflow-y-auto px-4 py-2 font-mono text-xs text-gray-500 leading-relaxed"
-                     style="height: calc(100% - 33px)">
-                </div>
+                <div id="log-output" class="overflow-y-auto px-4 py-2 font-mono text-xs text-gray-500 leading-relaxed"
+                     style="height:calc(100% - 30px)"></div>
             </div>
 
         </main>
     </div>
 
+    <!-- ═══════════════════════════════════════════ JS -->
     <script>
-        function app() {
-            return {
-                // State
-                comfyuiUrl: 'http://127.0.0.1:8189',
-                runs: [],
-                runsLoading: true,
-                runsError: null,
-                selectedRun: null,
+    function app() {
+        return {
+            comfyuiUrl: 'http://127.0.0.1:8189',
+            runs: [],
+            runsLoading: true,
+            runsError: null,
+            selectedRun: null,
+            flowData: null,
+            flowLoading: false,
+            flowError: null,
 
-                // Computed
-                get canGenerate() {
-                    return this.selectedRun?.compatibility === 'current';
-                },
-                get toolbarStatus() {
-                    if (!this.selectedRun) return 'Wybierz projekt aby zacząć';
-                    if (this.selectedRun.compatibility !== 'current') return '⚠️ Plik w starym formacie — nie można uruchomić przez GUI';
-                    return `Projekt: ${this.selectedRun.display_name}`;
-                },
+            get canGenerate() {
+                return this.selectedRun?.compatibility === 'current' && !!this.flowData;
+            },
+            get toolbarStatus() {
+                if (!this.selectedRun) return 'Wybierz projekt aby zacząć';
+                if (this.selectedRun.compatibility !== 'current') return '⚠️ Stary format — nie można uruchomić przez GUI';
+                return `Projekt: ${this.selectedRun.display_name}`;
+            },
 
-                // Init
-                async init() {
-                    await this.loadConfig();
-                    await this.loadRuns();
-                },
+            async init() {
+                try {
+                    const cfg = await fetch('/api/config').then(r => r.json());
+                    if (cfg.comfyui_url) this.comfyuiUrl = cfg.comfyui_url;
+                } catch(e) {}
+                await this.loadRuns();
+            },
 
-                async loadConfig() {
-                    try {
-                        const res = await fetch('/api/config');
-                        const cfg = await res.json();
-                        if (cfg.comfyui_url) this.comfyuiUrl = cfg.comfyui_url;
-                    } catch(e) {
-                        console.warn('Config load failed:', e);
-                    }
-                },
+            async loadRuns() {
+                this.runsLoading = true;
+                this.runsError = null;
+                try {
+                    const res = await fetch('/api/runs');
+                    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                    this.runs = await res.json();
+                    this.log(`Załadowano ${this.runs.length} projektów`);
+                } catch(e) {
+                    this.runsError = e.message;
+                    this.log(`❌ Błąd: ${e.message}`);
+                } finally {
+                    this.runsLoading = false;
+                }
+            },
 
-                async loadRuns() {
-                    this.runsLoading = true;
-                    this.runsError = null;
-                    try {
-                        const res = await fetch('/api/runs');
-                        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-                        this.runs = await res.json();
-                        this.log(`Załadowano ${this.runs.length} projektów`);
-                    } catch(e) {
-                        this.runsError = e.message;
-                        this.log(`❌ Błąd ładowania projektów: ${e.message}`);
-                    } finally {
-                        this.runsLoading = false;
-                    }
-                },
+            async selectRun(run) {
+                this.selectedRun = run;
+                this.flowData = null;
+                this.flowError = null;
+                this.log(`Wybrano: ${run.display_name} [${run.compatibility}]`);
 
-                selectRun(run) {
-                    this.selectedRun = run;
-                    this.log(`Wybrano: ${run.display_name} [${run.compatibility}]`);
-                },
+                if (run.compatibility === 'current') {
+                    await this.loadFlow(run.filename);
+                }
+            },
 
-                // Helpers
-                compatibilityIcon(c) {
-                    return { current: '✅', legacy: '⚠️', unknown: '❓' }[c] ?? '❓';
-                },
-                compatibilityTitle(c) {
-                    return {
-                        current: 'Aktualny format — można uruchomić',
-                        legacy:  'Stary format — wymaga migracji',
-                        unknown: 'Nieznany format'
-                    }[c] ?? '';
-                },
-                compatibilityLabel(c) {
-                    return { current: 'aktualny', legacy: 'stary format', unknown: 'nieznany' }[c] ?? c;
-                },
-                compatibilityClass(c) {
-                    return {
-                        current: 'bg-green-900 text-green-300',
-                        legacy:  'bg-yellow-900 text-yellow-300',
-                        unknown: 'bg-gray-700 text-gray-400'
-                    }[c] ?? 'bg-gray-700 text-gray-400';
-                },
-                formatResolution(r) {
-                    if (!r) return '—';
-                    if (Array.isArray(r) && r.length === 2) return `${r[0]} × ${r[1]}`;
-                    return String(r);
-                },
+            async loadFlow(filename) {
+                this.flowLoading = true;
+                this.flowError = null;
+                try {
+                    const res = await fetch(`/api/runs/${filename}/flow`);
+                    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                    this.flowData = await res.json();
+                    this.log(`FLOW: ${this.flowData.item_count} elementów (${this.flowData.flow_type})`);
+                } catch(e) {
+                    this.flowError = e.message;
+                    this.log(`❌ FLOW error: ${e.message}`);
+                } finally {
+                    this.flowLoading = false;
+                }
+            },
 
-                // Log
-                log(msg) {
-                    const out = document.getElementById('log-output');
-                    if (!out) return;
-                    const line = document.createElement('div');
-                    const time = new Date().toLocaleTimeString('pl-PL');
-                    line.innerHTML = `<span class="text-gray-700">[${time}]</span> ${msg}`;
-                    out.appendChild(line);
-                    out.scrollTop = out.scrollHeight;
-                },
-                clearLog() {
-                    const out = document.getElementById('log-output');
-                    if (out) out.innerHTML = '';
-                },
-            }
+            // Helpers
+            compatibilityIcon(c) {
+                return { current:'✅', legacy:'⚠️', unknown:'❓' }[c] ?? '❓';
+            },
+            compatibilityTitle(c) {
+                return { current:'Aktualny — można uruchomić', legacy:'Stary format', unknown:'Nieznany format' }[c] ?? '';
+            },
+            formatRes(r) {
+                if (!r) return '—';
+                if (Array.isArray(r) && r.length === 2) return `${r[0]}×${r[1]}`;
+                return String(r);
+            },
+            projectFolderName() {
+                const p = this.selectedRun?.project_folder;
+                if (!p) return '—';
+                return p.replace(/\\/g, '/').split('/').filter(Boolean).pop() || p;
+            },
+            fileIcon(f) {
+                if (!f) return '📄';
+                const ext = f.split('.').pop().toLowerCase();
+                if (['jpg','jpeg','png','webp','gif','bmp'].includes(ext)) return '📷';
+                if (['mp4','avi','mov','mkv','webm'].includes(ext)) return '🎬';
+                return '📄';
+            },
+
+            log(msg) {
+                const out = document.getElementById('log-output');
+                if (!out) return;
+                const line = document.createElement('div');
+                const time = new Date().toLocaleTimeString('pl-PL');
+                line.innerHTML = `<span class="text-gray-700">[${time}]</span> ${msg}`;
+                out.appendChild(line);
+                out.scrollTop = out.scrollHeight;
+            },
+            clearLog() {
+                const out = document.getElementById('log-output');
+                if (out) out.innerHTML = '';
+            },
         }
+    }
     </script>
 
 </body>
