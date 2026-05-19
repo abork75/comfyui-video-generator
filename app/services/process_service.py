@@ -208,11 +208,22 @@ class ProcessService:
     def _read_stdout_sync(
         self, proc: subprocess.Popen, loop: asyncio.AbstractEventLoop
     ) -> None:
+        """
+        Read stdout one byte at a time.
+
+        On Windows, read(n) blocks until n bytes arrive — so reading in large
+        chunks deadlocks when the subprocess prints a short prompt (< n bytes)
+        and then waits for stdin. Reading one byte at a time guarantees we
+        receive every character as soon as it's written.
+        """
         buf = ""
         while True:
-            raw = proc.stdout.read(256)
-            if not raw:
-                # EOF — flush leftover
+            try:
+                raw = proc.stdout.read(1)
+            except Exception:
+                break
+
+            if not raw:                    # EOF
                 if buf.strip():
                     clean = ANSI_ESCAPE.sub("", buf).strip()
                     if clean:
@@ -222,15 +233,17 @@ class ProcessService:
 
             buf += raw.decode("utf-8", errors="replace")
 
-            # Emit every complete line
-            while "\n" in buf:
-                line, buf = buf.split("\n", 1)
-                clean = ANSI_ESCAPE.sub("", line).rstrip("\r").rstrip()
+            # Complete line → emit immediately
+            if buf.endswith("\n"):
+                line  = buf.rstrip("\r\n")
+                clean = ANSI_ESCAPE.sub("", line).rstrip()
                 if clean:
                     loop.call_soon_threadsafe(
                         self._push, {"type": "log", "stream": "stdout", "text": clean})
+                buf = ""
+                continue
 
-            # Check if partial buffer is a known interactive prompt
+            # Partial line — check for interactive prompt (no trailing newline)
             clean_partial = ANSI_ESCAPE.sub("", buf)
             for pattern in PROMPT_PATTERNS:
                 if pattern in clean_partial:
@@ -245,7 +258,7 @@ class ProcessService:
                         self._push, {"type": "status", "status": self._status,
                                      "file": self._current_file, "awaiting_input": True})
 
-                    # Block thread until user clicks TAK/NIE (or 10-min timeout)
+                    # Block thread until user clicks TAK / NIE (max 10 min)
                     self._input_event.clear()
                     answered = self._input_event.wait(timeout=600.0)
                     self._awaiting = False
