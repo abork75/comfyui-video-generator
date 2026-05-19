@@ -5,6 +5,7 @@ API router for RUN file operations.
 
 from fastapi import APIRouter, HTTPException
 from app.services.run_file_service import scan_runs_folder, get_run_details, get_run_content, get_run_flow
+from app.services.media_service import get_transition_status
 
 router = APIRouter(prefix="/api/runs", tags=["runs"])
 
@@ -30,6 +31,15 @@ async def get_flow(filename: str):
     data = get_run_flow(filename)
     if data is None:
         raise HTTPException(status_code=404, detail=f"FLOW not found in: {filename}")
+    return data
+
+
+@router.get("/{filename}/status")
+async def get_run_status(filename: str):
+    """Get transition file existence status for every FLOW item."""
+    data = get_transition_status(filename)
+    if data is None:
+        raise HTTPException(status_code=404, detail=f"Cannot resolve status for: {filename}")
     return data
 
 

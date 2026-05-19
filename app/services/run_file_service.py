@@ -53,12 +53,10 @@ def extract_globals(content: str) -> dict[str, Any]:
 
     Only simple literals are extracted: str, int, float, bool, tuple, list, None.
     Complex expressions (function calls, comprehensions) are skipped silently.
+    Raises SyntaxError if the source cannot be parsed (caller decides how to handle).
     """
     result: dict[str, Any] = {}
-    try:
-        tree = ast.parse(content)
-    except SyntaxError:
-        return result
+    tree = ast.parse(content)   # intentionally let SyntaxError propagate
 
     for node in ast.iter_child_nodes(tree):
         if not isinstance(node, ast.Assign):
@@ -120,8 +118,20 @@ def _build_run_info(path: Path) -> dict:
 
     info["compatibility"] = check_compatibility(content)
 
+    try:
+        g = extract_globals(content) if info["compatibility"] == "current" else {}
+    except SyntaxError as exc:
+        info["error"] = f"SyntaxError (line {exc.lineno}): {exc.msg}"
+        info["syntax_error"] = {
+            "msg":    exc.msg,
+            "line":   exc.lineno,
+            "offset": exc.offset,
+            "text":   exc.text,
+        }
+        return info
+
     if info["compatibility"] == "current":
-        g = extract_globals(content)
+        info["syntax_error"]         = None
         info["project_folder"]       = g.get("PROJECT_FOLDER")
         info["force_resolution"]     = g.get("FORCE_RESOLUTION")
         info["default_resolution"]   = g.get("DEFAULT_RESOLUTION")

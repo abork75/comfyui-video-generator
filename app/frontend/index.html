@@ -12,650 +12,718 @@
         ::-webkit-scrollbar-track { background: #111827; }
         ::-webkit-scrollbar-thumb { background: #374151; border-radius: 3px; }
         ::-webkit-scrollbar-thumb:hover { background: #4b5563; }
-
-        /* Log line colors */
-        .log-sys    { color: #fbbf24; }   /* amber  — system messages */
-        .log-stdout { color: #d1d5db; }   /* gray   — stdout          */
-        .log-stderr { color: #f87171; }   /* red    — stderr          */
-        .log-ts     { color: #374151; }   /* dark   — timestamp       */
-
-        /* Running pulse on Generuj button */
+        .log-sys    { color: #fbbf24; }
+        .log-stdout { color: #d1d5db; }
+        .log-stderr { color: #f87171; }
+        .log-ts     { color: #374151; }
         @keyframes pulse-green {
-            0%, 100% { box-shadow: 0 0 0 0 rgba(34,197,94,0.4); }
-            50%       { box-shadow: 0 0 0 6px rgba(34,197,94,0);  }
+            0%,100% { box-shadow: 0 0 0 0 rgba(34,197,94,.4); }
+            50%      { box-shadow: 0 0 0 6px rgba(34,197,94,0); }
         }
         .btn-running { animation: pulse-green 1.5s ease-in-out infinite; }
+        /* Thumbnail */
+        .thumb { width:56px; height:42px; object-fit:cover; border-radius:4px; flex-shrink:0; background:#1f2937; cursor:pointer; }
+        .thumb-placeholder { width:56px; height:42px; border-radius:4px; flex-shrink:0; background:#1f2937; display:flex; align-items:center; justify-content:center; font-size:18px; }
     </style>
 </head>
 
-<body class="bg-gray-900 text-white h-screen flex flex-col overflow-hidden"
-      x-data="app()">
+<body class="bg-gray-900 text-white h-screen flex flex-col overflow-hidden" x-data="app()">
 
-    <!-- ═══════════════════════════════════════════ TOP BAR -->
-    <header class="bg-gray-800 border-b border-gray-700 px-5 py-3 flex items-center justify-between flex-shrink-0">
-        <div class="flex items-center gap-3">
-            <span class="text-2xl">🎬</span>
-            <div>
-                <h1 class="font-bold text-base leading-tight">ComfyUI Video Generator</h1>
-                <p class="text-xs text-gray-500 leading-tight">v0.4 — Etap 4b</p>
-            </div>
+<!-- ═══ TOP BAR ═══════════════════════════════════════════════════ -->
+<header class="bg-gray-800 border-b border-gray-700 px-5 py-3 flex items-center justify-between flex-shrink-0">
+    <div class="flex items-center gap-3">
+        <span class="text-2xl">🎬</span>
+        <div>
+            <h1 class="font-bold text-base leading-tight">ComfyUI Video Generator</h1>
+            <p class="text-xs text-gray-500 leading-tight">v0.5 — Etap 5</p>
         </div>
-        <div class="flex items-center gap-3">
-            <!-- WS status dot -->
-            <span :title="wsConnected ? 'WebSocket połączony' : 'WebSocket rozłączony'"
-                  :class="wsConnected ? 'bg-green-500' : 'bg-red-600'"
-                  class="w-2 h-2 rounded-full flex-shrink-0 transition-colors"></span>
+    </div>
+    <div class="flex items-center gap-3">
+        <span :title="wsConnected ? 'WebSocket OK' : 'WebSocket rozłączony'"
+              :class="wsConnected ? 'bg-green-500' : 'bg-red-600'"
+              class="w-2 h-2 rounded-full flex-shrink-0 transition-colors"></span>
+        <a :href="comfyuiUrl" target="_blank"
+           class="flex items-center gap-2 bg-purple-700 hover:bg-purple-600 px-3 py-1.5 rounded-lg text-sm font-medium transition">
+            ⚡ Open ComfyUI
+        </a>
+        <div class="h-5 w-px bg-gray-600"></div>
+        <a href="/logout" class="text-gray-400 hover:text-white text-sm transition px-2 py-1 rounded hover:bg-gray-700">Wyloguj ↩</a>
+    </div>
+</header>
 
-            <a :href="comfyuiUrl" target="_blank"
-               class="flex items-center gap-2 bg-purple-700 hover:bg-purple-600 px-3 py-1.5 rounded-lg text-sm font-medium transition">
-                ⚡ Open ComfyUI
-            </a>
-            <div class="h-5 w-px bg-gray-600"></div>
-            <a href="/logout" class="text-gray-400 hover:text-white text-sm transition px-2 py-1 rounded hover:bg-gray-700">
-                Wyloguj ↩
-            </a>
+<!-- ═══ MAIN ══════════════════════════════════════════════════════ -->
+<div class="flex flex-1 overflow-hidden">
+
+    <!-- ─── SIDEBAR ───────────────────────────────────────────── -->
+    <aside class="w-64 bg-gray-800 border-r border-gray-700 flex flex-col flex-shrink-0">
+        <div class="px-4 py-3 border-b border-gray-700 flex items-center justify-between">
+            <span class="text-xs text-gray-400 uppercase font-semibold tracking-wider">Projekty</span>
+            <button @click="loadRuns()" class="text-gray-500 hover:text-gray-300 transition text-sm" title="Odśwież">↻</button>
         </div>
-    </header>
-
-    <!-- ═══════════════════════════════════════════ MAIN -->
-    <div class="flex flex-1 overflow-hidden">
-
-        <!-- ─── SIDEBAR ─────────────────────────────── -->
-        <aside class="w-64 bg-gray-800 border-r border-gray-700 flex flex-col flex-shrink-0">
-
-            <div class="px-4 py-3 border-b border-gray-700 flex items-center justify-between">
-                <span class="text-xs text-gray-400 uppercase font-semibold tracking-wider">Projekty</span>
-                <button @click="loadRuns()" class="text-gray-500 hover:text-gray-300 transition text-sm" title="Odśwież">↻</button>
-            </div>
-
-            <div x-show="runsLoading" class="flex items-center justify-center py-8 text-gray-600 text-sm gap-2">
-                <span class="animate-spin inline-block">⟳</span> Ładowanie...
-            </div>
-
-            <div x-show="runsError && !runsLoading" class="px-4 py-3 text-red-400 text-xs">
-                ❌ <span x-text="runsError"></span>
-            </div>
-
-            <div x-show="!runsLoading" class="flex-1 overflow-y-auto py-1">
-                <template x-if="runs.length === 0 && !runsError">
-                    <div class="flex flex-col items-center justify-center py-8 text-center px-4 gap-2">
-                        <span class="text-3xl opacity-30">📁</span>
-                        <p class="text-xs text-gray-600">Brak plików RUN_*.py</p>
+        <div x-show="runsLoading" class="flex items-center justify-center py-8 text-gray-600 text-sm gap-2">
+            <span class="animate-spin inline-block">⟳</span> Ładowanie...
+        </div>
+        <div x-show="runsError && !runsLoading" class="px-4 py-3 text-red-400 text-xs">❌ <span x-text="runsError"></span></div>
+        <div x-show="!runsLoading" class="flex-1 overflow-y-auto py-1">
+            <template x-if="runs.length === 0 && !runsError">
+                <div class="flex flex-col items-center justify-center py-8 text-center px-4 gap-2">
+                    <span class="text-3xl opacity-30">📁</span>
+                    <p class="text-xs text-gray-600">Brak plików RUN_*.py</p>
+                </div>
+            </template>
+            <template x-for="run in runs" :key="run.filename">
+                <button @click="selectRun(run)"
+                        class="w-full text-left px-3 py-2.5 hover:bg-gray-700 transition flex items-start gap-2"
+                        :class="selectedRun?.filename === run.filename ? 'bg-gray-700 border-l-2 border-blue-500' : 'border-l-2 border-transparent'">
+                    <span class="mt-0.5 flex-shrink-0 text-xs" :title="compatibilityTitle(run.compatibility)"
+                          x-text="compatibilityIcon(run.compatibility)"></span>
+                    <div class="flex-1 min-w-0">
+                        <p class="text-sm text-gray-200 truncate leading-snug" x-text="run.display_name"></p>
+                        <p class="text-xs text-gray-600 truncate mt-0.5" x-text="run.filename"></p>
                     </div>
-                </template>
+                </button>
+            </template>
+        </div>
+        <div class="px-4 py-2 border-t border-gray-700 text-xs text-gray-600">✅ aktualny &nbsp; ⚠️ stary &nbsp; ❓ nieznany</div>
+    </aside>
 
-                <template x-for="run in runs" :key="run.filename">
-                    <button @click="selectRun(run)"
-                            class="w-full text-left px-3 py-2.5 hover:bg-gray-700 transition flex items-start gap-2"
-                            :class="selectedRun?.filename === run.filename
-                                ? 'bg-gray-700 border-l-2 border-blue-500'
-                                : 'border-l-2 border-transparent'">
-                        <span class="mt-0.5 flex-shrink-0 text-xs" :title="compatibilityTitle(run.compatibility)"
-                              x-text="compatibilityIcon(run.compatibility)"></span>
-                        <div class="flex-1 min-w-0">
-                            <p class="text-sm text-gray-200 truncate leading-snug" x-text="run.display_name"></p>
-                            <p class="text-xs text-gray-600 truncate mt-0.5" x-text="run.filename"></p>
+    <!-- ─── CONTENT ────────────────────────────────────────────── -->
+    <main class="flex-1 flex flex-col overflow-hidden">
+
+        <!-- TOOLBAR -->
+        <div class="border-b border-gray-700 px-5 py-2 flex items-center gap-3 flex-shrink-0 bg-gray-900">
+            <!-- Generuj -->
+            <button @click="startGeneration()"
+                    :disabled="!canGenerate"
+                    :class="[canGenerate && !isRunning ? 'bg-green-700 hover:bg-green-600 cursor-pointer'
+                             : isRunning ? 'bg-green-800 cursor-not-allowed btn-running'
+                             : 'bg-gray-700 opacity-40 cursor-not-allowed']"
+                    class="text-white text-sm font-medium px-4 py-1.5 rounded-lg transition flex items-center gap-2">
+                <span x-text="isRunning ? '⟳' : '▶'" :class="isRunning ? 'animate-spin inline-block' : ''"></span>
+                <span x-text="isRunning ? 'Generowanie...' : 'Generuj'"></span>
+            </button>
+            <!-- Stop -->
+            <button @click="stopGeneration()" :disabled="!isRunning"
+                    :class="isRunning ? 'bg-red-700 hover:bg-red-600 cursor-pointer' : 'bg-gray-700 opacity-40 cursor-not-allowed'"
+                    class="text-white text-sm px-3 py-1.5 rounded-lg transition">⏹ Stop</button>
+            <!-- Dry-run -->
+            <button @click="dryRun()"
+                    :disabled="!canGenerate || isRunning"
+                    :class="canGenerate && !isRunning ? 'bg-gray-700 hover:bg-gray-600 cursor-pointer' : 'bg-gray-800 opacity-40 cursor-not-allowed'"
+                    class="text-white text-sm px-3 py-1.5 rounded-lg transition" title="Sprawdź status bez generowania">
+                🔍 Sprawdź
+            </button>
+            <!-- Refresh status -->
+            <button @click="refreshStatus()"
+                    :disabled="!selectedRun || isRunning"
+                    :class="selectedRun && !isRunning ? 'text-gray-400 hover:text-white cursor-pointer' : 'text-gray-700 cursor-not-allowed'"
+                    class="text-sm px-2 py-1.5 rounded transition" title="Odśwież status plików">↻ Status</button>
+
+            <div class="h-4 w-px bg-gray-700"></div>
+            <span class="text-xs" :class="isRunning ? 'text-green-400' : 'text-gray-500'" x-text="toolbarStatus"></span>
+
+            <!-- FLOW badge + counters -->
+            <template x-if="flowData">
+                <div class="ml-auto flex items-center gap-3">
+                    <template x-if="statusData">
+                        <div class="flex items-center gap-2 text-xs">
+                            <span class="text-green-400" x-text="'✅ ' + statusData.existing"></span>
+                            <span class="text-gray-600">|</span>
+                            <span :class="statusData.missing > 0 ? 'text-orange-400' : 'text-gray-600'"
+                                  x-text="'○ ' + statusData.missing"></span>
                         </div>
-                    </button>
-                </template>
-            </div>
+                    </template>
+                    <span class="text-xs text-gray-500" x-text="`${flowData.item_count} elementów`"></span>
+                    <span class="px-2 py-0.5 rounded text-xs font-medium"
+                          :class="flowData.flow_type === 'test' ? 'bg-yellow-900 text-yellow-300' : 'bg-blue-900 text-blue-300'"
+                          x-text="flowData.flow_type === 'test' ? '🧪 TEST FLOW' : '📽 FULL FLOW'"></span>
+                </div>
+            </template>
+        </div>
 
-            <div class="px-4 py-2 border-t border-gray-700 text-xs text-gray-600">
-                ✅ aktualny &nbsp; ⚠️ stary &nbsp; ❓ nieznany
-            </div>
-        </aside>
+        <!-- ─── MAIN SCROLL AREA ─── -->
+        <div class="flex-1 overflow-y-auto">
 
-        <!-- ─── CONTENT ──────────────────────────────── -->
-        <main class="flex-1 flex flex-col overflow-hidden">
-
-            <!-- TOOLBAR -->
-            <div class="border-b border-gray-700 px-5 py-2 flex items-center gap-3 flex-shrink-0 bg-gray-900">
-
-                <!-- Generuj -->
-                <button @click="startGeneration()"
-                        :disabled="!canGenerate"
-                        :class="[
-                            canGenerate && !isRunning
-                                ? 'bg-green-700 hover:bg-green-600 cursor-pointer'
-                                : isRunning
-                                    ? 'bg-green-800 cursor-not-allowed btn-running'
-                                    : 'bg-gray-700 opacity-40 cursor-not-allowed'
-                        ]"
-                        class="text-white text-sm font-medium px-4 py-1.5 rounded-lg transition flex items-center gap-2">
-                    <span x-text="isRunning ? '⟳' : '▶'" :class="isRunning ? 'animate-spin inline-block' : ''"></span>
-                    <span x-text="isRunning ? 'Generowanie...' : 'Generuj'"></span>
-                </button>
-
-                <!-- Stop -->
-                <button @click="stopGeneration()"
-                        :disabled="!isRunning"
-                        :class="isRunning
-                            ? 'bg-red-700 hover:bg-red-600 cursor-pointer'
-                            : 'bg-gray-700 opacity-40 cursor-not-allowed'"
-                        class="text-white text-sm px-3 py-1.5 rounded-lg transition">
-                    ⏹ Stop
-                </button>
-
-                <div class="h-4 w-px bg-gray-700"></div>
-
-                <!-- Status text -->
-                <span class="text-xs" :class="isRunning ? 'text-green-400' : 'text-gray-500'"
-                      x-text="toolbarStatus"></span>
-
-                <!-- FLOW type badge -->
-                <template x-if="flowData">
-                    <div class="ml-auto flex items-center gap-2">
-                        <span class="text-xs text-gray-500" x-text="`${flowData.item_count} elementów`"></span>
-                        <span class="px-2 py-0.5 rounded text-xs font-medium"
-                              :class="flowData.flow_type === 'test'
-                                  ? 'bg-yellow-900 text-yellow-300'
-                                  : 'bg-blue-900 text-blue-300'"
-                              x-text="flowData.flow_type === 'test' ? '🧪 TEST FLOW' : '📽 FULL FLOW'">
-                        </span>
+            <!-- No run selected -->
+            <template x-if="!selectedRun">
+                <div class="flex items-center justify-center h-full">
+                    <div class="text-center">
+                        <div class="text-6xl mb-4 opacity-20">🎞</div>
+                        <p class="text-gray-500">Wybierz projekt z listy po lewej</p>
                     </div>
-                </template>
-            </div>
+                </div>
+            </template>
 
-            <!-- ─── MAIN SCROLL AREA ─── -->
-            <div class="flex-1 overflow-y-auto">
-
-                <!-- No run selected -->
-                <template x-if="!selectedRun">
-                    <div class="flex items-center justify-center h-full">
-                        <div class="text-center">
-                            <div class="text-6xl mb-4 opacity-20">🎞</div>
-                            <p class="text-gray-500">Wybierz projekt z listy po lewej</p>
+            <!-- Legacy / unknown -->
+            <template x-if="selectedRun && selectedRun.compatibility !== 'current'">
+                <div class="p-6 max-w-xl">
+                    <div class="flex items-center gap-3 mb-4">
+                        <span x-text="compatibilityIcon(selectedRun.compatibility)" class="text-2xl"></span>
+                        <div>
+                            <h2 class="text-lg font-bold" x-text="selectedRun.display_name"></h2>
+                            <p class="text-sm text-gray-500" x-text="selectedRun.filename"></p>
                         </div>
                     </div>
-                </template>
+                    <div class="bg-yellow-900/30 border border-yellow-700 rounded-lg px-4 py-3 text-sm text-yellow-300">
+                        ⚠️ Plik używa starego formatu i nie może być uruchomiony przez GUI.
+                    </div>
+                </div>
+            </template>
 
-                <!-- Legacy / unknown run -->
-                <template x-if="selectedRun && selectedRun.compatibility !== 'current'">
-                    <div class="p-6 max-w-xl">
-                        <div class="flex items-center gap-3 mb-4">
-                            <span x-text="compatibilityIcon(selectedRun.compatibility)" class="text-2xl"></span>
-                            <div>
-                                <h2 class="text-lg font-bold" x-text="selectedRun.display_name"></h2>
-                                <p class="text-sm text-gray-500" x-text="selectedRun.filename"></p>
+            <!-- Syntax error -->
+            <template x-if="selectedRun && selectedRun.compatibility === 'current' && selectedRun.syntax_error">
+                <div class="p-6">
+                    <div class="bg-red-950 border border-red-700 rounded-lg p-4">
+                        <p class="text-red-400 font-bold mb-2">❌ Błąd składni w pliku RUN</p>
+                        <p class="text-red-300 text-sm font-mono mb-1"
+                           x-text="`Linia ${selectedRun.syntax_error.line}: ${selectedRun.syntax_error.msg}`"></p>
+                        <p class="text-gray-400 text-xs font-mono bg-gray-900 rounded px-3 py-2 mt-2"
+                           x-text="selectedRun.syntax_error.text || ''"></p>
+                    </div>
+                </div>
+            </template>
+
+            <!-- Current run — FLOW -->
+            <template x-if="selectedRun && selectedRun.compatibility === 'current' && !selectedRun.syntax_error">
+                <div class="flex flex-col h-full">
+
+                    <!-- Project info bar -->
+                    <div class="px-5 py-2 bg-gray-800 border-b border-gray-700 flex flex-wrap items-center gap-x-5 gap-y-1 text-xs text-gray-400 flex-shrink-0">
+                        <span title="Folder projektu">📁 <span class="text-gray-300" x-text="projectFolderName()"></span></span>
+                        <span>📐 <span class="text-gray-300 font-mono" x-text="formatRes(selectedRun.force_resolution)"></span></span>
+                        <span>⚙️ <span class="text-gray-300" x-text="selectedRun.default_backend || '—'"></span></span>
+                        <span x-show="selectedRun.default_fps">🎞 <span class="text-gray-300" x-text="selectedRun.default_fps + ' fps'"></span></span>
+                        <span x-show="selectedRun.default_steps">🪜 <span class="text-gray-300" x-text="selectedRun.default_steps + ' steps'"></span></span>
+                        <span x-show="selectedRun.default_blocks_to_swap != null">🔲 <span class="text-gray-300" x-text="'bts:' + selectedRun.default_blocks_to_swap"></span></span>
+                    </div>
+
+                    <!-- FLOW list -->
+                    <div class="flex-1 overflow-y-auto p-4 space-y-2">
+                        <template x-if="flowLoading">
+                            <div class="flex items-center gap-2 text-gray-500 text-sm py-4">
+                                <span class="animate-spin">⟳</span> Ładowanie FLOW...
                             </div>
-                        </div>
-                        <div class="bg-yellow-900/30 border border-yellow-700 rounded-lg px-4 py-3 text-sm text-yellow-300">
-                            ⚠️ Plik używa starego formatu i nie może być uruchomiony przez GUI.<br>
-                            Uruchom bezpośrednio z terminala lub zmigruj do nowego formatu.
-                        </div>
-                    </div>
-                </template>
+                        </template>
+                        <template x-if="flowError && !flowLoading">
+                            <div class="text-red-400 text-sm py-4">❌ <span x-text="flowError"></span></div>
+                        </template>
 
-                <!-- Current run — project header + FLOW -->
-                <template x-if="selectedRun && selectedRun.compatibility === 'current'">
-                    <div class="flex flex-col h-full">
+                        <template x-if="flowData && !flowLoading">
+                            <div class="space-y-2">
+                                <template x-for="(item, idx) in flowData.flow" :key="idx">
+                                    <div>
 
-                        <!-- Compact project info bar -->
-                        <div class="px-5 py-2 bg-gray-800 border-b border-gray-700 flex flex-wrap items-center gap-x-5 gap-y-1 text-xs text-gray-400 flex-shrink-0">
-                            <span title="Folder projektu">
-                                📁 <span class="text-gray-300" x-text="projectFolderName()"></span>
-                            </span>
-                            <span>📐 <span class="text-gray-300 font-mono" x-text="formatRes(selectedRun.force_resolution)"></span></span>
-                            <span>⚙️ <span class="text-gray-300" x-text="selectedRun.default_backend || '—'"></span></span>
-                            <span x-show="selectedRun.default_fps">🎞 <span class="text-gray-300" x-text="selectedRun.default_fps + ' fps'"></span></span>
-                            <span x-show="selectedRun.default_steps">🪜 <span class="text-gray-300" x-text="selectedRun.default_steps + ' steps'"></span></span>
-                            <span x-show="selectedRun.default_blocks_to_swap != null">🔲 <span class="text-gray-300" x-text="'bts:' + selectedRun.default_blocks_to_swap"></span></span>
-                        </div>
+                                        <!-- BREAK -->
+                                        <template x-if="item.break">
+                                            <div class="flex items-center gap-3 py-1">
+                                                <div class="flex-1 border-t border-dashed border-gray-700"></div>
+                                                <span class="text-xs text-gray-600 flex-shrink-0">✂ break</span>
+                                                <div class="flex-1 border-t border-dashed border-gray-700"></div>
+                                            </div>
+                                        </template>
 
-                        <!-- FLOW list -->
-                        <div class="flex-1 overflow-y-auto p-4 space-y-2">
-
-                            <template x-if="flowLoading">
-                                <div class="flex items-center gap-2 text-gray-500 text-sm py-4">
-                                    <span class="animate-spin">⟳</span> Ładowanie FLOW...
-                                </div>
-                            </template>
-
-                            <template x-if="flowError && !flowLoading">
-                                <div class="text-red-400 text-sm py-4">❌ <span x-text="flowError"></span></div>
-                            </template>
-
-                            <template x-if="flowData && !flowLoading">
-                                <div class="space-y-2">
-                                    <template x-for="(item, idx) in flowData.flow" :key="idx">
-                                        <div>
-
-                                            <!-- ─ BREAK ─ -->
-                                            <template x-if="item.break">
-                                                <div class="flex items-center gap-3 py-1">
-                                                    <div class="flex-1 border-t border-dashed border-gray-700"></div>
-                                                    <span class="text-xs text-gray-600 flex-shrink-0">✂ break</span>
-                                                    <div class="flex-1 border-t border-dashed border-gray-700"></div>
-                                                </div>
-                                            </template>
-
-                                            <!-- ─ CHAIN ─ -->
-                                            <template x-if="item.chain">
-                                                <div class="bg-gray-800 border border-gray-600 rounded-lg overflow-hidden">
-                                                    <div class="px-4 py-2.5 border-b border-gray-700 flex flex-wrap items-center gap-2"
-                                                         style="background-color:#1a2332">
-                                                        <span class="text-sm">⛓</span>
-                                                        <span class="font-mono text-sm text-blue-300" x-text="item.chain_prefix || 'chain'"></span>
-                                                        <div class="flex flex-wrap gap-1.5 ml-1">
-                                                            <template x-if="item.backend">
-                                                                <span class="px-1.5 py-0.5 bg-gray-700 rounded text-xs text-gray-300" x-text="item.backend"></span>
-                                                            </template>
-                                                            <template x-if="item.fps">
-                                                                <span class="px-1.5 py-0.5 bg-gray-700 rounded text-xs text-gray-400" x-text="item.fps + ' fps'"></span>
-                                                            </template>
-                                                            <template x-if="item.steps">
-                                                                <span class="px-1.5 py-0.5 bg-gray-700 rounded text-xs text-gray-400" x-text="item.steps + ' steps'"></span>
-                                                            </template>
-                                                            <template x-if="item.cfg">
-                                                                <span class="px-1.5 py-0.5 bg-gray-700 rounded text-xs text-gray-400" x-text="'cfg ' + item.cfg"></span>
-                                                            </template>
-                                                            <template x-if="item.blocks_to_swap != null">
-                                                                <span class="px-1.5 py-0.5 bg-indigo-900 rounded text-xs text-indigo-300" x-text="'bts:' + item.blocks_to_swap"></span>
-                                                            </template>
-                                                            <template x-if="item.width && item.height">
-                                                                <span class="px-1.5 py-0.5 bg-gray-700 rounded text-xs text-yellow-400"
-                                                                      x-text="item.width + '×' + item.height"></span>
-                                                            </template>
-                                                        </div>
-                                                        <span class="ml-auto text-xs text-gray-600"
-                                                              x-text="item.chain.length + ' step' + (item.chain.length !== 1 ? 's' : '')"></span>
+                                        <!-- CHAIN -->
+                                        <template x-if="item.chain">
+                                            <div class="bg-gray-800 border border-gray-600 rounded-lg overflow-hidden">
+                                                <div class="px-4 py-2.5 border-b border-gray-700 flex flex-wrap items-center gap-2" style="background-color:#1a2332">
+                                                    <span class="text-sm">⛓</span>
+                                                    <span class="font-mono text-sm text-blue-300" x-text="item.chain_prefix || 'chain'"></span>
+                                                    <div class="flex flex-wrap gap-1.5 ml-1">
+                                                        <template x-if="item.backend"><span class="px-1.5 py-0.5 bg-gray-700 rounded text-xs text-gray-300" x-text="item.backend"></span></template>
+                                                        <template x-if="item.fps"><span class="px-1.5 py-0.5 bg-gray-700 rounded text-xs text-gray-400" x-text="item.fps + ' fps'"></span></template>
+                                                        <template x-if="item.steps"><span class="px-1.5 py-0.5 bg-gray-700 rounded text-xs text-gray-400" x-text="item.steps + ' steps'"></span></template>
+                                                        <template x-if="item.cfg"><span class="px-1.5 py-0.5 bg-gray-700 rounded text-xs text-gray-400" x-text="'cfg ' + item.cfg"></span></template>
+                                                        <template x-if="item.blocks_to_swap != null"><span class="px-1.5 py-0.5 bg-indigo-900 rounded text-xs text-indigo-300" x-text="'bts:' + item.blocks_to_swap"></span></template>
+                                                        <template x-if="item.width && item.height"><span class="px-1.5 py-0.5 bg-gray-700 rounded text-xs text-yellow-400" x-text="item.width + '×' + item.height"></span></template>
                                                     </div>
-                                                    <div class="divide-y divide-gray-700">
-                                                        <template x-for="(step, si) in item.chain" :key="si">
-                                                            <div class="px-4 py-2.5">
+                                                    <!-- Chain status -->
+                                                    <div class="ml-auto flex items-center gap-2">
+                                                        <template x-if="chainStatus(item)">
+                                                            <span :class="chainStatus(item).all ? 'text-green-400' : 'text-orange-400'"
+                                                                  x-text="chainStatus(item).all ? '✅ ' + chainStatus(item).count : '○ ' + chainStatus(item).missing + ' brak'"></span>
+                                                        </template>
+                                                        <span class="text-xs text-gray-600" x-text="item.chain.length + ' step' + (item.chain.length !== 1 ? 's' : '')"></span>
+                                                    </div>
+                                                </div>
+                                                <div class="divide-y divide-gray-700">
+                                                    <template x-for="(step, si) in item.chain" :key="si">
+                                                        <div class="px-4 py-2.5 flex items-start gap-3">
+                                                            <!-- Chain step thumbnail -->
+                                                            <div class="flex-shrink-0 mt-0.5">
+                                                                <template x-if="si === 0 && item.chain_prefix">
+                                                                    <img :src="thumbUrl(item.chain_prefix + '_001.mp4', 'start')"
+                                                                         class="thumb"
+                                                                         @error="$el.style.display='none'"
+                                                                         @click="openFrameModal(item.chain_prefix + '_001.mp4')"
+                                                                         title="Kliknij aby powiększyć">
+                                                                </template>
+                                                                <template x-if="si > 0 || !item.chain_prefix">
+                                                                    <div class="thumb-placeholder text-gray-700">⛓</div>
+                                                                </template>
+                                                            </div>
+                                                            <div class="flex-1 min-w-0">
                                                                 <div class="flex items-start gap-2">
-                                                                    <span class="text-xs text-gray-600 mt-0.5 flex-shrink-0"
-                                                                          x-text="'Step ' + (si+1)"></span>
+                                                                    <span class="text-xs text-gray-600 mt-0.5 flex-shrink-0" x-text="'Step ' + (si+1)"></span>
                                                                     <div class="flex flex-wrap gap-1.5">
-                                                                        <template x-if="step.duration">
-                                                                            <span class="px-1.5 py-0.5 bg-gray-700 rounded text-xs text-gray-300" x-text="step.duration + 's'"></span>
-                                                                        </template>
-                                                                        <template x-if="step.blocks_to_swap != null">
-                                                                            <span class="px-1.5 py-0.5 bg-indigo-900 rounded text-xs text-indigo-300" x-text="'bts:' + step.blocks_to_swap"></span>
-                                                                        </template>
-                                                                        <template x-if="step.width && step.height">
-                                                                            <span class="px-1.5 py-0.5 bg-gray-700 rounded text-xs text-yellow-400"
-                                                                                  x-text="step.width + '×' + step.height"></span>
-                                                                        </template>
+                                                                        <template x-if="step.duration"><span class="px-1.5 py-0.5 bg-gray-700 rounded text-xs text-gray-300" x-text="step.duration + 's'"></span></template>
+                                                                        <template x-if="step.blocks_to_swap != null"><span class="px-1.5 py-0.5 bg-indigo-900 rounded text-xs text-indigo-300" x-text="'bts:' + step.blocks_to_swap"></span></template>
+                                                                        <template x-if="step.width && step.height"><span class="px-1.5 py-0.5 bg-gray-700 rounded text-xs text-yellow-400" x-text="step.width + '×' + step.height"></span></template>
                                                                     </div>
                                                                 </div>
-                                                                <p class="text-xs text-gray-400 mt-1 ml-12 line-clamp-2"
-                                                                   x-text="step.pos || '—'"></p>
+                                                                <p class="text-xs text-gray-400 mt-1 line-clamp-2" x-text="step.pos || '—'"></p>
+                                                            </div>
+                                                            <!-- Chain step video actions -->
+                                                            <template x-if="item.chain_prefix">
+                                                                <div class="flex-shrink-0 flex items-center gap-1" x-data="{ fname: (item.chain_prefix + '_' + String(si+1).padStart(3,'0') + '.mp4') }">
+                                                                    <template x-if="itemExists(fname)">
+                                                                        <div class="flex gap-1">
+                                                                            <button @click="openVideoModal(fname)" class="text-green-500 hover:text-green-400 text-sm px-1" title="Odtwórz">▶</button>
+                                                                            <button @click="archiveFile(fname)" class="text-gray-600 hover:text-red-400 text-sm px-1" title="Archiwizuj">🗑</button>
+                                                                        </div>
+                                                                    </template>
+                                                                    <template x-if="!itemExists(fname)">
+                                                                        <span class="text-gray-700 text-xs">○</span>
+                                                                    </template>
+                                                                </div>
+                                                            </template>
+                                                        </div>
+                                                    </template>
+                                                </div>
+                                            </div>
+                                        </template>
+
+                                        <!-- FILE -->
+                                        <template x-if="item.file">
+                                            <div class="bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 hover:border-gray-600 transition"
+                                                 :class="fileItemStatus(item) === true ? 'border-l-4 border-l-green-700'
+                                                       : fileItemStatus(item) === false ? 'border-l-4 border-l-gray-700' : ''">
+                                                <div class="flex items-start gap-3">
+                                                    <!-- Thumbnail -->
+                                                    <div class="flex-shrink-0">
+                                                        <img :src="frameUrl(item.file, 'start')"
+                                                             class="thumb"
+                                                             @error="$el.style.display='none'; $el.nextElementSibling.style.display='flex'"
+                                                             @click="openFrameModal(item.file)"
+                                                             title="Kliknij aby zobaczyć klatki">
+                                                        <div class="thumb-placeholder text-gray-600" style="display:none"
+                                                             x-text="fileIcon(item.file)"></div>
+                                                    </div>
+
+                                                    <div class="flex-1 min-w-0">
+                                                        <!-- Header row -->
+                                                        <div class="flex flex-wrap items-center gap-2">
+                                                            <span class="font-mono text-sm text-gray-200 flex-shrink-0" x-text="item.file"></span>
+                                                            <div class="flex flex-wrap gap-1.5">
+                                                                <template x-if="item.backend"><span class="px-1.5 py-0.5 bg-gray-700 rounded text-xs text-gray-300" x-text="item.backend"></span></template>
+                                                                <template x-if="item.duration"><span class="px-1.5 py-0.5 bg-gray-700 rounded text-xs text-gray-300" x-text="item.duration + 's'"></span></template>
+                                                                <template x-if="item.fps"><span class="px-1.5 py-0.5 bg-gray-700 rounded text-xs text-gray-400" x-text="item.fps + ' fps'"></span></template>
+                                                                <template x-if="item.steps"><span class="px-1.5 py-0.5 bg-gray-700 rounded text-xs text-gray-400" x-text="item.steps + ' steps'"></span></template>
+                                                                <template x-if="item.cfg"><span class="px-1.5 py-0.5 bg-gray-700 rounded text-xs text-gray-400" x-text="'cfg ' + item.cfg"></span></template>
+                                                                <template x-if="item.blocks_to_swap != null"><span class="px-1.5 py-0.5 bg-indigo-900 rounded text-xs text-indigo-300" x-text="'bts:' + item.blocks_to_swap"></span></template>
+                                                                <template x-if="item.width && item.height"><span class="px-1.5 py-0.5 bg-gray-700 rounded text-xs text-yellow-400" x-text="item.width + '×' + item.height"></span></template>
+                                                            </div>
+                                                        </div>
+                                                        <!-- Positive prompt -->
+                                                        <template x-if="item.pos && item.pos !== 'NONE'">
+                                                            <p class="text-xs text-green-400/80 mt-2 line-clamp-2 leading-relaxed" x-text="item.pos"></p>
+                                                        </template>
+                                                        <!-- Negative prompt -->
+                                                        <template x-if="item.neg && item.neg !== 'NONE'">
+                                                            <div class="mt-1" x-data="{ open: false }">
+                                                                <button @click="open = !open" class="text-xs text-gray-600 hover:text-gray-400 transition">
+                                                                    <span x-text="open ? '▲ neg' : '▼ neg'"></span>
+                                                                </button>
+                                                                <p x-show="open" class="text-xs text-red-400/60 mt-1 leading-relaxed line-clamp-4" x-text="item.neg"></p>
                                                             </div>
                                                         </template>
                                                     </div>
-                                                </div>
-                                            </template>
 
-                                            <!-- ─ FILE ─ -->
-                                            <template x-if="item.file">
-                                                <div class="bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 hover:border-gray-600 transition">
-                                                    <div class="flex flex-wrap items-center gap-2">
-                                                        <span x-text="fileIcon(item.file)" class="text-base flex-shrink-0"></span>
-                                                        <span class="font-mono text-sm text-gray-200 flex-shrink-0" x-text="item.file"></span>
-                                                        <div class="flex flex-wrap gap-1.5 ml-1">
-                                                            <template x-if="item.backend">
-                                                                <span class="px-1.5 py-0.5 bg-gray-700 rounded text-xs text-gray-300" x-text="item.backend"></span>
-                                                            </template>
-                                                            <template x-if="item.duration">
-                                                                <span class="px-1.5 py-0.5 bg-gray-700 rounded text-xs text-gray-300" x-text="item.duration + 's'"></span>
-                                                            </template>
-                                                            <template x-if="item.fps">
-                                                                <span class="px-1.5 py-0.5 bg-gray-700 rounded text-xs text-gray-400" x-text="item.fps + ' fps'"></span>
-                                                            </template>
-                                                            <template x-if="item.steps">
-                                                                <span class="px-1.5 py-0.5 bg-gray-700 rounded text-xs text-gray-400" x-text="item.steps + ' steps'"></span>
-                                                            </template>
-                                                            <template x-if="item.cfg">
-                                                                <span class="px-1.5 py-0.5 bg-gray-700 rounded text-xs text-gray-400" x-text="'cfg ' + item.cfg"></span>
-                                                            </template>
-                                                            <template x-if="item.blocks_to_swap != null">
-                                                                <span class="px-1.5 py-0.5 bg-indigo-900 rounded text-xs text-indigo-300" x-text="'bts:' + item.blocks_to_swap"></span>
-                                                            </template>
-                                                            <template x-if="item.width && item.height">
-                                                                <span class="px-1.5 py-0.5 bg-gray-700 rounded text-xs text-yellow-400"
-                                                                      x-text="item.width + '×' + item.height"></span>
-                                                            </template>
-                                                        </div>
+                                                    <!-- Status + actions -->
+                                                    <div class="flex-shrink-0 flex items-center gap-2 ml-2">
+                                                        <template x-if="fileItemStatus(item) === true">
+                                                            <div class="flex items-center gap-1">
+                                                                <span class="text-xs text-green-500" x-text="fileItemSizeMb(item)"></span>
+                                                                <button @click="openVideoModal(fileItemName(item))"
+                                                                        class="text-green-500 hover:text-green-400 text-sm px-1 py-0.5 rounded" title="Odtwórz film">▶</button>
+                                                                <button @click="archiveFile(fileItemName(item))"
+                                                                        class="text-gray-600 hover:text-red-400 text-sm px-1 py-0.5 rounded" title="Archiwizuj (usuń z kolejki generowania)">🗑</button>
+                                                            </div>
+                                                        </template>
+                                                        <template x-if="fileItemStatus(item) === false">
+                                                            <span class="text-gray-600 text-xs">○ brak</span>
+                                                        </template>
                                                     </div>
-                                                    <template x-if="item.pos && item.pos !== 'NONE'">
-                                                        <p class="text-xs text-green-400/80 mt-2 line-clamp-2 leading-relaxed"
-                                                           x-text="item.pos"></p>
-                                                    </template>
-                                                    <template x-if="item.neg && item.neg !== 'NONE'">
-                                                        <div class="mt-1" x-data="{ open: false }">
-                                                            <button @click="open = !open"
-                                                                    class="text-xs text-gray-600 hover:text-gray-400 transition">
-                                                                <span x-text="open ? '▲ neg' : '▼ neg'"></span>
-                                                            </button>
-                                                            <p x-show="open"
-                                                               class="text-xs text-red-400/60 mt-1 leading-relaxed line-clamp-4"
-                                                               x-text="item.neg"></p>
-                                                        </div>
-                                                    </template>
                                                 </div>
-                                            </template>
+                                            </div>
+                                        </template>
 
-                                        </div>
-                                    </template>
-                                </div>
-                            </template>
-
-                        </div>
-                    </div>
-                </template>
-
-            </div>
-
-            <!-- ─── INPUT NEEDED BANNER ──────────────── -->
-            <div x-show="awaitingInput" x-cloak
-                 class="flex-shrink-0 border-t-2 border-yellow-500 bg-yellow-950 px-5 py-3 flex items-center gap-4">
-                <span class="text-yellow-400 text-lg flex-shrink-0">❓</span>
-                <div class="flex-1 min-w-0">
-                    <p class="text-xs text-yellow-300 font-semibold mb-0.5">Skrypt czeka na potwierdzenie:</p>
-                    <p class="text-sm text-yellow-100 font-mono truncate" x-text="inputPrompt"></p>
-                </div>
-                <div class="flex gap-2 flex-shrink-0">
-                    <button @click="answerInput('y')"
-                            class="bg-green-700 hover:bg-green-600 text-white text-sm font-bold px-5 py-2 rounded-lg transition">
-                        ✅ Tak (Y)
-                    </button>
-                    <button @click="answerInput('n')"
-                            class="bg-red-800 hover:bg-red-700 text-white text-sm font-bold px-5 py-2 rounded-lg transition">
-                        ❌ Nie (N)
-                    </button>
-                </div>
-            </div>
-
-            <!-- ─── LOG PANEL ─────────────────────────── -->
-            <div class="flex-shrink-0 border-t border-gray-700" style="height:160px;background:#030712">
-                <div class="px-4 py-1.5 border-b border-gray-800 flex items-center justify-between">
-                    <div class="flex items-center gap-2">
-                        <span class="text-xs text-gray-500 uppercase font-semibold tracking-wider">Logi generowania</span>
-                        <span x-show="isRunning"
-                              class="text-xs bg-green-900 text-green-400 px-1.5 py-0.5 rounded animate-pulse">
-                            ● LIVE
-                        </span>
-                    </div>
-                    <div class="flex items-center gap-3">
-                        <span class="text-xs"
-                              :class="{
-                                  'text-green-400': genStatus === 'running',
-                                  'text-gray-500':  genStatus === 'idle',
-                                  'text-blue-400':  genStatus === 'finished',
-                                  'text-red-400':   genStatus === 'failed',
-                                  'text-yellow-400': genStatus === 'stopped',
-                              }"
-                              x-text="statusLabel()"></span>
-                        <button @click="clearLog()" class="text-xs text-gray-600 hover:text-gray-400 transition">Wyczyść</button>
+                                    </div>
+                                </template>
+                            </div>
+                        </template>
                     </div>
                 </div>
-                <div id="log-output"
-                     class="overflow-y-auto px-4 py-2 font-mono text-xs leading-relaxed"
-                     style="height:calc(100% - 32px)"></div>
-            </div>
+            </template>
+        </div>
 
-        </main>
+        <!-- INPUT NEEDED BANNER -->
+        <div x-show="awaitingInput" x-cloak
+             class="flex-shrink-0 border-t-2 border-yellow-500 bg-yellow-950 px-5 py-3 flex items-center gap-4">
+            <span class="text-yellow-400 text-lg flex-shrink-0">❓</span>
+            <div class="flex-1 min-w-0">
+                <p class="text-xs text-yellow-300 font-semibold mb-0.5">Skrypt czeka na potwierdzenie:</p>
+                <p class="text-sm text-yellow-100 font-mono truncate" x-text="inputPrompt"></p>
+            </div>
+            <div class="flex gap-2 flex-shrink-0">
+                <button @click="answerInput('y')" class="bg-green-700 hover:bg-green-600 text-white text-sm font-bold px-5 py-2 rounded-lg transition">✅ Tak (Y)</button>
+                <button @click="answerInput('n')" class="bg-red-800 hover:bg-red-700 text-white text-sm font-bold px-5 py-2 rounded-lg transition">❌ Nie (N)</button>
+            </div>
+        </div>
+
+        <!-- LOG PANEL -->
+        <div class="flex-shrink-0 border-t border-gray-700" style="height:160px;background:#030712">
+            <div class="px-4 py-1.5 border-b border-gray-800 flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <span class="text-xs text-gray-500 uppercase font-semibold tracking-wider">Logi generowania</span>
+                    <span x-show="isRunning" class="text-xs bg-green-900 text-green-400 px-1.5 py-0.5 rounded animate-pulse">● LIVE</span>
+                </div>
+                <div class="flex items-center gap-3">
+                    <span class="text-xs"
+                          :class="{'text-green-400':genStatus==='running','text-gray-500':genStatus==='idle','text-blue-400':genStatus==='finished','text-red-400':genStatus==='failed','text-yellow-400':genStatus==='stopped'}"
+                          x-text="statusLabel()"></span>
+                    <button @click="clearLog()" class="text-xs text-gray-600 hover:text-gray-400 transition">Wyczyść</button>
+                </div>
+            </div>
+            <div id="log-output" class="overflow-y-auto px-4 py-2 font-mono text-xs leading-relaxed" style="height:calc(100% - 32px)"></div>
+        </div>
+
+    </main>
+</div>
+
+<!-- ═══ FRAME MODAL ═══════════════════════════════════════════════ -->
+<div x-show="frameModal.open" x-cloak
+     class="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4"
+     @click.self="frameModal.open = false">
+    <div class="bg-gray-900 rounded-xl border border-gray-700 max-w-4xl w-full p-4">
+        <div class="flex items-center justify-between mb-3">
+            <h3 class="text-sm font-semibold text-gray-300" x-text="frameModal.title"></h3>
+            <button @click="frameModal.open = false" class="text-gray-500 hover:text-white text-xl leading-none">×</button>
+        </div>
+        <div class="flex gap-4">
+            <div class="flex-1 text-center">
+                <p class="text-xs text-gray-600 mb-2">START</p>
+                <img :src="frameModal.startUrl" class="max-h-80 mx-auto rounded object-contain bg-gray-800" @error="$el.src=''">
+            </div>
+            <div class="flex-1 text-center">
+                <p class="text-xs text-gray-600 mb-2">END</p>
+                <img :src="frameModal.endUrl" class="max-h-80 mx-auto rounded object-contain bg-gray-800" @error="$el.src=''">
+            </div>
+        </div>
     </div>
+</div>
 
-    <!-- ═══════════════════════════════════════════ JS -->
-    <script>
-    function app() {
-        return {
-            // ─── State ─────────────────────────────
-            comfyuiUrl: 'http://127.0.0.1:8189',
-            runs: [],
-            runsLoading: true,
-            runsError: null,
-            selectedRun: null,
-            flowData: null,
-            flowLoading: false,
-            flowError: null,
+<!-- ═══ VIDEO MODAL ═══════════════════════════════════════════════ -->
+<div x-show="videoModal.open" x-cloak
+     class="fixed inset-0 bg-black/90 flex items-center justify-center z-50 p-4"
+     @click.self="closeVideoModal()">
+    <div class="bg-gray-900 rounded-xl border border-gray-700 max-w-3xl w-full p-4">
+        <div class="flex items-center justify-between mb-3">
+            <h3 class="text-sm font-semibold text-gray-300" x-text="videoModal.name"></h3>
+            <button @click="closeVideoModal()" class="text-gray-500 hover:text-white text-xl leading-none">×</button>
+        </div>
+        <video x-ref="videoPlayer" :src="videoModal.url" controls class="w-full rounded bg-black max-h-96"
+               style="outline:none"></video>
+    </div>
+</div>
 
-            // WebSocket + generation state
-            ws: null,
-            wsConnected: false,
-            genStatus: 'idle',   // idle | running | finished | failed | stopped
-            genFile: null,
-            awaitingInput: false,
-            inputPrompt: '',
+<!-- ═══ JS ════════════════════════════════════════════════════════ -->
+<script>
+function app() {
+    return {
+        // ─ State ──────────────────────────────────────────
+        comfyuiUrl: 'http://127.0.0.1:8189',
+        runs: [], runsLoading: true, runsError: null,
+        selectedRun: null,
+        flowData: null, flowLoading: false, flowError: null,
+        statusData: null,
+        ws: null, wsConnected: false,
+        genStatus: 'idle', genFile: null,
+        awaitingInput: false, inputPrompt: '',
+        frameModal: { open: false, title: '', startUrl: '', endUrl: '' },
+        videoModal: { open: false, name: '', url: '' },
 
-            // ─── Computed ──────────────────────────
-            get isRunning() {
-                return this.genStatus === 'running';
-            },
-            get canGenerate() {
-                return !this.isRunning
-                    && this.selectedRun?.compatibility === 'current'
-                    && !!this.flowData;
-            },
-            get toolbarStatus() {
-                if (this.isRunning) return `Generowanie: ${this.genFile || '...'}`;
-                if (!this.selectedRun) return 'Wybierz projekt aby zacząć';
-                if (this.selectedRun.compatibility !== 'current') return '⚠️ Stary format — nie można uruchomić przez GUI';
-                return `Projekt: ${this.selectedRun.display_name}`;
-            },
+        // ─ Computed ───────────────────────────────────────
+        get isRunning() { return this.genStatus === 'running'; },
+        get canGenerate() {
+            return !this.isRunning
+                && this.selectedRun?.compatibility === 'current'
+                && !this.selectedRun?.syntax_error
+                && !!this.flowData;
+        },
+        get toolbarStatus() {
+            if (this.isRunning) return `Generowanie: ${this.genFile || '...'}`;
+            if (!this.selectedRun) return 'Wybierz projekt aby zacząć';
+            if (this.selectedRun.compatibility !== 'current') return '⚠️ Stary format';
+            if (this.selectedRun.syntax_error) return '❌ Błąd składni w pliku RUN';
+            return `Projekt: ${this.selectedRun.display_name}`;
+        },
 
-            // ─── Init ──────────────────────────────
-            async init() {
-                try {
-                    const cfg = await fetch('/api/config').then(r => r.json());
-                    if (cfg.comfyui_url) this.comfyuiUrl = cfg.comfyui_url;
-                } catch(e) {}
-                this.connectWS();
-                await this.loadRuns();
-            },
+        // ─ Init ───────────────────────────────────────────
+        async init() {
+            try {
+                const cfg = await fetch('/api/config').then(r => r.json());
+                if (cfg.comfyui_url) this.comfyuiUrl = cfg.comfyui_url;
+            } catch(e) {}
+            this.connectWS();
+            await this.loadRuns();
+        },
 
-            // ─── WebSocket ─────────────────────────
-            connectWS() {
-                const proto = location.protocol === 'https:' ? 'wss' : 'ws';
-                const url   = `${proto}://${location.host}/ws/logs`;
-
-                try {
-                    this.ws = new WebSocket(url);
-                } catch(e) {
-                    this.logLine('sys', '❌ WebSocket: nie można połączyć');
+        // ─ WebSocket ──────────────────────────────────────
+        connectWS() {
+            const proto = location.protocol === 'https:' ? 'wss' : 'ws';
+            try { this.ws = new WebSocket(`${proto}://${location.host}/ws/logs`); } catch { return; }
+            this.ws.onopen = () => { this.wsConnected = true; this.logLine('sys','🔌 WebSocket połączony'); };
+            this.ws.onclose = () => {
+                this.wsConnected = false;
+                this.logLine('sys','🔌 WebSocket rozłączony — ponawiam za 3s...');
+                setTimeout(() => this.connectWS(), 3000);
+            };
+            this.ws.onerror = () => {};
+            this.ws.onmessage = (evt) => {
+                let msg; try { msg = JSON.parse(evt.data); } catch { return; }
+                if (msg.type === 'ping') return;
+                if (msg.type === 'status') {
+                    this.genStatus = msg.status || 'idle';
+                    if (msg.file) this.genFile = msg.file;
+                    if (typeof msg.awaiting_input === 'boolean') this.awaitingInput = msg.awaiting_input;
+                    // Auto-refresh status when generation finishes
+                    if (msg.status === 'finished' || msg.status === 'failed') this.refreshStatus();
                     return;
                 }
+                if (msg.type === 'input_needed') { this.awaitingInput = true; this.inputPrompt = msg.prompt || ''; return; }
+                if (msg.type === 'log') this.logLine(msg.stream, msg.text);
+            };
+        },
 
-                this.ws.onopen = () => {
-                    this.wsConnected = true;
-                    this.logLine('sys', '🔌 WebSocket połączony');
-                };
+        // ─ Generation ─────────────────────────────────────
+        async startGeneration() {
+            if (!this.canGenerate) return;
+            try {
+                const res = await fetch(`/api/generate/${encodeURIComponent(this.selectedRun.filename)}`, { method: 'POST' });
+                if (!res.ok) { const e = await res.json(); this.logLine('sys', `❌ ${e.detail}`); }
+            } catch(e) { this.logLine('sys', `❌ ${e.message}`); }
+        },
+        async stopGeneration() {
+            if (!this.isRunning) return;
+            try { await fetch('/api/generate', { method: 'DELETE' }); } catch(e) {}
+        },
+        async dryRun() {
+            if (!this.canGenerate || this.isRunning) return;
+            this.logLine('sys', '🔍 Dry-run: sprawdzam status (auto-odpowiedź N)...');
+            // Start generation — when the prompt appears, auto-answer N
+            this._dryRunMode = true;
+            try {
+                const res = await fetch(`/api/generate/${encodeURIComponent(this.selectedRun.filename)}`, { method: 'POST' });
+                if (!res.ok) { const e = await res.json(); this.logLine('sys', `❌ ${e.detail}`); }
+            } catch(e) { this.logLine('sys', `❌ ${e.message}`); }
+        },
+        async answerInput(answer) {
+            // If dry-run mode auto-answering N, clear flag
+            if (this._dryRunMode && answer !== 'n') { answer = 'n'; }
+            this._dryRunMode = false;
+            this.awaitingInput = false;
+            this.logLine('sys', `→ Wysyłam odpowiedź: ${answer.toUpperCase()}`);
+            try {
+                await fetch('/api/generate/stdin', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ text: answer }),
+                });
+            } catch(e) { this.logLine('sys', `❌ ${e.message}`); }
+        },
 
-                this.ws.onclose = () => {
-                    this.wsConnected = false;
-                    this.logLine('sys', '🔌 WebSocket rozłączony — ponawiam za 3s...');
-                    setTimeout(() => this.connectWS(), 3000);
-                };
+        // ─ Dry-run auto-answer hook ────────────────────────
+        _dryRunMode: false,
 
-                this.ws.onerror = () => {
-                    // onclose fires right after, no duplicate message needed
-                };
+        // When input_needed arrives during dry-run, auto-answer N
+        _handleInputNeeded(prompt) {
+            this.awaitingInput = true;
+            this.inputPrompt = prompt;
+            if (this._dryRunMode) {
+                setTimeout(() => this.answerInput('n'), 300);
+            }
+        },
 
-                this.ws.onmessage = (evt) => {
-                    let msg;
-                    try { msg = JSON.parse(evt.data); } catch { return; }
+        // ─ Runs ───────────────────────────────────────────
+        async loadRuns() {
+            this.runsLoading = true; this.runsError = null;
+            try {
+                const res = await fetch('/api/runs');
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                this.runs = await res.json();
+                this.logLine('sys', `Załadowano ${this.runs.length} projektów`);
+            } catch(e) { this.runsError = e.message; this.logLine('sys', `❌ ${e.message}`); }
+            finally { this.runsLoading = false; }
+        },
+        async selectRun(run) {
+            this.selectedRun = run; this.flowData = null; this.flowError = null; this.statusData = null;
+            this.logLine('sys', `Wybrano: ${run.display_name} [${run.compatibility}]`);
+            if (run.syntax_error) {
+                this.logLine('sys', `❌ Błąd składni linia ${run.syntax_error.line}: ${run.syntax_error.msg}`);
+                return;
+            }
+            if (run.compatibility === 'current') {
+                await Promise.all([this.loadFlow(run.filename), this.refreshStatus()]);
+            }
+        },
+        async loadFlow(filename) {
+            this.flowLoading = true; this.flowError = null;
+            try {
+                const res = await fetch(`/api/runs/${encodeURIComponent(filename)}/flow`);
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                this.flowData = await res.json();
+                this.logLine('sys', `FLOW: ${this.flowData.item_count} elementów (${this.flowData.flow_type})`);
+            } catch(e) { this.flowError = e.message; }
+            finally { this.flowLoading = false; }
+        },
 
-                    if (msg.type === 'ping') return;
+        // ─ Status ─────────────────────────────────────────
+        async refreshStatus() {
+            if (!this.selectedRun) return;
+            try {
+                const res = await fetch(`/api/runs/${encodeURIComponent(this.selectedRun.filename)}/status`);
+                if (!res.ok) return;
+                this.statusData = await res.json();
+            } catch(e) {}
+        },
 
-                    if (msg.type === 'status') {
-                        this.genStatus = msg.status || 'idle';
-                        if (msg.file) this.genFile = msg.file;
-                        if (typeof msg.awaiting_input === 'boolean') {
-                            this.awaitingInput = msg.awaiting_input;
-                        }
-                        return;
-                    }
+        // Map FLOW idx → status entry
+        _statusByIdx(idx) {
+            if (!this.statusData) return null;
+            return this.statusData.items.find(s => s.index === idx) || null;
+        },
 
-                    if (msg.type === 'input_needed') {
-                        this.awaitingInput = true;
-                        this.inputPrompt = msg.prompt || '';
-                        return;
-                    }
+        fileItemStatus(item) {
+            const idx = this.flowData?.flow?.indexOf(item);
+            const s = this._statusByIdx(idx);
+            return s ? s.exists : null;
+        },
+        fileItemName(item) {
+            const idx = this.flowData?.flow?.indexOf(item);
+            const s = this._statusByIdx(idx);
+            return s?.name || null;
+        },
+        fileItemSizeMb(item) {
+            const idx = this.flowData?.flow?.indexOf(item);
+            const s = this._statusByIdx(idx);
+            return s?.size_mb ? `${s.size_mb} MB` : '';
+        },
+        chainStatus(item) {
+            const idx = this.flowData?.flow?.indexOf(item);
+            const s = this._statusByIdx(idx);
+            if (!s || !s.steps) return null;
+            const total = s.steps.length;
+            const done  = s.steps.filter(x => x.exists).length;
+            return { all: done === total, count: done + '/' + total, missing: total - done };
+        },
+        itemExists(filename) {
+            if (!this.statusData) return false;
+            return this.statusData.items.some(s => {
+                if (s.steps) return s.steps.some(st => st.filename === filename && st.exists);
+                return s.name === filename && s.exists;
+            });
+        },
 
-                    if (msg.type === 'log') {
-                        this.logLine(msg.stream, msg.text);
-                    }
-                };
-            },
+        // ─ Media ──────────────────────────────────────────
+        frameUrl(file, kind) {
+            if (!this.selectedRun) return '';
+            return `/api/media/frame?run=${encodeURIComponent(this.selectedRun.filename)}&file=${encodeURIComponent(file)}&kind=${kind}`;
+        },
+        thumbUrl(file, kind) { return this.frameUrl(file, kind); },
 
-            // ─── Generation control ────────────────
-            async startGeneration() {
-                if (!this.canGenerate) return;
-                const filename = this.selectedRun.filename;
-                try {
-                    const res = await fetch(`/api/generate/${encodeURIComponent(filename)}`, {
-                        method: 'POST',
-                    });
-                    if (!res.ok) {
-                        const err = await res.json();
-                        this.logLine('sys', `❌ ${err.detail || 'Błąd startu'}`);
-                    }
-                } catch(e) {
-                    this.logLine('sys', `❌ Błąd: ${e.message}`);
+        openFrameModal(file) {
+            this.frameModal = {
+                open: true,
+                title: file,
+                startUrl: this.frameUrl(file, 'start'),
+                endUrl:   this.frameUrl(file, 'end'),
+            };
+        },
+        openVideoModal(name) {
+            if (!name || !this.selectedRun) return;
+            this.videoModal = {
+                open: true,
+                name: name,
+                url: `/api/media/video?run=${encodeURIComponent(this.selectedRun.filename)}&name=${encodeURIComponent(name)}`,
+            };
+        },
+        closeVideoModal() {
+            if (this.$refs.videoPlayer) { this.$refs.videoPlayer.pause(); this.$refs.videoPlayer.src = ''; }
+            this.videoModal = { open: false, name: '', url: '' };
+        },
+
+        async archiveFile(name) {
+            if (!name || !this.selectedRun) return;
+            if (!confirm(`Archiwizować ${name}?\n(plik zostanie przemianowany, nie usunięty)`)) return;
+            try {
+                const res = await fetch('/api/media/archive', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ run: this.selectedRun.filename, name }),
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    this.logLine('sys', `📦 Zarchiwizowano: ${name} → ${data.new_name}`);
+                    await this.refreshStatus();
+                } else {
+                    this.logLine('sys', `❌ ${data.detail}`);
                 }
-            },
+            } catch(e) { this.logLine('sys', `❌ ${e.message}`); }
+        },
 
-            async stopGeneration() {
-                if (!this.isRunning) return;
-                try {
-                    const res = await fetch('/api/generate', { method: 'DELETE' });
-                    if (!res.ok) {
-                        const err = await res.json();
-                        this.logLine('sys', `❌ ${err.detail || 'Błąd stopu'}`);
-                    }
-                } catch(e) {
-                    this.logLine('sys', `❌ Błąd: ${e.message}`);
-                }
-            },
+        // ─ Log panel ──────────────────────────────────────
+        logLine(stream, text) {
+            const out = document.getElementById('log-output');
+            if (!out) return;
+            const cls = { sys:'log-sys', stdout:'log-stdout', stderr:'log-stderr' }[stream] || 'log-stdout';
+            const time = new Date().toLocaleTimeString('pl-PL');
+            const line = document.createElement('div');
+            line.innerHTML = `<span class="log-ts">[${time}]</span> <span class="${cls}">${this._esc(text)}</span>`;
+            out.appendChild(line);
+            while (out.children.length > 500) out.removeChild(out.firstChild);
+            out.scrollTop = out.scrollHeight;
+        },
+        clearLog() { const o = document.getElementById('log-output'); if (o) o.innerHTML = ''; },
+        _esc(s) {
+            return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+        },
+        statusLabel() {
+            return { idle:'oczekuje', running:'● generowanie', finished:'✅ zakończono', failed:'❌ błąd', stopped:'⏹ zatrzymano' }[this.genStatus] ?? this.genStatus;
+        },
 
-            async answerInput(answer) {
-                this.awaitingInput = false;
-                this.logLine('sys', `→ Wysyłam odpowiedź: ${answer.toUpperCase()}`);
-                try {
-                    const res = await fetch('/api/generate/stdin', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ text: answer }),
-                    });
-                    if (!res.ok) {
-                        const err = await res.json();
-                        this.logLine('sys', `❌ ${err.detail || 'Błąd wysyłania odpowiedzi'}`);
-                    }
-                } catch(e) {
-                    this.logLine('sys', `❌ Błąd: ${e.message}`);
-                }
-            },
-
-            // ─── Runs list ─────────────────────────
-            async loadRuns() {
-                this.runsLoading = true;
-                this.runsError = null;
-                try {
-                    const res = await fetch('/api/runs');
-                    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-                    this.runs = await res.json();
-                    this.logLine('sys', `Załadowano ${this.runs.length} projektów`);
-                } catch(e) {
-                    this.runsError = e.message;
-                    this.logLine('sys', `❌ Błąd ładowania: ${e.message}`);
-                } finally {
-                    this.runsLoading = false;
-                }
-            },
-
-            async selectRun(run) {
-                this.selectedRun = run;
-                this.flowData = null;
-                this.flowError = null;
-                this.logLine('sys', `Wybrano: ${run.display_name} [${run.compatibility}]`);
-                if (run.compatibility === 'current') {
-                    await this.loadFlow(run.filename);
-                }
-            },
-
-            async loadFlow(filename) {
-                this.flowLoading = true;
-                this.flowError = null;
-                try {
-                    const res = await fetch(`/api/runs/${encodeURIComponent(filename)}/flow`);
-                    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-                    this.flowData = await res.json();
-                    this.logLine('sys', `FLOW: ${this.flowData.item_count} elementów (${this.flowData.flow_type})`);
-                } catch(e) {
-                    this.flowError = e.message;
-                    this.logLine('sys', `❌ FLOW error: ${e.message}`);
-                } finally {
-                    this.flowLoading = false;
-                }
-            },
-
-            // ─── Log panel ─────────────────────────
-            logLine(stream, text) {
-                const out = document.getElementById('log-output');
-                if (!out) return;
-
-                const cls = { sys: 'log-sys', stdout: 'log-stdout', stderr: 'log-stderr' }[stream] || 'log-stdout';
-                const time = new Date().toLocaleTimeString('pl-PL');
-
-                const line = document.createElement('div');
-                line.innerHTML =
-                    `<span class="log-ts">[${time}]</span> ` +
-                    `<span class="${cls}">${this._escHtml(text)}</span>`;
-                out.appendChild(line);
-
-                // Keep max ~500 lines
-                while (out.children.length > 500) out.removeChild(out.firstChild);
-                out.scrollTop = out.scrollHeight;
-            },
-
-            clearLog() {
-                const out = document.getElementById('log-output');
-                if (out) out.innerHTML = '';
-            },
-
-            _escHtml(str) {
-                return String(str)
-                    .replace(/&/g, '&amp;')
-                    .replace(/</g, '&lt;')
-                    .replace(/>/g, '&gt;');
-            },
-
-            // ─── Status label ──────────────────────
-            statusLabel() {
-                return {
-                    idle:     'oczekuje',
-                    running:  '● generowanie',
-                    finished: '✅ zakończono',
-                    failed:   '❌ błąd',
-                    stopped:  '⏹ zatrzymano',
-                }[this.genStatus] ?? this.genStatus;
-            },
-
-            // ─── Display helpers ───────────────────
-            compatibilityIcon(c)  { return { current:'✅', legacy:'⚠️', unknown:'❓' }[c] ?? '❓'; },
-            compatibilityTitle(c) { return { current:'Aktualny — można uruchomić', legacy:'Stary format', unknown:'Nieznany format' }[c] ?? ''; },
-            formatRes(r) {
-                if (!r) return '—';
-                if (Array.isArray(r) && r.length === 2) return `${r[0]}×${r[1]}`;
-                return String(r);
-            },
-            projectFolderName() {
-                const p = this.selectedRun?.project_folder;
-                if (!p) return '—';
-                return p.replace(/\\/g, '/').split('/').filter(Boolean).pop() || p;
-            },
-            fileIcon(f) {
-                if (!f) return '📄';
-                const ext = (f.split('.').pop() || '').toLowerCase();
-                if (['jpg','jpeg','png','webp','gif','bmp'].includes(ext)) return '📷';
-                if (['mp4','avi','mov','mkv','webm'].includes(ext)) return '🎬';
-                return '📄';
-            },
-        };
-    }
-    </script>
+        // ─ Display helpers ────────────────────────────────
+        compatibilityIcon(c)  { return { current:'✅', legacy:'⚠️', unknown:'❓' }[c] ?? '❓'; },
+        compatibilityTitle(c) { return { current:'Aktualny', legacy:'Stary format', unknown:'Nieznany' }[c] ?? ''; },
+        formatRes(r) {
+            if (!r) return '—';
+            if (Array.isArray(r) && r.length === 2) return `${r[0]}×${r[1]}`;
+            return String(r);
+        },
+        projectFolderName() {
+            const p = this.selectedRun?.project_folder;
+            if (!p) return '—';
+            return p.replace(/\\/g,'/').split('/').filter(Boolean).pop() || p;
+        },
+        fileIcon(f) {
+            if (!f) return '📄';
+            const ext = (f.split('.').pop() || '').toLowerCase();
+            if (['jpg','jpeg','png','webp','gif','bmp'].includes(ext)) return '📷';
+            if (['mp4','avi','mov','mkv','webm'].includes(ext)) return '🎬';
+            return '📄';
+        },
+    };
+}
+</script>
 
 </body>
 </html>
