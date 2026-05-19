@@ -165,6 +165,13 @@ class ProcessService:
     ) -> None:
         env = {**os.environ, "PYTHONUNBUFFERED": "1", "PYTHONUTF8": "1"}
 
+        # CREATE_NEW_PROCESS_GROUP isolates the subprocess from uvicorn's
+        # process group — so uvicorn --reload restarts don't send Ctrl+C/
+        # KeyboardInterrupt to the running generation process.
+        extra = {}
+        if sys.platform == "win32":
+            extra["creationflags"] = subprocess.CREATE_NEW_PROCESS_GROUP
+
         proc = subprocess.Popen(
             [str(PYTHON_EXE), str(run_path)],
             stdin=subprocess.PIPE,
@@ -172,6 +179,7 @@ class ProcessService:
             stderr=subprocess.PIPE,
             cwd=str(PROJECT_ROOT),
             env=env,
+            **extra,
         )
         self._proc = proc
 
