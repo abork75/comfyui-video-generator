@@ -13,6 +13,7 @@ Handles interactive input() prompts via threading.Event synchronisation.
 import os
 import re
 import sys
+import codecs
 import asyncio
 import threading
 import traceback
@@ -215,7 +216,13 @@ class ProcessService:
         chunks deadlocks when the subprocess prints a short prompt (< n bytes)
         and then waits for stdin. Reading one byte at a time guarantees we
         receive every character as soon as it's written.
+
+        Uses an incremental UTF-8 decoder so multi-byte emoji/chars (e.g. 🔗 = 4
+        bytes) are buffered internally and only emitted when the full sequence
+        arrives — avoiding the replacement-character corruption from naive
+        single-byte decoding.
         """
+        decoder = codecs.getincrementaldecoder("utf-8")(errors="replace")
         buf = ""
         while True:
             try:
@@ -223,7 +230,8 @@ class ProcessService:
             except Exception:
                 break
 
-            if not raw:                    # EOF
+            if not raw:                    # EOF — flush decoder remainder
+                buf += decoder.decode(b"", final=True)
                 if buf.strip():
                     clean = ANSI_ESCAPE.sub("", buf).strip()
                     if clean:
@@ -231,7 +239,7 @@ class ProcessService:
                             self._push, {"type": "log", "stream": "stdout", "text": clean})
                 break
 
-            buf += raw.decode("utf-8", errors="replace")
+            buf += decoder.decode(raw)
 
             # Complete line → emit immediately
             if buf.endswith("\n"):
