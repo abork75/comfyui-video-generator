@@ -24,6 +24,17 @@
         /* Thumbnail */
         .thumb { width:56px; height:42px; object-fit:cover; border-radius:4px; flex-shrink:0; background:#1f2937; cursor:pointer; }
         .thumb-placeholder { width:56px; height:42px; border-radius:4px; flex-shrink:0; background:#1f2937; display:flex; align-items:center; justify-content:center; font-size:18px; }
+        /* Status border colours — !important overrides Tailwind's border shorthand */
+        .sl-green { border-left: 4px solid #15803d !important; }
+        .sl-red   { border-left: 4px solid #b91c1c !important; }
+        .sl-gray  { border-left: 4px solid #374151 !important; }
+        /* Log resize handle */
+        .log-resize-handle { height:6px; cursor:ns-resize; background:#111827; border-top:1px solid #1f2937; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+        .log-resize-handle:hover { background:#1f2937; }
+        .log-resize-handle span { display:block; width:40px; height:2px; border-radius:9999px; background:#374151; pointer-events:none; }
+        /* Add-zone between flow items (edit mode) */
+        .add-zone { display:none; }
+        .add-zone.active { display:flex; }
     </style>
 </head>
 
@@ -35,7 +46,7 @@
         <span class="text-2xl">🎬</span>
         <div>
             <h1 class="font-bold text-base leading-tight">ComfyUI Video Generator</h1>
-            <p class="text-xs text-gray-500 leading-tight">v0.5 — Etap 5</p>
+            <p class="text-xs text-gray-500 leading-tight">v0.7 — Etap 7</p>
         </div>
     </div>
     <div class="flex items-center gap-3">
@@ -84,7 +95,7 @@
                 </button>
             </template>
         </div>
-        <div class="px-4 py-2 border-t border-gray-700 text-xs text-gray-600">✅ aktualny &nbsp; ⚠️ stary &nbsp; ❓ nieznany</div>
+        <div class="px-4 py-2 border-t border-gray-700 text-xs text-gray-600">✅ aktualny &nbsp; 📄 yaml &nbsp; ⚠️ stary &nbsp; ❓ nieznany</div>
     </aside>
 
     <!-- ─── CONTENT ────────────────────────────────────────────── -->
@@ -110,8 +121,8 @@
             <button @click="dryRun()"
                     :disabled="!canGenerate || isRunning"
                     :class="canGenerate && !isRunning ? 'bg-gray-700 hover:bg-gray-600 cursor-pointer' : 'bg-gray-800 opacity-40 cursor-not-allowed'"
-                    class="text-white text-sm px-3 py-1.5 rounded-lg transition" title="Sprawdź status bez generowania">
-                🔍 Sprawdź
+                    class="text-white text-sm px-3 py-1.5 rounded-lg transition" title="Sprawdź status generacji i odśwież wszystkie miniatury">
+                🔍 Sprawdź i odśwież
             </button>
             <!-- Refresh status -->
             <button @click="refreshStatus()"
@@ -120,6 +131,17 @@
                     class="text-sm px-2 py-1.5 rounded transition" title="Odśwież status plików">↻ Status</button>
 
             <div class="h-4 w-px bg-gray-700"></div>
+            <!-- Edit flow button — only for yaml runs -->
+            <template x-if="selectedRun?.compatibility === 'yaml' && !isRunning">
+                <button @click="editMode = !editMode"
+                        :class="editMode
+                            ? 'bg-yellow-700 hover:bg-yellow-600 text-white border-transparent'
+                            : 'text-yellow-400 border border-yellow-700 hover:border-yellow-400 hover:bg-yellow-900/30'"
+                        class="text-sm px-3 py-1.5 rounded-lg transition flex items-center gap-1.5">
+                    <span x-text="editMode ? '✏ Edycja ON' : '✏ Edytuj FLOW'"></span>
+                </button>
+            </template>
+            <div class="h-4 w-px bg-gray-700"></div>
             <span class="text-xs" :class="isRunning ? 'text-green-400' : 'text-gray-500'" x-text="toolbarStatus"></span>
 
             <!-- FLOW badge + counters -->
@@ -127,9 +149,9 @@
                 <div class="ml-auto flex items-center gap-3">
                     <template x-if="statusData">
                         <div class="flex items-center gap-2 text-xs">
-                            <span class="text-green-400" x-text="'✅ ' + statusData.existing"></span>
+                            <span class="text-green-400" x-text="'✅ ' + statusData.generated"></span>
                             <span class="text-gray-600">|</span>
-                            <span :class="statusData.missing > 0 ? 'text-orange-400' : 'text-gray-600'"
+                            <span :class="statusData.missing > 0 ? 'text-red-400' : 'text-gray-600'"
                                   x-text="'○ ' + statusData.missing"></span>
                         </div>
                     </template>
@@ -154,8 +176,8 @@
                 </div>
             </template>
 
-            <!-- Legacy / unknown -->
-            <template x-if="selectedRun && selectedRun.compatibility !== 'current'">
+            <!-- Legacy / unknown (not current and not yaml) -->
+            <template x-if="selectedRun && selectedRun.compatibility !== 'current' && selectedRun.compatibility !== 'yaml'">
                 <div class="p-6 max-w-xl">
                     <div class="flex items-center gap-3 mb-4">
                         <span x-text="compatibilityIcon(selectedRun.compatibility)" class="text-2xl"></span>
@@ -167,11 +189,17 @@
                     <div class="bg-yellow-900/30 border border-yellow-700 rounded-lg px-4 py-3 text-sm text-yellow-300">
                         ⚠️ Plik używa starego formatu i nie może być uruchomiony przez GUI.
                     </div>
+                    <template x-if="selectedRun.filename.endsWith('.py')">
+                        <button @click="migrateToYaml(selectedRun.filename)"
+                                class="mt-4 bg-indigo-700 hover:bg-indigo-600 text-white text-sm px-4 py-2 rounded-lg transition">
+                            📄 Migruj do YAML
+                        </button>
+                    </template>
                 </div>
             </template>
 
             <!-- Syntax error -->
-            <template x-if="selectedRun && selectedRun.compatibility === 'current' && selectedRun.syntax_error">
+            <template x-if="selectedRun && (selectedRun.compatibility === 'current' || selectedRun.compatibility === 'yaml') && selectedRun.syntax_error">
                 <div class="p-6">
                     <div class="bg-red-950 border border-red-700 rounded-lg p-4">
                         <p class="text-red-400 font-bold mb-2">❌ Błąd składni w pliku RUN</p>
@@ -183,18 +211,92 @@
                 </div>
             </template>
 
-            <!-- Current run — FLOW -->
-            <template x-if="selectedRun && selectedRun.compatibility === 'current' && !selectedRun.syntax_error">
+            <!-- Current run — FLOW (also yaml) -->
+            <template x-if="selectedRun && (selectedRun.compatibility === 'current' || selectedRun.compatibility === 'yaml') && !selectedRun.syntax_error">
                 <div class="flex flex-col h-full">
 
                     <!-- Project info bar -->
-                    <div class="px-5 py-2 bg-gray-800 border-b border-gray-700 flex flex-wrap items-center gap-x-5 gap-y-1 text-xs text-gray-400 flex-shrink-0">
-                        <span title="Folder projektu">📁 <span class="text-gray-300" x-text="projectFolderName()"></span></span>
-                        <span>📐 <span class="text-gray-300 font-mono" x-text="formatRes(selectedRun.force_resolution)"></span></span>
-                        <span>⚙️ <span class="text-gray-300" x-text="selectedRun.default_backend || '—'"></span></span>
-                        <span x-show="selectedRun.default_fps">🎞 <span class="text-gray-300" x-text="selectedRun.default_fps + ' fps'"></span></span>
-                        <span x-show="selectedRun.default_steps">🪜 <span class="text-gray-300" x-text="selectedRun.default_steps + ' steps'"></span></span>
-                        <span x-show="selectedRun.default_blocks_to_swap != null">🔲 <span class="text-gray-300" x-text="'bts:' + selectedRun.default_blocks_to_swap"></span></span>
+                    <!-- For YAML: whole left part clickable → opens global settings -->
+                    <div class="border-b border-gray-700 flex flex-wrap items-stretch text-xs text-gray-400 flex-shrink-0"
+                         :class="selectedRun.compatibility === 'yaml' ? 'bg-gray-800' : 'bg-gray-800'">
+
+                        <!-- Clickable settings area (yaml only) -->
+                        <template x-if="selectedRun.compatibility === 'yaml'">
+                            <button @click="openGlobalsModal(selectedRun.filename)"
+                                    class="flex flex-wrap items-center gap-x-4 gap-y-1 px-5 py-2 flex-1 text-left hover:bg-gray-750 group transition cursor-pointer"
+                                    style="background:transparent"
+                                    title="Kliknij aby edytować ustawienia projektu">
+                                <span class="text-orange-400 font-semibold text-xs group-hover:text-orange-300 transition flex-shrink-0">⚙</span>
+                                <span title="Folder projektu" class="flex items-center gap-1">
+                                    📁 <span class="text-gray-300 group-hover:text-white transition" x-text="projectFolderName()"></span>
+                                </span>
+                                <span class="flex items-center gap-1">
+                                    📐 <span class="text-gray-300 font-mono" x-text="formatRes(selectedRun.force_resolution)"></span>
+                                </span>
+                                <span class="flex items-center gap-1">
+                                    ⚙️ <span class="text-gray-300" x-text="selectedRun.default_backend || '—'"></span>
+                                </span>
+                                <span x-show="selectedRun.default_fps" class="flex items-center gap-1">
+                                    🎞 <span class="text-gray-300" x-text="selectedRun.default_fps + ' fps'"></span>
+                                </span>
+                                <span x-show="selectedRun.default_steps" class="flex items-center gap-1">
+                                    🪜 <span class="text-gray-300" x-text="selectedRun.default_steps + ' steps'"></span>
+                                </span>
+                                <span x-show="selectedRun.default_blocks_to_swap != null" class="flex items-center gap-1">
+                                    🔲 <span class="text-gray-300" x-text="'bts:' + selectedRun.default_blocks_to_swap"></span>
+                                </span>
+                                <span class="text-gray-600 text-xs group-hover:text-orange-500 transition ml-1">✎ edytuj ustawienia</span>
+                            </button>
+                        </template>
+
+                        <!-- Non-yaml: plain info (not clickable) -->
+                        <template x-if="selectedRun.compatibility !== 'yaml'">
+                            <div class="flex flex-wrap items-center gap-x-5 gap-y-1 px-5 py-2 flex-1">
+                                <span title="Folder projektu">📁 <span class="text-gray-300" x-text="projectFolderName()"></span></span>
+                                <span>📐 <span class="text-gray-300 font-mono" x-text="formatRes(selectedRun.force_resolution)"></span></span>
+                                <span>⚙️ <span class="text-gray-300" x-text="selectedRun.default_backend || '—'"></span></span>
+                                <span x-show="selectedRun.default_fps">🎞 <span class="text-gray-300" x-text="selectedRun.default_fps + ' fps'"></span></span>
+                                <span x-show="selectedRun.default_steps">🪜 <span class="text-gray-300" x-text="selectedRun.default_steps + ' steps'"></span></span>
+                                <span x-show="selectedRun.default_blocks_to_swap != null">🔲 <span class="text-gray-300" x-text="'bts:' + selectedRun.default_blocks_to_swap"></span></span>
+                            </div>
+                        </template>
+
+                        <!-- Right side actions (both modes) -->
+                        <div class="flex items-center gap-2 px-3 py-2 border-l border-gray-700 flex-shrink-0">
+                            <template x-if="selectedRun.compatibility === 'yaml'">
+                                <span class="flex items-center gap-2">
+                                    <button @click="viewSource(selectedRun.filename)"
+                                            class="bg-indigo-900 hover:bg-indigo-800 text-indigo-300 px-2 py-0.5 rounded text-xs font-medium cursor-pointer transition"
+                                            title="Podgląd pliku YAML">📄 YAML</button>
+                                    <button @click="reformatYaml(selectedRun.filename)"
+                                            :disabled="_reformatBusy"
+                                            :class="_reformatBusy ? 'opacity-40 cursor-not-allowed' : 'hover:bg-indigo-900/40 cursor-pointer'"
+                                            class="flex items-center gap-1 text-indigo-400 border border-indigo-700 hover:border-indigo-400 transition px-2 py-0.5 rounded text-xs"
+                                            title="Przepisz YAML w nowym czytelnym formacie">
+                                        <span :class="_reformatBusy ? 'animate-spin inline-block' : ''">⟳</span>
+                                        <span>YAML</span>
+                                    </button>
+                                    <button @click="generatePy(selectedRun.filename)"
+                                            :disabled="_genPyBusy"
+                                            :class="_genPyBusy ? 'opacity-40 cursor-not-allowed' : 'hover:bg-gray-700 cursor-pointer'"
+                                            class="flex items-center gap-1 text-gray-300 border border-gray-600 hover:border-gray-400 transition px-2 py-0.5 rounded text-xs"
+                                            title="Wygeneruj ponownie plik .py z YAML">
+                                        <span :class="_genPyBusy ? 'animate-spin inline-block' : ''">⟳</span>
+                                        <span>.py</span>
+                                    </button>
+                                </span>
+                            </template>
+                            <template x-if="selectedRun.compatibility === 'current'">
+                                <span class="flex items-center gap-2">
+                                    <button @click="viewSource(selectedRun.filename)"
+                                            class="text-gray-500 hover:text-gray-300 border border-gray-700 hover:border-gray-500 transition px-2 py-0.5 rounded text-xs cursor-pointer"
+                                            title="Podgląd pliku .py">📄 .py</button>
+                                    <button @click="migrateToYaml(selectedRun.filename)"
+                                            class="text-indigo-400 hover:text-indigo-200 border border-indigo-700 hover:border-indigo-400 hover:bg-indigo-900/30 transition px-2 py-0.5 rounded text-xs cursor-pointer"
+                                            title="Migruj do formatu YAML">→ YAML</button>
+                                </span>
+                            </template>
+                        </div>
                     </div>
 
                     <!-- FLOW list -->
@@ -210,7 +312,14 @@
 
                         <template x-if="flowData && !flowLoading">
                             <div class="space-y-2">
-                                <template x-for="(item, idx) in flowData.flow" :key="idx">
+                                <!-- Add-zone at the very start -->
+                                <div :class="editMode ? 'add-zone active' : 'add-zone'"
+                                     @click="openAddItemModal(-1)"
+                                     class="w-full items-center justify-center gap-2 py-1 mb-1 text-xs font-medium text-blue-400 bg-blue-950/40 border border-dashed border-blue-800 rounded hover:bg-blue-900/50 hover:border-blue-500 hover:text-blue-300 transition cursor-pointer">
+                                    <span>+</span><span>wstaw element</span>
+                                </div>
+
+                        <template x-for="(item, idx) in flowData.flow" :key="idx">
                                     <div>
 
                                         <!-- BREAK -->
@@ -219,15 +328,62 @@
                                                 <div class="flex-1 border-t border-dashed border-gray-700"></div>
                                                 <span class="text-xs text-gray-600 flex-shrink-0">✂ break</span>
                                                 <div class="flex-1 border-t border-dashed border-gray-700"></div>
+                                                <!-- Edit mode: break controls -->
+                                                <template x-if="editMode">
+                                                    <div class="flex items-center gap-1 flex-shrink-0">
+                                                        <button @click="editMoveItem(idx, -1)" :disabled="idx === 0"
+                                                                :class="idx === 0 ? 'opacity-30 cursor-not-allowed' : 'hover:text-white'"
+                                                                class="text-gray-600 text-xs px-1 py-0.5 rounded hover:bg-gray-700">↑</button>
+                                                        <button @click="editMoveItem(idx, 1)" :disabled="idx === flowData.flow.length - 1"
+                                                                :class="idx === flowData.flow.length - 1 ? 'opacity-30 cursor-not-allowed' : 'hover:text-white'"
+                                                                class="text-gray-600 text-xs px-1 py-0.5 rounded hover:bg-gray-700">↓</button>
+                                                        <button @click="editDeleteItem(idx)"
+                                                                class="text-gray-700 hover:text-red-400 text-xs px-1 py-0.5 rounded hover:bg-gray-800 transition">✕</button>
+                                                    </div>
+                                                </template>
+                                            </div>
+                                        </template>
+
+                                        <!-- HEADER -->
+                                        <template x-if="item.header !== undefined && !item.break">
+                                            <div class="flex items-center gap-3 py-1.5 px-3 rounded-lg"
+                                                 style="background:linear-gradient(90deg,#1e1b4b 0%,#2e1065 50%,#1e1b4b 100%);border:1px solid #4c1d95">
+                                                <div class="flex-1 flex items-center justify-center gap-3 min-w-0">
+                                                    <div class="h-px flex-1 opacity-40" style="background:linear-gradient(90deg,transparent,#a78bfa)"></div>
+                                                    <span class="text-xs font-semibold tracking-widest text-violet-300 uppercase flex-shrink-0" x-text="item.header"></span>
+                                                    <div class="h-px flex-1 opacity-40" style="background:linear-gradient(90deg,#a78bfa,transparent)"></div>
+                                                </div>
+                                                <!-- Edit mode controls -->
+                                                <template x-if="editMode">
+                                                    <div class="flex items-center gap-1 flex-shrink-0">
+                                                        <button @click="editOpenItem(idx)"
+                                                                class="text-violet-400 hover:text-violet-200 text-xs px-1.5 py-0.5 rounded hover:bg-violet-900/40 transition" title="Edytuj nagłówek">✎</button>
+                                                        <button @click="editMoveItem(idx, -1)" :disabled="idx === 0"
+                                                                :class="idx === 0 ? 'opacity-30 cursor-not-allowed' : 'hover:text-white'"
+                                                                class="text-gray-600 text-xs px-1 py-0.5 rounded hover:bg-gray-700">↑</button>
+                                                        <button @click="editMoveItem(idx, 1)" :disabled="idx === flowData.flow.length - 1"
+                                                                :class="idx === flowData.flow.length - 1 ? 'opacity-30 cursor-not-allowed' : 'hover:text-white'"
+                                                                class="text-gray-600 text-xs px-1 py-0.5 rounded hover:bg-gray-700">↓</button>
+                                                        <button @click="editDeleteItem(idx)"
+                                                                class="text-gray-600 hover:text-red-400 text-xs px-1 py-0.5 rounded hover:bg-gray-800 transition">✕</button>
+                                                    </div>
+                                                </template>
                                             </div>
                                         </template>
 
                                         <!-- CHAIN -->
                                         <template x-if="item.chain">
-                                            <div class="bg-gray-800 border border-gray-600 rounded-lg overflow-hidden">
-                                                <div class="px-4 py-2.5 border-b border-gray-700 flex flex-wrap items-center gap-2" style="background-color:#1a2332">
+                                            <div class="bg-gray-800 border border-gray-600 rounded-lg overflow-hidden"
+                                                 :class="chainBorderClass(idx)">
+                                                <div class="px-4 py-2.5 border-b border-gray-700 flex flex-wrap items-center gap-2"
+                                                     style="background-color:#1a2332"
+                                                     :class="editMode ? 'cursor-pointer' : ''"
+                                                     @click="if(editMode && !$event.target.closest('button,img,video,a,select,input')) editOpenItem(idx)">
                                                     <span class="text-sm">⛓</span>
                                                     <span class="font-mono text-sm text-blue-300" x-text="item.chain_prefix || 'chain'"></span>
+                                                    <template x-if="isChainPrefixDuplicate(item.chain_prefix)">
+                                                        <span class="px-1.5 py-0.5 bg-yellow-900/60 border border-yellow-700 rounded text-xs text-yellow-400 font-semibold">⚠ duplikat nazwy</span>
+                                                    </template>
                                                     <div class="flex flex-wrap gap-1.5 ml-1">
                                                         <template x-if="item.backend"><span class="px-1.5 py-0.5 bg-gray-700 rounded text-xs text-gray-300" x-text="item.backend"></span></template>
                                                         <template x-if="item.fps"><span class="px-1.5 py-0.5 bg-gray-700 rounded text-xs text-gray-400" x-text="item.fps + ' fps'"></span></template>
@@ -236,13 +392,27 @@
                                                         <template x-if="item.blocks_to_swap != null"><span class="px-1.5 py-0.5 bg-indigo-900 rounded text-xs text-indigo-300" x-text="'bts:' + item.blocks_to_swap"></span></template>
                                                         <template x-if="item.width && item.height"><span class="px-1.5 py-0.5 bg-gray-700 rounded text-xs text-yellow-400" x-text="item.width + '×' + item.height"></span></template>
                                                     </div>
-                                                    <!-- Chain status -->
+                                                    <!-- Chain status — each helper called ONCE -->
                                                     <div class="ml-auto flex items-center gap-2">
-                                                        <template x-if="chainStatus(item)">
-                                                            <span :class="chainStatus(item).all ? 'text-green-400' : 'text-orange-400'"
-                                                                  x-text="chainStatus(item).all ? '✅ ' + chainStatus(item).count : '○ ' + chainStatus(item).missing + ' brak'"></span>
+                                                        <template x-if="chainStatusOk(idx)">
+                                                            <span :class="chainStatusClass(idx)" x-text="chainStatusLabel(idx)"></span>
                                                         </template>
                                                         <span class="text-xs text-gray-600" x-text="item.chain.length + ' step' + (item.chain.length !== 1 ? 's' : '')"></span>
+                                                        <!-- Edit mode controls for chain -->
+                                                        <template x-if="editMode">
+                                                            <div class="flex items-center gap-1 border-l border-gray-700 pl-2 ml-1">
+                                                                <button @click="editOpenItem(idx)"
+                                                                        class="text-yellow-500 hover:text-yellow-300 text-xs px-1.5 py-0.5 rounded hover:bg-yellow-900/30 transition" title="Edytuj chain">✎</button>
+                                                                <button @click="editMoveItem(idx, -1)" :disabled="idx === 0"
+                                                                        :class="idx === 0 ? 'opacity-30 cursor-not-allowed' : 'hover:text-white'"
+                                                                        class="text-gray-600 text-xs px-1 py-0.5 rounded hover:bg-gray-700">↑</button>
+                                                                <button @click="editMoveItem(idx, 1)" :disabled="idx === flowData.flow.length - 1"
+                                                                        :class="idx === flowData.flow.length - 1 ? 'opacity-30 cursor-not-allowed' : 'hover:text-white'"
+                                                                        class="text-gray-600 text-xs px-1 py-0.5 rounded hover:bg-gray-700">↓</button>
+                                                                <button @click="editDeleteItem(idx)"
+                                                                        class="text-gray-600 hover:text-red-400 text-xs px-1 py-0.5 rounded hover:bg-gray-800 transition" title="Usuń chain">✕</button>
+                                                            </div>
+                                                        </template>
                                                     </div>
                                                 </div>
                                                 <div class="divide-y divide-gray-700">
@@ -270,19 +440,58 @@
                                                                         <template x-if="step.width && step.height"><span class="px-1.5 py-0.5 bg-gray-700 rounded text-xs text-yellow-400" x-text="step.width + '×' + step.height"></span></template>
                                                                     </div>
                                                                 </div>
-                                                                <p class="text-xs text-gray-400 mt-1 line-clamp-2" x-text="step.pos || '—'"></p>
+                                                                <!-- Pos prompt — green when active, gray when NONE -->
+                                                                <template x-if="step.pos && step.pos !== 'NONE'">
+                                                                    <p class="text-xs text-green-400/80 mt-1 line-clamp-2 leading-relaxed" x-text="step.pos"></p>
+                                                                </template>
+                                                                <template x-if="!step.pos || step.pos === 'NONE'">
+                                                                    <p class="text-xs text-gray-600 mt-1">— brak prompta</p>
+                                                                </template>
+                                                                <!-- Neg prompt — collapsible, red -->
+                                                                <template x-if="step.neg && step.neg !== 'NONE' && step.neg !== ''">
+                                                                    <div class="mt-1" x-data="{ open: false }">
+                                                                        <button @click="open = !open" class="text-xs text-gray-600 hover:text-gray-400 transition">
+                                                                            <span x-text="open ? '▲ neg' : '▼ neg'"></span>
+                                                                        </button>
+                                                                        <p x-show="open" class="text-xs text-red-400/60 mt-0.5 leading-relaxed line-clamp-3" x-text="step.neg"></p>
+                                                                    </div>
+                                                                </template>
                                                             </div>
                                                             <!-- Chain step video actions -->
                                                             <template x-if="item.chain_prefix">
                                                                 <div class="flex-shrink-0 flex items-center gap-1" x-data="{ fname: (item.chain_prefix + '_' + String(si+1).padStart(3,'0') + '.mp4') }">
                                                                     <template x-if="itemExists(fname)">
-                                                                        <div class="flex gap-1">
+                                                                        <div class="flex gap-1 items-center">
                                                                             <button @click="openVideoModal(fname)" class="text-green-500 hover:text-green-400 text-sm px-1" title="Odtwórz">▶</button>
-                                                                            <button @click="archiveFile(fname)" class="text-gray-600 hover:text-red-400 text-sm px-1" title="Archiwizuj">🗑</button>
+                                                                            <button @click="regenChainFrom(item.chain_prefix, si, item.chain.length)"
+                                                                                    :disabled="isRunning"
+                                                                                    :class="isRunning ? 'opacity-30 cursor-not-allowed text-gray-600' : 'text-gray-500 hover:text-blue-400'"
+                                                                                    class="text-sm px-1 transition"
+                                                                                    :title="'Re-generuj od step '+(si+1)+' do '+item.chain.length">↺</button>
+                                                                            <button @click="archiveChainFrom(item.chain_prefix, si, item.chain.length)"
+                                                                                    class="text-gray-600 hover:text-red-400 text-sm px-1"
+                                                                                    :title="'Archiwizuj od step '+(si+1)+' do '+item.chain.length">🗑</button>
+                                                                            <template x-if="chainStepHasArchived(idx, si)">
+                                                                                <button @click="openVersionsModal(fname)"
+                                                                                        class="text-gray-500 hover:text-yellow-400 text-sm px-1 transition"
+                                                                                        title="Pokaż wersje archiwalne">📂</button>
+                                                                            </template>
                                                                         </div>
                                                                     </template>
                                                                     <template x-if="!itemExists(fname)">
-                                                                        <span class="text-gray-700 text-xs">○</span>
+                                                                        <div class="flex items-center gap-1">
+                                                                            <span class="text-red-700 text-xs">○</span>
+                                                                            <button @click="regenChainFrom(item.chain_prefix, si, item.chain.length)"
+                                                                                    :disabled="isRunning"
+                                                                                    :class="isRunning ? 'opacity-30 cursor-not-allowed text-gray-600' : 'text-red-600 hover:text-red-400'"
+                                                                                    class="text-sm px-1 transition"
+                                                                                    :title="'Generuj od step '+(si+1)+' do '+item.chain.length">↺</button>
+                                                                            <template x-if="chainStepHasVersions(idx, si)">
+                                                                                <button @click="openVersionsModal(fname)"
+                                                                                        class="text-gray-500 hover:text-yellow-400 text-sm px-1 transition"
+                                                                                        title="Pokaż wersje archiwalne">📂</button>
+                                                                            </template>
+                                                                        </div>
                                                                     </template>
                                                                 </div>
                                                             </template>
@@ -295,18 +504,22 @@
                                         <!-- FILE -->
                                         <template x-if="item.file">
                                             <div class="bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 hover:border-gray-600 transition"
-                                                 :class="fileItemStatus(item) === true ? 'border-l-4 border-l-green-700'
-                                                       : fileItemStatus(item) === false ? 'border-l-4 border-l-gray-700' : ''">
+                                                 :class="[fileItemBorderClass(idx), editMode ? 'cursor-pointer ring-1 ring-yellow-700/40' : '']"
+                                                 @click="if(editMode && !$event.target.closest('button,img,video,a,select,input')) editOpenItem(idx)">
                                                 <div class="flex items-start gap-3">
-                                                    <!-- Thumbnail -->
-                                                    <div class="flex-shrink-0">
+                                                    <!-- Thumbnail + upload button -->
+                                                    <div class="flex-shrink-0 flex flex-col items-center gap-0.5">
                                                         <img :src="frameUrl(item.file, 'start')"
                                                              class="thumb"
                                                              @error="$el.style.display='none'; $el.nextElementSibling.style.display='flex'"
+                                                             @load="$el.style.display=''; $el.nextElementSibling.style.display='none'"
                                                              @click="openFrameModal(item.file)"
                                                              title="Kliknij aby zobaczyć klatki">
                                                         <div class="thumb-placeholder text-gray-600" style="display:none"
                                                              x-text="fileIcon(item.file)"></div>
+                                                        <button @click="openSourceUpload(item.file)"
+                                                                class="text-gray-600 hover:text-blue-400 text-xs leading-none transition cursor-pointer"
+                                                                title="Podmień plik źródłowy">⬆</button>
                                                     </div>
 
                                                     <div class="flex-1 min-w-0">
@@ -323,40 +536,109 @@
                                                                 <template x-if="item.width && item.height"><span class="px-1.5 py-0.5 bg-gray-700 rounded text-xs text-yellow-400" x-text="item.width + '×' + item.height"></span></template>
                                                             </div>
                                                         </div>
-                                                        <!-- Positive prompt -->
+                                                        <!-- Positive prompt — green when active (generates transition), gray when last-before-break -->
                                                         <template x-if="item.pos && item.pos !== 'NONE'">
-                                                            <p class="text-xs text-green-400/80 mt-2 line-clamp-2 leading-relaxed" x-text="item.pos"></p>
+                                                            <p class="text-xs mt-2 line-clamp-2 leading-relaxed"
+                                                               :class="_si(idx)?.status === 'gray' ? 'text-gray-600' : 'text-green-400/80'"
+                                                               x-text="item.pos"></p>
                                                         </template>
                                                         <!-- Negative prompt -->
                                                         <template x-if="item.neg && item.neg !== 'NONE'">
-                                                            <div class="mt-1" x-data="{ open: false }">
-                                                                <button @click="open = !open" class="text-xs text-gray-600 hover:text-gray-400 transition">
-                                                                    <span x-text="open ? '▲ neg' : '▼ neg'"></span>
+                                                            <div class="mt-1">
+                                                                <button @click="negOpen[idx] = !negOpen[idx]"
+                                                                        class="text-xs transition"
+                                                                        :class="_si(idx)?.status === 'gray' ? 'text-gray-700 hover:text-gray-500' : 'text-gray-600 hover:text-gray-400'">
+                                                                    <span x-text="negOpen[idx] ? '▲ neg' : '▼ neg'"></span>
                                                                 </button>
-                                                                <p x-show="open" class="text-xs text-red-400/60 mt-1 leading-relaxed line-clamp-4" x-text="item.neg"></p>
+                                                                <p x-show="negOpen[idx]"
+                                                                   class="text-xs mt-1 leading-relaxed line-clamp-4"
+                                                                   :class="_si(idx)?.status === 'gray' ? 'text-gray-700' : 'text-red-400/60'"
+                                                                   x-text="item.neg"></p>
                                                             </div>
                                                         </template>
                                                     </div>
 
+                                                    <!-- Edit mode controls for file -->
+                                                    <template x-if="editMode">
+                                                        <div class="flex-shrink-0 flex flex-col items-center gap-1 ml-2 border-l border-yellow-900/50 pl-2">
+                                                            <button @click="editOpenItem(idx)"
+                                                                    class="text-yellow-500 hover:text-yellow-300 text-sm px-1 py-0.5 rounded hover:bg-yellow-900/30 transition" title="Edytuj">✎</button>
+                                                            <button @click="editMoveItem(idx, -1)" :disabled="idx === 0"
+                                                                    :class="idx === 0 ? 'opacity-30 cursor-not-allowed' : 'hover:text-white'"
+                                                                    class="text-gray-600 text-xs px-1 rounded hover:bg-gray-700">↑</button>
+                                                            <button @click="editMoveItem(idx, 1)" :disabled="idx === flowData.flow.length - 1"
+                                                                    :class="idx === flowData.flow.length - 1 ? 'opacity-30 cursor-not-allowed' : 'hover:text-white'"
+                                                                    class="text-gray-600 text-xs px-1 rounded hover:bg-gray-700">↓</button>
+                                                            <button @click="editDeleteItem(idx)"
+                                                                    class="text-gray-700 hover:text-red-400 text-xs px-1 rounded hover:bg-gray-800 transition" title="Usuń">✕</button>
+                                                        </div>
+                                                    </template>
+
                                                     <!-- Status + actions -->
                                                     <div class="flex-shrink-0 flex items-center gap-2 ml-2">
-                                                        <template x-if="fileItemStatus(item) === true">
+                                                        <template x-if="fileItemIsGreen(idx)">
                                                             <div class="flex items-center gap-1">
-                                                                <span class="text-xs text-green-500" x-text="fileItemSizeMb(item)"></span>
-                                                                <button @click="openVideoModal(fileItemName(item))"
-                                                                        class="text-green-500 hover:text-green-400 text-sm px-1 py-0.5 rounded" title="Odtwórz film">▶</button>
-                                                                <button @click="archiveFile(fileItemName(item))"
-                                                                        class="text-gray-600 hover:text-red-400 text-sm px-1 py-0.5 rounded" title="Archiwizuj (usuń z kolejki generowania)">🗑</button>
+                                                                <span class="text-xs text-green-500" x-text="fileItemSizeMb(idx)"></span>
+                                                                <button @click="openVideoModal(fileItemName(idx))"
+                                                                        class="text-green-500 hover:text-green-400 text-sm px-1 py-0.5 rounded"
+                                                                        title="Odtwórz film">▶</button>
+                                                                <button @click="regenFile(fileItemName(idx))"
+                                                                        :disabled="isRunning"
+                                                                        :class="isRunning ? 'opacity-30 cursor-not-allowed text-gray-600' : 'text-gray-500 hover:text-blue-400'"
+                                                                        class="text-sm px-1 py-0.5 rounded transition"
+                                                                        title="Re-generuj (zarchiwizuj i uruchom ponownie)">↺</button>
+                                                                <button @click="archiveFile(fileItemName(idx))"
+                                                                        class="text-gray-600 hover:text-red-400 text-sm px-1 py-0.5 rounded"
+                                                                        title="Archiwizuj bez re-generowania">🗑</button>
+                                                                <template x-if="fileItemHasArchived(idx)">
+                                                                    <button @click="openVersionsModal(fileItemName(idx))"
+                                                                            class="text-gray-500 hover:text-yellow-400 text-sm px-1 py-0.5 rounded transition"
+                                                                            title="Pokaż wersje archiwalne">📂</button>
+                                                                </template>
                                                             </div>
                                                         </template>
-                                                        <template x-if="fileItemStatus(item) === false">
-                                                            <span class="text-gray-600 text-xs">○ brak</span>
+                                                        <template x-if="fileItemIsRed(idx)">
+                                                            <div class="flex items-center gap-1">
+                                                                <span class="text-red-500 text-xs">○ brak</span>
+                                                                <button @click="_startOnly([fileItemName(idx)])"
+                                                                        :disabled="isRunning"
+                                                                        :class="isRunning ? 'opacity-30 cursor-not-allowed text-gray-600' : 'text-red-600 hover:text-red-400'"
+                                                                        class="text-sm px-1 py-0.5 rounded transition"
+                                                                        title="Generuj tylko tę tranzycję">↺</button>
+                                                                <template x-if="fileItemHasVersions(idx)">
+                                                                    <button @click="openVersionsModal(fileItemName(idx))"
+                                                                            class="text-gray-500 hover:text-yellow-400 text-sm px-1 py-0.5 rounded transition"
+                                                                            title="Pokaż wersje archiwalne">📂</button>
+                                                                </template>
+                                                            </div>
+                                                        </template>
+                                                        <template x-if="fileItemIsGray(idx)">
+                                                            <div class="flex items-center gap-1">
+                                                                <template x-if="/\.(mp4|mov|avi|mkv|webm)$/i.test(item.file || '')">
+                                                                    <span class="text-xs text-blue-600" x-text="fileItemSourceSizeMb(idx)"></span>
+                                                                </template>
+                                                                <template x-if="!/\.(mp4|mov|avi|mkv|webm)$/i.test(item.file || '')">
+                                                                    <span class="text-gray-600 text-xs" title="Ten plik nie generuje przejścia">—</span>
+                                                                </template>
+                                                            </div>
+                                                        </template>
+                                                        <!-- Source video play — only for mp4/video source files -->
+                                                        <template x-if="/\.(mp4|mov|avi|mkv|webm)$/i.test(item.file || '')">
+                                                            <button @click.stop="openSourceVideoModal(item.file)"
+                                                                    class="text-blue-500 hover:text-blue-300 text-sm px-1 py-0.5 rounded transition"
+                                                                    title="Odtwórz plik źródłowy">▶</button>
                                                         </template>
                                                     </div>
                                                 </div>
                                             </div>
                                         </template>
 
+                                        <!-- Add-zone after each item — INSIDE x-for root div -->
+                                        <div :class="editMode ? 'add-zone active' : 'add-zone'"
+                                             @click="openAddItemModal(idx)"
+                                             class="w-full items-center justify-center gap-2 py-1 mt-1 text-xs font-medium text-blue-400 bg-blue-950/40 border border-dashed border-blue-800 rounded hover:bg-blue-900/50 hover:border-blue-500 hover:text-blue-300 transition cursor-pointer">
+                                            <span>+</span><span>wstaw element</span>
+                                        </div>
                                     </div>
                                 </template>
                             </div>
@@ -380,8 +662,13 @@
             </div>
         </div>
 
+        <!-- LOG RESIZE HANDLE -->
+        <div class="log-resize-handle" @mousedown.prevent="startLogResize($event)" title="Przeciągnij aby zmienić wysokość panelu">
+            <span></span>
+        </div>
+
         <!-- LOG PANEL -->
-        <div class="flex-shrink-0 border-t border-gray-700" style="height:160px;background:#030712">
+        <div class="flex-shrink-0 border-t border-gray-700" :style="`height:${logHeight}px;background:#030712`">
             <div class="px-4 py-1.5 border-b border-gray-800 flex items-center justify-between">
                 <div class="flex items-center gap-2">
                     <span class="text-xs text-gray-500 uppercase font-semibold tracking-wider">Logi generowania</span>
@@ -403,21 +690,207 @@
 <!-- ═══ FRAME MODAL ═══════════════════════════════════════════════ -->
 <div x-show="frameModal.open" x-cloak
      class="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4"
-     @click.self="frameModal.open = false">
+     @click.self="frameModal.open = false"
+     @keydown.escape.window="frameModal.open = false">
     <div class="bg-gray-900 rounded-xl border border-gray-700 max-w-4xl w-full p-4">
         <div class="flex items-center justify-between mb-3">
             <h3 class="text-sm font-semibold text-gray-300" x-text="frameModal.title"></h3>
             <button @click="frameModal.open = false" class="text-gray-500 hover:text-white text-xl leading-none">×</button>
         </div>
-        <div class="flex gap-4">
-            <div class="flex-1 text-center">
-                <p class="text-xs text-gray-600 mb-2">START</p>
-                <img :src="frameModal.startUrl" class="max-h-80 mx-auto rounded object-contain bg-gray-800" @error="$el.src=''">
+
+        <!-- IMAGE file — single end frame with click-to-fullscreen zoom -->
+        <template x-if="frameModal.isImage">
+            <div class="text-center">
+                <p class="text-xs text-gray-600 mb-2">FRAME <span class="text-gray-500">(kliknij aby otworzyć w pełnym rozmiarze)</span></p>
+                <img :src="frameModal.endUrl"
+                     class="max-h-[70vh] mx-auto rounded object-contain bg-gray-800 cursor-zoom-in hover:opacity-90 transition-opacity"
+                     @click="window.open(frameModal.endUrl,'_blank')"
+                     @error="$el.alt='Brak klatki'; $el.style.opacity='0.3'">
             </div>
-            <div class="flex-1 text-center">
-                <p class="text-xs text-gray-600 mb-2">END</p>
-                <img :src="frameModal.endUrl" class="max-h-80 mx-auto rounded object-contain bg-gray-800" @error="$el.src=''">
+        </template>
+
+        <!-- VIDEO file — start + end side by side -->
+        <template x-if="!frameModal.isImage">
+            <div class="flex gap-4">
+                <div class="flex-1 text-center">
+                    <p class="text-xs text-gray-600 mb-2">START</p>
+                    <img :src="frameModal.startUrl" class="max-h-80 mx-auto rounded object-contain bg-gray-800" @error="$el.src=''">
+                </div>
+                <div class="flex-1 text-center">
+                    <p class="text-xs text-gray-600 mb-2">END</p>
+                    <img :src="frameModal.endUrl" class="max-h-80 mx-auto rounded object-contain bg-gray-800" @error="$el.src=''">
+                </div>
             </div>
+        </template>
+    </div>
+</div>
+
+<!-- ═══ SOURCE UPLOAD MODAL ══════════════════════════════════════ -->
+<template x-if="uploadModal.open">
+<div class="fixed inset-0 bg-black/85 flex items-center justify-center z-50 p-4"
+     @click.self="uploadModal.open = false"
+     @keydown.escape.window="uploadModal.open = false">
+    <div class="bg-gray-900 rounded-xl border border-gray-700 w-full max-w-md p-5">
+
+        <!-- Header -->
+        <div class="flex items-center justify-between mb-4">
+            <div>
+                <h3 class="text-sm font-semibold text-gray-200">Podmień plik źródłowy</h3>
+                <p class="text-xs text-gray-500 font-mono mt-0.5" x-text="uploadModal.name"></p>
+            </div>
+            <button @click="uploadModal.open = false" class="text-gray-500 hover:text-white text-xl leading-none">×</button>
+        </div>
+
+        <!-- Current end frame preview -->
+        <div class="mb-4 bg-gray-800 rounded-lg p-2 text-center" style="min-height:80px">
+            <p class="text-xs text-gray-600 mb-1">Aktualny END frame</p>
+            <img :src="frameUrl(uploadModal.name, 'end')"
+                 class="max-h-32 mx-auto rounded object-contain"
+                 @error="$el.style.display='none'">
+        </div>
+
+        <!-- Drop zone -->
+        <div class="border-2 rounded-lg p-5 text-center transition-colors"
+             :class="uploadModal.dragging ? 'border-blue-500 bg-blue-950/30' : 'border-dashed border-gray-600 hover:border-gray-500'"
+             @dragover.prevent="uploadModal.dragging = true"
+             @dragleave.prevent="uploadModal.dragging = false"
+             @drop.prevent="uploadModal.dragging = false; _setUploadFile($event.dataTransfer.files[0])">
+
+            <input type="file" x-ref="sourceFileInput"
+                   accept="image/*,video/mp4,video/avi,video/quicktime,video/x-matroska"
+                   class="hidden"
+                   @change="_setUploadFile($event.target.files[0])">
+
+            <template x-if="!uploadModal.file">
+                <div>
+                    <p class="text-gray-500 text-sm mb-2">Przeciągnij plik lub</p>
+                    <button @click="$refs.sourceFileInput.click()"
+                            class="text-blue-400 hover:text-blue-300 text-sm underline transition">
+                        wybierz z dysku
+                    </button>
+                    <p class="text-gray-700 text-xs mt-2">PNG, JPG, MP4 i inne · max 500 MB</p>
+                </div>
+            </template>
+            <template x-if="uploadModal.file">
+                <div>
+                    <!-- Local preview of selected file -->
+                    <template x-if="uploadModal.previewUrl">
+                        <img :src="uploadModal.previewUrl"
+                             class="max-h-28 mx-auto rounded object-contain mb-2"
+                             @error="$el.style.display='none'">
+                    </template>
+                    <p class="text-green-400 text-sm font-mono truncate" x-text="uploadModal.file.name"></p>
+                    <p class="text-gray-500 text-xs mt-1"
+                       x-text="(uploadModal.file.size / 1048576).toFixed(1) + ' MB'"></p>
+                    <button @click="uploadModal.file = null; uploadModal.previewUrl = null; $refs.sourceFileInput.value = ''"
+                            class="text-gray-600 hover:text-red-400 text-xs mt-2 transition">✕ usuń</button>
+                </div>
+            </template>
+        </div>
+
+        <!-- Save-as note: clarify that the uploaded file is always saved under the FLOW name -->
+        <template x-if="uploadModal.file && uploadModal.file.name !== uploadModal.name">
+            <div class="mt-3 bg-blue-950/50 border border-blue-800 rounded-lg px-3 py-2 text-xs text-blue-300">
+                ℹ️ Nazwa pliku nie ma znaczenia — zostanie zapisany jako:<br>
+                <span class="font-mono text-blue-200" x-text="uploadModal.name"></span>
+            </div>
+        </template>
+        <p class="text-xs text-gray-600 mt-2">
+            💾 Stary plik zostanie przeniesiony do <span class="font-mono">source_backup/</span>
+        </p>
+
+        <!-- Error -->
+        <p x-show="uploadModal.error" x-cloak
+           class="text-red-400 text-xs mt-2" x-text="uploadModal.error"></p>
+
+        <!-- Buttons -->
+        <div class="flex justify-end gap-3 mt-4">
+            <button @click="uploadModal.open = false"
+                    :disabled="uploadModal.uploading"
+                    class="px-4 py-2 text-sm text-gray-400 hover:text-white rounded-lg hover:bg-gray-700 transition">
+                Anuluj
+            </button>
+            <button @click="doUploadSource()"
+                    :disabled="!uploadModal.file || uploadModal.uploading"
+                    :class="uploadModal.file && !uploadModal.uploading
+                            ? 'bg-blue-700 hover:bg-blue-600 cursor-pointer'
+                            : 'bg-gray-700 opacity-40 cursor-not-allowed'"
+                    class="px-4 py-2 text-sm text-white rounded-lg transition flex items-center gap-2">
+                <span x-show="uploadModal.uploading" class="animate-spin inline-block">⟳</span>
+                <span x-text="uploadModal.uploading ? 'Wgrywanie...' : '⬆️ Podmień'"></span>
+            </button>
+        </div>
+    </div>
+</div>
+</template>
+
+<!-- ═══ VERSIONS MODAL ════════════════════════════════════════════ -->
+<div x-show="versionsModal.open" x-cloak
+     class="fixed inset-0 bg-black/85 flex items-center justify-center z-50 p-4"
+     @click.self="versionsModal.open = false"
+     @keydown.escape.window="versionsModal.open = false">
+    <div class="bg-gray-900 rounded-xl border border-gray-700 max-w-2xl w-full flex flex-col" style="max-height:80vh">
+
+        <!-- Header -->
+        <div class="flex items-center justify-between px-5 py-3 border-b border-gray-700 flex-shrink-0">
+            <div>
+                <h3 class="text-sm font-semibold text-gray-200">Wersje pliku</h3>
+                <p class="text-xs text-gray-500 font-mono mt-0.5" x-text="versionsModal.name"></p>
+            </div>
+            <button @click="versionsModal.open = false" class="text-gray-500 hover:text-white text-xl leading-none">×</button>
+        </div>
+
+        <!-- Loading -->
+        <div x-show="versionsModal.loading" class="flex items-center justify-center py-10 text-gray-500 text-sm gap-2">
+            <span class="animate-spin">⟳</span> Ładowanie...
+        </div>
+
+        <!-- Empty -->
+        <template x-if="!versionsModal.loading && versionsModal.files.length === 0">
+            <div class="flex flex-col items-center justify-center py-10 text-gray-600 gap-2">
+                <span class="text-3xl opacity-30">📭</span>
+                <p class="text-sm">Brak plików (aktualnych ani archiwalnych)</p>
+            </div>
+        </template>
+
+        <!-- File list -->
+        <div x-show="!versionsModal.loading && versionsModal.files.length > 0"
+             class="flex-1 overflow-y-auto divide-y divide-gray-800">
+            <template x-for="(f, fi) in versionsModal.files" :key="f.name">
+                <div class="flex items-center gap-3 px-5 py-3 hover:bg-gray-800/50 transition">
+                    <!-- Badge -->
+                    <span :class="f.is_current ? 'bg-green-900 text-green-300' : 'bg-gray-800 text-gray-500'"
+                          class="flex-shrink-0 text-xs px-2 py-0.5 rounded font-medium"
+                          x-text="f.is_current ? 'AKTUALNY' : 'ARCHIW'"></span>
+
+                    <!-- File info -->
+                    <div class="flex-1 min-w-0">
+                        <p class="text-xs font-mono text-gray-300 truncate" x-text="f.name"></p>
+                        <p class="text-xs text-gray-600 mt-0.5"
+                           x-text="f.modified + ' · ' + f.size_mb + ' MB'"></p>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="flex items-center gap-1 flex-shrink-0">
+                        <button @click="openVideoModalFromVersions(f.name)"
+                                class="text-blue-400 hover:text-blue-300 text-sm px-2 py-1 rounded hover:bg-gray-700 transition"
+                                title="Odtwórz">▶</button>
+                        <template x-if="!f.is_current">
+                            <button @click="restoreFile(f.name, fi)"
+                                    class="text-gray-500 hover:text-green-400 text-sm px-2 py-1 rounded hover:bg-gray-700 transition"
+                                    title="Przywróć jako aktualny">↩</button>
+                        </template>
+                        <button @click="trashFile(f.name, fi)"
+                                class="text-gray-600 hover:text-red-400 text-sm px-2 py-1 rounded hover:bg-gray-700 transition"
+                                title="Przenieś do kosza Windows (można odzyskać)">🗑</button>
+                    </div>
+                </div>
+            </template>
+        </div>
+
+        <!-- Footer note -->
+        <div class="px-5 py-2 border-t border-gray-800 text-xs text-gray-600 flex-shrink-0">
+            🗑 Kosz Windows — pliki można odzyskać z Eksploratora plików
         </div>
     </div>
 </div>
@@ -436,6 +909,459 @@
     </div>
 </div>
 
+<!-- ═══ SOURCE MODAL ═════════════════════════════════════════════ -->
+<div x-show="sourceModal.open" x-cloak
+     class="fixed inset-0 bg-black/85 flex items-center justify-center z-50 p-4"
+     @click.self="sourceModal.open = false"
+     @keydown.escape.window="sourceModal.open = false">
+    <div class="bg-gray-900 rounded-xl border border-gray-700 w-full max-w-4xl flex flex-col" style="max-height:85vh">
+        <div class="flex items-center justify-between px-5 py-3 border-b border-gray-700 flex-shrink-0">
+            <p class="text-sm font-mono text-gray-300" x-text="sourceModal.filename"></p>
+            <button @click="sourceModal.open = false" class="text-gray-500 hover:text-white text-xl leading-none">×</button>
+        </div>
+        <pre class="flex-1 overflow-auto px-5 py-4 text-xs font-mono text-gray-300 leading-relaxed whitespace-pre"
+             x-text="sourceModal.content"></pre>
+    </div>
+</div>
+
+<!-- ═══ GLOBAL SETTINGS MODAL ═══════════════════════════════════ -->
+<template x-if="globalsModal.open">
+<div class="fixed inset-0 bg-black/85 flex items-center justify-center z-50 p-4"
+     @keydown.escape.window="globalsModal.open = false">
+    <div class="bg-gray-900 rounded-xl border border-gray-700 w-full max-w-2xl flex flex-col" style="max-height:90vh">
+
+        <!-- Header -->
+        <div class="flex items-center justify-between px-5 py-3 border-b border-gray-700 flex-shrink-0">
+            <div>
+                <h3 class="text-sm font-semibold text-gray-200">⚙ Ustawienia projektu</h3>
+                <p class="text-xs text-gray-500 font-mono mt-0.5" x-text="globalsModal.filename"></p>
+            </div>
+            <button @click="globalsModal.open = false" class="text-gray-500 hover:text-white text-xl leading-none">×</button>
+        </div>
+
+        <!-- Loading -->
+        <div x-show="globalsModal.loading" class="flex items-center justify-center py-12 text-gray-500 text-sm gap-2">
+            <span class="animate-spin">⟳</span> Ładowanie...
+        </div>
+
+        <!-- Body -->
+        <div x-show="!globalsModal.loading" class="flex-1 overflow-y-auto px-5 py-4 space-y-5">
+
+            <!-- project_folder -->
+            <div>
+                <label class="block text-xs text-gray-400 mb-1 font-semibold uppercase tracking-wider">📁 Folder projektu</label>
+                <input type="text" x-model="globalsModal.data.project_folder"
+                       class="w-full bg-gray-800 border border-gray-600 rounded px-3 py-1.5 text-sm text-gray-200 font-mono focus:outline-none focus:border-orange-500">
+                <p class="text-xs text-gray-600 mt-1">Ścieżka do katalogu z plikami źródłowymi (obrazy/wideo)</p>
+            </div>
+
+            <!-- use_test_flow toggle -->
+            <div class="flex items-center justify-between bg-gray-800 rounded-lg px-4 py-3">
+                <div>
+                    <p class="text-sm text-gray-200">🧪 Tryb testowy (use_test_flow)</p>
+                    <p class="text-xs text-gray-500 mt-0.5">Gdy włączony, uruchamia flow_test zamiast flow</p>
+                </div>
+                <button @click="globalsModal.data.use_test_flow = !globalsModal.data.use_test_flow"
+                        :class="globalsModal.data.use_test_flow ? 'bg-yellow-600' : 'bg-gray-700'"
+                        class="relative w-12 h-6 rounded-full transition-colors flex-shrink-0">
+                    <span :class="globalsModal.data.use_test_flow ? 'translate-x-6' : 'translate-x-1'"
+                          class="absolute top-1 w-4 h-4 bg-white rounded-full transition-transform shadow"></span>
+                </button>
+            </div>
+
+            <!-- defaults -->
+            <div>
+                <label class="block text-xs text-gray-400 mb-2 font-semibold uppercase tracking-wider">🎛 Domyślne ustawienia generacji</label>
+                <div class="grid grid-cols-3 gap-3">
+                    <div>
+                        <label class="block text-xs text-gray-500 mb-1">Backend</label>
+                        <select x-model="globalsModal.data.defaults.backend"
+                                class="w-full bg-gray-800 border border-gray-600 rounded px-2 py-1.5 text-sm text-gray-200 focus:outline-none focus:border-orange-500">
+                            <option value="">— brak —</option>
+                            <option value="linux">linux</option>
+                            <option value="local">local</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs text-gray-500 mb-1">FPS</label>
+                        <input type="number" x-model.number="globalsModal.data.defaults.fps" min="1" placeholder="16"
+                               class="w-full bg-gray-800 border border-gray-600 rounded px-3 py-1.5 text-sm text-gray-200 focus:outline-none focus:border-orange-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs text-gray-500 mb-1">Steps</label>
+                        <input type="number" x-model.number="globalsModal.data.defaults.steps" min="1" placeholder="6"
+                               class="w-full bg-gray-800 border border-gray-600 rounded px-3 py-1.5 text-sm text-gray-200 focus:outline-none focus:border-orange-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs text-gray-500 mb-1">CFG</label>
+                        <input type="number" x-model.number="globalsModal.data.defaults.cfg" min="0" step="0.5" placeholder="2.0"
+                               class="w-full bg-gray-800 border border-gray-600 rounded px-3 py-1.5 text-sm text-gray-200 focus:outline-none focus:border-orange-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs text-gray-500 mb-1">Duration (s)</label>
+                        <input type="number" x-model.number="globalsModal.data.defaults.duration" min="0" placeholder="2"
+                               class="w-full bg-gray-800 border border-gray-600 rounded px-3 py-1.5 text-sm text-gray-200 focus:outline-none focus:border-orange-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs text-gray-500 mb-1">Blocks to swap</label>
+                        <input type="number" x-model.number="globalsModal.data.defaults.blocks_to_swap" min="0" placeholder="35"
+                               class="w-full bg-gray-800 border border-gray-600 rounded px-3 py-1.5 text-sm text-gray-200 focus:outline-none focus:border-orange-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs text-gray-500 mb-1">Szer. (px)</label>
+                        <input type="number" x-model.number="globalsModal._resW" min="64" step="64" placeholder="1024"
+                               class="w-full bg-gray-800 border border-gray-600 rounded px-3 py-1.5 text-sm text-gray-200 focus:outline-none focus:border-orange-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs text-gray-500 mb-1">Wys. (px)</label>
+                        <input type="number" x-model.number="globalsModal._resH" min="64" step="64" placeholder="1024"
+                               class="w-full bg-gray-800 border border-gray-600 rounded px-3 py-1.5 text-sm text-gray-200 focus:outline-none focus:border-orange-500">
+                    </div>
+                </div>
+                <p class="text-xs text-gray-600 mt-2">Szer. i Wys. ustawiają FORCE_RESOLUTION — zostaw puste aby używać domyślnego 1024×1024</p>
+            </div>
+
+            <!-- linux_backend -->
+            <div>
+                <label class="block text-xs text-gray-400 mb-2 font-semibold uppercase tracking-wider">🖥 Backend Linux / ComfyUI</label>
+                <div class="space-y-2">
+                    <div>
+                        <label class="block text-xs text-gray-500 mb-1">config_path (plik wan_i2v.yaml)</label>
+                        <input type="text" x-model="globalsModal.data.linux_backend.config_path"
+                               class="w-full bg-gray-800 border border-gray-600 rounded px-3 py-1.5 text-xs text-gray-200 font-mono focus:outline-none focus:border-orange-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs text-gray-500 mb-1">workflows_path (folder workflows)</label>
+                        <input type="text" x-model="globalsModal.data.linux_backend.workflows_path"
+                               class="w-full bg-gray-800 border border-gray-600 rounded px-3 py-1.5 text-xs text-gray-200 font-mono focus:outline-none focus:border-orange-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs text-gray-500 mb-1">comfyui_output_folder (folder wyjściowy ComfyUI)</label>
+                        <input type="text" x-model="globalsModal.data.linux_backend.comfyui_output_folder"
+                               class="w-full bg-gray-800 border border-gray-600 rounded px-3 py-1.5 text-xs text-gray-200 font-mono focus:outline-none focus:border-orange-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs text-gray-500 mb-1">api_url (np. http://127.0.0.1:8189)</label>
+                        <input type="text" x-model="globalsModal.data.linux_backend.api_url"
+                               class="w-full bg-gray-800 border border-gray-600 rounded px-3 py-1.5 text-xs text-gray-200 font-mono focus:outline-none focus:border-orange-500">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="flex items-center justify-between px-5 py-3 border-t border-gray-700 flex-shrink-0">
+            <p x-show="globalsModal.error" class="text-red-400 text-xs flex-1 mr-4" x-text="globalsModal.error"></p>
+            <p x-show="globalsModal.saved && !globalsModal.error" class="text-green-400 text-xs flex-1 mr-4">✅ Zapisano</p>
+            <div class="ml-auto flex gap-3">
+                <button @click="globalsModal.open = false"
+                        class="px-4 py-2 text-sm text-gray-400 hover:text-white rounded-lg hover:bg-gray-700 transition">
+                    Zamknij
+                </button>
+                <button @click="globalsModalSave()"
+                        :disabled="globalsModal.saving || globalsModal.loading"
+                        :class="(globalsModal.saving || globalsModal.loading) ? 'opacity-40 cursor-not-allowed bg-orange-900' : 'bg-orange-700 hover:bg-orange-600 cursor-pointer'"
+                        class="px-4 py-2 text-sm text-white rounded-lg transition flex items-center gap-2">
+                    <span x-show="globalsModal.saving" class="animate-spin inline-block">⟳</span>
+                    <span x-text="globalsModal.saving ? 'Zapisywanie...' : '💾 Zapisz'"></span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+</template>
+
+<!-- ═══ FLOW EDITOR MODAL ════════════════════════════════════════ -->
+<template x-if="editModal.open">
+<div class="fixed inset-0 bg-black/85 flex items-center justify-center z-50 p-4"
+     @keydown.escape.window="editModal.open = false">
+    <div class="bg-gray-900 rounded-xl border border-gray-700 w-full max-w-2xl flex flex-col" style="max-height:90vh">
+
+        <!-- Header -->
+        <div class="flex items-center justify-between px-5 py-3 border-b border-gray-700 flex-shrink-0">
+            <div>
+                <h3 class="text-sm font-semibold text-gray-200" x-text="editModal.title"></h3>
+                <p class="text-xs text-gray-500 mt-0.5" x-text="editModal.subtitle"></p>
+            </div>
+            <button @click="editModal.open = false" class="text-gray-500 hover:text-white text-xl leading-none">×</button>
+        </div>
+
+        <!-- Body -->
+        <div class="flex-1 overflow-y-auto px-5 py-4 space-y-4">
+
+            <!-- FILE ITEM fields -->
+            <template x-if="editModal.kind === 'file'">
+                <div class="space-y-3">
+                    <div>
+                        <label class="block text-xs text-gray-400 mb-1">
+                            Plik źródłowy
+                            <span x-show="editModal.loadingFiles" class="ml-1 text-gray-600 animate-spin inline-block">⟳</span>
+                            <span x-show="!editModal.loadingFiles && editModal.projectFiles.length > 0"
+                                  class="ml-1 text-gray-600"
+                                  x-text="'(' + editModal.projectFiles.length + ' plików)'"></span>
+                        </label>
+                        <input type="text" x-model="editModal.data.file"
+                               class="w-full bg-gray-800 border border-gray-600 rounded px-3 py-1.5 text-sm text-gray-200 font-mono focus:outline-none focus:border-blue-500"
+                               placeholder="np. 09.51. scene.png">
+                        <!-- File picker list -->
+                        <template x-if="editModal.projectFiles.length > 0">
+                            <div class="mt-1 bg-gray-950 border border-gray-700 rounded max-h-40 overflow-y-auto">
+                                <template x-for="f in editModal.projectFiles" :key="f">
+                                    <button type="button" @click="editModal.data.file = f"
+                                            :class="editModal.data.file === f
+                                                ? 'bg-blue-900/60 text-blue-200 border-l-2 border-blue-500'
+                                                : 'text-gray-400 hover:bg-gray-800 hover:text-gray-200 border-l-2 border-transparent'"
+                                            class="w-full text-left px-3 py-1 text-xs font-mono transition truncate block">
+                                        <span x-text="f"></span>
+                                    </button>
+                                </template>
+                            </div>
+                        </template>
+                    </div>
+                    <div class="grid grid-cols-3 gap-3">
+                        <div>
+                            <label class="block text-xs text-gray-400 mb-1">Backend</label>
+                            <select x-model="editModal.data.backend"
+                                    class="w-full bg-gray-800 border border-gray-600 rounded px-2 py-1.5 text-sm text-gray-200 focus:outline-none focus:border-blue-500">
+                                <option value="">— domyślny —</option>
+                                <option value="linux">linux</option>
+                                <option value="local">local</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs text-gray-400 mb-1">Duration (s)</label>
+                            <input type="number" x-model.number="editModal.data.duration" min="0" step="1"
+                                   class="w-full bg-gray-800 border border-gray-600 rounded px-3 py-1.5 text-sm text-gray-200 focus:outline-none focus:border-blue-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-gray-400 mb-1">FPS</label>
+                            <input type="number" x-model.number="editModal.data.fps" min="1" step="1" placeholder="domyślny"
+                                   class="w-full bg-gray-800 border border-gray-600 rounded px-3 py-1.5 text-sm text-gray-200 focus:outline-none focus:border-blue-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-gray-400 mb-1">Steps</label>
+                            <input type="number" x-model.number="editModal.data.steps" min="1" placeholder="domyślne"
+                                   class="w-full bg-gray-800 border border-gray-600 rounded px-3 py-1.5 text-sm text-gray-200 focus:outline-none focus:border-blue-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-gray-400 mb-1">CFG</label>
+                            <input type="number" x-model.number="editModal.data.cfg" min="0" step="0.5" placeholder="domyślny"
+                                   class="w-full bg-gray-800 border border-gray-600 rounded px-3 py-1.5 text-sm text-gray-200 focus:outline-none focus:border-blue-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-gray-400 mb-1">Blocks to swap</label>
+                            <input type="number" x-model.number="editModal.data.blocks_to_swap" min="0" placeholder="domyślne"
+                                   class="w-full bg-gray-800 border border-gray-600 rounded px-3 py-1.5 text-sm text-gray-200 focus:outline-none focus:border-blue-500">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs text-green-400 mb-1">Prompt pozytywny (pos)</label>
+                        <textarea x-model="editModal.data.pos" rows="5"
+                                  class="w-full bg-gray-800 border border-gray-600 rounded px-3 py-2 text-sm text-gray-200 font-mono focus:outline-none focus:border-green-500 resize-y"></textarea>
+                    </div>
+                    <div>
+                        <label class="block text-xs text-red-400 mb-1">Prompt negatywny (neg)</label>
+                        <textarea x-model="editModal.data.neg" rows="3"
+                                  class="w-full bg-gray-800 border border-gray-600 rounded px-3 py-2 text-sm text-gray-200 font-mono focus:outline-none focus:border-red-500 resize-y"></textarea>
+                    </div>
+                </div>
+            </template>
+
+            <!-- HEADER fields -->
+            <template x-if="editModal.kind === 'header'">
+                <div class="space-y-3">
+                    <div>
+                        <label class="block text-xs text-violet-400 mb-1">Tekst nagłówka</label>
+                        <input type="text" x-model="editModal.data.header"
+                               class="w-full bg-gray-800 border border-indigo-800 rounded px-3 py-2 text-sm text-violet-200 font-semibold tracking-wide focus:outline-none focus:border-violet-500"
+                               placeholder="np. SCENA 2: Sypialnia">
+                    </div>
+                    <p class="text-xs text-gray-600">Nagłówki są widoczne tylko w GUI — nie wpływają na generowanie.</p>
+                </div>
+            </template>
+
+            <!-- CHAIN HEADER fields -->
+            <template x-if="editModal.kind === 'chain'">
+                <div class="space-y-3">
+                    <div>
+                        <label class="block text-xs text-gray-400 mb-1">Prefix (nazwa chain)</label>
+                        <input type="text" x-model="editModal.data.chain_prefix"
+                               class="w-full bg-gray-800 border border-gray-600 rounded px-3 py-1.5 text-sm text-blue-300 font-mono focus:outline-none focus:border-blue-500">
+                    </div>
+                    <div class="grid grid-cols-3 gap-3">
+                        <div>
+                            <label class="block text-xs text-gray-400 mb-1">Backend</label>
+                            <select x-model="editModal.data.backend"
+                                    class="w-full bg-gray-800 border border-gray-600 rounded px-2 py-1.5 text-sm text-gray-200 focus:outline-none focus:border-blue-500">
+                                <option value="">— domyślny —</option>
+                                <option value="linux">linux</option>
+                                <option value="local">local</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs text-gray-400 mb-1">FPS</label>
+                            <input type="number" x-model.number="editModal.data.fps" min="1" placeholder="domyślny"
+                                   class="w-full bg-gray-800 border border-gray-600 rounded px-3 py-1.5 text-sm text-gray-200 focus:outline-none focus:border-blue-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-gray-400 mb-1">Steps</label>
+                            <input type="number" x-model.number="editModal.data.steps" min="1" placeholder="domyślne"
+                                   class="w-full bg-gray-800 border border-gray-600 rounded px-3 py-1.5 text-sm text-gray-200 focus:outline-none focus:border-blue-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-gray-400 mb-1">CFG</label>
+                            <input type="number" x-model.number="editModal.data.cfg" min="0" step="0.5" placeholder="domyślny"
+                                   class="w-full bg-gray-800 border border-gray-600 rounded px-3 py-1.5 text-sm text-gray-200 focus:outline-none focus:border-blue-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-gray-400 mb-1">Blocks to swap</label>
+                            <input type="number" x-model.number="editModal.data.blocks_to_swap" min="0" placeholder="domyślne"
+                                   class="w-full bg-gray-800 border border-gray-600 rounded px-3 py-1.5 text-sm text-gray-200 focus:outline-none focus:border-blue-500">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs text-red-400 mb-1">Domyślny neg (dla całego chain)</label>
+                        <textarea x-model="editModal.data.neg" rows="3"
+                                  class="w-full bg-gray-800 border border-gray-600 rounded px-3 py-2 text-sm text-gray-200 font-mono focus:outline-none focus:border-red-500 resize-y"></textarea>
+                    </div>
+                    <!-- Chain steps list (edit pos/neg/duration per step) -->
+                    <div>
+                        <div class="flex items-center justify-between mb-2">
+                            <label class="text-xs text-blue-300 font-semibold">Steps (<span x-text="editModal.data.chain?.length || 0"></span>)</label>
+                            <button @click="editAddChainStep()"
+                                    class="text-xs text-blue-400 hover:text-blue-300 border border-blue-800 hover:border-blue-500 px-2 py-0.5 rounded transition">
+                                + Dodaj step
+                            </button>
+                        </div>
+                        <template x-for="(step, si) in (editModal.data.chain || [])" :key="si">
+                            <div class="bg-gray-800 border border-gray-700 rounded-lg p-3 mb-2">
+                                <div class="flex items-center justify-between mb-2">
+                                    <span class="text-xs text-gray-500 font-semibold" x-text="'Step ' + (si+1)"></span>
+                                    <div class="flex gap-1">
+                                        <button @click="editMoveChainStep(si, -1)" :disabled="si === 0"
+                                                :class="si === 0 ? 'opacity-30 cursor-not-allowed' : 'hover:text-white'"
+                                                class="text-gray-600 text-xs px-1">↑</button>
+                                        <button @click="editMoveChainStep(si, 1)" :disabled="si === (editModal.data.chain.length - 1)"
+                                                :class="si === editModal.data.chain.length - 1 ? 'opacity-30 cursor-not-allowed' : 'hover:text-white'"
+                                                class="text-gray-600 text-xs px-1">↓</button>
+                                        <button @click="editRemoveChainStep(si)"
+                                                class="text-gray-600 hover:text-red-400 text-xs px-1">✕</button>
+                                    </div>
+                                </div>
+                                <div class="grid grid-cols-3 gap-2 mb-2">
+                                    <div>
+                                        <label class="block text-xs text-gray-500 mb-0.5">Duration (s)</label>
+                                        <input type="number" x-model.number="step.duration" min="0"
+                                               class="w-full bg-gray-900 border border-gray-700 rounded px-2 py-1 text-xs text-gray-200 focus:outline-none focus:border-blue-500">
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs text-gray-500 mb-0.5">Blocks to swap</label>
+                                        <input type="number" x-model.number="step.blocks_to_swap" min="0" placeholder="chain"
+                                               class="w-full bg-gray-900 border border-gray-700 rounded px-2 py-1 text-xs text-gray-200 focus:outline-none focus:border-blue-500">
+                                    </div>
+                                </div>
+                                <div class="mb-2">
+                                    <label class="block text-xs text-green-400 mb-0.5">Pos</label>
+                                    <textarea x-model="step.pos" rows="3"
+                                              class="w-full bg-gray-900 border border-gray-700 rounded px-2 py-1 text-xs text-gray-200 font-mono focus:outline-none focus:border-green-500 resize-y"></textarea>
+                                </div>
+                                <div>
+                                    <label class="block text-xs text-red-400 mb-0.5">Neg (override chain neg)</label>
+                                    <textarea x-model="step.neg" rows="2"
+                                              class="w-full bg-gray-900 border border-gray-700 rounded px-2 py-1 text-xs text-gray-200 font-mono focus:outline-none focus:border-red-500 resize-y"></textarea>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+            </template>
+
+        </div>
+
+        <!-- Footer -->
+        <div class="flex items-center justify-between px-5 py-3 border-t border-gray-700 flex-shrink-0">
+            <p x-show="editModal.error" class="text-red-400 text-xs" x-text="editModal.error"></p>
+            <div class="ml-auto flex gap-3">
+                <button @click="editModal.open = false"
+                        class="px-4 py-2 text-sm text-gray-400 hover:text-white rounded-lg hover:bg-gray-700 transition">
+                    Anuluj
+                </button>
+                <button @click="editModalSave()"
+                        :disabled="editModal.saving"
+                        :class="editModal.saving ? 'opacity-40 cursor-not-allowed bg-blue-900' : 'bg-blue-700 hover:bg-blue-600 cursor-pointer'"
+                        class="px-4 py-2 text-sm text-white rounded-lg transition flex items-center gap-2">
+                    <span x-show="editModal.saving" class="animate-spin inline-block">⟳</span>
+                    <span x-text="editModal.saving ? 'Zapisywanie...' : '💾 Zapisz'"></span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+</template>
+
+<!-- ═══ PRE-FLIGHT MODAL ══════════════════════════════════════════ -->
+<template x-if="preflightModal.open">
+<div class="fixed inset-0 bg-black/85 flex items-center justify-center z-50 p-4"
+     @keydown.escape.window="preflightModal.open = false">
+    <div class="bg-gray-900 rounded-xl border border-yellow-800 w-full max-w-md p-5">
+        <div class="flex items-center gap-2 mb-3">
+            <span class="text-yellow-400 text-xl">⚠</span>
+            <h3 class="text-sm font-semibold text-yellow-300">Wykryto konflikty w FLOW</h3>
+        </div>
+        <ul class="space-y-2 mb-4">
+            <template x-for="c in preflightModal.conflicts" :key="c">
+                <li class="text-xs text-gray-300 bg-yellow-950/40 border border-yellow-900/50 rounded px-3 py-2" x-text="c"></li>
+            </template>
+        </ul>
+        <p class="text-xs text-gray-500 mb-4">Kontynuowanie może nadpisać istniejące pliki wideo na dysku.</p>
+        <div class="flex justify-end gap-2">
+            <button @click="preflightModal.open = false"
+                    class="px-4 py-2 text-sm text-gray-400 hover:text-white rounded-lg hover:bg-gray-700 transition">Anuluj</button>
+            <button @click="preflightModal.onConfirm()"
+                    class="px-4 py-2 text-sm text-white bg-yellow-700 hover:bg-yellow-600 rounded-lg transition">⚡ Generuj mimo to</button>
+        </div>
+    </div>
+</div>
+</template>
+
+<!-- ═══ ADD ITEM MODAL ════════════════════════════════════════════ -->
+<template x-if="addItemModal.open">
+<div class="fixed inset-0 bg-black/85 flex items-center justify-center z-50 p-4"
+     @keydown.escape.window="addItemModal.open = false">
+    <div class="bg-gray-900 rounded-xl border border-gray-700 w-full max-w-sm p-5">
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="text-sm font-semibold text-gray-200">Dodaj element</h3>
+            <button @click="addItemModal.open = false" class="text-gray-500 hover:text-white text-xl leading-none">×</button>
+        </div>
+        <p class="text-xs text-gray-500 mb-4">
+            Wstawianie <span class="text-gray-300 font-mono" x-text="addItemModal.afterIdx >= 0 ? 'po elemencie #' + (addItemModal.afterIdx+1) : 'na końcu'"></span>
+        </p>
+        <div class="grid grid-cols-2 gap-2">
+            <button @click="addItemDo('file')"
+                    class="flex flex-col items-center gap-2 bg-gray-800 hover:bg-gray-700 border border-gray-600 hover:border-gray-500 rounded-lg p-4 transition">
+                <span class="text-2xl">📄</span>
+                <span class="text-xs text-gray-300">Plik</span>
+            </button>
+            <button @click="addItemDo('chain')"
+                    class="flex flex-col items-center gap-2 bg-gray-800 hover:bg-gray-700 border border-gray-600 hover:border-gray-500 rounded-lg p-4 transition">
+                <span class="text-2xl">⛓</span>
+                <span class="text-xs text-gray-300">Chain</span>
+            </button>
+            <button @click="addItemDo('break')"
+                    class="flex flex-col items-center gap-2 bg-gray-800 hover:bg-gray-700 border border-gray-600 hover:border-gray-500 rounded-lg p-4 transition">
+                <span class="text-2xl">✂</span>
+                <span class="text-xs text-gray-300">Break</span>
+            </button>
+            <button @click="addItemDo('header')"
+                    class="flex flex-col items-center gap-2 bg-gray-800 hover:bg-gray-700 border border-indigo-900 hover:border-indigo-600 rounded-lg p-4 transition">
+                <span class="text-2xl">📌</span>
+                <span class="text-xs text-violet-300">Nagłówek</span>
+            </button>
+        </div>
+    </div>
+</div>
+</template>
+
 <!-- ═══ JS ════════════════════════════════════════════════════════ -->
 <script>
 function app() {
@@ -449,23 +1375,41 @@ function app() {
         ws: null, wsConnected: false,
         genStatus: 'idle', genFile: null,
         awaitingInput: false, inputPrompt: '',
-        frameModal: { open: false, title: '', startUrl: '', endUrl: '' },
+        frameModal: { open: false, title: '', isImage: false, startUrl: '', endUrl: '' },
         videoModal: { open: false, name: '', url: '' },
+        versionsModal: { open: false, name: '', files: [], loading: false },
+        uploadModal:   { open: false, name: '', file: null, previewUrl: null, uploading: false, error: null, dragging: false },
+        frameVersion:  Date.now(),
+        negOpen: {},
+        logHeight: 160,
+        _genPyBusy: false,
+        _reformatBusy: false,
+        sourceModal: { open: false, filename: '', content: '' },
+        _logResizing: false, _logResizeStartY: 0, _logResizeStartH: 0,
 
         // ─ Computed ───────────────────────────────────────
         get isRunning() { return this.genStatus === 'running'; },
+        get _runIsReady() {
+            const c = this.selectedRun?.compatibility;
+            return c === 'current' || c === 'yaml';
+        },
         get canGenerate() {
             return !this.isRunning
-                && this.selectedRun?.compatibility === 'current'
+                && this._runIsReady
                 && !this.selectedRun?.syntax_error
                 && !!this.flowData;
         },
         get toolbarStatus() {
             if (this.isRunning) return `Generowanie: ${this.genFile || '...'}`;
             if (!this.selectedRun) return 'Wybierz projekt aby zacząć';
-            if (this.selectedRun.compatibility !== 'current') return '⚠️ Stary format';
+            if (!this._runIsReady) return '⚠️ Stary format';
             if (this.selectedRun.syntax_error) return '❌ Błąd składni w pliku RUN';
             return `Projekt: ${this.selectedRun.display_name}`;
+        },
+        get toolbarStatusExtra() {
+            // shown when genStatus is running and we know we're in only-mode
+            // (status message is pushed from backend via WS, no extra state needed here)
+            return '';
         },
 
         // ─ Init ───────────────────────────────────────────
@@ -497,17 +1441,42 @@ function app() {
                     if (msg.file) this.genFile = msg.file;
                     if (typeof msg.awaiting_input === 'boolean') this.awaitingInput = msg.awaiting_input;
                     // Auto-refresh status when generation finishes
-                    if (msg.status === 'finished' || msg.status === 'failed') this.refreshStatus();
+                    if (msg.status === 'finished' || msg.status === 'failed') {
+                        this._dryRunMode = false;  // always clear on process end
+                        this.refreshStatus();
+                    }
                     return;
                 }
-                if (msg.type === 'input_needed') { this.awaitingInput = true; this.inputPrompt = msg.prompt || ''; return; }
-                if (msg.type === 'log') this.logLine(msg.stream, msg.text);
+                if (msg.type === 'input_needed') { this._handleInputNeeded(msg.prompt || ''); return; }
+                if (msg.type === 'log') {
+                    const t = msg.text || '';
+                    // Filter verbose debug lines from generation script
+                    const isDebug = t.startsWith('🐛') ||
+                                    t.startsWith('from_config:') ||
+                                    t.startsWith('to_config:') ||
+                                    t.startsWith('default_backend:') ||
+                                    t.startsWith('📁 Normal transition') ||
+                                    t.startsWith('⛓️ Chain file generation') ||
+                                    t.startsWith('Using prompt:');
+                    if (!isDebug) this.logLine(msg.stream, t);
+                }
             };
         },
 
         // ─ Generation ─────────────────────────────────────
         async startGeneration() {
             if (!this.canGenerate) return;
+            this._dryRunMode = false;   // safety: clear any stale dry-run flag
+            const conflicts = this._getFlowConflicts();
+            if (conflicts.length > 0) {
+                this.preflightModal = { open: true, conflicts, onConfirm: () => this._doStartGeneration() };
+                return;
+            }
+            await this._doStartGeneration();
+        },
+
+        async _doStartGeneration() {
+            this.preflightModal.open = false;
             try {
                 const res = await fetch(`/api/generate/${encodeURIComponent(this.selectedRun.filename)}`, { method: 'POST' });
                 if (!res.ok) { const e = await res.json(); this.logLine('sys', `❌ ${e.detail}`); }
@@ -519,13 +1488,23 @@ function app() {
         },
         async dryRun() {
             if (!this.canGenerate || this.isRunning) return;
-            this.logLine('sys', '🔍 Dry-run: sprawdzam status (auto-odpowiedź N)...');
-            // Start generation — when the prompt appears, auto-answer N
+            // 1. Clear frame thumbnail cache so all thumbs are re-extracted from source
+            try {
+                await fetch('/api/media/clear-frame-cache', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ run: this.selectedRun.filename }),
+                });
+            } catch(e) {}
+            // 2. Bump frameVersion → browser re-fetches all thumbnails
+            this.frameVersion = Date.now();
+            // 3. Dry-run: start generation, auto-answer N at the first prompt
+            this.logLine('sys', '🔍 Sprawdzam status i odświeżam miniatury (auto-odpowiedź N)...');
             this._dryRunMode = true;
             try {
                 const res = await fetch(`/api/generate/${encodeURIComponent(this.selectedRun.filename)}`, { method: 'POST' });
-                if (!res.ok) { const e = await res.json(); this.logLine('sys', `❌ ${e.detail}`); }
-            } catch(e) { this.logLine('sys', `❌ ${e.message}`); }
+                if (!res.ok) { const e = await res.json(); this.logLine('sys', `❌ ${e.detail}`); this._dryRunMode = false; }
+            } catch(e) { this.logLine('sys', `❌ ${e.message}`); this._dryRunMode = false; }
         },
         async answerInput(answer) {
             // If dry-run mode auto-answering N, clear flag
@@ -540,6 +1519,25 @@ function app() {
                     body: JSON.stringify({ text: answer }),
                 });
             } catch(e) { this.logLine('sys', `❌ ${e.message}`); }
+        },
+
+        // ─ Log panel resize ───────────────────────────────
+        startLogResize(e) {
+            this._logResizing = true;
+            this._logResizeStartY = e.clientY;
+            this._logResizeStartH = this.logHeight;
+            const move = (ev) => {
+                if (!this._logResizing) return;
+                const delta = this._logResizeStartY - ev.clientY;
+                this.logHeight = Math.max(80, Math.min(window.innerHeight * 0.8, this._logResizeStartH + delta));
+            };
+            const up = () => {
+                this._logResizing = false;
+                document.removeEventListener('mousemove', move);
+                document.removeEventListener('mouseup', up);
+            };
+            document.addEventListener('mousemove', move);
+            document.addEventListener('mouseup', up);
         },
 
         // ─ Dry-run auto-answer hook ────────────────────────
@@ -567,12 +1565,14 @@ function app() {
         },
         async selectRun(run) {
             this.selectedRun = run; this.flowData = null; this.flowError = null; this.statusData = null;
+            this.editMode = false; // reset edit mode on run switch
             this.logLine('sys', `Wybrano: ${run.display_name} [${run.compatibility}]`);
             if (run.syntax_error) {
                 this.logLine('sys', `❌ Błąd składni linia ${run.syntax_error.line}: ${run.syntax_error.msg}`);
                 return;
             }
-            if (run.compatibility === 'current') {
+            const ready = run.compatibility === 'current' || run.compatibility === 'yaml';
+            if (ready) {
                 await Promise.all([this.loadFlow(run.filename), this.refreshStatus()]);
             }
         },
@@ -597,55 +1597,78 @@ function app() {
             } catch(e) {}
         },
 
-        // Map FLOW idx → status entry
-        _statusByIdx(idx) {
-            if (!this.statusData) return null;
-            return this.statusData.items.find(s => s.index === idx) || null;
-        },
+        // ── Status helpers — all O(1), no indexOf/find ────────────────
+        // statusData.items[idx] corresponds 1:1 with flowData.flow[idx]
+        _si(idx) { return this.statusData?.items?.[idx] ?? null; },
 
-        fileItemStatus(item) {
-            const idx = this.flowData?.flow?.indexOf(item);
-            const s = this._statusByIdx(idx);
-            return s ? s.exists : null;
+        // border class for FILE row
+        fileItemBorderClass(idx) {
+            const st = this._si(idx)?.status;
+            if (st === 'green') return 'sl-green';
+            if (st === 'red')   return 'sl-red';
+            if (st === 'gray')  return 'sl-gray';
+            return '';
         },
-        fileItemName(item) {
-            const idx = this.flowData?.flow?.indexOf(item);
-            const s = this._statusByIdx(idx);
-            return s?.name || null;
+        fileItemIsGreen(idx)   { return this._si(idx)?.status === 'green'; },
+        fileItemIsRed(idx)     { return this._si(idx)?.status === 'red'; },
+        fileItemIsGray(idx)    { return this._si(idx)?.status === 'gray'; },
+        fileItemName(idx)      { return this._si(idx)?.name ?? null; },
+        fileItemSizeMb(idx)    { const mb = this._si(idx)?.size_mb; return mb ? `${mb} MB` : ''; },
+        fileItemHasVersions(idx) { return this._si(idx)?.has_versions === true; },
+        fileItemHasArchived(idx) { return this._si(idx)?.has_archived === true; },
+        fileItemSourceSizeMb(idx) { const mb = this._si(idx)?.source_size_mb; return mb ? `${mb} MB` : ''; },
+
+        // chain status — called ONCE each, not 3× per item
+        chainStatusOk(idx)    { return !!(this._si(idx)?.steps); },
+        chainStatusClass(idx) {
+            const st = this._si(idx)?.status;
+            if (st === 'green')   return 'text-green-400';
+            if (st === 'partial') return 'text-yellow-400';
+            return 'text-red-400';
         },
-        fileItemSizeMb(item) {
-            const idx = this.flowData?.flow?.indexOf(item);
-            const s = this._statusByIdx(idx);
-            return s?.size_mb ? `${s.size_mb} MB` : '';
-        },
-        chainStatus(item) {
-            const idx = this.flowData?.flow?.indexOf(item);
-            const s = this._statusByIdx(idx);
-            if (!s || !s.steps) return null;
+        chainStatusLabel(idx) {
+            const s = this._si(idx);
+            if (!s?.steps) return '';
             const total = s.steps.length;
             const done  = s.steps.filter(x => x.exists).length;
-            return { all: done === total, count: done + '/' + total, missing: total - done };
+            if (s.status === 'green')   return `✅ ${done}/${total}`;
+            if (s.status === 'partial') return `⚡ ${done}/${total}`;
+            return `○ ${total - done} brak`;
         },
+        chainBorderClass(idx) {
+            const st = this._si(idx)?.status;
+            if (st === 'green')   return 'sl-green';
+            if (st === 'red')     return 'sl-red';
+            if (st === 'partial') return 'border-l-4 border-l-yellow-700';
+            return '';
+        },
+        chainStepHasVersions(idx, si) { return this._si(idx)?.steps?.[si]?.has_versions === true; },
+        chainStepHasArchived(idx, si) { return this._si(idx)?.steps?.[si]?.has_archived === true; },
+
         itemExists(filename) {
             if (!this.statusData) return false;
             return this.statusData.items.some(s => {
                 if (s.steps) return s.steps.some(st => st.filename === filename && st.exists);
-                return s.name === filename && s.exists;
+                return s.name === filename && s.status === 'green';
             });
         },
 
         // ─ Media ──────────────────────────────────────────
         frameUrl(file, kind) {
             if (!this.selectedRun) return '';
-            return `/api/media/frame?run=${encodeURIComponent(this.selectedRun.filename)}&file=${encodeURIComponent(file)}&kind=${kind}`;
+            // frameVersion busts cache after source-file upload
+            return `/api/media/frame?run=${encodeURIComponent(this.selectedRun.filename)}&file=${encodeURIComponent(file)}&kind=${kind}&v=${this.frameVersion}`;
         },
         thumbUrl(file, kind) { return this.frameUrl(file, kind); },
 
         openFrameModal(file) {
+            const ext = (file.split('.').pop() || '').toLowerCase();
+            const isImage = ['jpg','jpeg','png','webp','gif','bmp','tiff','tif'].includes(ext);
             this.frameModal = {
-                open: true,
-                title: file,
-                startUrl: this.frameUrl(file, 'start'),
+                open:     true,
+                title:    file,
+                isImage:  isImage,
+                startUrl: isImage ? '' : this.frameUrl(file, 'start'),
                 endUrl:   this.frameUrl(file, 'end'),
             };
         },
@@ -657,9 +1680,272 @@ function app() {
                 url: `/api/media/video?run=${encodeURIComponent(this.selectedRun.filename)}&name=${encodeURIComponent(name)}`,
             };
         },
+        openSourceVideoModal(filename) {
+            if (!filename || !this.selectedRun) return;
+            this.videoModal = {
+                open: true,
+                name: filename,
+                url: `/api/media/source-video?run=${encodeURIComponent(this.selectedRun.filename)}&name=${encodeURIComponent(filename)}`,
+            };
+        },
         closeVideoModal() {
             if (this.$refs.videoPlayer) { this.$refs.videoPlayer.pause(); this.$refs.videoPlayer.src = ''; }
             this.videoModal = { open: false, name: '', url: '' };
+        },
+
+        openSourceUpload(filename) {
+            if (this.uploadModal.previewUrl) URL.revokeObjectURL(this.uploadModal.previewUrl);
+            this.uploadModal = { open: true, name: filename, file: null, previewUrl: null, uploading: false, error: null, dragging: false };
+        },
+        _setUploadFile(file) {
+            if (!file) return;
+            if (this.uploadModal.previewUrl) URL.revokeObjectURL(this.uploadModal.previewUrl);
+            this.uploadModal.file = file;
+            // Local preview for images
+            if (file.type.startsWith('image/')) {
+                this.uploadModal.previewUrl = URL.createObjectURL(file);
+            } else {
+                this.uploadModal.previewUrl = null;
+            }
+        },
+        async doUploadSource() {
+            if (!this.uploadModal.file || !this.selectedRun) return;
+            this.uploadModal.uploading = true;
+            this.uploadModal.error = null;
+
+            const fd = new FormData();
+            fd.append('run',  this.selectedRun.filename);
+            fd.append('name', this.uploadModal.name);
+            fd.append('file', this.uploadModal.file);
+
+            try {
+                const res  = await fetch('/api/media/upload-source', { method: 'POST', body: fd });
+                const data = await res.json();
+                if (!res.ok) {
+                    this.uploadModal.error = data.detail || 'Błąd uploadu';
+                    return;
+                }
+                const note = data.archived ? ` (backup → source_backup/${data.archived})` : '';
+                this.logLine('sys', `⬆️ Podmieniono: ${data.name}${note}`);
+                if (this.uploadModal.previewUrl) URL.revokeObjectURL(this.uploadModal.previewUrl);
+                this.uploadModal.open = false;
+                this.frameVersion = Date.now();   // bust browser thumbnail cache → reload all frames
+                await this.refreshStatus();
+            } catch(e) {
+                this.uploadModal.error = e.message;
+            } finally {
+                this.uploadModal.uploading = false;
+            }
+        },
+
+        async openVersionsModal(name) {
+            if (!name || !this.selectedRun) return;
+            this.versionsModal = { open: true, name, files: [], loading: true };
+            try {
+                const res = await fetch(
+                    `/api/media/versions?run=${encodeURIComponent(this.selectedRun.filename)}&name=${encodeURIComponent(name)}`
+                );
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                const data = await res.json();
+                this.versionsModal.files = data.files || [];
+            } catch(e) {
+                this.logLine('sys', `❌ Błąd ładowania wersji: ${e.message}`);
+                this.versionsModal.open = false;
+            } finally {
+                this.versionsModal.loading = false;
+            }
+        },
+        openVideoModalFromVersions(name) {
+            // Open video player without closing versions modal
+            if (!name || !this.selectedRun) return;
+            this.videoModal = {
+                open: true,
+                name: name,
+                url: `/api/media/video?run=${encodeURIComponent(this.selectedRun.filename)}&name=${encodeURIComponent(name)}`,
+            };
+        },
+        async restoreFile(name, fileIndex) {
+            if (!this.selectedRun) return;
+
+            // ── Detect chain file and warn about missing previous steps ──
+            // name can be "prefix_003.mp4" (current) or "prefix_003_ver260520070004.mp4" (archived)
+            const chainMatch = name.match(/^(.+)_(\d{3})(?:_ver\d{12})?\.mp4$/);
+            let missingPrev = [];
+
+            if (chainMatch && this.statusData) {
+                const chainPrefix = chainMatch[1];
+                const stepNum = parseInt(chainMatch[2]); // 1-based
+                for (let i = 1; i < stepNum; i++) {
+                    const prevName = `${chainPrefix}_${String(i).padStart(3, '0')}.mp4`;
+                    const exists = this.statusData.items.some(s =>
+                        s.steps ? s.steps.some(st => st.filename === prevName && st.exists) : false
+                    );
+                    if (!exists) missingPrev.push(prevName);
+                }
+            }
+
+            const cascadeNote = missingPrev.length
+                ? `\n\n⚠ Uwaga: poprzednie kroki brakują:\n${missingPrev.join('\n')}\n\nPrzywróć je ręcznie przez 📂 lub re-generuj od brakującego kroku.`
+                : '';
+            if (!confirm(`Przywrócić jako aktualny:\n${name}?${cascadeNote}\n\nAktualny plik (jeśli istnieje) zostanie zarchiwizowany.`)) return;
+
+            // ── Restore the explicitly chosen file ────────────────────
+            try {
+                const res  = await fetch('/api/media/restore', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ run: this.selectedRun.filename, name }),
+                });
+                const data = await res.json();
+                if (!res.ok) { this.logLine('sys', `❌ ${data.detail}`); return; }
+
+                const note = data.displaced ? ` (stary → ${data.displaced})` : '';
+                this.logLine('sys', `↩ Przywrócono: ${data.restored}${note}`);
+
+                // Close modal and refresh status
+                this.versionsModal.open = false;
+                this.statusData = null;
+                await this.refreshStatus();
+            } catch(e) { this.logLine('sys', `❌ ${e.message}`); }
+        },
+
+        async trashFile(name, fileIndex) {
+            if (!confirm(`Przenieść do kosza Windows:\n${name}\n\n(plik można odzyskać z Eksploratora plików)`)) return;
+            try {
+                const res = await fetch('/api/media/trash', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ run: this.selectedRun.filename, name }),
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    this.logLine('sys', `🗑 Do kosza: ${name}`);
+                    // Remove from modal list
+                    this.versionsModal.files.splice(fileIndex, 1);
+                    // Refresh status badges
+                    await this.refreshStatus();
+                } else {
+                    this.logLine('sys', `❌ ${data.detail}`);
+                }
+            } catch(e) { this.logLine('sys', `❌ ${e.message}`); }
+        },
+
+        async regenFile(name) {
+            if (!name || !this.selectedRun || this.isRunning) return;
+            if (!confirm(`Re-generować: ${name}?\n\nPlik zostanie zarchiwizowany (_ver...) jako backup.`)) return;
+
+            // 1. Archive current file (backup)
+            this.logLine('sys', `📦 Re-gen: archiwizuję ${name}...`);
+            try {
+                const res = await fetch('/api/media/archive', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ run: this.selectedRun.filename, name }),
+                });
+                const data = await res.json();
+                if (!res.ok) { this.logLine('sys', `❌ Błąd archiwizacji: ${data.detail}`); return; }
+                this.logLine('sys', `📦 Backup: ${data.new_name}`);
+            } catch(e) { this.logLine('sys', `❌ ${e.message}`); return; }
+
+            // 2. Start targeted generation — only this one transition
+            this.logLine('sys', `▶ Uruchamiam generowanie: tylko ${name}`);
+            await this._startOnly([name]);
+        },
+
+        // Re-generate a chain step AND all subsequent steps.
+        // fromSi: 0-based index of the step to start from.
+        // totalSteps: item.chain.length
+        async regenChainFrom(chainPrefix, fromSi, totalSteps) {
+            if (!chainPrefix || !this.selectedRun || this.isRunning) return;
+
+            // Build filenames for step fromSi … totalSteps-1
+            const names = [];
+            for (let i = fromSi; i < totalSteps; i++) {
+                names.push(`${chainPrefix}_${String(i+1).padStart(3,'0')}.mp4`);
+            }
+
+            const stepLabel = `step ${fromSi + 1}`;
+            const rangeLabel = names.length === 1
+                ? names[0]
+                : `${names[0]} … ${names[names.length-1]} (${names.length} pliki)`;
+
+            if (!confirm(`Re-generować chain od ${stepLabel}?\n\n${rangeLabel}\n\nIstniejące pliki zostaną zarchiwizowane.`)) return;
+
+            // Batch-archive with shared timestamp (files that don't exist are silently skipped)
+            try {
+                const res  = await fetch('/api/media/batch-archive', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ run: this.selectedRun.filename, names }),
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    for (const r of data.results) {
+                        if (r.ok) this.logLine('sys', `📦 Backup [${data.ts}]: ${r.new_name}`);
+                        // silently skip files that didn't exist
+                    }
+                } else {
+                    this.logLine('sys', `❌ batch-archive: ${data.detail || res.status}`);
+                }
+            } catch(e) { this.logLine('sys', `❌ batch-archive: ${e.message}`); }
+
+            const stepRange = names.length === 1
+                ? names[0]
+                : `${names.length} kroki (step ${fromSi+1}–${totalSteps})`;
+            this.logLine('sys', `▶ Re-gen chain: ${stepRange}`);
+            await this._startOnly(names);
+        },
+
+        async _startOnly(names) {
+            // Start generation targeting only specific transition files.
+            // names: array of output filenames (e.g. ["foo_bar_transition.mp4"])
+            if (!this.canGenerate) return;
+            try {
+                const res = await fetch(
+                    `/api/generate/${encodeURIComponent(this.selectedRun.filename)}`,
+                    {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ only: names }),
+                    }
+                );
+                if (!res.ok) { const e = await res.json(); this.logLine('sys', `❌ ${e.detail}`); }
+            } catch(e) { this.logLine('sys', `❌ ${e.message}`); }
+        },
+
+        // Archive a chain step AND all subsequent steps (cascade).
+        async archiveChainFrom(chainPrefix, fromSi, totalSteps) {
+            if (!chainPrefix || !this.selectedRun) return;
+
+            const names = [];
+            for (let i = fromSi; i < totalSteps; i++) {
+                names.push(`${chainPrefix}_${String(i+1).padStart(3,'0')}.mp4`);
+            }
+
+            const rangeLabel = names.length === 1
+                ? names[0]
+                : `${names[0]} … ${names[names.length-1]} (${names.length} pliki)`;
+
+            if (!confirm(`Archiwizować chain od step ${fromSi+1}?\n\n${rangeLabel}\n\nPliki zostaną przemianowane, nie usunięte.`)) return;
+
+            // Batch-archive with shared timestamp
+            try {
+                const res  = await fetch('/api/media/batch-archive', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ run: this.selectedRun.filename, names }),
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    for (const r of data.results) {
+                        if (r.ok) this.logLine('sys', `📦 Backup [${data.ts}]: ${r.new_name}`);
+                        else      this.logLine('sys', `⚠ ${r.name}: ${r.error}`);
+                    }
+                } else {
+                    this.logLine('sys', `❌ batch-archive: ${data.detail || res.status}`);
+                }
+            } catch(e) { this.logLine('sys', `❌ batch-archive: ${e.message}`); }
+            this.statusData = null; await this.refreshStatus();
         },
 
         async archiveFile(name) {
@@ -679,6 +1965,334 @@ function app() {
                     this.logLine('sys', `❌ ${data.detail}`);
                 }
             } catch(e) { this.logLine('sys', `❌ ${e.message}`); }
+        },
+
+        // ─ Flow editor ────────────────────────────────────
+        editMode: false,
+        editModal: { open: false, kind: '', title: '', subtitle: '', data: {}, idx: null, saving: false, error: null, projectFiles: [], loadingFiles: false },
+        addItemModal: { open: false, afterIdx: -1 },
+        preflightModal: { open: false, conflicts: [], onConfirm: null },
+
+        editOpenItem(idx) {
+            const item = this.flowData?.flow?.[idx];
+            if (!item || item.break) return;
+            const kind = item.chain !== undefined ? 'chain' : (item.header !== undefined ? 'header' : 'file');
+            const titles   = { chain: '⛓ Edytuj Chain', header: '📌 Edytuj nagłówek', file: '📄 Edytuj plik' };
+            const subtitles = { chain: item.chain_prefix || 'chain', header: item.header || '', file: item.file || '' };
+            this.editModal = {
+                open: true,
+                kind,
+                title: titles[kind],
+                subtitle: subtitles[kind],
+                idx,
+                saving: false,
+                error: null,
+                data: JSON.parse(JSON.stringify(item)),
+                projectFiles: [],
+                loadingFiles: false,
+            };
+            if (kind === 'file' && this.selectedRun?.filename) {
+                this.editModal.loadingFiles = true;
+                fetch(`/api/runs/${encodeURIComponent(this.selectedRun.filename)}/project-files`)
+                    .then(r => r.ok ? r.json() : Promise.reject(r.status))
+                    .then(data => { this.editModal.projectFiles = data.files || []; })
+                    .catch(() => { /* silent — manual typing still works */ })
+                    .finally(() => { this.editModal.loadingFiles = false; });
+            }
+        },
+
+        async editModalSave() {
+            this.editModal.saving = true;
+            this.editModal.error = null;
+            const d = this.editModal.data;
+            // Remove empty optional numerics
+            const optionals = ['fps', 'steps', 'cfg', 'blocks_to_swap', 'width', 'height'];
+            for (const k of optionals) {
+                if (d[k] === '' || d[k] === null || d[k] === undefined) delete d[k];
+            }
+            if (Array.isArray(d.chain)) {
+                for (const step of d.chain) {
+                    for (const k of optionals) {
+                        if (step[k] === '' || step[k] === null || step[k] === undefined) delete step[k];
+                    }
+                }
+            }
+            // Warstwa 1: walidacja unikalności chain_prefix
+            if (this.editModal.kind === 'chain' && d.chain_prefix) {
+                const isDup = this.flowData.flow.some((item, i) =>
+                    i !== this.editModal.idx && item.chain !== undefined && item.chain_prefix === d.chain_prefix
+                );
+                if (isDup) {
+                    this.editModal.error = `Nazwa "${d.chain_prefix}" jest już używana przez inny chain — wybierz inną.`;
+                    this.editModal.saving = false;
+                    return;
+                }
+            }
+            const newFlow = JSON.parse(JSON.stringify(this.flowData.flow));
+            newFlow[this.editModal.idx] = d;
+            const ok = await this._saveFlow(newFlow);
+            if (ok) {
+                this.flowData.flow = newFlow;
+                this.frameVersion = Date.now();   // bust thumbnail cache → re-fetch after file rename
+                this.editModal.open = false;
+                this.logLine('sys', `✅ Zapisano zmiany w elemencie #${this.editModal.idx + 1}`);
+                this.statusData = null; await this.refreshStatus();
+            }
+            this.editModal.saving = false;
+        },
+
+        async editMoveItem(idx, dir) {
+            const flow = this.flowData?.flow;
+            if (!flow) return;
+            const ni = idx + dir;
+            if (ni < 0 || ni >= flow.length) return;
+            const newFlow = JSON.parse(JSON.stringify(flow));
+            [newFlow[idx], newFlow[ni]] = [newFlow[ni], newFlow[idx]];
+            const ok = await this._saveFlow(newFlow);
+            if (ok) {
+                this.flowData.flow = newFlow;
+                this.statusData = null; await this.refreshStatus();
+            }
+        },
+
+        async editDeleteItem(idx) {
+            const item = this.flowData?.flow?.[idx];
+            if (!item) return;
+            const label = item.break ? 'break' : item.header !== undefined ? `nagłówek "${item.header}"` : item.chain_prefix ? `chain "${item.chain_prefix}"` : `plik "${item.file}"`;
+            if (!confirm(`Usunąć: ${label}?\n\nTa operacja usuwa go z FLOW (pliki wideo na dysku zostają).`)) return;
+            const newFlow = JSON.parse(JSON.stringify(this.flowData.flow));
+            newFlow.splice(idx, 1);
+            const ok = await this._saveFlow(newFlow);
+            if (ok) {
+                this.flowData.flow = newFlow;
+                this.flowData.item_count = newFlow.length;
+                this.statusData = null; await this.refreshStatus();
+                this.logLine('sys', `🗑 Usunięto element #${idx + 1}: ${label}`);
+            }
+        },
+
+        // ─ Chain prefix helpers ────────────────────────────
+        nextChainPrefix() {
+            const existing = new Set(
+                (this.flowData?.flow || [])
+                    .filter(i => i.chain !== undefined)
+                    .map(i => i.chain_prefix || '')
+            );
+            let n = 1;
+            while (existing.has(`nowy_chain_${n}`)) n++;
+            return `nowy_chain_${n}`;
+        },
+
+        isChainPrefixDuplicate(prefix) {
+            if (!prefix || !this.flowData?.flow) return false;
+            return this.flowData.flow.filter(i => i.chain !== undefined && i.chain_prefix === prefix).length > 1;
+        },
+
+        // ─ Pre-flight conflict check ───────────────────────
+        _getFlowConflicts() {
+            const flow = this.flowData?.flow || [];
+            const conflicts = [];
+            // 1. Duplicate chain prefixes
+            const prefixCounts = {};
+            for (const item of flow) {
+                if (item.chain !== undefined) {
+                    const p = item.chain_prefix || '(bez nazwy)';
+                    prefixCounts[p] = (prefixCounts[p] || 0) + 1;
+                }
+            }
+            for (const [prefix, count] of Object.entries(prefixCounts)) {
+                if (count > 1)
+                    conflicts.push(`Duplikat nazwy chain: "${prefix}" (${count}×) — pliki wideo będą się nadpisywać`);
+            }
+            // 2. Duplicate start-frame files
+            const fileCounts = {};
+            for (const item of flow) {
+                if (item.file) fileCounts[item.file] = (fileCounts[item.file] || 0) + 1;
+            }
+            for (const [file, count] of Object.entries(fileCounts)) {
+                if (count > 1)
+                    conflicts.push(`Plik "${file}" pojawia się ${count}× jako klatka — możliwa kolizja nazw tranzycji`);
+            }
+            return conflicts;
+        },
+
+        openAddItemModal(afterIdx) {
+            this.addItemModal = { open: true, afterIdx };
+        },
+
+        async addItemDo(kind) {
+            const afterIdx = this.addItemModal.afterIdx;
+            this.addItemModal.open = false;
+            let newItem;
+            if (kind === 'break') {
+                newItem = { break: true };
+            } else if (kind === 'header') {
+                newItem = { header: 'Nowa sekcja' };
+            } else if (kind === 'file') {
+                newItem = { file: 'nowy_plik.png', backend: 'linux', duration: 2, pos: 'NONE', neg: 'NONE' };
+            } else {
+                newItem = {
+                    chain_prefix: this.nextChainPrefix(),
+                    chain: [{ duration: 3, pos: 'NONE', neg: '' }],
+                    backend: 'linux', fps: 16, steps: 6, cfg: 2.0,
+                    neg: 'static, frozen, no movement',
+                };
+            }
+            const newFlow = JSON.parse(JSON.stringify(this.flowData.flow));
+            const insertAt = afterIdx < 0 ? 0 : afterIdx + 1;
+            newFlow.splice(insertAt, 0, newItem);
+            const ok = await this._saveFlow(newFlow);
+            if (ok) {
+                this.flowData.flow = newFlow;
+                this.flowData.item_count = newFlow.length;
+                this.statusData = null; await this.refreshStatus();
+                this.logLine('sys', `➕ Dodano ${kind} na pozycji #${insertAt + 1}`);
+                if (kind !== 'break') {
+                    this.$nextTick(() => this.editOpenItem(insertAt));
+                }
+            }
+        },
+
+        editAddChainStep() {
+            if (!this.editModal.data.chain) this.editModal.data.chain = [];
+            this.editModal.data.chain.push({ duration: 3, pos: 'NONE', neg: '' });
+        },
+        editRemoveChainStep(si) {
+            if (!confirm(`Usunąć step ${si + 1}?`)) return;
+            this.editModal.data.chain.splice(si, 1);
+        },
+        editMoveChainStep(si, dir) {
+            const steps = this.editModal.data.chain;
+            const ni = si + dir;
+            if (ni < 0 || ni >= steps.length) return;
+            [steps[si], steps[ni]] = [steps[ni], steps[si]];
+        },
+
+        async _saveFlow(newFlow) {
+            if (!this.selectedRun?.filename?.endsWith('.yaml')) {
+                this.logLine('sys', '❌ Edycja FLOW działa tylko dla plików YAML');
+                return false;
+            }
+            const flowKey = this.flowData?.flow_type === 'test' ? 'flow_test' : 'flow';
+            try {
+                const res = await fetch(
+                    `/api/runs/${encodeURIComponent(this.selectedRun.filename)}/flow`,
+                    {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ flow: newFlow, flow_key: flowKey }),
+                    }
+                );
+                const data = await res.json();
+                if (!res.ok) {
+                    const msg = data.detail || `HTTP ${res.status}`;
+                    this.logLine('sys', `❌ Błąd zapisu FLOW: ${msg}`);
+                    if (this.editModal.open) this.editModal.error = msg;
+                    return false;
+                }
+                if (data.py_error) this.logLine('sys', `⚠ .py: ${data.py_error}`);
+                return true;
+            } catch(e) {
+                this.logLine('sys', `❌ ${e.message}`);
+                if (this.editModal.open) this.editModal.error = e.message;
+                return false;
+            }
+        },
+
+        // ─ Global settings modal ──────────────────────────
+        globalsModal: {
+            open: false, filename: '', loading: false, saving: false,
+            error: null, saved: false,
+            _resW: null, _resH: null,
+            data: { project_folder: '', use_test_flow: false, defaults: {}, linux_backend: {} },
+        },
+
+        async openGlobalsModal(filename) {
+            this.globalsModal = {
+                open: true, filename, loading: true, saving: false,
+                error: null, saved: false, _resW: null, _resH: null,
+                data: { project_folder: '', use_test_flow: false, defaults: {}, linux_backend: {} },
+            };
+            try {
+                const res = await fetch(`/api/runs/${encodeURIComponent(filename)}/globals`);
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                const data = await res.json();
+                // Extract resolution into separate width/height fields
+                const res2 = data.defaults?.resolution;
+                const resW = Array.isArray(res2) && res2.length === 2 ? res2[0] : null;
+                const resH = Array.isArray(res2) && res2.length === 2 ? res2[1] : null;
+                // Remove resolution from defaults (we handle it separately)
+                const defaults = { ...data.defaults };
+                delete defaults.resolution;
+                this.globalsModal = {
+                    ...this.globalsModal,
+                    loading: false,
+                    _resW: resW,
+                    _resH: resH,
+                    data: {
+                        project_folder:  data.project_folder || '',
+                        use_test_flow:   data.use_test_flow || false,
+                        defaults:        defaults,
+                        linux_backend:   data.linux_backend || {},
+                    },
+                };
+            } catch(e) {
+                this.globalsModal.loading = false;
+                this.globalsModal.error = e.message;
+            }
+        },
+
+        async globalsModalSave() {
+            this.globalsModal.saving = true;
+            this.globalsModal.error = null;
+            this.globalsModal.saved = false;
+
+            // Assemble payload — clean up empty optionals
+            const d = this.globalsModal.data;
+            const defaults = { ...d.defaults };
+            // Prune null/undefined/empty optional numerics
+            for (const k of ['fps', 'steps', 'cfg', 'duration', 'blocks_to_swap']) {
+                if (defaults[k] === '' || defaults[k] === null || defaults[k] === undefined) delete defaults[k];
+            }
+            // Re-attach resolution if both width and height are set
+            const w = this.globalsModal._resW;
+            const h = this.globalsModal._resH;
+            if (w && h) defaults.resolution = [w, h];
+            else delete defaults.resolution;
+
+            const payload = {
+                project_folder: d.project_folder,
+                use_test_flow:  d.use_test_flow,
+                defaults,
+                linux_backend:  d.linux_backend || {},
+            };
+
+            try {
+                const res = await fetch(
+                    `/api/runs/${encodeURIComponent(this.globalsModal.filename)}/globals`,
+                    {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload),
+                    }
+                );
+                const data = await res.json();
+                if (!res.ok) {
+                    this.globalsModal.error = data.detail || `HTTP ${res.status}`;
+                } else {
+                    this.globalsModal.saved = true;
+                    if (data.py_error) this.logLine('sys', `⚠ .py: ${data.py_error}`);
+                    this.logLine('sys', `✅ Ustawienia globalne zapisane: ${this.globalsModal.filename}`);
+                    // Reload run info so the info bar updates
+                    await this.loadRuns();
+                    const updated = this.runs.find(r => r.filename === this.globalsModal.filename);
+                    if (updated) this.selectedRun = updated;
+                }
+            } catch(e) {
+                this.globalsModal.error = e.message;
+            } finally {
+                this.globalsModal.saving = false;
+            }
         },
 
         // ─ Log panel ──────────────────────────────────────
@@ -701,9 +2315,58 @@ function app() {
             return { idle:'oczekuje', running:'● generowanie', finished:'✅ zakończono', failed:'❌ błąd', stopped:'⏹ zatrzymano' }[this.genStatus] ?? this.genStatus;
         },
 
+        // ─ YAML migration / generation ───────────────────
+        async migrateToYaml(filename) {
+            if (!filename.endsWith('.py')) return;
+            if (!confirm(`Migrować ${filename} do formatu YAML?\n\nPowstanie plik ${filename.replace('.py','.yaml')} — oryginał .py zostaje bez zmian.`)) return;
+            this.logLine('sys', `📄 Migruję ${filename} → YAML...`);
+            try {
+                const res = await fetch(`/api/runs/${encodeURIComponent(filename)}/migrate-to-yaml`, { method: 'POST' });
+                const data = await res.json();
+                if (!res.ok) { this.logLine('sys', `❌ Błąd migracji: ${data.detail}`); return; }
+                this.logLine('sys', `✅ Plik YAML zapisany: ${data.yaml_filename}`);
+                await this.loadRuns();
+            } catch(e) { this.logLine('sys', `❌ ${e.message}`); }
+        },
+        async generatePy(filename) {
+            if (!filename.endsWith('.yaml') || this._genPyBusy) return;
+            const pyName = filename.replace('.yaml', '.py');
+            this._genPyBusy = true;
+            this.logLine('sys', `⟳ Generuję ${pyName} z ${filename}...`);
+            try {
+                const res = await fetch(`/api/runs/${encodeURIComponent(filename)}/generate-py`, { method: 'POST' });
+                const data = await res.json();
+                if (!res.ok) { this.logLine('sys', `❌ Błąd generowania: ${data.detail}`); return; }
+                this.logLine('sys', `✅ Plik .py wygenerowany: ${data.py_filename}`);
+            } catch(e) { this.logLine('sys', `❌ ${e.message}`); }
+            finally { this._genPyBusy = false; }
+        },
+
+        async reformatYaml(filename) {
+            if (!filename.endsWith('.yaml') || this._reformatBusy) return;
+            this._reformatBusy = true;
+            this.logLine('sys', `⟳ Reformatuję ${filename}...`);
+            try {
+                const res = await fetch(`/api/runs/${encodeURIComponent(filename)}/reformat-yaml`, { method: 'POST' });
+                const data = await res.json();
+                if (!res.ok) { this.logLine('sys', `❌ Błąd: ${data.detail}`); return; }
+                this.logLine('sys', `✅ YAML przepisany w nowym formacie: ${filename}`);
+            } catch(e) { this.logLine('sys', `❌ ${e.message}`); }
+            finally { this._reformatBusy = false; }
+        },
+
+        async viewSource(filename) {
+            try {
+                const res = await fetch(`/api/runs/${encodeURIComponent(filename)}/source`);
+                if (!res.ok) return;
+                const data = await res.json();
+                this.sourceModal = { open: true, filename: data.filename, content: data.content };
+            } catch(e) { this.logLine('sys', `❌ ${e.message}`); }
+        },
+
         // ─ Display helpers ────────────────────────────────
-        compatibilityIcon(c)  { return { current:'✅', legacy:'⚠️', unknown:'❓' }[c] ?? '❓'; },
-        compatibilityTitle(c) { return { current:'Aktualny', legacy:'Stary format', unknown:'Nieznany' }[c] ?? ''; },
+        compatibilityIcon(c)  { return { current:'✅', yaml:'📄', legacy:'⚠️', unknown:'❓' }[c] ?? '❓'; },
+        compatibilityTitle(c) { return { current:'Aktualny', yaml:'YAML', legacy:'Stary format', unknown:'Nieznany' }[c] ?? ''; },
         formatRes(r) {
             if (!r) return '—';
             if (Array.isArray(r) && r.length === 2) return `${r[0]}×${r[1]}`;

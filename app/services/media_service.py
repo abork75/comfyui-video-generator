@@ -2,50 +2,71 @@
 """
 Media service — resolves paths for frames, transitions and chain files.
 
-All paths are derived from PROJECT_FOLDER read from the RUN file —
-no arbitrary filesystem access.
+Status color logic:
+    green  — transition/chain file EXISTS (was generated)
+    red    — transition/chain file MISSING (needs to be generated)
+    gray   — no file will be generated for this item:
+               * last item in a section (nothing follows it)
+               * file immediately before a chain (chain owns the output)
 
-Directory structure under PROJECT_FOLDER:
-    frames/
-        {stem}_start.jpg
-        {stem}_end.jpg
-    transitions/
-        {from_stem}_{to_stem}_transition.mp4
-        chains/
-            {chain_prefix}_NNN.mp4
+has_versions flag:
+    True  — at least one file exists: current and/or archived _verXXXXXXXXXXXX.mp4
+    False — no files at all
 """
 
 import re
+import shutil
+import subprocess
+import sys
 from datetime import datetime
 from pathlib import Path
 from typing import Any
 
 from app.services.run_file_service import get_run_details, get_run_flow
 
-# ── Path resolution helpers ───────────────────────────────────────────
+
+# ── Project folder cache ──────────────────────────────────────────────
+# Caches (run_filename → Path | None) so each request does NOT re-read
+# and re-parse the run file.  The cache is intentionally process-wide and
+# never expires — project_folder is a constant for a given run file.
+# Call invalidate_run_cache(filename) after the run file is modified.
+
+_pf_cache: dict[str, Path | None] = {}
+
+
+def invalidate_run_cache(run_filename: str) -> None:
+    """Remove a run from the project-folder cache (call after file edits)."""
+    _pf_cache.pop(run_filename, None)
+
 
 def _project_folder(run_filename: str) -> Path | None:
+    if run_filename in _pf_cache:
+        return _pf_cache[run_filename]
     info = get_run_details(run_filename)
-    if not info or not info.get("project_folder"):
-        return None
-    return Path(info["project_folder"])
+    result = Path(info["project_folder"]) if info and info.get("project_folder") else None
+    _pf_cache[run_filename] = result
+    return result
 
 
 def frame_path(project_folder: Path, item_file: str, kind: str) -> Path:
-    """Return path to _start.jpg or _end.jpg for a given source file."""
     stem = Path(item_file).stem
     return project_folder / "frames" / f"{stem}_{kind}.jpg"
 
 
+_VER_RE = re.compile(r"_ver\d{12}$")   # matches _ver240101120000 at end of stem
+
+
+def _has_archived(directory: Path, base_stem: str) -> bool:
+    """Return True if any *_verXXXXXXXXXXXX.mp4 archive exists for base_stem."""
+    return any(directory.glob(f"{base_stem}_ver????????????.mp4"))
+
+
 def transition_path(project_folder: Path, from_file: str, to_file: str) -> Path:
-    """Normal transition: transitions/{from_stem}_{to_stem}_transition.mp4"""
-    from_stem = Path(from_file).stem
-    to_stem   = Path(to_file).stem
-    return project_folder / "transitions" / f"{from_stem}_{to_stem}_transition.mp4"
+    return (project_folder / "transitions"
+            / f"{Path(from_file).stem}_{Path(to_file).stem}_transition.mp4")
 
 
 def chain_path(project_folder: Path, chain_filename: str) -> Path:
-    """Chain file: transitions/chains/{chain_filename}"""
     return project_folder / "transitions" / "chains" / chain_filename
 
 
@@ -53,17 +74,21 @@ def chain_path(project_folder: Path, chain_filename: str) -> Path:
 
 def get_transition_status(run_filename: str) -> dict | None:
     """
-    For each FLOW item determine whether its output file exists.
+    For each FLOW item determine the generation status.
 
-    Returns a list of dicts:
-        {
-            "index":    int,
-            "type":     "file" | "chain" | "break",
-            "name":     str,              # transition/chain filename
-            "exists":   bool,
-            "size_mb":  float | None,
-            "path":     str | None,       # absolute path (for serving)
-        }
+    Status values:
+        "green"   — output file exists
+        "red"     — output file missing (needs to be generated)
+        "gray"    — no output expected for this item
+        None      — break separator
+
+    Rules:
+      * Breaks split the flow into sections.
+      * Within a section, the LAST item is gray (nothing comes after it).
+      * A FILE immediately before a CHAIN is gray —
+        the chain item owns all step outputs, including step 1.
+      * A FILE → FILE pair produces a normal _transition.mp4.
+      * A CHAIN produces one file per step (chain_prefix_NNN.mp4).
     """
     pf = _project_folder(run_filename)
     if pf is None:
@@ -74,116 +99,254 @@ def get_transition_status(run_filename: str) -> dict | None:
         return None
 
     flow: list[dict[str, Any]] = flow_data["flow"]
-    results = []
 
-    # We need to iterate pairs like batch_transitions does
-    # to derive the correct transition filenames.
-    # Collect all non-break items in order.
-    items = [item for item in flow if not item.get("break")]
-
-    # Walk pairs
-    for idx, item in enumerate(flow):
+    # ── Split flow into sections (between breaks) ──────────────────
+    sections: list[list[dict]] = []
+    current: list[dict] = []
+    for item in flow:
         if item.get("break"):
-            results.append({"index": idx, "type": "break",
-                             "name": None, "exists": None,
+            if current:
+                sections.append(current)
+            current = []
+        else:
+            current.append(item)
+    if current:
+        sections.append(current)
+
+    # ── Build a lookup: item id → (section, position_in_section) ──
+    # Use id() because items are plain dicts (may not be hashable as keys otherwise)
+    item_pos: dict[int, tuple[list, int]] = {}
+    for sec in sections:
+        for pos, item in enumerate(sec):
+            item_pos[id(item)] = (sec, pos)
+
+    # ── Walk every flow item and compute status ────────────────────
+    results: list[dict] = []
+
+    for i_flow, item in enumerate(flow):
+
+        # BREAK
+        if item.get("break"):
+            results.append({"index": i_flow, "type": "break",
+                             "status": None, "name": None,
                              "size_mb": None, "path": None})
             continue
 
+        # CHAIN
         if item.get("chain"):
-            # Each step in the chain has its own output file
             chain_prefix = item.get("chain_prefix") or "chain"
-            step_results = []
-            for si, step in enumerate(item["chain"]):
-                fname = f"{chain_prefix}_{si+1:03d}.mp4"
+            chains_dir = pf / "transitions" / "chains"
+            steps = []
+            for si in range(len(item["chain"])):
+                fname = f"{chain_prefix}_{si + 1:03d}.mp4"
                 p = chain_path(pf, fname)
                 exists = p.exists()
-                step_results.append({
-                    "filename": fname,
-                    "exists":   exists,
-                    "size_mb":  round(p.stat().st_size / 1_048_576, 1) if exists else None,
-                    "path":     str(p) if exists else None,
+                base_stem = Path(fname).stem
+                has_arch = _has_archived(chains_dir, base_stem)
+                steps.append({
+                    "filename":     fname,
+                    "exists":       exists,
+                    "has_versions": exists or has_arch,
+                    "has_archived": has_arch,
+                    "size_mb":      round(p.stat().st_size / 1_048_576, 1) if exists else None,
+                    "path":         str(p) if exists else None,
                 })
-            all_exist = all(s["exists"] for s in step_results)
+            all_exist = all(s["exists"] for s in steps)
+            any_exist = any(s["exists"] for s in steps)
+            status = "green" if all_exist else ("partial" if any_exist else "red")
             results.append({
-                "index":    idx,
-                "type":     "chain",
-                "name":     chain_prefix,
-                "steps":    step_results,
-                "exists":   all_exist,
-                "size_mb":  None,
-                "path":     None,
+                "index":   i_flow,
+                "type":    "chain",
+                "status":  status,
+                "name":    chain_prefix,
+                "steps":   steps,
+                "size_mb": None,
+                "path":    None,
             })
             continue
 
-        # FILE item — need the NEXT non-break item to build the transition name
-        # Find next file/chain in the flow
-        next_item = None
-        for j in range(flow.index(item) + 1, len(flow)):
-            if not flow[j].get("break"):
-                next_item = flow[j]
-                break
+        # FILE
+        sec, pos = item_pos.get(id(item), (None, None))
 
-        if next_item is None:
-            # Last item — no transition generated
-            results.append({"index": idx, "type": "file",
-                             "name": item.get("file"), "exists": None,
-                             "size_mb": None, "path": None})
+        def _source_size(fname: str) -> float | None:
+            src = pf / (fname or "")
+            return round(src.stat().st_size / 1_048_576, 1) if src.exists() else None
+
+        if sec is None or pos == len(sec) - 1:
+            # Last item in section → gray
+            fname = item.get("file") or ""
+            results.append({"index": i_flow, "type": "file", "status": "gray",
+                             "name": fname, "size_mb": None,
+                             "source_size_mb": _source_size(fname), "path": None})
             continue
 
-        from_file = item.get("file", "")
-        to_file   = (next_item.get("file") or
-                     (next_item.get("chain_prefix", "chain") + "_001.mp4"))
+        next_item = sec[pos + 1]
 
         if next_item.get("chain"):
-            # Transition into a chain → output is the chain's first file
-            chain_prefix = next_item.get("chain_prefix") or "chain"
-            p = chain_path(pf, f"{chain_prefix}_001.mp4")
-        else:
-            p = transition_path(pf, from_file, to_file)
+            # File immediately before a chain → gray (chain owns all outputs)
+            fname = item.get("file") or ""
+            results.append({"index": i_flow, "type": "file", "status": "gray",
+                             "name": fname, "size_mb": None,
+                             "source_size_mb": _source_size(fname), "path": None})
+            continue
 
+        # Normal FILE → FILE transition
+        p = transition_path(pf, item.get("file", ""), next_item.get("file", ""))
         exists = p.exists()
+        has_arch = _has_archived(p.parent, p.stem)
         results.append({
-            "index":   idx,
-            "type":    "file",
-            "name":    p.name,
-            "exists":  exists,
-            "size_mb": round(p.stat().st_size / 1_048_576, 1) if exists else None,
-            "path":    str(p) if exists else None,
+            "index":        i_flow,
+            "type":         "file",
+            "status":       "green" if exists else "red",
+            "name":         p.name,
+            "has_versions": exists or has_arch,
+            "has_archived": has_arch,
+            "size_mb":      round(p.stat().st_size / 1_048_576, 1) if exists else None,
+            "path":         str(p) if exists else None,
         })
+
+    # ── Totals (count each actual file once) ───────────────────────
+    green = red = 0
+    for r in results:
+        if r["type"] == "file":
+            if r["status"] == "green":
+                green += 1
+            elif r["status"] == "red":
+                red += 1
+        elif r["type"] == "chain":
+            for step in r.get("steps", []):
+                if step["exists"]:
+                    green += 1
+                else:
+                    red += 1
 
     return {
         "project_folder": str(pf),
         "items":          results,
-        "total":          sum(1 for r in results if r["exists"] is not None),
-        "existing":       sum(1 for r in results if r["exists"] is True),
-        "missing":        sum(1 for r in results if r["exists"] is False),
+        "generated":      green,
+        "missing":        red,
     }
 
 
 # ── Frame serving ─────────────────────────────────────────────────────
 
+_IMAGE_EXTS = {'.jpg', '.jpeg', '.png', '.webp', '.gif', '.bmp', '.tiff', '.tif'}
+_VIDEO_EXTS = {'.mp4', '.avi', '.mov', '.mkv', '.webm'}
+
+
+def _extract_video_frame(video_path: Path, output_path: Path, time: float = 0.0) -> bool:
+    """
+    Extract a single frame from a video file using ffmpeg.
+    Saves the result as JPEG to output_path.
+    Returns True on success.
+    """
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    try:
+        result = subprocess.run(
+            [
+                "ffmpeg", "-y",
+                "-ss", str(time),
+                "-i", str(video_path),
+                "-vframes", "1",
+                "-q:v", "3",
+                str(output_path),
+            ],
+            capture_output=True,
+            timeout=30,
+        )
+        return result.returncode == 0 and output_path.exists()
+    except Exception:
+        return False
+
+
 def resolve_frame(run_filename: str, item_file: str, kind: str) -> Path | None:
-    """Return Path to a frame file, or None if not found."""
+    """
+    Resolve a frame image path for a source file (image or video).
+    1. Preferred: cached thumbnail in frames/{stem}_{kind}.jpg
+    2. For images: fallback to original source file in PROJECT_FOLDER
+    3. For mp4 source files: extract first frame with ffmpeg, cache it
+    """
     if kind not in ("start", "end"):
         return None
     pf = _project_folder(run_filename)
     if pf is None:
         return None
+    # 1. Cached thumbnail
     p = frame_path(pf, item_file, kind)
-    return p if p.exists() else None
+    if p.exists():
+        return p
+    # 2. Source file exists?
+    source = pf / item_file
+    if not source.exists():
+        return None
+    ext = source.suffix.lower()
+    # 3. Image — return as-is (fast, no extraction needed)
+    if ext in _IMAGE_EXTS:
+        return source
+    # 4. Video — extract first frame with ffmpeg and cache it
+    if ext in _VIDEO_EXTS and kind == "start":
+        ok = _extract_video_frame(source, p)
+        if ok:
+            return p
+    return None
+
+
+def resolve_source_video(run_filename: str, filename: str) -> Path | None:
+    """
+    Resolve a source video file (external mp4) located directly in PROJECT_FOLDER.
+    Used for playback of imported video clips in the FLOW view.
+    """
+    pf = _project_folder(run_filename)
+    if pf is None:
+        return None
+    p = pf / filename
+    if p.exists() and p.suffix.lower() in _VIDEO_EXTS:
+        return p
+    return None
+
+
+def resolve_video_thumb(run_filename: str, video_name: str) -> Path | None:
+    """
+    Get (or generate) a thumbnail for a generated transition/chain mp4.
+    Caches result in frames/{stem}_thumb.jpg.
+    Used by the post-processing view.
+    """
+    pf = _project_folder(run_filename)
+    if pf is None:
+        return None
+    video_path = resolve_video(run_filename, video_name)
+    if video_path is None:
+        return None
+    thumb_path = pf / "frames" / f"{video_path.stem}_thumb.jpg"
+    if thumb_path.exists():
+        return thumb_path
+    ok = _extract_video_frame(video_path, thumb_path)
+    return thumb_path if ok else None
+
+
+def clear_frame_cache(run_filename: str) -> dict:
+    """
+    Delete the frames/ thumbnail cache directory so all thumbnails
+    are re-extracted from source on next request.
+    """
+    pf = _project_folder(run_filename)
+    if pf is None:
+        return {"ok": False, "error": "Nie znaleziono PROJECT_FOLDER"}
+    frames_dir = pf / "frames"
+    if frames_dir.exists():
+        try:
+            shutil.rmtree(frames_dir)
+        except OSError as exc:
+            return {"ok": False, "error": str(exc)}
+    return {"ok": True}
 
 
 # ── Video serving ─────────────────────────────────────────────────────
 
 def resolve_video(run_filename: str, video_name: str) -> Path | None:
-    """
-    Resolve a transition or chain .mp4 by name.
-    Looks in transitions/ then transitions/chains/.
-    """
     pf = _project_folder(run_filename)
     if pf is None:
         return None
-
     for candidate in [
         pf / "transitions" / video_name,
         pf / "transitions" / "chains" / video_name,
@@ -193,31 +356,223 @@ def resolve_video(run_filename: str, video_name: str) -> Path | None:
     return None
 
 
-# ── Archive (rename with timestamp suffix) ────────────────────────────
+# ── Archive ───────────────────────────────────────────────────────────
 
-def archive_video(run_filename: str, video_name: str) -> dict:
+def archive_video(run_filename: str, video_name: str, ts: str | None = None) -> dict:
+    pf = _project_folder(run_filename)
+    if pf is None:
+        return {"ok": False, "error": "Nie znaleziono PROJECT_FOLDER"}
+    original = resolve_video(run_filename, video_name)
+    if original is None:
+        return {"ok": False, "error": f"Plik nie istnieje: {video_name}"}
+    if ts is None:
+        ts = datetime.now().strftime("%y%m%d%H%M%S")
+    new_path = original.parent / f"{original.stem}_ver{ts}.mp4"
+    try:
+        original.rename(new_path)
+    except OSError as exc:
+        return {"ok": False, "error": str(exc)}
+    return {"ok": True, "new_name": new_path.name, "old_name": video_name}
+
+
+def batch_archive_videos(run_filename: str, video_names: list[str]) -> dict:
+    """Archive multiple files using a single shared timestamp (batch consistency)."""
+    ts = datetime.now().strftime("%y%m%d%H%M%S")
+    results = []
+    for name in video_names:
+        results.append({**archive_video(run_filename, name, ts=ts), "name": name})
+    return {"ts": ts, "results": results}
+
+
+# ── File versions ─────────────────────────────────────────────────────
+
+def list_file_versions(run_filename: str, video_name: str) -> dict | None:
     """
-    Rename  transitions/{name}.mp4
-    →       transitions/{name}_ver{YYMMDDHHmmss}.mp4
-    (or same in chains/ subdirectory).
-    Returns {ok, new_name, error}.
+    Return all versions of a video: the current file (if it exists) plus
+    every *_verXXXXXXXXXXXX.mp4 archive in the same directory.
+
+    video_name — the *expected* canonical name, e.g. "A_B_transition.mp4"
+                 or a chain step "chain_001.mp4".
+    """
+    pf = _project_folder(run_filename)
+    if pf is None:
+        return None
+
+    base_stem = _VER_RE.sub("", Path(video_name).stem)  # strip _ver... if any
+
+    results = []
+    for search_dir in [pf / "transitions", pf / "transitions" / "chains"]:
+        if not search_dir.exists():
+            continue
+        # Exact canonical file
+        canon = search_dir / video_name
+        if canon.exists():
+            st = canon.stat()
+            results.append({
+                "name":       canon.name,
+                "path":       str(canon),
+                "size_mb":    round(st.st_size / 1_048_576, 1),
+                "is_current": True,
+                "modified":   datetime.fromtimestamp(st.st_mtime).strftime("%Y-%m-%d %H:%M:%S"),
+            })
+        # Archived versions
+        for p in sorted(search_dir.glob(f"{base_stem}_ver????????????.mp4"), reverse=True):
+            st = p.stat()
+            results.append({
+                "name":       p.name,
+                "path":       str(p),
+                "size_mb":    round(st.st_size / 1_048_576, 1),
+                "is_current": False,
+                "modified":   datetime.fromtimestamp(st.st_mtime).strftime("%Y-%m-%d %H:%M:%S"),
+            })
+
+    return {"files": results, "expected_name": video_name}
+
+
+# ── Source file upload ───────────────────────────────────────────────
+
+ALLOWED_SOURCE_EXTS = {
+    ".jpg", ".jpeg", ".png", ".webp", ".gif", ".bmp", ".tiff", ".tif",
+    ".mp4", ".avi", ".mov", ".mkv", ".webm",
+}
+MAX_UPLOAD_BYTES = 500 * 1024 * 1024  # 500 MB
+
+
+def upload_source_file(run_filename: str, item_filename: str, content: bytes) -> dict:
+    """
+    Replace a source file (image/video) directly in PROJECT_FOLDER.
+
+    Steps:
+      1. Validate size & extension.
+      2. Archive the existing file to PROJECT_FOLDER/source_backup/ (if present).
+      3. Write new content as PROJECT_FOLDER/{item_filename}.
+      4. Delete cached frame thumbnails (frames/{stem}_start.jpg / _end.jpg).
     """
     pf = _project_folder(run_filename)
     if pf is None:
         return {"ok": False, "error": "Nie znaleziono PROJECT_FOLDER"}
 
+    ext = Path(item_filename).suffix.lower()
+    if ext not in ALLOWED_SOURCE_EXTS:
+        return {"ok": False, "error": f"Niedozwolony typ pliku: {ext}"}
+    if len(content) > MAX_UPLOAD_BYTES:
+        return {"ok": False, "error": "Plik za duży (max 500 MB)"}
+
+    target = pf / item_filename
+    archived_name = None
+
+    # Archive old file if present
+    if target.exists():
+        backup_dir = pf / "source_backup"
+        backup_dir.mkdir(exist_ok=True)
+        ts = datetime.now().strftime("%y%m%d%H%M%S")
+        archive_path = backup_dir / f"{target.stem}_ver{ts}{target.suffix}"
+        try:
+            target.rename(archive_path)
+            archived_name = archive_path.name
+        except OSError as exc:
+            return {"ok": False, "error": f"Błąd archiwizacji: {exc}"}
+
+    # Write new file
+    try:
+        target.write_bytes(content)
+    except OSError as exc:
+        return {"ok": False, "error": f"Błąd zapisu: {exc}"}
+
+    # Delete stale frame thumbnails so they get re-extracted on next generation
+    for kind in ("start", "end"):
+        fp = frame_path(pf, item_filename, kind)
+        try:
+            fp.unlink(missing_ok=True)
+        except OSError:
+            pass
+
+    return {
+        "ok":       True,
+        "name":     item_filename,
+        "archived": archived_name,   # None if file was new
+    }
+
+
+# ── Restore archived file ────────────────────────────────────────────
+
+def restore_video(run_filename: str, archived_name: str) -> dict:
+    """
+    Restore an archived _verXXXXXXXXXXXX file as the canonical current file.
+
+    Steps:
+      1. Derive canonical name by stripping the _ver suffix.
+      2. If a current canonical file already exists → archive it first.
+      3. Rename the archived file → canonical name.
+    """
+    pf = _project_folder(run_filename)
+    if pf is None:
+        return {"ok": False, "error": "Nie znaleziono PROJECT_FOLDER"}
+
+    archived = resolve_video(run_filename, archived_name)
+    if archived is None:
+        return {"ok": False, "error": f"Plik nie istnieje: {archived_name}"}
+
+    # Derive canonical name: strip _ver<12 digits> from stem
+    canonical_name = _VER_RE.sub("", archived.stem) + archived.suffix
+    if canonical_name == archived_name:
+        return {"ok": False, "error": "Podany plik nie wygląda na archiwalny (_ver...)"}
+
+    canonical = archived.parent / canonical_name
+    displaced_name = None
+
+    # If current canonical exists → archive it to make room
+    if canonical.exists():
+        ts = datetime.now().strftime("%y%m%d%H%M%S")
+        displaced = canonical.parent / f"{canonical.stem}_ver{ts}{canonical.suffix}"
+        try:
+            canonical.rename(displaced)
+            displaced_name = displaced.name
+        except OSError as exc:
+            return {"ok": False, "error": f"Błąd archiwizacji aktualnego: {exc}"}
+
+    # Rename archived → canonical
+    try:
+        archived.rename(canonical)
+    except OSError as exc:
+        return {"ok": False, "error": f"Błąd przywracania: {exc}"}
+
+    return {
+        "ok":          True,
+        "restored":    canonical_name,   # name of the restored file
+        "displaced":   displaced_name,   # old canonical that was archived (or None)
+    }
+
+
+# ── Trash (Recycle Bin) ───────────────────────────────────────────────
+
+def trash_video(run_filename: str, video_name: str) -> dict:
+    """
+    Move a video file to the Windows Recycle Bin (recoverable delete).
+    On non-Windows systems falls back to permanent deletion.
+    """
     original = resolve_video(run_filename, video_name)
     if original is None:
         return {"ok": False, "error": f"Plik nie istnieje: {video_name}"}
 
-    ts       = datetime.now().strftime("%y%m%d%H%M%S")
-    stem     = original.stem
-    new_name = f"{stem}_ver{ts}.mp4"
-    new_path = original.parent / new_name
-
-    try:
-        original.rename(new_path)
-    except OSError as exc:
-        return {"ok": False, "error": str(exc)}
-
-    return {"ok": True, "new_name": new_name, "old_name": video_name}
+    if sys.platform == "win32":
+        path_esc = str(original).replace("'", "''")  # escape single quotes for PS
+        ps = (
+            "Add-Type -AssemblyName Microsoft.VisualBasic; "
+            "[Microsoft.VisualBasic.FileIO.FileSystem]::DeleteFile("
+            f"'{path_esc}', 'OnlyErrorDialogs', 'SendToRecycleBin')"
+        )
+        r = subprocess.run(
+            ["powershell", "-NoProfile", "-NonInteractive", "-Command", ps],
+            capture_output=True, timeout=15,
+        )
+        if r.returncode == 0:
+            return {"ok": True}
+        err = (r.stderr.decode(errors="replace") or r.stdout.decode(errors="replace")).strip()
+        return {"ok": False, "error": err or f"PS exit {r.returncode}"}
+    else:
+        try:
+            original.unlink()
+            return {"ok": True}
+        except OSError as exc:
+            return {"ok": False, "error": str(exc)}

@@ -139,7 +139,10 @@ async def ws_logs(websocket: WebSocket):
 
 @app.get("/", response_class=HTMLResponse)
 async def index():
-    return (FRONTEND_DIR / "index.html").read_text(encoding="utf-8")
+    return HTMLResponse(
+        content=(FRONTEND_DIR / "index.html").read_text(encoding="utf-8"),
+        headers={"Cache-Control": "no-cache, no-store, must-revalidate"},
+    )
 
 
 # ============================================================

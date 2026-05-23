@@ -504,7 +504,26 @@ def run_batch_generation(config):
     else:
         logger.warning("\nRegenerating ALL transitions (skip_existed=False)")
         to_generate = [{'name': f"{Path(p['from_file']).stem}_{Path(p['to_file']).stem}_transition.mp4", 'config': p} for p in pairs]
-    
+
+    # ============================================================
+    # FILTER: only_transitions  (targeted single-file re-generation)
+    # Set via config['only_transitions'] or env var ONLY_TRANSITIONS=a.mp4,b.mp4
+    # Overrides skip_existed — forces (re-)generation of just these files.
+    # ============================================================
+
+    only_filter = config.get('only_transitions') or os.environ.get('ONLY_TRANSITIONS', '').strip()
+    if only_filter:
+        if isinstance(only_filter, str):
+            only_names = {n.strip() for n in only_filter.split(',') if n.strip()}
+        else:
+            only_names = {str(n).strip() for n in only_filter if str(n).strip()}
+        # Pick from all_transitions so we always have the full config struct
+        to_generate = [t for t in all_transitions if t['name'] in only_names]
+        logger.info(f"\n🎯 Cel (only_transitions): {', '.join(sorted(only_names))}")
+        if not to_generate:
+            logger.warning("   Żadna tranzycja nie pasuje do filtra — sprawdź nazwy plików.")
+            return
+
     # ============================================================
     # GENERATE TRANSITIONS (by backend)
     # ============================================================
