@@ -11,7 +11,7 @@ from app.services.run_file_service import (
     scan_runs_folder, get_run_details, get_run_content, get_run_flow,
     invalidate_run_info_cache,
 )
-from app.services.media_service import get_transition_status, invalidate_run_cache
+from app.services.media_service import get_transition_status, get_post_clips, invalidate_run_cache
 from app.services.yaml_service import save_yaml_flow, get_yaml_globals, save_yaml_globals
 
 router = APIRouter(prefix="/api/runs", tags=["runs"])
@@ -47,6 +47,15 @@ async def get_run_status(filename: str):
     data = get_transition_status(filename)
     if data is None:
         raise HTTPException(status_code=404, detail=f"Cannot resolve status for: {filename}")
+    return data
+
+
+@router.get("/{filename}/postclips")
+async def get_run_postclips(filename: str):
+    """Ordered list of all playable mp4 clips for the post-processing view."""
+    data = get_post_clips(filename)
+    if data is None:
+        raise HTTPException(status_code=404, detail=f"Cannot resolve post clips for: {filename}")
     return data
 
 

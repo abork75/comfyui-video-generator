@@ -228,6 +228,173 @@ def get_transition_status(run_filename: str) -> dict | None:
     }
 
 
+
+# ── Clip metadata (duration + resolution via ffprobe) ─────────────────
+
+def _get_clip_meta(path: Path) -> dict:
+    """
+    Return {duration_s, width, height} for a video/image file via ffprobe.
+    Falls back to None values on any error (ffprobe not found, corrupt file, etc.).
+    """
+    meta = {"duration_s": None, "width": None, "height": None}
+    if not path.exists():
+        return meta
+    try:
+        result = subprocess.run(
+            [
+                "ffprobe", "-v", "error",
+                "-select_streams", "v:0",
+                "-show_entries", "stream=width,height:format=duration",
+                "-of", "default=noprint_wrappers=1",
+                str(path),
+            ],
+            capture_output=True, text=True, timeout=15,
+        )
+        for line in result.stdout.splitlines():
+            if "=" not in line:
+                continue
+            k, v = line.split("=", 1)
+            if k == "duration":
+                try:
+                    meta["duration_s"] = round(float(v), 2)
+                except ValueError:
+                    pass
+            elif k == "width":
+                try:
+                    meta["width"] = int(v)
+                except ValueError:
+                    pass
+            elif k == "height":
+                try:
+                    meta["height"] = int(v)
+                except ValueError:
+                    pass
+    except Exception:
+        pass
+    return meta
+
+
+# ── Post-processing clips list ────────────────────────────────────────
+
+def get_post_clips(run_filename: str) -> list | None:
+    """
+    Returns an ordered flat list of all playable mp4 clips for the post view.
+    Order mirrors the actual film sequence:
+      - for each flow FILE item: source video (if mp4) → then its outgoing transition
+      - for each CHAIN item: each chain step mp4 in order
+    Breaks are skipped.
+    """
+    pf = _project_folder(run_filename)
+    if pf is None:
+        return None
+
+    flow_data = get_run_flow(run_filename)
+    if not flow_data:
+        return None
+
+    flow: list[dict[str, Any]] = flow_data["flow"]
+
+    # Split into sections to know which item is "last"
+    sections: list[list[dict]] = []
+    current: list[dict] = []
+    for item in flow:
+        if item.get("break"):
+            if current:
+                sections.append(current)
+            current = []
+        else:
+            current.append(item)
+    if current:
+        sections.append(current)
+
+    item_pos: dict[int, tuple[list, int]] = {}
+    for sec in sections:
+        for pos, item in enumerate(sec):
+            item_pos[id(item)] = (sec, pos)
+
+    clips: list[dict] = []
+    seq = 0
+    chains_dir = pf / "transitions" / "chains"
+
+    for item in flow:
+        if item.get("break"):
+            continue
+
+        # ── CHAIN ──────────────────────────────────────────────────
+        if item.get("chain"):
+            prefix = item.get("chain_prefix") or "chain"
+            for si in range(len(item["chain"])):
+                fname = f"{prefix}_{si + 1:03d}.mp4"
+                p = chain_path(pf, fname)
+                exists = p.exists()
+                base_stem = Path(fname).stem
+                has_arch = _has_archived(chains_dir, base_stem)
+                meta = _get_clip_meta(p) if exists else {"duration_s": None, "width": None, "height": None}
+                clips.append({
+                    "seq":          seq,
+                    "name":         fname,
+                    "type":         "generated",
+                    "subtype":      "chain",
+                    "status":       "ok" if exists else "missing",
+                    "has_versions": exists or has_arch,
+                    "has_archived": has_arch,
+                    "size_mb":      round(p.stat().st_size / 1_048_576, 1) if exists else None,
+                    "mtime":        int(p.stat().st_mtime) if exists else None,
+                    **meta,
+                })
+                seq += 1
+            continue
+
+        # ── FILE ───────────────────────────────────────────────────
+        file = item.get("file") or ""
+        sec, pos = item_pos.get(id(item), (None, None))
+        is_video = bool(re.search(r'\.(mp4|mov|avi|mkv|webm)$', file, re.I))
+
+        # 1. Source video plays as its own clip in the film
+        if is_video:
+            src = pf / file
+            exists = src.exists()
+            meta = _get_clip_meta(src) if exists else {"duration_s": None, "width": None, "height": None}
+            clips.append({
+                "seq":     seq,
+                "name":    file,
+                "type":    "external",
+                "subtype": "source",
+                "status":  "ok" if exists else "missing",
+                "size_mb": round(src.stat().st_size / 1_048_576, 1) if exists else None,
+                "mtime":   int(src.stat().st_mtime) if exists else None,
+                **meta,
+            })
+            seq += 1
+
+        # 2. Outgoing transition (if not last item, not before a chain)
+        if sec is None or pos == len(sec) - 1:
+            continue
+        next_item = sec[pos + 1]
+        if next_item.get("chain"):
+            continue
+
+        p = transition_path(pf, file, next_item.get("file", ""))
+        exists = p.exists()
+        has_arch = _has_archived(p.parent, p.stem)
+        meta = _get_clip_meta(p) if exists else {"duration_s": None, "width": None, "height": None}
+        clips.append({
+            "seq":          seq,
+            "name":         p.name,
+            "type":         "generated",
+            "subtype":      "transition",
+            "status":       "ok" if exists else "missing",
+            "has_versions": exists or has_arch,
+            "has_archived": has_arch,
+            "size_mb":      round(p.stat().st_size / 1_048_576, 1) if exists else None,
+            "mtime":        int(p.stat().st_mtime) if exists else None,
+            **meta,
+        })
+        seq += 1
+
+    return clips
+
+
 # ── Frame serving ─────────────────────────────────────────────────────
 
 _IMAGE_EXTS = {'.jpg', '.jpeg', '.png', '.webp', '.gif', '.bmp', '.tiff', '.tif'}
@@ -271,20 +438,19 @@ def resolve_frame(run_filename: str, item_file: str, kind: str) -> Path | None:
     pf = _project_folder(run_filename)
     if pf is None:
         return None
-    # 1. Cached thumbnail
+    # 1. Check cached thumbnail freshness
     p = frame_path(pf, item_file, kind)
-    if p.exists():
-        return p
-    # 2. Source file exists?
     source = pf / item_file
     if not source.exists():
         return None
     ext = source.suffix.lower()
-    # 3. Image — return as-is (fast, no extraction needed)
+    # 2. Image — return as-is (no extraction needed, always fresh)
     if ext in _IMAGE_EXTS:
         return source
-    # 4. Video — extract first frame with ffmpeg and cache it
+    # 3. Video — use cached thumb only if it's at least as fresh as the source
     if ext in _VIDEO_EXTS and kind == "start":
+        if p.exists() and p.stat().st_mtime >= source.stat().st_mtime:
+            return p
         ok = _extract_video_frame(source, p)
         if ok:
             return p
@@ -309,7 +475,7 @@ def resolve_video_thumb(run_filename: str, video_name: str) -> Path | None:
     """
     Get (or generate) a thumbnail for a generated transition/chain mp4.
     Caches result in frames/{stem}_thumb.jpg.
-    Used by the post-processing view.
+    Regenerates the thumbnail if the video file is newer than the cached thumb.
     """
     pf = _project_folder(run_filename)
     if pf is None:
@@ -318,7 +484,8 @@ def resolve_video_thumb(run_filename: str, video_name: str) -> Path | None:
     if video_path is None:
         return None
     thumb_path = pf / "frames" / f"{video_path.stem}_thumb.jpg"
-    if thumb_path.exists():
+    # Use cache only if thumb is at least as fresh as the video
+    if thumb_path.exists() and thumb_path.stat().st_mtime >= video_path.stat().st_mtime:
         return thumb_path
     ok = _extract_video_frame(video_path, thumb_path)
     return thumb_path if ok else None

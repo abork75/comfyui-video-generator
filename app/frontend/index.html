@@ -62,15 +62,113 @@
     </div>
 </header>
 
+<!-- ═══ COMBINED NAV BAR: PROJEKTY + project info ══════════════════ -->
+<div class="flex items-stretch border-b border-gray-700 bg-gray-800 flex-shrink-0 text-xs text-gray-400">
+
+    <!-- PROJEKTY label — same width as sidebar -->
+    <div class="w-52 flex items-center justify-between px-4 py-3 border-r border-gray-700 flex-shrink-0">
+        <span class="uppercase font-semibold tracking-wider">Projekty</span>
+        <button @click="loadRuns()" class="text-gray-500 hover:text-gray-300 transition text-sm" title="Odśwież">↻</button>
+    </div>
+
+    <!-- Project info content (flex-1) -->
+    <div class="flex flex-1 items-stretch min-w-0 overflow-hidden">
+
+        <!-- Placeholder: no project selected or incompatible -->
+        <template x-if="!selectedRun || !((selectedRun.compatibility === 'current' || selectedRun.compatibility === 'yaml') && !selectedRun.syntax_error)">
+            <div class="flex items-center px-5 flex-1 text-gray-700 select-none">— wybierz projekt —</div>
+        </template>
+
+        <!-- Info area: yaml (clickable) -->
+        <template x-if="selectedRun && selectedRun.compatibility === 'yaml' && !selectedRun.syntax_error">
+            <button @click="openGlobalsModal(selectedRun.filename)"
+                    class="flex items-center gap-x-4 px-5 flex-1 text-left group transition cursor-pointer min-w-0 overflow-hidden"
+                    style="background:transparent"
+                    title="Kliknij aby edytować ustawienia projektu">
+                <span class="text-orange-400 font-semibold group-hover:text-orange-300 transition flex-shrink-0">⚙</span>
+                <span class="flex items-center gap-1 flex-shrink-0">📁 <span class="text-gray-300 group-hover:text-white transition" x-text="projectFolderName()"></span></span>
+                <span class="flex items-center gap-1 flex-shrink-0">📐 <span class="text-gray-300 font-mono" x-text="formatRes(selectedRun.force_resolution)"></span></span>
+                <span class="flex items-center gap-1 flex-shrink-0">⚙️ <span class="text-gray-300" x-text="selectedRun.default_backend || '—'"></span></span>
+                <span x-show="selectedRun.default_fps" class="flex items-center gap-1 flex-shrink-0">🎞 <span class="text-gray-300" x-text="selectedRun.default_fps + ' fps'"></span></span>
+                <span x-show="selectedRun.default_steps" class="flex items-center gap-1 flex-shrink-0">🪜 <span class="text-gray-300" x-text="selectedRun.default_steps + ' steps'"></span></span>
+                <span x-show="selectedRun.default_blocks_to_swap != null" class="flex items-center gap-1 flex-shrink-0">🔲 <span class="text-gray-300" x-text="'bts:' + selectedRun.default_blocks_to_swap"></span></span>
+                <span class="text-gray-600 group-hover:text-orange-500 transition ml-1 flex-shrink-0">✎ edytuj</span>
+            </button>
+        </template>
+
+        <!-- Info area: non-yaml (plain) -->
+        <template x-if="selectedRun && selectedRun.compatibility === 'current' && !selectedRun.syntax_error">
+            <div class="flex items-center gap-x-5 px-5 flex-1 min-w-0 overflow-hidden">
+                <span class="flex items-center gap-1 flex-shrink-0">📁 <span class="text-gray-300" x-text="projectFolderName()"></span></span>
+                <span class="flex-shrink-0">📐 <span class="text-gray-300 font-mono" x-text="formatRes(selectedRun.force_resolution)"></span></span>
+                <span class="flex-shrink-0">⚙️ <span class="text-gray-300" x-text="selectedRun.default_backend || '—'"></span></span>
+                <span x-show="selectedRun.default_fps" class="flex-shrink-0">🎞 <span class="text-gray-300" x-text="selectedRun.default_fps + ' fps'"></span></span>
+                <span x-show="selectedRun.default_steps" class="flex-shrink-0">🪜 <span class="text-gray-300" x-text="selectedRun.default_steps + ' steps'"></span></span>
+                <span x-show="selectedRun.default_blocks_to_swap != null" class="flex-shrink-0">🔲 <span class="text-gray-300" x-text="'bts:' + selectedRun.default_blocks_to_swap"></span></span>
+            </div>
+        </template>
+
+        <!-- Flow / Post tabs — only when run is active -->
+        <template x-if="selectedRun && (selectedRun.compatibility === 'current' || selectedRun.compatibility === 'yaml') && !selectedRun.syntax_error">
+            <div class="flex items-center border-l border-gray-700 px-2 gap-0.5 flex-shrink-0">
+                <button @click="postMode = false; editMode = false"
+                        :class="!postMode ? 'bg-gray-700 text-white' : 'text-gray-500 hover:text-gray-300 hover:bg-gray-700/50'"
+                        class="text-xs px-2.5 py-1 rounded-l transition"
+                        title="Widok FLOW">📋 Flow</button>
+                <button @click="postMode = true; editMode = false; loadPostClips()"
+                        :class="postMode ? 'bg-blue-900 text-blue-200' : 'text-gray-500 hover:text-gray-300 hover:bg-gray-700/50'"
+                        class="text-xs px-2.5 py-1 rounded-r transition"
+                        title="Post-processing">🎬 Post</button>
+            </div>
+        </template>
+
+        <!-- Right side actions — only when run is active -->
+        <template x-if="selectedRun && (selectedRun.compatibility === 'current' || selectedRun.compatibility === 'yaml') && !selectedRun.syntax_error">
+            <div class="flex items-center gap-2 px-3 border-l border-gray-700 flex-shrink-0">
+                <template x-if="selectedRun.compatibility === 'yaml'">
+                    <span class="flex items-center gap-2">
+                        <button @click="viewSource(selectedRun.filename)"
+                                class="bg-indigo-900 hover:bg-indigo-800 text-indigo-300 px-2 py-0.5 rounded text-xs font-medium cursor-pointer transition"
+                                title="Podgląd pliku YAML">📄 YAML</button>
+                        <button @click="reformatYaml(selectedRun.filename)"
+                                :disabled="_reformatBusy"
+                                :class="_reformatBusy ? 'opacity-40 cursor-not-allowed' : 'hover:bg-indigo-900/40 cursor-pointer'"
+                                class="flex items-center gap-1 text-indigo-400 border border-indigo-700 hover:border-indigo-400 transition px-2 py-0.5 rounded text-xs"
+                                title="Przepisz YAML w nowym czytelnym formacie">
+                            <span :class="_reformatBusy ? 'animate-spin inline-block' : ''">⟳</span>
+                            <span>YAML</span>
+                        </button>
+                        <button @click="generatePy(selectedRun.filename)"
+                                :disabled="_genPyBusy"
+                                :class="_genPyBusy ? 'opacity-40 cursor-not-allowed' : 'hover:bg-gray-700 cursor-pointer'"
+                                class="flex items-center gap-1 text-gray-300 border border-gray-600 hover:border-gray-400 transition px-2 py-0.5 rounded text-xs"
+                                title="Wygeneruj ponownie plik .py z YAML">
+                            <span :class="_genPyBusy ? 'animate-spin inline-block' : ''">⟳</span>
+                            <span>.py</span>
+                        </button>
+                    </span>
+                </template>
+                <template x-if="selectedRun.compatibility === 'current'">
+                    <span class="flex items-center gap-2">
+                        <button @click="viewSource(selectedRun.filename)"
+                                class="text-gray-500 hover:text-gray-300 border border-gray-700 hover:border-gray-500 transition px-2 py-0.5 rounded text-xs cursor-pointer"
+                                title="Podgląd pliku .py">📄 .py</button>
+                        <button @click="migrateToYaml(selectedRun.filename)"
+                                class="text-indigo-400 hover:text-indigo-200 border border-indigo-700 hover:border-indigo-400 hover:bg-indigo-900/30 transition px-2 py-0.5 rounded text-xs cursor-pointer"
+                                title="Migruj do formatu YAML">→ YAML</button>
+                    </span>
+                </template>
+            </div>
+        </template>
+
+    </div><!-- /project info content -->
+</div><!-- /combined nav bar -->
+
 <!-- ═══ MAIN ══════════════════════════════════════════════════════ -->
 <div class="flex flex-1 overflow-hidden">
 
     <!-- ─── SIDEBAR ───────────────────────────────────────────── -->
-    <aside class="w-64 bg-gray-800 border-r border-gray-700 flex flex-col flex-shrink-0">
-        <div class="px-4 py-3 border-b border-gray-700 flex items-center justify-between">
-            <span class="text-xs text-gray-400 uppercase font-semibold tracking-wider">Projekty</span>
-            <button @click="loadRuns()" class="text-gray-500 hover:text-gray-300 transition text-sm" title="Odśwież">↻</button>
-        </div>
+    <aside class="w-52 bg-gray-800 border-r border-gray-700 flex flex-col flex-shrink-0">
         <div x-show="runsLoading" class="flex items-center justify-center py-8 text-gray-600 text-sm gap-2">
             <span class="animate-spin inline-block">⟳</span> Ładowanie...
         </div>
@@ -101,8 +199,8 @@
     <!-- ─── CONTENT ────────────────────────────────────────────── -->
     <main class="flex-1 flex flex-col overflow-hidden">
 
-        <!-- TOOLBAR -->
-        <div class="border-b border-gray-700 px-5 py-2 flex items-center gap-3 flex-shrink-0 bg-gray-900">
+        <!-- TOOLBAR — hidden in post-processing mode -->
+        <div x-show="selectedRun && !postMode" class="border-b border-gray-700 px-5 py-2 flex items-center gap-3 flex-shrink-0 bg-gray-900">
             <!-- Generuj -->
             <button @click="startGeneration()"
                     :disabled="!canGenerate"
@@ -211,96 +309,9 @@
                 </div>
             </template>
 
-            <!-- Current run — FLOW (also yaml) -->
-            <template x-if="selectedRun && (selectedRun.compatibility === 'current' || selectedRun.compatibility === 'yaml') && !selectedRun.syntax_error">
-                <div class="flex flex-col h-full">
-
-                    <!-- Project info bar -->
-                    <!-- For YAML: whole left part clickable → opens global settings -->
-                    <div class="border-b border-gray-700 flex flex-wrap items-stretch text-xs text-gray-400 flex-shrink-0"
-                         :class="selectedRun.compatibility === 'yaml' ? 'bg-gray-800' : 'bg-gray-800'">
-
-                        <!-- Clickable settings area (yaml only) -->
-                        <template x-if="selectedRun.compatibility === 'yaml'">
-                            <button @click="openGlobalsModal(selectedRun.filename)"
-                                    class="flex flex-wrap items-center gap-x-4 gap-y-1 px-5 py-2 flex-1 text-left hover:bg-gray-750 group transition cursor-pointer"
-                                    style="background:transparent"
-                                    title="Kliknij aby edytować ustawienia projektu">
-                                <span class="text-orange-400 font-semibold text-xs group-hover:text-orange-300 transition flex-shrink-0">⚙</span>
-                                <span title="Folder projektu" class="flex items-center gap-1">
-                                    📁 <span class="text-gray-300 group-hover:text-white transition" x-text="projectFolderName()"></span>
-                                </span>
-                                <span class="flex items-center gap-1">
-                                    📐 <span class="text-gray-300 font-mono" x-text="formatRes(selectedRun.force_resolution)"></span>
-                                </span>
-                                <span class="flex items-center gap-1">
-                                    ⚙️ <span class="text-gray-300" x-text="selectedRun.default_backend || '—'"></span>
-                                </span>
-                                <span x-show="selectedRun.default_fps" class="flex items-center gap-1">
-                                    🎞 <span class="text-gray-300" x-text="selectedRun.default_fps + ' fps'"></span>
-                                </span>
-                                <span x-show="selectedRun.default_steps" class="flex items-center gap-1">
-                                    🪜 <span class="text-gray-300" x-text="selectedRun.default_steps + ' steps'"></span>
-                                </span>
-                                <span x-show="selectedRun.default_blocks_to_swap != null" class="flex items-center gap-1">
-                                    🔲 <span class="text-gray-300" x-text="'bts:' + selectedRun.default_blocks_to_swap"></span>
-                                </span>
-                                <span class="text-gray-600 text-xs group-hover:text-orange-500 transition ml-1">✎ edytuj ustawienia</span>
-                            </button>
-                        </template>
-
-                        <!-- Non-yaml: plain info (not clickable) -->
-                        <template x-if="selectedRun.compatibility !== 'yaml'">
-                            <div class="flex flex-wrap items-center gap-x-5 gap-y-1 px-5 py-2 flex-1">
-                                <span title="Folder projektu">📁 <span class="text-gray-300" x-text="projectFolderName()"></span></span>
-                                <span>📐 <span class="text-gray-300 font-mono" x-text="formatRes(selectedRun.force_resolution)"></span></span>
-                                <span>⚙️ <span class="text-gray-300" x-text="selectedRun.default_backend || '—'"></span></span>
-                                <span x-show="selectedRun.default_fps">🎞 <span class="text-gray-300" x-text="selectedRun.default_fps + ' fps'"></span></span>
-                                <span x-show="selectedRun.default_steps">🪜 <span class="text-gray-300" x-text="selectedRun.default_steps + ' steps'"></span></span>
-                                <span x-show="selectedRun.default_blocks_to_swap != null">🔲 <span class="text-gray-300" x-text="'bts:' + selectedRun.default_blocks_to_swap"></span></span>
-                            </div>
-                        </template>
-
-                        <!-- Right side actions (both modes) -->
-                        <div class="flex items-center gap-2 px-3 py-2 border-l border-gray-700 flex-shrink-0">
-                            <template x-if="selectedRun.compatibility === 'yaml'">
-                                <span class="flex items-center gap-2">
-                                    <button @click="viewSource(selectedRun.filename)"
-                                            class="bg-indigo-900 hover:bg-indigo-800 text-indigo-300 px-2 py-0.5 rounded text-xs font-medium cursor-pointer transition"
-                                            title="Podgląd pliku YAML">📄 YAML</button>
-                                    <button @click="reformatYaml(selectedRun.filename)"
-                                            :disabled="_reformatBusy"
-                                            :class="_reformatBusy ? 'opacity-40 cursor-not-allowed' : 'hover:bg-indigo-900/40 cursor-pointer'"
-                                            class="flex items-center gap-1 text-indigo-400 border border-indigo-700 hover:border-indigo-400 transition px-2 py-0.5 rounded text-xs"
-                                            title="Przepisz YAML w nowym czytelnym formacie">
-                                        <span :class="_reformatBusy ? 'animate-spin inline-block' : ''">⟳</span>
-                                        <span>YAML</span>
-                                    </button>
-                                    <button @click="generatePy(selectedRun.filename)"
-                                            :disabled="_genPyBusy"
-                                            :class="_genPyBusy ? 'opacity-40 cursor-not-allowed' : 'hover:bg-gray-700 cursor-pointer'"
-                                            class="flex items-center gap-1 text-gray-300 border border-gray-600 hover:border-gray-400 transition px-2 py-0.5 rounded text-xs"
-                                            title="Wygeneruj ponownie plik .py z YAML">
-                                        <span :class="_genPyBusy ? 'animate-spin inline-block' : ''">⟳</span>
-                                        <span>.py</span>
-                                    </button>
-                                </span>
-                            </template>
-                            <template x-if="selectedRun.compatibility === 'current'">
-                                <span class="flex items-center gap-2">
-                                    <button @click="viewSource(selectedRun.filename)"
-                                            class="text-gray-500 hover:text-gray-300 border border-gray-700 hover:border-gray-500 transition px-2 py-0.5 rounded text-xs cursor-pointer"
-                                            title="Podgląd pliku .py">📄 .py</button>
-                                    <button @click="migrateToYaml(selectedRun.filename)"
-                                            class="text-indigo-400 hover:text-indigo-200 border border-indigo-700 hover:border-indigo-400 hover:bg-indigo-900/30 transition px-2 py-0.5 rounded text-xs cursor-pointer"
-                                            title="Migruj do formatu YAML">→ YAML</button>
-                                </span>
-                            </template>
-                        </div>
-                    </div>
-
-                    <!-- FLOW list -->
-                    <div class="flex-1 overflow-y-auto p-4 space-y-2">
+            <!-- Current run — FLOW view -->
+            <template x-if="selectedRun && (selectedRun.compatibility === 'current' || selectedRun.compatibility === 'yaml') && !selectedRun.syntax_error && !postMode">
+                <div class="p-4 space-y-2">
                         <template x-if="flowLoading">
                             <div class="flex items-center gap-2 text-gray-500 text-sm py-4">
                                 <span class="animate-spin">⟳</span> Ładowanie FLOW...
@@ -644,8 +655,157 @@
                             </div>
                         </template>
                     </div>
+            </template>
+
+            <!-- ═══ POST-PROCESSING VIEW ═══ -->
+            <template x-if="selectedRun && (selectedRun.compatibility === 'current' || selectedRun.compatibility === 'yaml') && !selectedRun.syntax_error && postMode">
+                <div class="flex flex-col h-full overflow-hidden">
+
+                    <!-- ── TOP: Player + Inspector ── -->
+                    <div class="flex flex-shrink-0 border-b border-gray-700" style="height:460px">
+
+                        <!-- PLAYER -->
+                        <div class="flex-1 min-w-0 bg-black flex flex-col">
+                            <video x-ref="postPlayer"
+                                   class="flex-1 w-full min-h-0 object-contain"
+                                   @ended="postPlayNext()"
+                                   @timeupdate="postUpdateProgress()"
+                                   @play="postIsPlaying=true"
+                                   @pause="postIsPlaying=false">
+                            </video>
+                            <!-- Controls bar -->
+                            <div class="flex items-center gap-2 px-3 py-1.5 bg-gray-900 text-xs text-gray-300 flex-shrink-0 border-t border-gray-800">
+                                <button @click="postPlayPrev()" class="text-gray-400 hover:text-white transition px-1" title="Poprzedni">◄</button>
+                                <button @click="postTogglePlay()"
+                                        class="w-6 h-6 flex items-center justify-center rounded bg-gray-700 hover:bg-gray-600 transition text-xs"
+                                        :title="postIsPlaying ? 'Pauza' : 'Odtwórz'">
+                                    <span x-text="postIsPlaying ? '‖' : '▶'"></span>
+                                </button>
+                                <button @click="postPlayNext()" class="text-gray-400 hover:text-white transition px-1" title="Następny">►</button>
+                                <!-- Progress bar -->
+                                <div class="flex-1 bg-gray-700 h-1.5 rounded mx-1 cursor-pointer relative"
+                                     @click="postSeek($event)">
+                                    <div class="bg-blue-500 h-1.5 rounded absolute left-0 top-0 transition-all"
+                                         :style="`width:${postProgress}%`"></div>
+                                </div>
+                                <span class="text-gray-500 truncate max-w-[140px]" x-text="postCurrentClipName()"></span>
+                                <span x-show="postCurrentIndex >= 0" class="text-gray-500 flex-shrink-0 font-mono"
+                                      x-text="postTimeDisplay()"></span>
+                                <span x-show="postCurrentIndex >= 0" class="text-gray-700 flex-shrink-0"
+                                      x-text="`(${postCurrentIndex+1}/${postClips.length})`"></span>
+                            </div>
+                        </div>
+
+                        <!-- INSPECTOR -->
+                        <div class="w-64 flex-shrink-0 border-l border-gray-700 bg-gray-800 flex flex-col text-xs overflow-y-auto">
+                            <template x-if="postSelectedClip()">
+                                <div class="flex flex-col h-full">
+                                    <!-- Thumbnail -->
+                                    <div class="relative bg-gray-900 flex-shrink-0" style="height:80px">
+                                        <img :src="postClipThumbUrl(postSelectedClip())"
+                                             class="w-full h-full object-cover"
+                                             onerror="this.style.display='none'">
+                                    </div>
+                                    <!-- Info -->
+                                    <div class="p-3 flex flex-col gap-2 flex-1">
+                                        <p class="text-gray-200 font-medium break-all leading-tight" x-text="postSelectedClip().name"></p>
+                                        <div class="flex items-center gap-2 flex-wrap">
+                                            <span :class="postSelectedClip().status==='ok' ? 'text-green-400' : 'text-red-400'"
+                                                  x-text="postSelectedClip().status==='ok' ? '✅ Gotowy' : '❌ Brakujący'"></span>
+                                            <span x-show="postSelectedClip().size_mb" class="text-gray-600"
+                                                  x-text="postSelectedClip().size_mb + ' MB'"></span>
+                                        </div>
+                                        <div class="flex flex-wrap gap-x-3 gap-y-0.5 text-gray-600">
+                                            <span x-show="postSelectedClip().width && postSelectedClip().height"
+                                                  x-text="postSelectedClip().width + '×' + postSelectedClip().height"></span>
+                                            <span x-show="postSelectedClip().duration_s"
+                                                  x-text="'⏱ ' + postFmtTime(postSelectedClip().duration_s)"></span>
+                                            <span x-text="postSelectedClip().type==='external' ? '📂 Zewnętrzny' : (postSelectedClip().subtype==='chain' ? '⛓️ Chain' : '🔀 Tranzycja')"></span>
+                                        </div>
+                                        <!-- Actions -->
+                                        <div class="flex flex-col gap-1.5 mt-auto pt-2">
+                                            <button @click="postPlayFrom(postSelectedIndex)"
+                                                    class="bg-blue-900 hover:bg-blue-800 text-blue-200 px-3 py-1.5 rounded transition text-center">
+                                                ▶ Odtwórz od tego
+                                            </button>
+                                            <template x-if="postSelectedClip().status==='ok'">
+                                                <button @click="postArchiveClip(postSelectedClip())"
+                                                        class="text-gray-400 hover:text-white border border-gray-600 hover:border-gray-400 px-3 py-1.5 rounded transition text-center">
+                                                    📦 Archiwizuj
+                                                </button>
+                                            </template>
+                                            <template x-if="postSelectedClip().type==='generated' && postSelectedClip().status==='ok'">
+                                                <button @click="postTrashClip(postSelectedClip())"
+                                                        class="text-red-500 hover:text-red-300 border border-red-900 hover:border-red-700 px-3 py-1.5 rounded transition text-center">
+                                                    🗑 Przesuń do kosza
+                                                </button>
+                                            </template>
+                                        </div>
+                                    </div>
+                                </div>
+                            </template>
+                            <template x-if="!postSelectedClip()">
+                                <div class="flex items-center justify-center h-full text-gray-700 select-none text-center px-4">
+                                    kliknij klip<br>w filmstrip
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+
+                    <!-- ── FILMSTRIP (poziomy scroll) ── -->
+                    <div x-ref="postFilmstrip"
+                         class="flex-1 min-h-0 overflow-x-auto overflow-y-hidden bg-gray-950 flex items-center px-3 gap-2"
+                         style="min-height:110px; max-height:110px">
+                        <template x-if="postLoading">
+                            <div class="flex items-center gap-2 text-gray-600 text-sm flex-shrink-0">
+                                <span class="animate-spin inline-block">⟳</span> Ładowanie…
+                            </div>
+                        </template>
+                        <template x-if="!postLoading && postClips.length === 0">
+                            <div class="text-gray-700 text-xs flex-shrink-0">Brak klipów. Sprawdź czy pliki zostały wygenerowane.</div>
+                        </template>
+                        <template x-for="(clip, i) in postClips" :key="clip.seq">
+                            <div @click="postSelectClip(i)"
+                                 @dblclick="postPlayFrom(i)"
+                                 :data-clip-idx="i"
+                                 class="flex-shrink-0 cursor-pointer rounded overflow-hidden border-2 transition select-none"
+                                 :class="postTileClass(i)"
+                                 style="width:120px"
+                                 :title="clip.name">
+                                <!-- Thumbnail -->
+                                <div class="relative bg-gray-800" style="height:68px">
+                                    <img :src="postClipThumbUrl(clip)"
+                                         class="w-full h-full object-cover"
+                                         onerror="this.style.display='none'">
+                                    <!-- Seq number -->
+                                    <span class="absolute top-0.5 left-0.5 bg-black/75 text-white rounded px-1 leading-none"
+                                          style="font-size:9px" x-text="i+1"></span>
+                                    <!-- Type badge -->
+                                    <span class="absolute top-0.5 right-0.5 bg-black/75 rounded px-1 leading-none"
+                                          style="font-size:9px"
+                                          :class="clip.type==='external' ? 'text-blue-400' : clip.subtype==='chain' ? 'text-purple-400' : 'text-gray-400'"
+                                          x-text="clip.type==='external' ? '📂' : clip.subtype==='chain' ? '⛓' : '🔀'">
+                                    </span>
+                                    <!-- Playing pulse -->
+                                    <template x-if="i === postCurrentIndex">
+                                        <div class="absolute inset-0 border-2 border-green-400 rounded pointer-events-none"
+                                             :class="postIsPlaying ? 'opacity-100' : 'opacity-60'"></div>
+                                    </template>
+                                </div>
+                                <!-- Status bar -->
+                                <div class="h-0.5"
+                                     :class="i===postCurrentIndex ? 'bg-green-400' : clip.status==='ok' ? 'bg-green-800' : 'bg-red-800'">
+                                </div>
+                                <!-- Name -->
+                                <div class="bg-gray-900 px-1 py-0.5 text-center text-gray-600 truncate"
+                                     style="font-size:9px" x-text="clip.name"></div>
+                            </div>
+                        </template>
+                    </div>
+
                 </div>
             </template>
+
         </div>
 
         <!-- INPUT NEEDED BANNER -->
@@ -1565,7 +1725,8 @@ function app() {
         },
         async selectRun(run) {
             this.selectedRun = run; this.flowData = null; this.flowError = null; this.statusData = null;
-            this.editMode = false; // reset edit mode on run switch
+            this.editMode = false;  // reset on run switch
+            this.postMode = false;  // reset to flow view on run switch
             this.logLine('sys', `Wybrano: ${run.display_name} [${run.compatibility}]`);
             if (run.syntax_error) {
                 this.logLine('sys', `❌ Błąd składni linia ${run.syntax_error.line}: ${run.syntax_error.msg}`);
@@ -1963,6 +2124,203 @@ function app() {
                     await this.refreshStatus();
                 } else {
                     this.logLine('sys', `❌ ${data.detail}`);
+                }
+            } catch(e) { this.logLine('sys', `❌ ${e.message}`); }
+        },
+
+        // ─ View mode ──────────────────────────────────────
+        postMode: false,
+
+        // ─ Post-processing ────────────────────────────────
+        postClips:         [],
+        postClipOffsets:   [],   // cumulative seconds before clip[i]
+        postCurrentIndex:  -1,
+        postSelectedIndex: -1,
+        postProgress:      0,
+        postFilmPosition:  0,    // seconds from film start (for display)
+        postIsPlaying:     false,
+        postLoading:       false,
+
+        postSelectedClip()   { return this.postClips[this.postSelectedIndex] ?? null; },
+        postCurrentClipName(){ return this.postClips[this.postCurrentIndex]?.name ?? ''; },
+
+        postFmtTime(secs) {
+            if (secs == null || secs < 0) return '—';
+            const m = Math.floor(secs / 60);
+            const s = Math.floor(secs % 60);
+            return `${m}:${s.toString().padStart(2, '0')}`;
+        },
+        postTimeDisplay() {
+            const total = this.postClipOffsets[this.postClips.length] ?? 0;
+            return `${this.postFmtTime(this.postFilmPosition)} / ${this.postFmtTime(total)}`;
+        },
+
+        postClipVideoUrl(clip) {
+            if (!clip || !this.selectedRun) return '';
+            const run  = encodeURIComponent(this.selectedRun.filename);
+            const name = encodeURIComponent(clip.name);
+            const v    = clip.mtime ? `&v=${clip.mtime}` : '';
+            return clip.type === 'external'
+                ? `/api/media/source-video?run=${run}&name=${name}${v}`
+                : `/api/media/video?run=${run}&name=${name}${v}`;
+        },
+        postClipThumbUrl(clip) {
+            if (!clip || !this.selectedRun) return '';
+            const run  = encodeURIComponent(this.selectedRun.filename);
+            const name = encodeURIComponent(clip.name);
+            return clip.type === 'external'
+                ? `/api/media/frame?run=${run}&file=${name}&kind=start`
+                : `/api/media/video-thumb?run=${run}&name=${name}`;
+        },
+        postTileClass(i) {
+            const playing  = i === this.postCurrentIndex;
+            const selected = i === this.postSelectedIndex;
+            if (playing && selected) return 'border-green-400';
+            if (playing)  return 'border-green-600';
+            if (selected) return 'border-blue-500';
+            return 'border-transparent hover:border-gray-600';
+        },
+
+        async loadPostClips(preserveScroll = false) {
+            if (!this.selectedRun) return;
+            // Save filmstrip scroll position before refresh
+            const filmstrip = this.$refs.postFilmstrip;
+            const savedScroll = preserveScroll && filmstrip ? filmstrip.scrollLeft : 0;
+
+            this.postLoading = true;
+            if (!preserveScroll) {
+                this.postClips = [];
+                this.postCurrentIndex  = -1;
+                this.postSelectedIndex = -1;
+                this.postProgress      = 0;
+                this.postFilmPosition  = 0;
+            }
+            try {
+                const res = await fetch(`/api/runs/${encodeURIComponent(this.selectedRun.filename)}/postclips`);
+                if (res.ok) {
+                    this.postClips = await res.json();
+                    // Build cumulative offsets: postClipOffsets[i] = seconds before clip i
+                    const offsets = [];
+                    let acc = 0;
+                    for (const clip of this.postClips) {
+                        offsets.push(acc);
+                        acc += clip.duration_s ?? 0;
+                    }
+                    offsets.push(acc); // total film duration at index [length]
+                    this.postClipOffsets = offsets;
+                }
+            } catch(e) { console.error('postclips fetch error', e); }
+            finally {
+                this.postLoading = false;
+                // Restore scroll position after Alpine re-renders the list
+                if (preserveScroll && savedScroll > 0) {
+                    this.$nextTick(() => {
+                        const fs = this.$refs.postFilmstrip;
+                        if (fs) fs.scrollLeft = savedScroll;
+                    });
+                }
+            }
+        },
+
+        postSelectClip(i) {
+            this.postSelectedIndex = i;
+            // Load into player but don't autoplay
+            const clip = this.postClips[i];
+            if (!clip) return;
+            const p = this.$refs.postPlayer;
+            if (!p) return;
+            if (p.src !== this.postClipVideoUrl(clip)) {
+                p.src = this.postClipVideoUrl(clip);
+                p.load();
+            }
+            this.postCurrentIndex = i;
+        },
+        postPlayFrom(i) {
+            this.postSelectedIndex = i;
+            this.postCurrentIndex  = i;
+            const clip = this.postClips[i];
+            if (!clip) return;
+            const p = this.$refs.postPlayer;
+            if (!p) return;
+            p.src = this.postClipVideoUrl(clip);
+            p.load();
+            p.play().catch(() => {});
+            this._postScrollTo(i);
+        },
+        postPlayNext() {
+            const next = this.postCurrentIndex + 1;
+            if (next < this.postClips.length) {
+                this.postCurrentIndex  = next;
+                this.postSelectedIndex = next;
+                const p = this.$refs.postPlayer;
+                if (!p) return;
+                p.src = this.postClipVideoUrl(this.postClips[next]);
+                p.load();
+                p.play().catch(() => {});
+                this.$nextTick(() => this._postScrollTo(next));
+            } else {
+                this.postIsPlaying = false;
+            }
+        },
+        postPlayPrev() {
+            const prev = this.postCurrentIndex - 1;
+            if (prev >= 0) this.postPlayFrom(prev);
+        },
+        postTogglePlay() {
+            const p = this.$refs.postPlayer;
+            if (!p) return;
+            if (p.paused) { p.play().catch(() => {}); }
+            else          { p.pause(); }
+        },
+        postUpdateProgress() {
+            const p = this.$refs.postPlayer;
+            if (!p || !p.duration) return;
+            this.postProgress = (p.currentTime / p.duration) * 100;
+            this.postFilmPosition = (this.postClipOffsets[this.postCurrentIndex] ?? 0) + p.currentTime;
+        },
+        postSeek(e) {
+            const p = this.$refs.postPlayer;
+            if (!p || !p.duration) return;
+            const rect = e.currentTarget.getBoundingClientRect();
+            p.currentTime = ((e.clientX - rect.left) / rect.width) * p.duration;
+        },
+        _postScrollTo(i) {
+            this.$nextTick(() => {
+                const tile = document.querySelector(`[data-clip-idx="${i}"]`);
+                if (tile) tile.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+            });
+        },
+        async postArchiveClip(clip) {
+            if (!clip || !this.selectedRun) return;
+            try {
+                const res = await fetch('/api/media/archive', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ run: this.selectedRun.filename, name: clip.name }),
+                });
+                const data = await res.json();
+                if (data.ok) {
+                    this.logLine('sys', `📦 Zarchiwizowano: ${clip.name} → ${data.new_name}`);
+                    await Promise.all([this.loadPostClips(true), this.refreshStatus()]);
+                } else {
+                    this.logLine('sys', `❌ ${data.detail || data.error}`);
+                }
+            } catch(e) { this.logLine('sys', `❌ ${e.message}`); }
+        },
+        async postTrashClip(clip) {
+            if (!clip || !this.selectedRun) return;
+            try {
+                const res = await fetch('/api/media/trash', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ run: this.selectedRun.filename, name: clip.name }),
+                });
+                const data = await res.json();
+                if (data.ok) {
+                    this.logLine('sys', `🗑 Usunięto: ${clip.name}`);
+                    await Promise.all([this.loadPostClips(true), this.refreshStatus()]);
+                } else {
+                    this.logLine('sys', `❌ ${data.detail || data.error}`);
                 }
             } catch(e) { this.logLine('sys', `❌ ${e.message}`); }
         },
