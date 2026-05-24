@@ -18,6 +18,7 @@ from app.core.config import settings
 from app.api.runs import router as runs_router
 from app.api.generation import router as generation_router
 from app.api.media import router as media_router
+from app.api.upscale import router as upscale_router
 from app.services.process_service import process_service
 
 # ============================================================
@@ -37,6 +38,7 @@ app.add_middleware(BaseHTTPMiddleware, dispatch=auth_middleware)
 app.include_router(runs_router)
 app.include_router(generation_router)
 app.include_router(media_router)
+app.include_router(upscale_router)
 
 # Static files
 FRONTEND_DIR = Path(__file__).parent / "frontend"

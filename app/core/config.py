@@ -17,8 +17,13 @@ class Settings(BaseSettings):
     host: str = "0.0.0.0"
     port: int = 8000
 
-    # ComfyUI
+    # ComfyUI (Linux – transitions, port 8189)
     comfyui_url: str = "http://127.0.0.1:8189"
+
+    # ComfyUI Upscaler (Windows – RealESRGAN, port 8100)
+    comfyui_upscale_url: str = "http://127.0.0.1:8100"
+    comfyui_upscale_input_dir:  str = r"D:\ComfyUI\input"
+    comfyui_upscale_output_dir: str = r"D:\ComfyUI\output"
 
     model_config = {"env_file": ".env", "env_file_encoding": "utf-8"}
 

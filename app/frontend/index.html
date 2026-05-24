@@ -111,11 +111,15 @@
         <!-- Flow / Post tabs — only when run is active -->
         <template x-if="selectedRun && (selectedRun.compatibility === 'current' || selectedRun.compatibility === 'yaml') && !selectedRun.syntax_error">
             <div class="flex items-center border-l border-gray-700 px-2 gap-0.5 flex-shrink-0">
-                <button @click="postMode = false; editMode = false"
-                        :class="!postMode ? 'bg-gray-700 text-white' : 'text-gray-500 hover:text-gray-300 hover:bg-gray-700/50'"
+                <button @click="preMode=true; postMode=false; editMode=false; loadPreClips()"
+                        :class="preMode ? 'bg-purple-900 text-purple-200' : 'text-gray-500 hover:text-gray-300 hover:bg-gray-700/50'"
                         class="text-xs px-2.5 py-1 rounded-l transition"
+                        title="Pre-processing (hurtowy upscale)">🔧 Pre</button>
+                <button @click="preMode=false; postMode=false; editMode=false"
+                        :class="!preMode && !postMode ? 'bg-gray-700 text-white' : 'text-gray-500 hover:text-gray-300 hover:bg-gray-700/50'"
+                        class="text-xs px-2.5 py-1 transition"
                         title="Widok FLOW">📋 Flow</button>
-                <button @click="postMode = true; editMode = false; loadPostClips()"
+                <button @click="preMode=false; postMode=true; editMode=false; loadPostClips()"
                         :class="postMode ? 'bg-blue-900 text-blue-200' : 'text-gray-500 hover:text-gray-300 hover:bg-gray-700/50'"
                         class="text-xs px-2.5 py-1 rounded-r transition"
                         title="Post-processing">🎬 Post</button>
@@ -199,8 +203,8 @@
     <!-- ─── CONTENT ────────────────────────────────────────────── -->
     <main class="flex-1 flex flex-col overflow-hidden">
 
-        <!-- TOOLBAR — hidden in post-processing mode -->
-        <div x-show="selectedRun && !postMode" class="border-b border-gray-700 px-5 py-2 flex items-center gap-3 flex-shrink-0 bg-gray-900">
+        <!-- TOOLBAR — hidden in post/pre-processing mode -->
+        <div x-show="selectedRun && !postMode && !preMode" class="border-b border-gray-700 px-5 py-2 flex items-center gap-3 flex-shrink-0 bg-gray-900">
             <!-- Generuj -->
             <button @click="startGeneration()"
                     :disabled="!canGenerate"
@@ -310,7 +314,7 @@
             </template>
 
             <!-- Current run — FLOW view -->
-            <template x-if="selectedRun && (selectedRun.compatibility === 'current' || selectedRun.compatibility === 'yaml') && !selectedRun.syntax_error && !postMode">
+            <template x-if="selectedRun && (selectedRun.compatibility === 'current' || selectedRun.compatibility === 'yaml') && !selectedRun.syntax_error && !postMode && !preMode">
                 <div class="p-4 space-y-2">
                         <template x-if="flowLoading">
                             <div class="flex items-center gap-2 text-gray-500 text-sm py-4">
@@ -657,6 +661,151 @@
                     </div>
             </template>
 
+            <!-- ═══ PRE-PROCESSING VIEW ═══ -->
+            <template x-if="selectedRun && (selectedRun.compatibility === 'current' || selectedRun.compatibility === 'yaml') && !selectedRun.syntax_error && preMode">
+                <div class="flex flex-col h-full overflow-hidden">
+
+                    <!-- ── Header: target resolution + controls ── -->
+                    <div class="flex items-center gap-3 px-5 py-2.5 border-b border-gray-700 bg-gray-900 flex-shrink-0 text-xs flex-wrap">
+                        <span class="text-gray-400 flex-shrink-0">Docelowa rozdzielczość:</span>
+                        <input x-model.number="preTargetW" type="number" min="64" max="8192" step="64"
+                               class="w-20 bg-gray-800 border border-gray-600 rounded px-2 py-1 text-gray-200 text-center focus:outline-none focus:border-purple-500">
+                        <span class="text-gray-600">×</span>
+                        <input x-model.number="preTargetH" type="number" min="64" max="8192" step="64"
+                               class="w-20 bg-gray-800 border border-gray-600 rounded px-2 py-1 text-gray-200 text-center focus:outline-none focus:border-purple-500">
+                        <span class="text-gray-600"
+                              x-show="selectedRun?.force_resolution"
+                              x-text="`(projekt: ${selectedRun?.force_resolution?.[0]}×${selectedRun?.force_resolution?.[1]})`"></span>
+                        <div class="flex-1"></div>
+                        <button @click="preSelectBelowTarget()" :disabled="preIsRunning"
+                                class="text-gray-400 hover:text-white border border-gray-600 hover:border-gray-400 px-2 py-1 rounded transition disabled:opacity-40">
+                            ☑ Zaznacz poniżej celu</button>
+                        <button @click="preSelected = {}" :disabled="preIsRunning"
+                                class="text-gray-400 hover:text-white border border-gray-600 hover:border-gray-400 px-2 py-1 rounded transition disabled:opacity-40">
+                            ☐ Odznacz</button>
+                        <button @click="loadPreClips()" :disabled="preIsRunning"
+                                class="text-gray-400 hover:text-white border border-gray-600 hover:border-gray-400 px-2 py-1 rounded transition disabled:opacity-40">
+                            🔍 Odśwież</button>
+                    </div>
+
+                    <!-- ── File list ── -->
+                    <div class="flex-1 overflow-y-auto">
+                        <template x-if="preLoading">
+                            <div class="flex items-center gap-2 p-5 text-gray-600 text-sm">
+                                <span class="animate-spin inline-block">⟳</span> Skanowanie plików…
+                            </div>
+                        </template>
+                        <template x-if="!preLoading && preClips.length === 0">
+                            <div class="p-5 text-gray-700 text-sm">Brak klipów wideo. Sprawdź czy projekt ma pliki mp4.</div>
+                        </template>
+                        <template x-if="!preLoading && preClips.length > 0">
+                            <div>
+                                <template x-for="clip in preClips" :key="clip.seq">
+                                    <div class="flex items-center gap-3 px-5 py-2 border-b border-gray-800/60 text-xs transition"
+                                         :class="clip.status !== 'ok' ? 'opacity-35 cursor-default' : 'hover:bg-gray-800/40'">
+
+                                        <!-- Checkbox (only for existing files) -->
+                                        <div class="w-4 flex-shrink-0 flex items-center justify-center">
+                                            <template x-if="clip.status === 'ok'">
+                                                <input type="checkbox"
+                                                       :checked="!!preSelected[clip.name]"
+                                                       @change="preToggle(clip.name)"
+                                                       :disabled="preIsRunning"
+                                                       class="rounded border-gray-600 bg-gray-800 cursor-pointer accent-purple-500">
+                                            </template>
+                                        </div>
+
+                                        <!-- Type icon -->
+                                        <span class="flex-shrink-0"
+                                              x-text="clip.type==='external' ? '📂' : clip.subtype==='chain' ? '⛓' : '🔀'"></span>
+
+                                        <!-- Name -->
+                                        <span class="flex-1 min-w-0 truncate"
+                                              :class="clip.status === 'ok' ? 'text-gray-300' : 'text-gray-600'"
+                                              x-text="clip.name"></span>
+
+                                        <!-- Resolution / status -->
+                                        <div class="flex items-center gap-2 flex-shrink-0 font-mono">
+                                            <template x-if="clip.status !== 'ok'">
+                                                <span class="text-gray-600 italic font-sans">nie wygenerowany</span>
+                                            </template>
+                                            <template x-if="clip.status === 'ok' && clip.width === null">
+                                                <span class="text-yellow-600">⚠ brak metadanych</span>
+                                            </template>
+                                            <template x-if="clip.status === 'ok' && clip.width !== null">
+                                                <span :class="preBelowTarget(clip) ? 'text-orange-400' : 'text-green-600'"
+                                                      x-text="`${clip.width}×${clip.height}`"></span>
+                                            </template>
+                                            <template x-if="clip.status === 'ok' && clip.width !== null && preBelowTarget(clip)">
+                                                <span class="text-gray-700">→</span>
+                                                <span class="text-gray-500" x-text="`${preTargetW}×${preTargetH}`"></span>
+                                            </template>
+                                            <template x-if="clip.status === 'ok' && clip.width !== null && !preBelowTarget(clip) && !preQueueStatus[clip.name]">
+                                                <span class="text-green-800">✅</span>
+                                            </template>
+                                        </div>
+
+                                        <!-- Queue status badge (during/after batch) -->
+                                        <template x-if="preQueueStatus[clip.name]">
+                                            <span class="flex-shrink-0 w-5 text-center"
+                                                  :class="preQueueStatus[clip.name]==='running' ? 'animate-spin inline-block' : ''"
+                                                  x-text="preQueueStatus[clip.name]==='done' ? '✅' : preQueueStatus[clip.name]==='running' ? '⟳' : preQueueStatus[clip.name]==='error' ? '❌' : '⏳'">
+                                            </span>
+                                        </template>
+                                    </div>
+                                </template>
+                            </div>
+                        </template>
+                    </div>
+
+                    <!-- ── Action bar ── -->
+                    <div class="flex items-center gap-3 px-5 py-2.5 border-t border-gray-700 bg-gray-900 flex-shrink-0 text-xs">
+                        <span class="text-gray-600"
+                              x-text="`Zaznaczono: ${preSelectedCount()} z ${preClips.filter(c=>c.status==='ok').length} dostępnych`"></span>
+                        <div class="flex-1"></div>
+                        <button @click="preStartBatch()"
+                                :disabled="preSelectedCount() === 0 || preIsRunning"
+                                :class="preSelectedCount() === 0 || preIsRunning
+                                    ? 'opacity-40 cursor-not-allowed bg-purple-900'
+                                    : 'bg-purple-700 hover:bg-purple-600 cursor-pointer'"
+                                class="flex items-center gap-2 px-4 py-1.5 text-white rounded-lg transition">
+                            <span x-show="preIsRunning" class="animate-spin inline-block">⟳</span>
+                            <span x-text="preIsRunning
+                                ? `W toku… (${preQueue.filter(i=>i.status==='done').length}/${preQueue.length})`
+                                : `⬆ Upscaluj zaznaczone (${preSelectedCount()})`"></span>
+                        </button>
+                    </div>
+
+                    <!-- ── Queue progress panel ── -->
+                    <template x-if="preQueue.length > 0">
+                        <div class="border-t-2 border-purple-900 bg-gray-950 flex-shrink-0 overflow-y-auto" style="max-height:160px">
+                            <div class="px-5 py-1.5 text-xs text-purple-400 font-semibold border-b border-gray-800 sticky top-0 bg-gray-950 flex items-center gap-2">
+                                <span>Kolejka upscalingu</span>
+                                <span class="text-gray-600"
+                                      x-text="`${preQueue.filter(i=>i.status==='done').length} / ${preQueue.length} gotowych`"></span>
+                                <template x-if="!preIsRunning && preQueue.length > 0">
+                                    <button @click="preQueue = []; preQueueStatus = {}"
+                                            class="ml-auto text-gray-600 hover:text-gray-400 transition">✕ Wyczyść</button>
+                                </template>
+                            </div>
+                            <template x-for="(item, idx) in preQueue" :key="idx">
+                                <div class="flex items-center gap-3 px-5 py-1.5 border-b border-gray-900/60 text-xs">
+                                    <span :class="item.status==='running' ? 'animate-spin inline-block' : ''"
+                                          x-text="item.status==='done' ? '✅' : item.status==='running' ? '⟳' : item.status==='error' ? '❌' : '⏳'"></span>
+                                    <span class="flex-1 min-w-0 truncate text-gray-400" x-text="item.clip.name"></span>
+                                    <span x-show="item.elapsed_s && item.status !== 'pending'"
+                                          class="text-gray-600 font-mono flex-shrink-0"
+                                          x-text="`${item.elapsed_s}s`"></span>
+                                    <span x-show="item.status === 'error'"
+                                          class="text-red-500 truncate max-w-xs flex-shrink-0" x-text="item.error"></span>
+                                </div>
+                            </template>
+                        </div>
+                    </template>
+
+                </div>
+            </template>
+
             <!-- ═══ POST-PROCESSING VIEW ═══ -->
             <template x-if="selectedRun && (selectedRun.compatibility === 'current' || selectedRun.compatibility === 'yaml') && !selectedRun.syntax_error && postMode">
                 <div class="flex flex-col h-full overflow-hidden">
@@ -738,6 +887,12 @@
                                                 <button @click="postTrashClip(postSelectedClip())"
                                                         class="text-red-500 hover:text-red-300 border border-red-900 hover:border-red-700 px-3 py-1.5 rounded transition text-center">
                                                     🗑 Przesuń do kosza
+                                                </button>
+                                            </template>
+                                            <template x-if="postSelectedClip().status==='ok'">
+                                                <button @click="openUpscaleModal(postSelectedClip())"
+                                                        class="text-yellow-400 hover:text-yellow-200 border border-yellow-800 hover:border-yellow-600 px-3 py-1.5 rounded transition text-center">
+                                                    ⬆ Upscaluj
                                                 </button>
                                             </template>
                                         </div>
@@ -1484,6 +1639,108 @@
 </div>
 </template>
 
+<!-- ═══ UPSCALE MODAL ═════════════════════════════════════════════ -->
+<template x-if="upscaleModal.open">
+<div class="fixed inset-0 bg-black/85 flex items-center justify-center z-50 p-4"
+     @keydown.escape.window="if(upscaleModal.status!=='running' && upscaleModal.status!=='queued') closeUpscaleModal()">
+    <div class="bg-gray-900 rounded-xl border border-yellow-800 w-full max-w-sm p-5 text-sm">
+        <!-- Header -->
+        <div class="flex items-center justify-between mb-4">
+            <div class="flex items-center gap-2">
+                <span class="text-yellow-400 text-lg">⬆</span>
+                <h3 class="font-semibold text-yellow-300">Upscaluj klip</h3>
+            </div>
+            <button @click="closeUpscaleModal()"
+                    :disabled="upscaleModal.status==='running' || upscaleModal.status==='queued'"
+                    class="text-gray-500 hover:text-white transition disabled:opacity-30 disabled:cursor-not-allowed text-lg leading-none">✕</button>
+        </div>
+
+        <!-- Clip info -->
+        <p class="text-gray-400 text-xs mb-1">Klip:</p>
+        <p class="text-gray-200 font-mono text-xs break-all mb-3" x-text="upscaleModal.clip?.name"></p>
+        <template x-if="upscaleModal.clip?.width && upscaleModal.clip?.height">
+            <p class="text-gray-600 text-xs mb-3"
+               x-text="`Aktualna rozdzielczość: ${upscaleModal.clip.width}×${upscaleModal.clip.height}`"></p>
+        </template>
+
+        <!-- Dimensions -->
+        <template x-if="upscaleModal.status === 'idle'">
+            <div>
+                <p class="text-gray-400 text-xs mb-2">Docelowa rozdzielczość po upscalingu:</p>
+                <div class="flex items-center gap-2 mb-4">
+                    <div class="flex-1">
+                        <label class="text-gray-500 text-xs block mb-0.5">Szerokość</label>
+                        <input x-model.number="upscaleModal.width" type="number" min="64" max="8192" step="64"
+                               class="w-full bg-gray-800 border border-gray-600 rounded px-2 py-1.5 text-gray-200 text-sm focus:outline-none focus:border-yellow-600">
+                    </div>
+                    <span class="text-gray-600 mt-4">×</span>
+                    <div class="flex-1">
+                        <label class="text-gray-500 text-xs block mb-0.5">Wysokość</label>
+                        <input x-model.number="upscaleModal.height" type="number" min="64" max="8192" step="64"
+                               class="w-full bg-gray-800 border border-gray-600 rounded px-2 py-1.5 text-gray-200 text-sm focus:outline-none focus:border-yellow-600">
+                    </div>
+                </div>
+                <p class="text-gray-600 text-xs mb-4">
+                    Model 4× upscaluje każdy kadr, następnie obraz jest przeskalowany do podanych wymiarów.
+                    Plik oryginalny zostanie zarchiwizowany.
+                </p>
+                <div class="flex justify-end gap-2">
+                    <button @click="closeUpscaleModal()"
+                            class="px-4 py-2 text-gray-400 hover:text-white rounded-lg hover:bg-gray-700 transition">Anuluj</button>
+                    <button @click="startUpscale()"
+                            class="px-4 py-2 text-white bg-yellow-700 hover:bg-yellow-600 rounded-lg transition">⬆ Start Upscale</button>
+                </div>
+            </div>
+        </template>
+
+        <!-- Progress -->
+        <template x-if="upscaleModal.status === 'queued' || upscaleModal.status === 'running'">
+            <div class="text-center py-4">
+                <div class="flex items-center justify-center gap-3 mb-3">
+                    <span class="animate-spin inline-block text-yellow-400 text-2xl">⟳</span>
+                    <span class="text-gray-300"
+                          x-text="upscaleModal.status === 'queued' ? 'Wysyłanie do ComfyUI…' : 'Upscaling w toku…'"></span>
+                </div>
+                <p class="text-gray-500 text-xs"
+                   x-show="upscaleModal.elapsed_s"
+                   x-text="`Czas: ${upscaleModal.elapsed_s}s`"></p>
+                <p class="text-gray-600 text-xs mt-2">
+                    Upscaling może trwać 5–7 minut. Nie zamykaj okna.
+                </p>
+            </div>
+        </template>
+
+        <!-- Done -->
+        <template x-if="upscaleModal.status === 'done'">
+            <div class="text-center py-4">
+                <div class="text-green-400 text-3xl mb-2">✅</div>
+                <p class="text-gray-200 mb-1">Upscaling zakończony!</p>
+                <p class="text-gray-500 text-xs mb-4"
+                   x-text="upscaleModal.elapsed_s ? `Czas: ${upscaleModal.elapsed_s}s` : ''"></p>
+                <button @click="closeUpscaleModal()"
+                        class="px-4 py-2 text-white bg-green-800 hover:bg-green-700 rounded-lg transition">Zamknij</button>
+            </div>
+        </template>
+
+        <!-- Error -->
+        <template x-if="upscaleModal.status === 'error'">
+            <div class="py-2">
+                <div class="flex items-start gap-2 mb-4 bg-red-950/50 border border-red-900 rounded p-3">
+                    <span class="text-red-400 flex-shrink-0">❌</span>
+                    <p class="text-red-300 text-xs break-words" x-text="upscaleModal.error"></p>
+                </div>
+                <div class="flex justify-end gap-2">
+                    <button @click="closeUpscaleModal()"
+                            class="px-4 py-2 text-gray-400 hover:text-white rounded-lg hover:bg-gray-700 transition">Zamknij</button>
+                    <button @click="upscaleModal.status='idle'; upscaleModal.error=null"
+                            class="px-4 py-2 text-white bg-yellow-700 hover:bg-yellow-600 rounded-lg transition">Spróbuj ponownie</button>
+                </div>
+            </div>
+        </template>
+    </div>
+</div>
+</template>
+
 <!-- ═══ ADD ITEM MODAL ════════════════════════════════════════════ -->
 <template x-if="addItemModal.open">
 <div class="fixed inset-0 bg-black/85 flex items-center justify-center z-50 p-4"
@@ -1583,14 +1840,40 @@ function app() {
         },
 
         // ─ WebSocket ──────────────────────────────────────
+        _wsFailCount: 0,
         connectWS() {
+            // Guard: don't open a second connection if one is already live
+            if (this.ws && (this.ws.readyState === WebSocket.OPEN ||
+                            this.ws.readyState === WebSocket.CONNECTING)) return;
+
             const proto = location.protocol === 'https:' ? 'wss' : 'ws';
+            let opened = false;
             try { this.ws = new WebSocket(`${proto}://${location.host}/ws/logs`); } catch { return; }
-            this.ws.onopen = () => { this.wsConnected = true; this.logLine('sys','🔌 WebSocket połączony'); };
+
+            this.ws.onopen = () => {
+                opened = true;
+                this._wsFailCount = 0;
+                this.wsConnected = true;
+                this.logLine('sys','🔌 WebSocket połączony');
+            };
             this.ws.onclose = () => {
                 this.wsConnected = false;
-                this.logLine('sys','🔌 WebSocket rozłączony — ponawiam za 3s...');
-                setTimeout(() => this.connectWS(), 3000);
+                if (!opened) {
+                    // Connection was never established — likely auth error (403)
+                    // Use exponential backoff, stop after 5 consecutive failures
+                    this._wsFailCount++;
+                    if (this._wsFailCount >= 5) {
+                        this.logLine('sys','🔌 WebSocket — zbyt wiele błędów, odśwież stronę');
+                        return;
+                    }
+                    const delay = Math.min(3000 * this._wsFailCount, 30000);
+                    setTimeout(() => this.connectWS(), delay);
+                } else {
+                    // Was connected before — normal disconnect, retry quickly
+                    this._wsFailCount = 0;
+                    this.logLine('sys','🔌 WebSocket rozłączony — ponawiam za 3s...');
+                    setTimeout(() => this.connectWS(), 3000);
+                }
             };
             this.ws.onerror = () => {};
             this.ws.onmessage = (evt) => {
@@ -2130,6 +2413,18 @@ function app() {
 
         // ─ View mode ──────────────────────────────────────
         postMode: false,
+        preMode:  false,
+
+        // ─ Pre-processing ─────────────────────────────────
+        preClips:       [],
+        preLoading:     false,
+        preTargetW:     1024,
+        preTargetH:     1024,
+        preSelected:    {},     // { [clip.name]: true }
+        preQueue:       [],     // [{ clip, status, elapsed_s, error }]
+        preQueueStatus: {},     // { [clip.name]: 'pending'|'running'|'done'|'error' }
+        preIsRunning:   false,
+        _prePolling:    null,
 
         // ─ Post-processing ────────────────────────────────
         postClips:         [],
@@ -2140,6 +2435,18 @@ function app() {
         postFilmPosition:  0,    // seconds from film start (for display)
         postIsPlaying:     false,
         postLoading:       false,
+
+        // ─ Upscale modal ──────────────────────────────────────
+        upscaleModal: {
+            open:      false,
+            clip:      null,
+            width:     1024,
+            height:    1024,
+            status:    'idle',    // idle | queued | running | done | error
+            error:     null,
+            elapsed_s: null,
+            _timer:    null,
+        },
 
         postSelectedClip()   { return this.postClips[this.postSelectedIndex] ?? null; },
         postCurrentClipName(){ return this.postClips[this.postCurrentIndex]?.name ?? ''; },
@@ -2323,6 +2630,225 @@ function app() {
                     this.logLine('sys', `❌ ${data.detail || data.error}`);
                 }
             } catch(e) { this.logLine('sys', `❌ ${e.message}`); }
+        },
+
+        // ─ Upscale ────────────────────────────────────────
+        openUpscaleModal(clip) {
+            if (!clip) return;
+            // Pre-fill: project force_resolution → default_resolution → 1024×1024
+            const res = this.selectedRun?.force_resolution
+                     || this.selectedRun?.default_resolution
+                     || null;
+            const w = res ? res[0] : 1024;
+            const h = res ? res[1] : 1024;
+            this.upscaleModal = {
+                open:      true,
+                clip,
+                width:     w,
+                height:    h,
+                status:    'idle',
+                error:     null,
+                elapsed_s: null,
+                _timer:    null,
+            };
+        },
+        closeUpscaleModal() {
+            if (this.upscaleModal._timer) {
+                clearInterval(this.upscaleModal._timer);
+            }
+            this.upscaleModal.open = false;
+        },
+        async startUpscale() {
+            const m = this.upscaleModal;
+            if (!m.clip || !this.selectedRun) return;
+            m.status = 'queued';
+            m.error  = null;
+            try {
+                const res = await fetch('/api/upscale/start', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        run:    this.selectedRun.filename,
+                        name:   m.clip.name,
+                        type:   m.clip.type,
+                        width:  parseInt(m.width)  || 1024,
+                        height: parseInt(m.height) || 1024,
+                    }),
+                });
+                const data = await res.json();
+                if (!data.ok && !res.ok) {
+                    m.status = 'error';
+                    m.error  = data.detail || data.error || 'Błąd startu upscalingu';
+                    return;
+                }
+                // Start polling
+                m._timer = setInterval(() => this._pollUpscale(), 3000);
+            } catch(e) {
+                m.status = 'error';
+                m.error  = e.message;
+            }
+        },
+        async _pollUpscale() {
+            const m = this.upscaleModal;
+            try {
+                const res  = await fetch('/api/upscale/status');
+                const data = await res.json();
+                m.status    = data.status;
+                m.elapsed_s = data.elapsed_s;
+                if (data.status === 'done') {
+                    clearInterval(m._timer);
+                    m._timer = null;
+                    this.logLine('sys', `⬆ Upscale gotowy: ${data.output_name} (${data.elapsed_s}s)`);
+                    await Promise.all([this.loadPostClips(true), this.refreshStatus()]);
+                } else if (data.status === 'error') {
+                    clearInterval(m._timer);
+                    m._timer = null;
+                    m.error  = data.error || 'Nieznany błąd';
+                }
+            } catch(e) { /* ignore transient network error */ }
+        },
+
+        // ─ Pre-processing ─────────────────────────────────
+        async loadPreClips() {
+            this.preLoading = true;
+            this.preClips = [];
+            this.preSelected = {};
+            this.preQueue = [];
+            this.preQueueStatus = {};
+            try {
+                const res = await fetch(`/api/runs/${encodeURIComponent(this.selectedRun.filename)}/postclips`);
+                if (res.ok) {
+                    const all = await res.json();
+                    // Only video clips; skip archive files (_ver*, _beforeupscale*)
+                    this.preClips = all.filter(c =>
+                        !c.name.includes('_ver') && !c.name.includes('_beforeupscale')
+                    );
+                    // Set default target from project force_resolution
+                    const fr = this.selectedRun?.force_resolution;
+                    if (fr) { this.preTargetW = fr[0]; this.preTargetH = fr[1]; }
+                    // Auto-select files below target
+                    this.preSelectBelowTarget();
+                }
+            } catch(e) { this.logLine('sys', `❌ ${e.message}`); }
+            this.preLoading = false;
+        },
+
+        preBelowTarget(clip) {
+            if (clip.status !== 'ok' || clip.width === null || clip.height === null) return false;
+            return clip.width < this.preTargetW || clip.height < this.preTargetH;
+        },
+
+        preSelectBelowTarget() {
+            const sel = {};
+            for (const c of this.preClips) {
+                if (this.preBelowTarget(c)) sel[c.name] = true;
+            }
+            this.preSelected = sel;
+        },
+
+        preToggle(name) {
+            if (this.preSelected[name]) {
+                const copy = {...this.preSelected};
+                delete copy[name];
+                this.preSelected = copy;
+            } else {
+                this.preSelected = {...this.preSelected, [name]: true};
+            }
+        },
+
+        preSelectedCount() {
+            return Object.keys(this.preSelected).length;
+        },
+
+        async preStartBatch() {
+            if (this.preIsRunning) return;
+            const selected = this.preClips.filter(c => this.preSelected[c.name]);
+            if (selected.length === 0) return;
+
+            this.preQueue = selected.map(c => ({
+                clip: c, status: 'pending', elapsed_s: null, error: null,
+            }));
+            // Build quick-lookup map for inline status badges in the file list
+            this.preQueueStatus = Object.fromEntries(selected.map(c => [c.name, 'pending']));
+            this.preIsRunning = true;
+            await this._preRunNext();
+        },
+
+        async _preRunNext() {
+            const item = this.preQueue.find(i => i.status === 'pending');
+            if (!item) {
+                // All done
+                this.preIsRunning = false;
+                await Promise.all([this.loadPostClips(true), this.refreshStatus()]);
+                return;
+            }
+            item.status = 'running';
+            this.preQueueStatus = {...this.preQueueStatus, [item.clip.name]: 'running'};
+
+            try {
+                const res = await fetch('/api/upscale/start', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        run:    this.selectedRun.filename,
+                        name:   item.clip.name,
+                        type:   item.clip.type,
+                        width:  parseInt(this.preTargetW)  || 1024,
+                        height: parseInt(this.preTargetH) || 1024,
+                    }),
+                });
+                const data = await res.json();
+                if (!data.ok || !res.ok) {
+                    item.status = 'error';
+                    item.error = data.detail || data.error || 'Błąd startu';
+                    this.preQueueStatus = {...this.preQueueStatus, [item.clip.name]: 'error'};
+                    await this._preRunNext();
+                    return;
+                }
+                // Poll until done then advance queue
+                this._prePolling = setInterval(() => this._prePollCurrent(item), 3000);
+            } catch(e) {
+                item.status = 'error';
+                item.error = e.message;
+                this.preQueueStatus = {...this.preQueueStatus, [item.clip.name]: 'error'};
+                await this._preRunNext();
+            }
+        },
+
+        async _prePollCurrent(item) {
+            try {
+                const res  = await fetch('/api/upscale/status');
+                const data = await res.json();
+                item.elapsed_s = data.elapsed_s;
+
+                if (data.status === 'done') {
+                    clearInterval(this._prePolling);
+                    item.status    = 'done';
+                    item.elapsed_s = data.elapsed_s;
+                    this.preQueueStatus = {...this.preQueueStatus, [item.clip.name]: 'done'};
+                    // Refresh clip metadata so new resolution shows immediately
+                    const refreshed = await fetch(`/api/runs/${encodeURIComponent(this.selectedRun.filename)}/postclips`);
+                    if (refreshed.ok) {
+                        const all = await refreshed.json();
+                        this.preClips = all.filter(c =>
+                            !c.name.includes('_ver') && !c.name.includes('_beforeupscale')
+                        );
+                    }
+                    await this._preRunNext();
+                } else if (data.status === 'error') {
+                    clearInterval(this._prePolling);
+                    item.status = 'error';
+                    item.error  = data.error || 'Nieznany błąd';
+                    this.preQueueStatus = {...this.preQueueStatus, [item.clip.name]: 'error'};
+                    await this._preRunNext();
+                } else if (data.status === 'idle') {
+                    clearInterval(this._prePolling);
+                    item.status = 'error';
+                    item.error  = 'Job zakończony bez statusu';
+                    this.preQueueStatus = {...this.preQueueStatus, [item.clip.name]: 'error'};
+                    await this._preRunNext();
+                }
+            } catch(e) { /* ignore transient network error */ }
         },
 
         // ─ Flow editor ────────────────────────────────────
