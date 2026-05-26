@@ -50,6 +50,26 @@
         </div>
     </div>
     <div class="flex items-center gap-3">
+        <!-- Environment status chips (read-only) -->
+        <div class="flex items-center gap-1.5">
+            <span :title="envStatus.linux === 'ready' ? 'Linux ComfyUI aktywny (port 8189)' : 'Linux ComfyUI nieaktywny'"
+                  :class="envStatus.linux === 'ready'
+                          ? 'bg-green-900 text-green-300 border border-green-700'
+                          : 'bg-gray-800 text-gray-500 border border-gray-700'"
+                  class="flex items-center gap-1 text-xs px-2 py-1 rounded-lg select-none">
+                <span>🐧</span>
+                <span x-text="envStatus.linux === 'ready' ? 'Linux ●' : 'Linux ○'"></span>
+            </span>
+            <span :title="envStatus.windows === 'ready' ? 'Windows ComfyUI aktywny (port 8100)' : 'Windows ComfyUI nieaktywny'"
+                  :class="envStatus.windows === 'ready'
+                          ? 'bg-blue-900 text-blue-300 border border-blue-700'
+                          : 'bg-gray-800 text-gray-500 border border-gray-700'"
+                  class="flex items-center gap-1 text-xs px-2 py-1 rounded-lg select-none">
+                <span>🪟</span>
+                <span x-text="envStatus.windows === 'ready' ? 'Windows ●' : 'Windows ○'"></span>
+            </span>
+        </div>
+
         <span :title="wsConnected ? 'WebSocket OK' : 'WebSocket rozłączony'"
               :class="wsConnected ? 'bg-green-500' : 'bg-red-600'"
               class="w-2 h-2 rounded-full flex-shrink-0 transition-colors"></span>
@@ -1836,6 +1856,7 @@ function app() {
                 if (cfg.comfyui_url) this.comfyuiUrl = cfg.comfyui_url;
             } catch(e) {}
             this.connectWS();
+            this._pollEnvStatus();   // start env health polling
             await this.loadRuns();
         },
 
@@ -1904,6 +1925,16 @@ function app() {
                     if (!isDebug) this.logLine(msg.stream, t);
                 }
             };
+        },
+
+        // ─ Environment status polling (read-only) ─────────
+
+        async _pollEnvStatus() {
+            try {
+                const data = await fetch('/api/env/status').then(r => r.json());
+                this.envStatus = data;
+            } catch(e) {}
+            this._envPollTimer = setTimeout(() => this._pollEnvStatus(), 12000);
         },
 
         // ─ Generation ─────────────────────────────────────
@@ -2410,6 +2441,10 @@ function app() {
                 }
             } catch(e) { this.logLine('sys', `❌ ${e.message}`); }
         },
+
+        // ─ Environment status (read-only, polled) ─────────
+        envStatus: { linux: 'stopped', windows: 'stopped' },
+        _envPollTimer: null,
 
         // ─ View mode ──────────────────────────────────────
         postMode: false,
