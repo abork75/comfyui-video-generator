@@ -45,6 +45,19 @@ class Settings(BaseSettings):
         r"D:\streamlit_project\comfyui_integration\talk_workflow_api.json"
     )
 
+    # CapCut export — desktop projects folder
+    # Default: %LOCALAPPDATA%\CapCut\User Data\Projects\com.lveditor.draft
+    capcut_projects_dir: str = (
+        r"D:\CapCut\User Data\Projects\com.lveditor.draft"
+    )
+    # CapCut TEMPLATE project folder — cloned for each export.
+    # Kept inside the app repo so it's version-controlled and independent of
+    # the CapCut installation path.  Add more sibling folders (TEMPLATE_9x16,
+    # TEMPLATE_SHORTS, …) here in future.
+    capcut_template_dir: str = (
+        r"D:\streamlit_project\comfyui_integration\CapCut export\TEMPLATE"
+    )
+
     model_config = {"env_file": ".env", "env_file_encoding": "utf-8"}
 
 

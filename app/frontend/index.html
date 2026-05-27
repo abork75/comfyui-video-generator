@@ -88,7 +88,12 @@
     <!-- PROJEKTY label — same width as sidebar -->
     <div class="w-52 flex items-center justify-between px-4 py-3 border-r border-gray-700 flex-shrink-0">
         <span class="uppercase font-semibold tracking-wider">Projekty</span>
-        <button @click="loadRuns()" class="text-gray-500 hover:text-gray-300 transition text-sm" title="Odśwież">↻</button>
+        <div class="flex items-center gap-2">
+            <button @click="newRunOpen=!newRunOpen; newRunName=''; newRunError=null"
+                    :class="newRunOpen ? 'text-green-400' : 'text-gray-500 hover:text-green-400'"
+                    class="transition text-base font-bold leading-none" title="Nowy projekt z bieżących ustawień">+</button>
+            <button @click="loadRuns()" class="text-gray-500 hover:text-gray-300 transition text-sm" title="Odśwież">↻</button>
+        </div>
     </div>
 
     <!-- Project info content (flex-1) -->
@@ -193,6 +198,32 @@
 
     <!-- ─── SIDEBAR ───────────────────────────────────────────── -->
     <aside class="w-52 bg-gray-800 border-r border-gray-700 flex flex-col flex-shrink-0">
+
+        <!-- ── Nowy projekt — inline form ── -->
+        <div x-show="newRunOpen" class="border-b border-gray-700 px-3 py-2 bg-gray-900 flex flex-col gap-1.5">
+            <div class="text-xs text-gray-400">
+                Nowy projekt
+                <span class="text-gray-600"> (ustawienia z <span class="text-gray-500 font-mono">TEMPLATE.yaml</span>)</span>
+            </div>
+            <div class="flex items-center gap-1">
+                <span class="text-xs text-gray-600 font-mono flex-shrink-0">RUN_</span>
+                <input x-model="newRunName" type="text" placeholder="012_nowy_projekt"
+                       class="flex-1 min-w-0 text-xs bg-gray-800 text-gray-200 border border-gray-600 rounded px-2 py-1 focus:outline-none focus:border-green-500"
+                       @keydown.enter="createNewRun()"
+                       @keydown.escape="newRunOpen=false"
+                       x-init="$watch('newRunOpen', v => v && $nextTick(() => $el.focus()))">
+                <button @click="createNewRun()"
+                        :disabled="newRunCreating || !newRunName.trim()"
+                        :class="newRunCreating || !newRunName.trim() ? 'opacity-40 cursor-not-allowed' : 'hover:bg-green-600 cursor-pointer'"
+                        class="px-2 py-1 rounded bg-green-700 text-white text-xs transition flex-shrink-0">
+                    <span x-text="newRunCreating ? '…' : '✓'"></span>
+                </button>
+                <button @click="newRunOpen=false"
+                        class="px-1.5 py-1 rounded bg-gray-700 hover:bg-gray-600 text-gray-400 text-xs cursor-pointer transition flex-shrink-0">✕</button>
+            </div>
+            <div x-show="newRunError" class="text-xs text-red-400" x-text="newRunError"></div>
+        </div>
+
         <div x-show="runsLoading" class="flex items-center justify-center py-8 text-gray-600 text-sm gap-2">
             <span class="animate-spin inline-block">⟳</span> Ładowanie...
         </div>
@@ -1058,6 +1089,21 @@
                         <span x-show="flowResult && !flowCreating"
                               :class="flowResult && flowResult.startsWith('❌') ? 'text-red-400' : 'text-green-400'"
                               x-text="flowResult"></span>
+
+                        <!-- CapCut export -->
+                        <div class="ml-auto flex items-center gap-2">
+                            <button @click="exportCapcut()"
+                                    :disabled="capcutExporting || postLoading || postClips.length === 0"
+                                    :class="capcutExporting ? 'bg-pink-900 text-pink-400 cursor-not-allowed' : (postClips.length === 0 ? 'bg-gray-800 text-gray-600 cursor-not-allowed' : 'bg-pink-900/60 hover:bg-pink-900 text-pink-300 cursor-pointer')"
+                                    class="flex items-center gap-1.5 px-3 py-1.5 rounded transition"
+                                    title="Eksportuj projekt do CapCut (otwórz CapCut żeby zobaczyć nowy projekt)">
+                                <span :class="capcutExporting ? 'animate-spin inline-block' : ''">🎬</span>
+                                <span x-text="capcutExporting ? 'Eksportuję...' : 'Eksport CapCut'"></span>
+                            </button>
+                            <span x-show="capcutResult"
+                                  :class="capcutResult && capcutResult.startsWith('❌') ? 'text-red-400' : 'text-green-400'"
+                                  x-text="capcutResult"></span>
+                        </div>
                     </div>
 
                     <!-- ── FILMSTRIP (poziomy scroll) ── -->
@@ -2071,6 +2117,8 @@ function app() {
         comfyuiUrl: 'http://127.0.0.1:8189',
         runs: [], runsLoading: true, runsError: null,
         selectedRun: null,
+        // ─ Nowy projekt ───────────────────────────────────────
+        newRunOpen: false, newRunName: '', newRunCreating: false, newRunError: null,
         flowData: null, flowLoading: false, flowError: null,
         statusData: null,
         ws: null, wsConnected: false,
@@ -2305,6 +2353,37 @@ function app() {
             } catch(e) { this.runsError = e.message; this.logLine('sys', `❌ ${e.message}`); }
             finally { this.runsLoading = false; }
         },
+        async createNewRun() {
+            const name = this.newRunName.trim();
+            if (!name || this.newRunCreating) return;
+            this.newRunCreating = true;
+            this.newRunError = null;
+            try {
+                const body = { new_name: name };
+                const res = await fetch('/api/runs/clone', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body),
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    this.newRunOpen = false;
+                    this.newRunName = '';
+                    await this.loadRuns();
+                    // Auto-select the new run
+                    const newRun = this.runs.find(r => r.filename === data.filename);
+                    if (newRun) await this.selectRun(newRun);
+                    this.logLine('sys', `✅ Nowy projekt: ${data.filename}`);
+                } else {
+                    this.newRunError = data.detail || data.error || 'Błąd';
+                }
+            } catch(e) {
+                this.newRunError = e.message;
+            } finally {
+                this.newRunCreating = false;
+            }
+        },
+
         async selectRun(run) {
             this.selectedRun = run; this.flowData = null; this.flowError = null; this.statusData = null;
             this.editMode = false;  // reset on run switch
@@ -2743,6 +2822,10 @@ function app() {
         flowCreating: false,
         flowResult:   null,
 
+        // ─ CapCut export ──────────────────────────────────────
+        capcutExporting: false,
+        capcutResult:    null,
+
         // ─ Talk generation ────────────────────────────────────
         talkStatus: { status: 'idle', talk_name: null, segment: null, total_segs: null, error: null, elapsed_s: null },
         _talkPollTimer: null,
@@ -2822,6 +2905,36 @@ function app() {
                 this.logLine('sys', `❌ ${e.message}`);
             } finally {
                 this.flowCreating = false;
+            }
+        },
+
+        // ─ CapCut export ─────────────────────────────────────────────────────
+
+        async exportCapcut() {
+            if (!this.selectedRun || this.capcutExporting) return;
+            this.capcutExporting = true;
+            this.capcutResult = null;
+            this.logLine('sys', '🎬 Eksportuję projekt do CapCut...');
+            try {
+                const res = await fetch(
+                    `/api/capcut/${encodeURIComponent(this.selectedRun.filename)}/export`,
+                    { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' }
+                );
+                const data = await res.json();
+                if (res.ok) {
+                    const msg = `✅ CapCut: ${data.clip_count} klipów, ${data.duration_s}s → ${data.project_name}`;
+                    this.capcutResult = msg;
+                    this.logLine('sys', msg);
+                    this.logLine('sys', `   📂 ${data.project_dir}`);
+                } else {
+                    this.capcutResult = `❌ ${data.detail || data.error}`;
+                    this.logLine('sys', `❌ CapCut: ${data.detail || data.error}`);
+                }
+            } catch(e) {
+                this.capcutResult = `❌ ${e.message}`;
+                this.logLine('sys', `❌ CapCut: ${e.message}`);
+            } finally {
+                this.capcutExporting = false;
             }
         },
 

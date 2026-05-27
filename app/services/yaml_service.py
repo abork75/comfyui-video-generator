@@ -907,6 +907,78 @@ def save_yaml_globals(yaml_path: Path, globals_data: dict) -> None:
     yaml_path.write_text(header + _yaml_dump(doc), encoding="utf-8")
 
 
+def create_run_from_globals(
+    new_name: str,
+    out_dir: Path,
+    source_yaml: Path | None = None,
+) -> Path:
+    """
+    Create a new RUN_*.yaml by cloning the global settings from *source_yaml*
+    (project_folder, defaults, linux_backend) and leaving flow empty.
+
+    If *source_yaml* is None or unreadable, sensible empty defaults are used.
+
+    Parameters
+    ----------
+    new_name:
+        Project name.  If it doesn't start with ``RUN_`` that prefix is added
+        automatically.  ``.yaml`` extension is appended if missing.
+    out_dir:
+        Directory where the new file is created (normally RUNS_FOLDER).
+    source_yaml:
+        Optional path to the YAML file to copy globals from.
+
+    Returns
+    -------
+    Path
+        Path to the newly created .yaml file.
+
+    Raises
+    ------
+    FileExistsError
+        If a file with the computed name already exists.
+    """
+    # Normalise filename
+    stem = new_name.strip()
+    if not stem.upper().startswith("RUN_"):
+        stem = f"RUN_{stem}"
+    if not stem.endswith(".yaml"):
+        stem = f"{stem}.yaml"
+
+    out_path = out_dir / stem
+    if out_path.exists():
+        raise FileExistsError(f"Plik już istnieje: {stem}")
+
+    # Read globals from source
+    globals_data: dict = {}
+    if source_yaml is not None and source_yaml.exists():
+        try:
+            raw = get_yaml_globals(source_yaml)
+            if isinstance(raw, dict):
+                globals_data = raw
+        except Exception:
+            pass
+
+    doc: dict = {}
+    pf = globals_data.get("project_folder", "")
+    if pf:
+        doc["project_folder"] = pf
+    if globals_data.get("defaults"):
+        doc["defaults"] = dict(globals_data["defaults"])
+    if globals_data.get("linux_backend"):
+        doc["linux_backend"] = dict(globals_data["linux_backend"])
+    doc["use_test_flow"] = False
+    doc["flow"] = []
+
+    header = (
+        f"# {stem}\n"
+        f"# Created: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n"
+        f"# Edit this file freely — regenerate .py with generate_py_from_yaml()\n#\n"
+    )
+    out_path.write_text(header + _yaml_dump(doc), encoding="utf-8")
+    return out_path
+
+
 def save_yaml_flow(yaml_path: Path, new_flow: list, flow_key: str = "flow") -> None:
     """
     Overwrite the 'flow' (or 'flow_test') list in a YAML RUN file.

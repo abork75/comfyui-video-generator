@@ -1,0 +1,28 @@
+# TEMPLATE.yaml
+# Wzorzec dla nowych projektów — edytuj dowolnie.
+# Każdy nowy projekt stworzony przez "+" kopiuje stąd ustawienia i zeruje flow.
+#
+project_folder: ""
+
+defaults:
+  resolution:
+  - 1024
+  - 1024
+  fps: 16
+  steps: 6
+  cfg: 2.0
+  duration: 2
+  blocks_to_swap: 35
+
+linux_backend:
+  config_path: D:\streamlit_project\comfyui_integration\workflow_configs\wan_i2v.yaml
+  workflows_path: D:\streamlit_project\comfyui_integration\workflows
+  comfyui_output_folder: D:\ComfyUI\output\Wan22_I2V
+  api_url: http://127.0.0.1:8189
+
+use_test_flow: false
+
+# ──────────────────────────────────────────────────────────
+# FLOW — lista generacji
+# ──────────────────────────────────────────────────────────
+flow: []

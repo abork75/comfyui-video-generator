@@ -12,9 +12,50 @@ from app.services.run_file_service import (
     invalidate_run_info_cache,
 )
 from app.services.media_service import get_transition_status, get_post_clips, invalidate_run_cache, create_numbered_flow
-from app.services.yaml_service import save_yaml_flow, get_yaml_globals, save_yaml_globals
+from app.services.yaml_service import save_yaml_flow, get_yaml_globals, save_yaml_globals, create_run_from_globals
+from pydantic import BaseModel
 
 router = APIRouter(prefix="/api/runs", tags=["runs"])
+
+
+class CloneRunRequest(BaseModel):
+    new_name: str
+    source_filename: str | None = None   # YAML run to copy globals from (None = blank defaults)
+
+
+@router.post("/clone")
+async def clone_run(body: CloneRunRequest):
+    """
+    Create a new RUN_*.yaml by copying globals (project_folder, defaults,
+    linux_backend) from RUNS/TEMPLATE.yaml and leaving flow empty.
+    Also generates a companion .py file.
+    Returns: {"ok": true, "filename": "RUN_XXX.yaml"}
+    """
+    # Always use TEMPLATE.yaml as the source of defaults
+    template_yaml = RUNS_FOLDER / "TEMPLATE.yaml"
+    source_yaml = template_yaml if template_yaml.exists() else None
+
+    try:
+        out_path = create_run_from_globals(
+            new_name=body.new_name,
+            out_dir=RUNS_FOLDER,
+            source_yaml=source_yaml,
+        )
+    except FileExistsError as exc:
+        raise HTTPException(status_code=409, detail=str(exc))
+    except Exception as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+
+    # Generate companion .py
+    py_error = None
+    try:
+        from app.services.yaml_service import generate_py_from_yaml
+        generate_py_from_yaml(out_path)
+    except Exception as exc:
+        py_error = str(exc)
+
+    invalidate_run_info_cache()
+    return {"ok": True, "filename": out_path.name, "py_error": py_error}
 
 
 @router.get("")
