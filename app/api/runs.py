@@ -11,7 +11,7 @@ from app.services.run_file_service import (
     scan_runs_folder, get_run_details, get_run_content, get_run_flow,
     invalidate_run_info_cache,
 )
-from app.services.media_service import get_transition_status, get_post_clips, invalidate_run_cache
+from app.services.media_service import get_transition_status, get_post_clips, invalidate_run_cache, create_numbered_flow
 from app.services.yaml_service import save_yaml_flow, get_yaml_globals, save_yaml_globals
 
 router = APIRouter(prefix="/api/runs", tags=["runs"])
@@ -159,6 +159,7 @@ async def get_project_files(filename: str):
     _IMG_VIDEO = {
         ".png", ".jpg", ".jpeg", ".webp", ".gif", ".bmp", ".tiff", ".tif",
         ".mp4", ".avi", ".mov", ".mkv", ".webm",
+        ".mp3", ".wav", ".ogg", ".flac", ".aac", ".m4a",
     }
     files = sorted(
         f.name for f in project_path.iterdir()
@@ -263,3 +264,18 @@ async def put_flow(filename: str, request: Request):
 
     invalidate_run_info_cache(filename)
     return {"ok": True, "flow_key": flow_key, "py_error": py_error}
+
+
+@router.post("/{filename}/create-flow")
+async def create_flow_folder(filename: str):
+    """
+    Create a numbered FLOW folder in final_outputs/.
+    Copies all clips in flow order: 0001_clip.mp4, 0002_transition.mp4, ...
+    Returns: {ok, folder, path, copied, missing, error}
+    """
+    import asyncio
+    loop = asyncio.get_running_loop()
+    result = await loop.run_in_executor(None, create_numbered_flow, filename)
+    if not result["ok"]:
+        raise HTTPException(status_code=400, detail=result["error"])
+    return result

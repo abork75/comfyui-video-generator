@@ -31,6 +31,7 @@ ANSI_ESCAPE = re.compile(r"\x1b\[[0-9;]*[mK]")
 PROMPT_PATTERNS = [
     "Proceed with generation? [Y/n]:",
     "Continue with postprocessing? (yes/no):",
+    "talk clip(s)? [Y/n]:",
 ]
 
 

@@ -22,6 +22,24 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
+
+def _audio_duration_sec(path: Path) -> float | None:
+    """Return audio duration in seconds via ffprobe, or None on failure."""
+    try:
+        result = subprocess.run(
+            [
+                "ffprobe", "-v", "error",
+                "-show_entries", "format=duration",
+                "-of", "default=noprint_wrappers=1:nokey=1",
+                str(path),
+            ],
+            capture_output=True, text=True, timeout=8,
+        )
+        val = result.stdout.strip()
+        return round(float(val), 1) if val else None
+    except Exception:
+        return None
+
 from app.services.run_file_service import get_run_details, get_run_flow
 
 
@@ -68,6 +86,33 @@ def transition_path(project_folder: Path, from_file: str, to_file: str) -> Path:
 
 def chain_path(project_folder: Path, chain_filename: str) -> Path:
     return project_folder / "transitions" / "chains" / chain_filename
+
+
+def talk_path(project_folder: Path, talk_item: dict) -> Path:
+    """
+    Deterministic output path for a talk clip.
+
+    Priority:
+      1. item["prefix"]  → transitions/talk_{prefix}.mp4   (user-defined; avoids collisions
+                            when the same mp3 is reused in multiple talk items)
+      2. first audio stem → transitions/talk_{stem}.mp4    (legacy / auto fallback)
+    """
+    # 1. Explicit prefix overrides everything
+    explicit = (talk_item.get("prefix") or "").strip()
+    if explicit:
+        return project_folder / "transitions" / f"talk_{explicit}.mp4"
+
+    # 2. Derive from first audio filename
+    audio = talk_item.get("audio", "")
+    if isinstance(audio, list):
+        first = audio[0] if audio else "unknown"
+    else:
+        first = audio
+    # audio entry may be a dict {file, pos, neg} or a plain string
+    if isinstance(first, dict):
+        first = first.get("file", "unknown")
+    stem = Path(str(first)).stem
+    return project_folder / "transitions" / f"talk_{stem}.mp4"
 
 
 # ── Status check ─────────────────────────────────────────────────────
@@ -165,6 +210,39 @@ def get_transition_status(run_filename: str) -> dict | None:
             })
             continue
 
+        # TALK
+        if item.get("type") == "talk":
+            p = talk_path(pf, item)
+            exists = p.exists()
+            has_arch = _has_archived(p.parent, p.stem)
+            audio = item.get("audio", "")
+            audio_list = audio if isinstance(audio, list) else [audio]
+            # Normalize entries to plain filenames for display
+            audio_names = [
+                (a.get("file", "") if isinstance(a, dict) else a)
+                for a in audio_list
+            ]
+            # Read durations for each audio file (ffprobe, best-effort)
+            audio_durations = [
+                _audio_duration_sec(pf / fname) if fname else None
+                for fname in audio_names
+            ]
+            results.append({
+                "index":           i_flow,
+                "type":            "talk",
+                "status":          "green" if exists else "red",
+                "name":            p.name,
+                "audio":           audio_names,
+                "audio_durations": audio_durations,
+                "width":           item.get("width"),
+                "height":          item.get("height"),
+                "has_versions":    exists or has_arch,
+                "has_archived":    has_arch,
+                "size_mb":         round(p.stat().st_size / 1_048_576, 1) if exists else None,
+                "path":            str(p) if exists else None,
+            })
+            continue
+
         # FILE
         sec, pos = item_pos.get(id(item), (None, None))
 
@@ -182,8 +260,8 @@ def get_transition_status(run_filename: str) -> dict | None:
 
         next_item = sec[pos + 1]
 
-        if next_item.get("chain"):
-            # File immediately before a chain → gray (chain owns all outputs)
+        if next_item.get("chain") or next_item.get("type") == "talk":
+            # File immediately before a chain/talk → gray (chain/talk owns the output)
             fname = item.get("file") or ""
             results.append({"index": i_flow, "type": "file", "status": "gray",
                              "name": fname, "size_mb": None,
@@ -219,6 +297,11 @@ def get_transition_status(run_filename: str) -> dict | None:
                     green += 1
                 else:
                     red += 1
+        elif r["type"] == "talk":
+            if r["status"] == "green":
+                green += 1
+            else:
+                red += 1
 
     return {
         "project_folder": str(pf),
@@ -320,6 +403,27 @@ def get_post_clips(run_filename: str) -> list | None:
         if item.get("break"):
             continue
 
+        # ── TALK ───────────────────────────────────────────────────
+        if item.get("type") == "talk":
+            p = talk_path(pf, item)
+            exists = p.exists()
+            has_arch = _has_archived(p.parent, p.stem)
+            meta = _get_clip_meta(p) if exists else {"duration_s": None, "width": None, "height": None}
+            clips.append({
+                "seq":          seq,
+                "name":         p.name,
+                "type":         "generated",
+                "subtype":      "talk",
+                "status":       "ok" if exists else "missing",
+                "has_versions": exists or has_arch,
+                "has_archived": has_arch,
+                "size_mb":      round(p.stat().st_size / 1_048_576, 1) if exists else None,
+                "mtime":        int(p.stat().st_mtime) if exists else None,
+                **meta,
+            })
+            seq += 1
+            continue
+
         # ── CHAIN ──────────────────────────────────────────────────
         if item.get("chain"):
             prefix = item.get("chain_prefix") or "chain"
@@ -371,7 +475,7 @@ def get_post_clips(run_filename: str) -> list | None:
         if sec is None or pos == len(sec) - 1:
             continue
         next_item = sec[pos + 1]
-        if next_item.get("chain"):
+        if next_item.get("chain") or next_item.get("type") == "talk":
             continue
 
         p = transition_path(pf, file, next_item.get("file", ""))
@@ -424,6 +528,92 @@ def _extract_video_frame(video_path: Path, output_path: Path, time: float = 0.0)
         return result.returncode == 0 and output_path.exists()
     except Exception:
         return False
+
+
+def create_numbered_flow(run_filename: str) -> dict:
+    """
+    Create a FLOW_* folder with sequentially numbered copies of all clips.
+
+    Mirrors the logic from postprocessing/postprocess_engine.py::run_numbered_flow()
+    but returns structured data instead of printing to stdout.
+
+    Output: {project_folder}/final_outputs/FLOW_{project_name}_{timestamp}/
+    Files:  0001_{original_name}.mp4, 0002_..., etc.
+
+    Returns:
+        {
+            "ok":      bool,
+            "folder":  str,   # folder name (not full path)
+            "path":    str,   # full absolute path
+            "copied":  int,
+            "missing": int,
+            "error":   str | None,
+        }
+    """
+    try:
+        # ── resolve project ───────────────────────────────────────────
+        pf = _project_folder(run_filename)
+        if pf is None:
+            return {"ok": False, "error": "Nie można znaleźć folderu projektu"}
+
+        flow_data = get_run_flow(run_filename)
+        if not flow_data:
+            return {"ok": False, "error": "Nie można odczytać FLOW z pliku projektu"}
+
+        # ── import flow_parser from project root ──────────────────────
+        project_root = Path(__file__).parent.parent.parent  # comfyui_integration/
+        if str(project_root) not in sys.path:
+            sys.path.insert(0, str(project_root))
+        from flow_parser import parse_flow  # type: ignore
+
+        # ── prepare output folder ─────────────────────────────────────
+        ts            = datetime.now().strftime("%Y%m%d_%H%M%S")
+        project_name  = pf.name
+        output_base   = pf / "final_outputs"
+        output_base.mkdir(exist_ok=True)
+        folder_name   = f"FLOW_{project_name}_{ts}"
+        output_folder = output_base / folder_name
+        output_folder.mkdir(exist_ok=True)
+
+        # ── build numbered list via flow_parser ───────────────────────
+        parser = parse_flow(flow_data)
+        items  = parser.get_numbered_flow_list(pf, skip_images=True)
+
+        transitions_folder = pf / "transitions"
+        chains_folder      = transitions_folder / "chains"
+
+        counter = 1
+        copied  = 0
+        missing = 0
+
+        for item in items:
+            if item["type"] == "skip":
+                continue
+
+            item_path: Path = item["path"]
+            item_name: str  = item["name"]
+            exists: bool    = item.get("exists", False)
+
+            if not exists:
+                missing += 1
+                continue
+
+            dest_name = f"{counter:04d}_{item_name}"
+            shutil.copy2(str(item_path), str(output_folder / dest_name))
+            copied  += 1
+            counter += 1
+
+        return {
+            "ok":      True,
+            "folder":  folder_name,
+            "path":    str(output_folder),
+            "copied":  copied,
+            "missing": missing,
+            "error":   None,
+        }
+
+    except Exception as exc:
+        return {"ok": False, "error": str(exc)}
 
 
 def resolve_frame(run_filename: str, item_file: str, kind: str) -> Path | None:

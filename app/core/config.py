@@ -35,6 +35,16 @@ class Settings(BaseSettings):
         r"C:\Users\abork\AppData\Local\Programs\ComfyUI\ComfyUI.exe"
     )
 
+    # Talk (InfiniteTalk) — Linux ComfyUI, port 8189
+    # Linux ComfyUI (WSL2) mounts the Windows D: drive at /mnt/d, so input/output
+    # are accessible from Windows via the regular D:\ paths (same as upscaler).
+    comfyui_linux_input_dir:  str = r"D:\ComfyUI\input"
+    comfyui_linux_output_dir: str = r"D:\ComfyUI\output"
+    # API-format workflow JSON exported from ComfyUI (Dev mode → Save API Format)
+    talk_workflow_json: str = (
+        r"D:\streamlit_project\comfyui_integration\talk_workflow_api.json"
+    )
+
     model_config = {"env_file": ".env", "env_file_encoding": "utf-8"}
 
 

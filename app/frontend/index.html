@@ -668,6 +668,124 @@
                                             </div>
                                         </template>
 
+                                        <!-- TALK tile -->
+                                        <template x-if="item.type === 'talk' && !item.break">
+                                            <div class="bg-gray-800 border border-gray-700 rounded-lg overflow-hidden"
+                                                 :class="_si(idx)?.status === 'green' ? 'sl-green' : 'sl-red'">
+                                                <!-- ── Header bar (matches chain style) ── -->
+                                                <div class="px-4 py-2.5 border-b border-gray-700 flex flex-wrap items-center gap-2"
+                                                     style="background-color:#1a2332"
+                                                     :class="editMode ? 'cursor-pointer' : ''"
+                                                     @click="if(editMode && !$event.target.closest('button,img,video,a,select,input')) editOpenItem(idx)">
+                                                    <span class="text-sm">🎙</span>
+                                                    <!-- Name: explicit prefix → else stem from first audio -->
+                                                    <span class="font-mono text-sm text-teal-300"
+                                                          x-text="item.prefix || _talkFirstStem(item)"></span>
+                                                    <!-- Resolution badge -->
+                                                    <template x-if="item.width && item.height">
+                                                        <span class="px-1.5 py-0.5 bg-gray-700 rounded text-xs text-gray-300"
+                                                              x-text="item.width + '×' + item.height"></span>
+                                                    </template>
+                                                    <!-- Right side: status + actions + steps count + edit controls -->
+                                                    <div class="ml-auto flex items-center gap-1.5">
+                                                        <!-- Green: size + play + archive -->
+                                                        <template x-if="_si(idx)?.status === 'green'">
+                                                            <div class="flex items-center gap-1">
+                                                                <span class="text-xs text-green-500"
+                                                                      x-text="_si(idx)?.size_mb ? _si(idx).size_mb + ' MB' : ''"></span>
+                                                                <button @click.stop="openVideoModal(_si(idx).name)"
+                                                                        class="text-green-500 hover:text-green-400 text-sm px-1"
+                                                                        title="Odtwórz">▶</button>
+                                                                <button @click.stop="archiveFile(_si(idx).name)"
+                                                                        class="text-gray-600 hover:text-red-400 text-sm px-1"
+                                                                        title="Archiwizuj talk clip">🗑</button>
+                                                            </div>
+                                                        </template>
+                                                        <!-- Red: missing indicator -->
+                                                        <template x-if="_si(idx)?.status !== 'green'">
+                                                            <span class="text-xs text-red-700">○</span>
+                                                        </template>
+                                                        <!-- Versions (always when archived exist) -->
+                                                        <template x-if="_si(idx)?.has_versions">
+                                                            <button @click.stop="openVersionsModal(_si(idx).name)"
+                                                                    class="text-gray-500 hover:text-yellow-400 text-sm px-1 transition"
+                                                                    title="Pokaż wersje archiwalne">📂</button>
+                                                        </template>
+                                                        <!-- Steps count -->
+                                                        <span class="text-xs text-gray-600"
+                                                              x-text="(Array.isArray(item.audio) ? item.audio.length : 1) + ' step' + ((Array.isArray(item.audio) ? item.audio.length : 1) !== 1 ? 's' : '')"></span>
+                                                        <!-- Generate / re-generate -->
+                                                        <button @click.stop="startTalkGen(idx)"
+                                                                :disabled="talkStatus.status === 'running' || talkStatus.status === 'queued' || envStatus.linux !== 'ready'"
+                                                                :class="(talkStatus.status === 'running' || talkStatus.status === 'queued' || envStatus.linux !== 'ready') ? 'opacity-30 cursor-not-allowed text-gray-600' : (_si(idx)?.status === 'green' ? 'text-gray-500 hover:text-blue-400' : 'text-teal-500 hover:text-teal-300')"
+                                                                class="text-sm px-1 py-0.5 rounded transition"
+                                                                :title="envStatus.linux !== 'ready' ? '🐧 Linux nieaktywny' : (_si(idx)?.status === 'green' ? 'Re-generuj talk' : 'Generuj Talk')">
+                                                            <span x-show="talkStatus.status === 'running' && talkStatus.talk_name === _si(idx)?.name" class="animate-spin inline-block">⟳</span>
+                                                            <span x-show="!(talkStatus.status === 'running' && talkStatus.talk_name === _si(idx)?.name)">🎙</span>
+                                                        </button>
+                                                        <!-- Edit mode controls -->
+                                                        <template x-if="editMode">
+                                                            <div class="flex items-center gap-1 border-l border-gray-700 pl-2 ml-1">
+                                                                <button @click.stop="editOpenItem(idx)"
+                                                                        class="text-teal-500 hover:text-teal-300 text-xs px-1.5 py-0.5 rounded hover:bg-teal-900/30 transition"
+                                                                        title="Edytuj talk">✎</button>
+                                                                <button @click.stop="editMoveItem(idx, -1)"
+                                                                        :disabled="idx === 0"
+                                                                        :class="idx === 0 ? 'opacity-30 cursor-not-allowed' : 'hover:text-white'"
+                                                                        class="text-gray-600 text-xs px-1 py-0.5 rounded hover:bg-gray-700">↑</button>
+                                                                <button @click.stop="editMoveItem(idx, 1)"
+                                                                        :disabled="idx === flowData.flow.length - 1"
+                                                                        :class="idx === flowData.flow.length - 1 ? 'opacity-30 cursor-not-allowed' : 'hover:text-white'"
+                                                                        class="text-gray-600 text-xs px-1 py-0.5 rounded hover:bg-gray-700">↓</button>
+                                                                <button @click.stop="editDeleteItem(idx)"
+                                                                        class="text-gray-600 hover:text-red-400 text-xs px-1 py-0.5 rounded hover:bg-gray-800 transition"
+                                                                        title="Usuń">✕</button>
+                                                            </div>
+                                                        </template>
+                                                    </div>
+                                                </div>
+                                                <!-- ── Steps body (divide-y like chain) ── -->
+                                                <div class="divide-y divide-gray-700">
+                                                    <template x-for="(aud, ai) in (Array.isArray(item.audio) ? item.audio : [item.audio])" :key="ai">
+                                                        <div class="px-4 py-2.5 flex items-start gap-3">
+                                                            <div class="flex-1 min-w-0">
+                                                                <div class="flex items-start gap-2">
+                                                                    <span class="text-xs text-gray-600 mt-0.5 flex-shrink-0" x-text="'Step ' + (ai+1)"></span>
+                                                                    <div class="flex flex-wrap gap-1.5">
+                                                                        <!-- mp3 badge -->
+                                                                        <span class="px-1.5 py-0.5 bg-gray-700 border border-teal-900 rounded text-xs font-mono text-teal-400"
+                                                                              x-text="typeof aud === 'object' ? aud.file : aud"></span>
+                                                                        <!-- duration badge -->
+                                                                        <template x-if="_si(idx)?.audio_durations?.[ai] != null">
+                                                                            <span class="px-1 py-0.5 bg-gray-700 rounded text-xs text-gray-400"
+                                                                                  x-text="_si(idx).audio_durations[ai] + 's'"></span>
+                                                                        </template>
+                                                                    </div>
+                                                                </div>
+                                                                <!-- Pos prompt (green) -->
+                                                                <template x-if="typeof aud === 'object' && aud.pos && aud.pos !== 'NONE'">
+                                                                    <p class="text-xs text-green-400/80 mt-1 line-clamp-2 leading-relaxed" x-text="aud.pos"></p>
+                                                                </template>
+                                                                <template x-if="!(typeof aud === 'object' && aud.pos && aud.pos !== 'NONE')">
+                                                                    <p class="text-xs text-gray-600 mt-1">— brak prompta</p>
+                                                                </template>
+                                                                <!-- Neg prompt (collapsible, red) -->
+                                                                <template x-if="typeof aud === 'object' && aud.neg && aud.neg !== 'NONE' && aud.neg !== ''">
+                                                                    <div class="mt-1" x-data="{ open: false }">
+                                                                        <button @click.stop="open = !open"
+                                                                                class="text-xs text-gray-600 hover:text-gray-400 transition">
+                                                                            <span x-text="open ? '▲ neg' : '▼ neg'"></span>
+                                                                        </button>
+                                                                        <p x-show="open" class="text-xs text-red-400/60 mt-0.5 leading-relaxed line-clamp-3" x-text="aud.neg"></p>
+                                                                    </div>
+                                                                </template>
+                                                            </div>
+                                                        </div>
+                                                    </template>
+                                                </div>
+                                            </div>
+                                        </template>
+
                                         <!-- Add-zone after each item — INSIDE x-for root div -->
                                         <div :class="editMode ? 'add-zone active' : 'add-zone'"
                                              @click="openAddItemModal(idx)"
@@ -925,6 +1043,21 @@
                                 </div>
                             </template>
                         </div>
+                    </div>
+
+                    <!-- ── POST ACTION BAR ── -->
+                    <div class="flex items-center gap-3 px-4 py-2 border-b border-gray-700 bg-gray-900 flex-shrink-0 text-xs">
+                        <button @click="createFlow()"
+                                :disabled="flowCreating || postLoading"
+                                :class="flowCreating ? 'bg-indigo-900 text-indigo-400 cursor-not-allowed' : 'bg-indigo-800 hover:bg-indigo-700 text-indigo-200 cursor-pointer'"
+                                class="flex items-center gap-1.5 px-3 py-1.5 rounded transition"
+                                title="Skopiuj wszystkie klipy w kolejności FLOW do katalogu final_outputs/FLOW_*/ z numeracją 0001_, 0002_...">
+                            <span :class="flowCreating ? 'animate-spin inline-block' : ''">📁</span>
+                            <span x-text="flowCreating ? 'Tworzę FLOW...' : 'Utwórz FLOW'"></span>
+                        </button>
+                        <span x-show="flowResult && !flowCreating"
+                              :class="flowResult && flowResult.startsWith('❌') ? 'text-red-400' : 'text-green-400'"
+                              x-text="flowResult"></span>
                     </div>
 
                     <!-- ── FILMSTRIP (poziomy scroll) ── -->
@@ -1613,6 +1746,132 @@
 
         </div>
 
+            <!-- TALK fields -->
+            <template x-if="editModal.kind === 'talk'">
+                <div class="space-y-4">
+
+                    <!-- Output prefix (unique identifier → prevents file collision) -->
+                    <div>
+                        <label class="block text-xs text-yellow-500 mb-1">
+                            Prefix pliku wyjściowego
+                            <span class="text-gray-500 font-normal ml-1">→ transitions/talk_<em>prefix</em>.mp4</span>
+                        </label>
+                        <input type="text" x-model="editModal.data.prefix"
+                               class="w-full bg-gray-800 border border-yellow-900 rounded px-2 py-1.5 text-sm text-yellow-200 font-mono focus:outline-none focus:border-yellow-600"
+                               placeholder="np. scena1_jeki  (zostaw puste = nazwa z mp3)">
+                    </div>
+
+                    <!-- Audio steps (chain-style: each has file + pos + neg) -->
+                    <div>
+                        <label class="block text-xs text-teal-400 mb-1">
+                            Segmenty audio
+                            <span x-show="editModal.loadingFiles" class="ml-1 text-gray-600 animate-spin inline-block">⟳</span>
+                        </label>
+
+                        <div class="space-y-3 mb-2">
+                            <template x-for="(aud, ai) in _talkAudios()" :key="ai">
+                                <div class="border border-teal-900 rounded-lg p-2 bg-gray-900/60 space-y-1.5">
+                                    <!-- Step header + remove -->
+                                    <div class="flex items-center justify-between">
+                                        <span class="text-xs text-teal-600 font-semibold" x-text="'Step ' + (ai+1)"></span>
+                                        <button @click="editTalkRemoveAudio(ai)"
+                                                x-show="_talkAudios().length > 1"
+                                                class="text-gray-600 hover:text-red-400 text-xs px-1 rounded">✕</button>
+                                    </div>
+                                    <!-- Audio file -->
+                                    <div class="flex gap-2 items-center">
+                                        <span class="text-teal-600 text-xs flex-shrink-0">🎵</span>
+                                        <input type="text"
+                                               :value="aud.file"
+                                               @input="editTalkSetAudio(ai, 'file', $event.target.value)"
+                                               class="flex-1 bg-gray-800 border border-teal-800 rounded px-2 py-1 text-sm text-teal-200 font-mono focus:outline-none focus:border-teal-500"
+                                               :placeholder="'glos_' + (ai+1) + '.mp3'">
+                                    </div>
+                                    <!-- Positive prompt -->
+                                    <div>
+                                        <label class="block text-xs text-green-500 mb-0.5">Pos</label>
+                                        <textarea rows="2"
+                                                  :value="aud.pos || ''"
+                                                  @input="editTalkSetAudio(ai, 'pos', $event.target.value)"
+                                                  class="w-full bg-gray-800 border border-gray-700 rounded px-2 py-1 text-xs text-gray-200 font-mono focus:outline-none focus:border-green-600 resize-y"
+                                                  placeholder="a person is talking..."></textarea>
+                                    </div>
+                                    <!-- Negative prompt -->
+                                    <div>
+                                        <label class="block text-xs text-red-400 mb-0.5">Neg</label>
+                                        <textarea rows="2"
+                                                  :value="aud.neg || ''"
+                                                  @input="editTalkSetAudio(ai, 'neg', $event.target.value)"
+                                                  class="w-full bg-gray-800 border border-gray-700 rounded px-2 py-1 text-xs text-gray-200 font-mono focus:outline-none focus:border-red-600 resize-y"
+                                                  placeholder="blurry, low quality..."></textarea>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+
+                        <div class="flex gap-2 items-center">
+                            <button @click="editTalkAddAudio()"
+                                    class="text-xs text-teal-600 hover:text-teal-400 border border-teal-900 hover:border-teal-700 rounded px-2 py-1 transition">+ Dodaj step</button>
+                        </div>
+
+                        <!-- Audio picker (mp3/wav from project_folder) -->
+                        <template x-if="editModal.audioFiles && editModal.audioFiles.length > 0">
+                            <div class="mt-2 bg-gray-950 border border-gray-700 rounded max-h-32 overflow-y-auto">
+                                <template x-for="f in editModal.audioFiles" :key="f">
+                                    <button type="button" @click="editTalkPickAudio(f)"
+                                            class="w-full text-left px-3 py-1 text-xs font-mono text-teal-400 hover:bg-teal-950 hover:text-teal-200 transition truncate block">
+                                        🎵 <span x-text="f"></span>
+                                    </button>
+                                </template>
+                            </div>
+                        </template>
+                    </div>
+
+                    <!-- Resolution -->
+                    <div>
+                        <div class="flex items-center justify-between mb-1">
+                            <label class="block text-xs text-gray-400">Rozdzielczość</label>
+                            <button @click="editTalkAutoResolve()"
+                                    :disabled="editModal.resolvingRes"
+                                    class="text-xs text-teal-600 hover:text-teal-400 border border-teal-900 hover:border-teal-700 rounded px-2 py-0.5 transition flex items-center gap-1">
+                                <span x-show="editModal.resolvingRes" class="animate-spin inline-block">⟳</span>
+                                <span>Auto-wykryj</span>
+                            </button>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <select @change="editTalkSetPreset($event.target.value)"
+                                    class="flex-1 bg-gray-800 border border-gray-600 rounded px-2 py-1.5 text-sm text-gray-200 focus:outline-none focus:border-teal-500">
+                                <option value="">— wybierz preset —</option>
+                                <optgroup label="9:16 (pionowy)">
+                                    <option value="480,832">480×832 ✅</option>
+                                    <option value="576,1024">576×1024</option>
+                                    <option value="720,1280">720×1280</option>
+                                </optgroup>
+                                <optgroup label="16:9 (poziomy)">
+                                    <option value="832,480">832×480 ✅</option>
+                                    <option value="1024,576">1024×576</option>
+                                    <option value="1280,720">1280×720</option>
+                                </optgroup>
+                                <optgroup label="1:1 (kwadrat)">
+                                    <option value="512,512">512×512 ✅</option>
+                                    <option value="640,640">640×640 ✅</option>
+                                    <option value="768,768">768×768</option>
+                                </optgroup>
+                            </select>
+                            <input type="number" x-model.number="editModal.data.width" min="64" max="2048" step="32" placeholder="W"
+                                   class="w-20 bg-gray-800 border border-gray-600 rounded px-2 py-1.5 text-sm text-gray-200 text-center focus:outline-none focus:border-teal-500">
+                            <span class="text-gray-600">×</span>
+                            <input type="number" x-model.number="editModal.data.height" min="64" max="2048" step="32" placeholder="H"
+                                   class="w-20 bg-gray-800 border border-gray-600 rounded px-2 py-1.5 text-sm text-gray-200 text-center focus:outline-none focus:border-teal-500">
+                        </div>
+                        <p x-show="editModal.resHint" class="text-xs text-teal-600 mt-1" x-text="editModal.resHint"></p>
+                    </div>
+
+                </div>
+            </template>
+
+        </div><!-- /body -->
+
         <!-- Footer -->
         <div class="flex items-center justify-between px-5 py-3 border-t border-gray-700 flex-shrink-0">
             <p x-show="editModal.error" class="text-red-400 text-xs" x-text="editModal.error"></p>
@@ -1773,7 +2032,7 @@
         <p class="text-xs text-gray-500 mb-4">
             Wstawianie <span class="text-gray-300 font-mono" x-text="addItemModal.afterIdx >= 0 ? 'po elemencie #' + (addItemModal.afterIdx+1) : 'na końcu'"></span>
         </p>
-        <div class="grid grid-cols-2 gap-2">
+        <div class="grid grid-cols-3 gap-2">
             <button @click="addItemDo('file')"
                     class="flex flex-col items-center gap-2 bg-gray-800 hover:bg-gray-700 border border-gray-600 hover:border-gray-500 rounded-lg p-4 transition">
                 <span class="text-2xl">📄</span>
@@ -1783,6 +2042,11 @@
                     class="flex flex-col items-center gap-2 bg-gray-800 hover:bg-gray-700 border border-gray-600 hover:border-gray-500 rounded-lg p-4 transition">
                 <span class="text-2xl">⛓</span>
                 <span class="text-xs text-gray-300">Chain</span>
+            </button>
+            <button @click="addItemDo('talk')"
+                    class="flex flex-col items-center gap-2 bg-teal-950 hover:bg-teal-900 border border-teal-800 hover:border-teal-600 rounded-lg p-4 transition">
+                <span class="text-2xl">🎙️</span>
+                <span class="text-xs text-teal-300">Talk</span>
             </button>
             <button @click="addItemDo('break')"
                     class="flex flex-col items-center gap-2 bg-gray-800 hover:bg-gray-700 border border-gray-600 hover:border-gray-500 rounded-lg p-4 transition">
@@ -1905,7 +2169,7 @@ function app() {
                     if (msg.file) this.genFile = msg.file;
                     if (typeof msg.awaiting_input === 'boolean') this.awaitingInput = msg.awaiting_input;
                     // Auto-refresh status when generation finishes
-                    if (msg.status === 'finished' || msg.status === 'failed') {
+                    if (msg.status === 'finished' || msg.status === 'failed' || msg.status === 'stopped') {
                         this._dryRunMode = false;  // always clear on process end
                         this.refreshStatus();
                     }
@@ -1951,6 +2215,11 @@ function app() {
 
         async _doStartGeneration() {
             this.preflightModal.open = false;
+            // Guard: Linux ComfyUI must be running
+            if (this.envStatus.linux !== 'ready') {
+                this.logLine('sys', '❌ 🐧 Linux ComfyUI nie działa (port 8189) — uruchom środowisko Linux i spróbuj ponownie');
+                return;
+            }
             try {
                 const res = await fetch(`/api/generate/${encodeURIComponent(this.selectedRun.filename)}`, { method: 'POST' });
                 if (!res.ok) { const e = await res.json(); this.logLine('sys', `❌ ${e.detail}`); }
@@ -1981,9 +2250,8 @@ function app() {
             } catch(e) { this.logLine('sys', `❌ ${e.message}`); this._dryRunMode = false; }
         },
         async answerInput(answer) {
-            // If dry-run mode auto-answering N, clear flag
-            if (this._dryRunMode && answer !== 'n') { answer = 'n'; }
-            this._dryRunMode = false;
+            // In dry-run mode force 'n' for every prompt (flag stays set until process ends)
+            if (this._dryRunMode) { answer = 'n'; }
             this.awaitingInput = false;
             this.logLine('sys', `→ Wysyłam odpowiedź: ${answer.toUpperCase()}`);
             try {
@@ -2471,6 +2739,14 @@ function app() {
         postIsPlaying:     false,
         postLoading:       false,
 
+        // ─ FLOW folder creation ───────────────────────────────
+        flowCreating: false,
+        flowResult:   null,
+
+        // ─ Talk generation ────────────────────────────────────
+        talkStatus: { status: 'idle', talk_name: null, segment: null, total_segs: null, error: null, elapsed_s: null },
+        _talkPollTimer: null,
+
         // ─ Upscale modal ──────────────────────────────────────
         upscaleModal: {
             open:      false,
@@ -2521,6 +2797,186 @@ function app() {
             if (playing)  return 'border-green-600';
             if (selected) return 'border-blue-500';
             return 'border-transparent hover:border-gray-600';
+        },
+
+        async createFlow() {
+            if (!this.selectedRun || this.flowCreating) return;
+            this.flowCreating = true;
+            this.flowResult   = null;
+            try {
+                const res  = await fetch(
+                    `/api/runs/${encodeURIComponent(this.selectedRun.filename)}/create-flow`,
+                    { method: 'POST' }
+                );
+                const data = await res.json();
+                if (res.ok && data.ok) {
+                    const miss = data.missing > 0 ? ` (brak: ${data.missing})` : '';
+                    this.flowResult = `✅ ${data.folder} — skopiowano ${data.copied} klipów${miss}`;
+                    this.logLine('sys', `📁 FLOW utworzony: ${data.folder} (${data.copied} plików)`);
+                } else {
+                    this.flowResult = `❌ ${data.detail || data.error}`;
+                    this.logLine('sys', `❌ Błąd FLOW: ${data.detail || data.error}`);
+                }
+            } catch(e) {
+                this.flowResult = `❌ ${e.message}`;
+                this.logLine('sys', `❌ ${e.message}`);
+            } finally {
+                this.flowCreating = false;
+            }
+        },
+
+        // ─ Talk generation ────────────────────────────────────────────────
+
+        async startTalkGen(flowIdx) {
+            if (!this.selectedRun) return;
+            if (this.envStatus.linux !== 'ready') {
+                this.logLine('sys', '❌ 🐧 Linux ComfyUI nie działa (port 8189) — uruchom środowisko Linux i spróbuj ponownie');
+                return;
+            }
+            const item = this.flowData?.flow?.[flowIdx];
+            if (!item || item.type !== 'talk') return;
+
+            // Find the start frame: previous file item in flow
+            let startImage = null;
+            for (let i = flowIdx - 1; i >= 0; i--) {
+                const prev = this.flowData.flow[i];
+                if (prev.file) { startImage = prev.file; break; }
+                if (prev.break) break;
+            }
+            if (!startImage) {
+                this.logLine('sys', '❌ Talk: nie znaleziono klatki startowej (poprzedni plik w flow)');
+                return;
+            }
+
+            this.talkStatus = { status: 'queued', talk_name: null, segment: null, total_segs: null, error: null, elapsed_s: null };
+            this.logLine('sys', `🎙️ Startuję Talk: ${startImage} + ${JSON.stringify(item.audio)}`);
+
+            try {
+                const res = await fetch('/api/talk/start', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        run_filename: this.selectedRun.filename,
+                        talk_item:    item,
+                        start_image:  startImage,
+                    }),
+                });
+                const data = await res.json();
+                if (!res.ok || !data.ok) {
+                    this.talkStatus.status = 'error';
+                    this.talkStatus.error  = data.detail || data.error || 'Błąd startu';
+                    this.logLine('sys', `❌ Talk error: ${this.talkStatus.error}`);
+                    return;
+                }
+                this._talkPollTimer = setInterval(() => this._pollTalkStatus(), 4000);
+            } catch(e) {
+                this.talkStatus = { ...this.talkStatus, status: 'error', error: e.message };
+                this.logLine('sys', `❌ Talk: ${e.message}`);
+            }
+        },
+
+        async _pollTalkStatus() {
+            try {
+                const res  = await fetch('/api/talk/status');
+                const data = await res.json();
+                this.talkStatus = { ...data };
+                if (data.status === 'done') {
+                    clearInterval(this._talkPollTimer);
+                    this._talkPollTimer = null;
+                    this.logLine('sys', `✅ Talk gotowy: ${data.output_name} (${data.elapsed_s}s)`);
+                    this.statusData = null;
+                    await this.refreshStatus();
+                } else if (data.status === 'error') {
+                    clearInterval(this._talkPollTimer);
+                    this._talkPollTimer = null;
+                    this.logLine('sys', `❌ Talk błąd: ${data.error}`);
+                } else if (data.status === 'running' && data.segment) {
+                    this.logLine('sys', `🎙️ Talk: segment ${data.segment}…`);
+                }
+            } catch(e) { /* network hiccup — ignore */ }
+        },
+
+        // ─ Talk edit helpers ─────────────────────────────────────────────
+
+        // Return the display name for the talk tile header (stem of first audio)
+        _talkFirstStem(item) {
+            const raw = Array.isArray(item.audio) ? item.audio[0] : item.audio;
+            const fname = (typeof raw === 'object' && raw !== null) ? (raw.file || '') : (raw || '');
+            return fname.replace(/\.[^.]+$/, '') || 'talk';
+        },
+
+        // Normalize audio entries to array of objects {file, pos, neg}
+        _talkAudios() {
+            let aud = this.editModal.data.audio;
+            if (!Array.isArray(aud)) aud = [aud];
+            return aud.map(a => typeof a === 'object' && a !== null ? a : { file: a || '', pos: '', neg: '' });
+        },
+        editTalkSetAudio(idx, field, val) {
+            // field: 'file' | 'pos' | 'neg'
+            let aud = this._talkAudios();
+            aud = [...aud];
+            aud[idx] = { ...aud[idx], [field]: val };
+            this.editModal.data = { ...this.editModal.data, audio: aud };
+        },
+        editTalkAddAudio() {
+            let aud = this._talkAudios();
+            this.editModal.data = { ...this.editModal.data, audio: [...aud, { file: '', pos: '', neg: '' }] };
+        },
+        editTalkRemoveAudio(idx) {
+            let aud = this._talkAudios();
+            aud = aud.filter((_, i) => i !== idx);
+            this.editModal.data = { ...this.editModal.data, audio: aud };
+        },
+        editTalkPickAudio(fname) {
+            // Append to list (or replace if only placeholder)
+            let aud = this._talkAudios();
+            const existingFiles = aud.map(a => a.file);
+            if (aud.length === 1 && !aud[0].file) {
+                aud = [{ file: fname, pos: '', neg: '' }];
+            } else if (!existingFiles.includes(fname)) {
+                aud = [...aud, { file: fname, pos: '', neg: '' }];
+            }
+            this.editModal.data = { ...this.editModal.data, audio: aud };
+        },
+        editTalkSetPreset(val) {
+            if (!val) return;
+            const [w, h] = val.split(',').map(Number);
+            this.editModal.data = { ...this.editModal.data, width: w, height: h };
+        },
+        async editTalkAutoResolve() {
+            if (!this.selectedRun || this.editModal.resolvingRes) return;
+            this.editModal.resolvingRes = true;
+            this.editModal.resHint = '';
+            try {
+                const aud = this.editModal.data.audio;
+                const audioList = Array.isArray(aud) ? aud : [aud];
+                // Find start image: look for a file item before this item's position
+                let startImage = '';
+                const idx = this.editModal.idx;
+                for (let i = idx - 1; i >= 0; i--) {
+                    const prev = this.flowData.flow[i];
+                    if (prev.file) { startImage = prev.file; break; }
+                    if (prev.break) break;
+                }
+                const res  = await fetch('/api/talk/suggest-resolution', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        run_filename: this.selectedRun.filename,
+                        image:  startImage,
+                        audio:  audioList.filter(Boolean),
+                    }),
+                });
+                const data = await res.json();
+                if (res.ok && data.width && data.height) {
+                    this.editModal.data = { ...this.editModal.data, width: data.width, height: data.height };
+                    this.editModal.resHint = `⚡ Auto: ${data.width}×${data.height}`;
+                }
+            } catch(e) {
+                this.editModal.resHint = `❌ ${e.message}`;
+            } finally {
+                this.editModal.resolvingRes = false;
+            }
         },
 
         async loadPostClips(preserveScroll = false) {
@@ -2698,6 +3154,12 @@ function app() {
             if (!m.clip || !this.selectedRun) return;
             m.status = 'queued';
             m.error  = null;
+            // Guard: Windows ComfyUI must be running
+            if (this.envStatus.windows !== 'ready') {
+                m.status = 'error';
+                m.error  = '🪟 Windows ComfyUI nie działa (port 8100) — uruchom środowisko Windows i spróbuj ponownie';
+                return;
+            }
             try {
                 const res = await fetch('/api/upscale/start', {
                     method: 'POST',
@@ -2799,6 +3261,11 @@ function app() {
             if (this.preIsRunning) return;
             const selected = this.preClips.filter(c => this.preSelected[c.name]);
             if (selected.length === 0) return;
+            // Guard: Windows ComfyUI must be running
+            if (this.envStatus.windows !== 'ready') {
+                this.logLine('sys', '❌ Windows ComfyUI nie działa (port 8100) — uruchom środowisko Windows przed upscalingiem');
+                return;
+            }
 
             this.preQueue = selected.map(c => ({
                 clip: c, status: 'pending', elapsed_s: null, error: null,
@@ -2888,16 +3355,19 @@ function app() {
 
         // ─ Flow editor ────────────────────────────────────
         editMode: false,
-        editModal: { open: false, kind: '', title: '', subtitle: '', data: {}, idx: null, saving: false, error: null, projectFiles: [], loadingFiles: false },
+        editModal: { open: false, kind: '', title: '', subtitle: '', data: {}, idx: null, saving: false, error: null, projectFiles: [], audioFiles: [], loadingFiles: false, resolvingRes: false, resHint: '' },
         addItemModal: { open: false, afterIdx: -1 },
         preflightModal: { open: false, conflicts: [], onConfirm: null },
 
         editOpenItem(idx) {
             const item = this.flowData?.flow?.[idx];
             if (!item || item.break) return;
-            const kind = item.chain !== undefined ? 'chain' : (item.header !== undefined ? 'header' : 'file');
-            const titles   = { chain: '⛓ Edytuj Chain', header: '📌 Edytuj nagłówek', file: '📄 Edytuj plik' };
-            const subtitles = { chain: item.chain_prefix || 'chain', header: item.header || '', file: item.file || '' };
+            const kind = item.chain !== undefined ? 'chain'
+                       : item.header !== undefined ? 'header'
+                       : item.type === 'talk' ? 'talk'
+                       : 'file';
+            const titles    = { chain: '⛓ Edytuj Chain', header: '📌 Edytuj nagłówek', file: '📄 Edytuj plik', talk: '🎙️ Edytuj Talk' };
+            const subtitles = { chain: item.chain_prefix || 'chain', header: item.header || '', file: item.file || '', talk: 'InfiniteTalk' };
             this.editModal = {
                 open: true,
                 kind,
@@ -2908,14 +3378,22 @@ function app() {
                 error: null,
                 data: JSON.parse(JSON.stringify(item)),
                 projectFiles: [],
+                audioFiles: [],
                 loadingFiles: false,
+                resolvingRes: false,
+                resHint: '',
             };
-            if (kind === 'file' && this.selectedRun?.filename) {
+            if ((kind === 'file' || kind === 'talk') && this.selectedRun?.filename) {
                 this.editModal.loadingFiles = true;
                 fetch(`/api/runs/${encodeURIComponent(this.selectedRun.filename)}/project-files`)
                     .then(r => r.ok ? r.json() : Promise.reject(r.status))
-                    .then(data => { this.editModal.projectFiles = data.files || []; })
-                    .catch(() => { /* silent — manual typing still works */ })
+                    .then(data => {
+                        const all = data.files || [];
+                        const audioExts = ['.mp3','.wav','.ogg','.flac','.aac','.m4a'];
+                        this.editModal.audioFiles = all.filter(f => audioExts.some(e => f.toLowerCase().endsWith(e)));
+                        this.editModal.projectFiles = all.filter(f => !audioExts.some(e => f.toLowerCase().endsWith(e)));
+                    })
+                    .catch(() => { })
                     .finally(() => { this.editModal.loadingFiles = false; });
             }
         },
@@ -2935,6 +3413,28 @@ function app() {
                         if (step[k] === '' || step[k] === null || step[k] === undefined) delete step[k];
                     }
                 }
+            }
+            // Normalize talk audio — remove empty entries, simplify if no per-segment prompts
+            if (this.editModal.kind === 'talk') {
+                let aud = this._talkAudios().filter(a => (a.file || '').trim());
+                if (aud.length === 0) {
+                    this.editModal.error = 'Wymagany co najmniej jeden plik audio';
+                    this.editModal.saving = false;
+                    return;
+                }
+                // Simplify entries that have no per-segment prompts → plain string
+                const simplified = aud.map(a =>
+                    (a.pos || '').trim() || (a.neg || '').trim()
+                        ? { file: a.file.trim(), pos: a.pos || undefined, neg: a.neg || undefined }
+                        : a.file.trim()
+                );
+                // Single entry with no overrides → just a string
+                d.audio = simplified.length === 1 ? simplified[0] : simplified;
+                // Prefix — keep only if non-empty, else remove from YAML
+                if (typeof d.prefix === 'string' && !d.prefix.trim()) delete d.prefix;
+                // Remove legacy global pos/neg (now per-step only)
+                if (typeof d.pos === 'string' && !d.pos.trim()) delete d.pos;
+                if (typeof d.neg === 'string' && !d.neg.trim()) delete d.neg;
             }
             // Warstwa 1: walidacja unikalności chain_prefix
             if (this.editModal.kind === 'chain' && d.chain_prefix) {
@@ -2977,7 +3477,8 @@ function app() {
         async editDeleteItem(idx) {
             const item = this.flowData?.flow?.[idx];
             if (!item) return;
-            const label = item.break ? 'break' : item.header !== undefined ? `nagłówek "${item.header}"` : item.chain_prefix ? `chain "${item.chain_prefix}"` : `plik "${item.file}"`;
+            const _talkAudioLabel = a => typeof a === 'object' ? (a.file || '?') : (a || '?');
+            const label = item.break ? 'break' : item.header !== undefined ? `nagłówek "${item.header}"` : item.type === 'talk' ? `talk "${Array.isArray(item.audio) ? _talkAudioLabel(item.audio[0]) : _talkAudioLabel(item.audio)}"` : item.chain_prefix ? `chain "${item.chain_prefix}"` : `plik "${item.file}"`;
             if (!confirm(`Usunąć: ${label}?\n\nTa operacja usuwa go z FLOW (pliki wideo na dysku zostają).`)) return;
             const newFlow = JSON.parse(JSON.stringify(this.flowData.flow));
             newFlow.splice(idx, 1);
@@ -3049,6 +3550,8 @@ function app() {
                 newItem = { header: 'Nowa sekcja' };
             } else if (kind === 'file') {
                 newItem = { file: 'nowy_plik.png', backend: 'linux', duration: 2, pos: 'NONE', neg: 'NONE' };
+            } else if (kind === 'talk') {
+                newItem = { type: 'talk', audio: ['glos.mp3'], width: 480, height: 832, pos: '' };
             } else {
                 newItem = {
                     chain_prefix: this.nextChainPrefix(),

@@ -99,8 +99,37 @@ def _check_flow_item(item: Any, idx: int) -> list[str]:
         elif not isinstance(t, list) or len(t) == 0:
             errors.append(f"flow[{idx}].chain: 'transitions' must be a non-empty list")
         return errors
+    if item.get("type") == "talk":
+        audio = item.get("audio")
+        if audio is None:
+            errors.append(f"flow[{idx}].talk: 'audio' is required")
+        elif isinstance(audio, dict):
+            # Single entry as dict: {file, pos, neg}
+            if not audio.get("file"):
+                errors.append(f"flow[{idx}].talk: audio dict must have 'file'")
+        elif isinstance(audio, str):
+            pass  # plain filename — OK
+        elif isinstance(audio, list):
+            if len(audio) == 0:
+                errors.append(f"flow[{idx}].talk: 'audio' list must not be empty")
+            else:
+                for ei, entry in enumerate(audio):
+                    if isinstance(entry, str):
+                        pass  # plain filename — OK
+                    elif isinstance(entry, dict):
+                        if not entry.get("file"):
+                            errors.append(
+                                f"flow[{idx}].talk: audio[{ei}] dict must have 'file'"
+                            )
+                    else:
+                        errors.append(
+                            f"flow[{idx}].talk: audio[{ei}] must be a filename or dict"
+                        )
+        else:
+            errors.append(f"flow[{idx}].talk: 'audio' must be a string, dict, or list")
+        return errors
     if "file" not in item:
-        errors.append(f"flow[{idx}]: must have 'file', 'break', or 'chain'")
+        errors.append(f"flow[{idx}]: must have 'file', 'break', 'chain', or 'type: talk'")
     return errors
 
 
@@ -142,6 +171,11 @@ def _yaml_item_to_internal(item: dict) -> dict:
 
     Internal chain format (matches what batch_transitions.py expects):
         {"chain": [...steps...], "chain_prefix": "name", "fps": 16, ...}
+
+    YAML talk format:
+        {"type": "talk", "audio": "voice.mp3", "width": 480, "height": 832, ...}
+
+    Internal talk format: same dict, passed through verbatim.
     """
     if item.get("break"):
         return {"break": True}
@@ -160,6 +194,9 @@ def _yaml_item_to_internal(item: dict) -> dict:
             if k in chain_data:
                 result[k] = chain_data[k]
         return result
+    if item.get("type") == "talk":
+        # Pass through verbatim — all fields (audio, width, height, pos) preserved
+        return dict(item)
     # Regular file item — copy verbatim
     return dict(item)
 
@@ -183,6 +220,9 @@ def _internal_item_to_yaml(item: dict) -> dict:
             if k in item:
                 chain_data[k] = item[k]
         return {"chain": chain_data}
+    if item.get("type") == "talk":
+        # Pass through verbatim
+        return dict(item)
     return dict(item)
 
 
@@ -383,6 +423,15 @@ def _flow_list_to_py(flow: list, var_name: str) -> str:
                 if k in item:
                     vr = _py_val(item[k], 8)
                     lines.append(f'        {repr(k)}: {vr},')
+            lines.append("    },")
+            lines.append("")
+            continue
+        if item.get("type") == "talk":
+            # talk item — render as plain dict
+            lines.append("    {")
+            for k, v in item.items():
+                vr = _py_val(v, 8)
+                lines.append(f'        {repr(k)}: {vr},')
             lines.append("    },")
             lines.append("")
             continue

@@ -248,7 +248,15 @@ async def _run_upscale(
 
         # 4. Submit to ComfyUI
         def _submit():
-            return _http_post(f"{upscale_url}/prompt", {"prompt": workflow})
+            try:
+                return _http_post(f"{upscale_url}/prompt", {"prompt": workflow})
+            except OSError as e:
+                if getattr(e, "errno", None) in (10061, 111):  # Windows / Linux "connection refused"
+                    raise RuntimeError(
+                        f"Windows ComfyUI niedostępny (port 8100). "
+                        f"Uruchom środowisko Windows i spróbuj ponownie."
+                    ) from e
+                raise
 
         resp = await loop.run_in_executor(None, _submit)
         prompt_id = resp.get("prompt_id")

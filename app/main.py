@@ -20,6 +20,7 @@ from app.api.generation import router as generation_router
 from app.api.media import router as media_router
 from app.api.upscale import router as upscale_router
 from app.api.env import router as env_router
+from app.api.talks import router as talks_router
 from app.services.process_service import process_service
 
 # ============================================================
@@ -41,6 +42,7 @@ app.include_router(generation_router)
 app.include_router(media_router)
 app.include_router(upscale_router)
 app.include_router(env_router)
+app.include_router(talks_router)
 
 # Static files
 FRONTEND_DIR = Path(__file__).parent / "frontend"
