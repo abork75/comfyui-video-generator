@@ -102,7 +102,8 @@ def run_batch_generation(config):
     default_seed = config.get('default_seed', -1)
     default_positive_prompt = config.get('default_positive_prompt', '')
     default_negative_prompt = config.get('default_negative_prompt', '')
-    default_blocks_to_swap = config.get('default_blocks_to_swap', None)
+    default_blocks_to_swap      = config.get('default_blocks_to_swap', None)
+    default_frame_interpolation = config.get('default_frame_interpolation', True)
     
     # Check ffmpeg
     import subprocess
@@ -189,6 +190,7 @@ def run_batch_generation(config):
                 'width': transition_to_next.get('width', chain_config.get('width', None)),
                 'height': transition_to_next.get('height', chain_config.get('height', None)),
                 'blocks_to_swap': transition_to_next.get('blocks_to_swap', chain_config.get('blocks_to_swap', default_blocks_to_swap)),
+                'frame_interpolation': transition_to_next.get('frame_interpolation', chain_config.get('frame_interpolation', default_frame_interpolation)),
 
                 # Mark as normal I2V2I (not chain I2V)
                 'is_i2v_mode': False,
@@ -225,6 +227,7 @@ def run_batch_generation(config):
                     'width': to_config.get('width', from_config.get('width', None)),
                     'height': to_config.get('height', from_config.get('height', None)),
                     'blocks_to_swap': to_config.get('blocks_to_swap', from_config.get('blocks_to_swap', default_blocks_to_swap)),
+                    'frame_interpolation': to_config.get('frame_interpolation', from_config.get('frame_interpolation', default_frame_interpolation)),
                     'is_i2v_mode': True,  # Chain is always I2V
                 }
             else:
@@ -246,6 +249,7 @@ def run_batch_generation(config):
                     'width': from_config.get('width', to_config.get('width', None)),
                     'height': from_config.get('height', to_config.get('height', None)),
                     'blocks_to_swap': from_config.get('blocks_to_swap', to_config.get('blocks_to_swap', default_blocks_to_swap)),
+                    'frame_interpolation': from_config.get('frame_interpolation', to_config.get('frame_interpolation', default_frame_interpolation)),
                     'is_i2v_mode': False,
                 }
 
@@ -988,7 +992,8 @@ def run_batch_generation(config):
             negative_prompt=trans_config['negative_prompt'],
             width=trans_config.get('width') or target_width,
             height=trans_config.get('height') or target_height,
-            blocks_to_swap=trans_config.get('blocks_to_swap')
+            blocks_to_swap=trans_config.get('blocks_to_swap'),
+            frame_interpolation=trans_config.get('frame_interpolation'),
         )
         
         # ============================================================

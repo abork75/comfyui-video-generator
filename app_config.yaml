@@ -1,0 +1,48 @@
+# app_config.yaml — Globalne ustawienia aplikacji
+# Edytuj ten plik aby zmienić modele i domyślne parametry.
+# Ustawienia per-projekt (defaults w RUN_*.yaml) nadpisują wartości z sekcji defaults.
+#
+
+# ── Backendy ─────────────────────────────────────────────────────────────────
+
+backends:
+
+  linux:                            # WSL2 / Linux ComfyUI (port 8189)
+    api_url: http://127.0.0.1:8189
+    workflows_path: D:\streamlit_project\comfyui_integration\workflows
+    comfyui_output_folder: D:\ComfyUI\output\Wan22_I2V
+    models:
+      video_gen:                    # I2V i I2V2I — end_frame kontrolowany per-klip
+        config_path: D:\streamlit_project\comfyui_integration\workflow_configs\wan_i2v.yaml
+      talk:                         # InfiniteTalk
+        workflow_json: D:\streamlit_project\comfyui_integration\talk_workflow_api.json
+      # multitalk:
+      #   workflow_json: D:\streamlit_project\comfyui_integration\multitalk_workflow_api.json
+
+  windows:                          # Windows ComfyUI (port 8100)
+    api_url: http://127.0.0.1:8100
+    input_dir: D:\ComfyUI\input
+    output_dir: D:\ComfyUI\output
+    models:
+      upscale:                      # RealESRGAN — wbudowany w upscale_service
+        workflow_json: ""
+
+  # external:                       # Przyszłość — np. RunPod, Replicate
+  #   provider: runpod
+  #   api_key: ""
+  #   endpoint: https://...
+  #   models:
+  #     video_gen:
+  #       model_id: ""
+
+# ── Domyślne parametry generacji ─────────────────────────────────────────────
+# Per-projekt YAML może nadpisać dowolne z tych wartości w sekcji defaults:
+
+defaults:
+  resolution: [1024, 1024]
+  fps: 16
+  steps: 6
+  cfg: 2.0
+  duration: 2
+  blocks_to_swap: 35
+  frame_interpolation: true   # RIFE VFI 2x — false = wyłącz interpolację

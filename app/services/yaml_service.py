@@ -69,6 +69,7 @@ from typing import Any
 
 import yaml
 
+from app.services import app_config_service
 from app.services.run_file_service import (
     RUNS_FOLDER,
     extract_globals,
@@ -190,7 +191,7 @@ def _yaml_item_to_internal(item: dict) -> dict:
             "chain":        transitions,
             "chain_prefix": chain_data.get("prefix", "chain"),
         }
-        for k in ("backend", "fps", "steps", "cfg", "neg", "blocks_to_swap"):
+        for k in ("backend", "fps", "steps", "cfg", "neg", "blocks_to_swap", "frame_interpolation"):
             if k in chain_data:
                 result[k] = chain_data[k]
         return result
@@ -216,7 +217,7 @@ def _internal_item_to_yaml(item: dict) -> dict:
             "prefix":      chain_prefix,
             "transitions": item.get("chain", []),
         }
-        for k in ("backend", "fps", "steps", "cfg", "neg", "blocks_to_swap"):
+        for k in ("backend", "fps", "steps", "cfg", "neg", "blocks_to_swap", "frame_interpolation"):
             if k in item:
                 chain_data[k] = item[k]
         return {"chain": chain_data}
@@ -260,10 +261,11 @@ def load_yaml_run(yaml_path: Path) -> dict | None:
         "force_resolution":      None,
         "default_resolution":    None,
         "default_backend":       None,
-        "default_blocks_to_swap": None,
-        "default_fps":           None,
-        "default_steps":         None,
-        "error":                 None,
+        "default_blocks_to_swap":      None,
+        "default_fps":                 None,
+        "default_steps":               None,
+        "default_frame_interpolation": None,
+        "error":                       None,
         "source":                "yaml",
     }
 
@@ -289,10 +291,11 @@ def load_yaml_run(yaml_path: Path) -> dict | None:
     info["project_folder"]         = doc.get("project_folder")
     info["force_resolution"]       = tuple(res) if res else None
     info["default_resolution"]     = tuple(res) if res else None
-    info["default_backend"]        = defs.get("backend", "linux")
-    info["default_blocks_to_swap"] = defs.get("blocks_to_swap")
-    info["default_fps"]            = defs.get("fps")
-    info["default_steps"]          = defs.get("steps")
+    info["default_backend"]              = defs.get("backend", "linux")
+    info["default_blocks_to_swap"]      = defs.get("blocks_to_swap")
+    info["default_fps"]                 = defs.get("fps")
+    info["default_steps"]               = defs.get("steps")
+    info["default_frame_interpolation"] = defs.get("frame_interpolation")
 
     return info
 
@@ -419,7 +422,7 @@ def _flow_list_to_py(flow: list, var_name: str) -> str:
                 lines.append("            },")
             lines.append("        ],")
             lines.append(f'        "chain_prefix": {repr(chain_prefix)},')
-            for k in ("backend", "fps", "steps", "cfg", "neg", "blocks_to_swap"):
+            for k in ("backend", "fps", "steps", "cfg", "neg", "blocks_to_swap", "frame_interpolation"):
                 if k in item:
                     vr = _py_val(item[k], 8)
                     lines.append(f'        {repr(k)}: {vr},')
@@ -516,7 +519,9 @@ def generate_py_from_yaml(yaml_path: Path, out_path: Path | None = None) -> Path
     if out_path is None:
         out_path = yaml_path.with_suffix(".py")
 
-    defs = doc.get("defaults") or {}
+    # defaults: per-project overrides app_config, app_config overrides hard-coded
+    _app_defs = app_config_service.get_defaults()
+    defs      = {**_app_defs, **(doc.get("defaults") or {})}
 
     # ── Build file sections ──────────────────────────────────────────
     parts: list[str] = []
@@ -543,7 +548,10 @@ def generate_py_from_yaml(yaml_path: Path, out_path: Path | None = None) -> Path
     parts.append(f"DEFAULT_STEPS          = {defs.get('steps', 6)}\n")
     parts.append(f"DEFAULT_CFG            = {defs.get('cfg', 2.0)}\n")
     parts.append(f"DEFAULT_DURATION       = {defs.get('duration', 2)}\n")
-    parts.append(f"DEFAULT_BLOCKS_TO_SWAP = {defs.get('blocks_to_swap', 35)}\n")
+    parts.append(f"DEFAULT_BLOCKS_TO_SWAP      = {defs.get('blocks_to_swap', 35)}\n")
+    _fi = defs.get('frame_interpolation')
+    _fi_val = "True" if _fi is None or _fi else "False"
+    parts.append(f"DEFAULT_FRAME_INTERPOLATION = {_fi_val}\n")
     parts.append(f"DEFAULT_SEED           = None\n")
     parts.append(f"SKIP_MISSING           = True\n")
     parts.append(f"SKIP_EXISTED           = {_py_val(defs.get('skip_existed', True))}\n")
@@ -555,18 +563,31 @@ def generate_py_from_yaml(yaml_path: Path, out_path: Path | None = None) -> Path
     # Postprocessing — disabled by default (not yet in YAML schema)
     parts.append("\nPOSTPROCESSING = {'enabled': False}\n")
 
-    # Linux / local backend paths
-    lb = doc.get("linux_backend") or {}
-    if lb:
+    # Linux backend paths
+    # Priority: per-project linux_backend → app_config.yaml backends.linux + models.video_gen
+    _app_lb   = app_config_service.get_backend("linux")
+    _app_vgen = app_config_service.get_model("linux", "video_gen")
+    lb        = doc.get("linux_backend") or {}
+
+    def _lb(yaml_key: str, app_key: str | None = None) -> str | None:
+        """Return per-project value, else app_config value, else None."""
+        v = lb.get(yaml_key)
+        if v:
+            return str(v)
+        k = app_key or yaml_key
+        v = _app_lb.get(k)
+        return str(v) if v else None
+
+    _lb_values = {
+        "CONFIG_PATH":           lb.get("config_path")           or _app_vgen.get("config_path"),
+        "WORKFLOWS_PATH":        lb.get("workflows_path")        or _app_lb.get("workflows_path"),
+        "COMFYUI_OUTPUT_FOLDER": lb.get("comfyui_output_folder") or _app_lb.get("comfyui_output_folder"),
+        "API_URL":               lb.get("api_url")               or _app_lb.get("api_url"),
+    }
+    if any(_lb_values.values()):
         parts.append("\n# ── Linux backend paths ─────────────────────────────────────────\n")
-        for py_key, yaml_key in [
-            ("CONFIG_PATH",           "config_path"),
-            ("WORKFLOWS_PATH",        "workflows_path"),
-            ("COMFYUI_OUTPUT_FOLDER", "comfyui_output_folder"),
-            ("API_URL",               "api_url"),
-        ]:
-            v = lb.get(yaml_key)
-            if v is not None:
+        for py_key, v in _lb_values.items():
+            if v:
                 parts.append(f"{py_key} = {repr(str(v))}\n")
 
     # USE_TEST_FLOW
@@ -620,7 +641,7 @@ _SKIP_KEYS = {
     "GENERIC_PROMPTS", "POSTPROCESSING", "DEBUG_LOG",
     # cloud backend — kept separately
     "COMFY_ICU_WORKFLOW_ID", "WORKFLOW_TEMPLATE_PATH",
-    # linux/local backend paths — now stored in 'linux_backend:' YAML section
+    # linux backend paths — now stored in 'linux_backend:' YAML section (optional per-project override)
     "CONFIG_PATH", "WORKFLOWS_PATH", "COMFYUI_OUTPUT_FOLDER", "API_URL",
 }
 
@@ -655,7 +676,8 @@ def _build_yaml_doc_from_globals(g: dict, full_flow: list | None, test_flow: lis
         ("steps",          "DEFAULT_STEPS",          None),
         ("cfg",            "DEFAULT_CFG",            None),
         ("duration",       "DEFAULT_DURATION",       None),
-        ("blocks_to_swap", "DEFAULT_BLOCKS_TO_SWAP", None),
+        ("blocks_to_swap",      "DEFAULT_BLOCKS_TO_SWAP",      None),
+        ("frame_interpolation", "DEFAULT_FRAME_INTERPOLATION", None),
     ]:
         v = g.get(py_key)
         if v is not None:
@@ -959,16 +981,10 @@ def create_run_from_globals(
         except Exception:
             pass
 
-    doc: dict = {}
-    pf = globals_data.get("project_folder", "")
-    if pf:
-        doc["project_folder"] = pf
-    if globals_data.get("defaults"):
-        doc["defaults"] = dict(globals_data["defaults"])
-    if globals_data.get("linux_backend"):
-        doc["linux_backend"] = dict(globals_data["linux_backend"])
-    doc["use_test_flow"] = False
-    doc["flow"] = []
+    # New projects only store project_folder + flow.
+    # defaults and linux_backend come from app_config.yaml (global),
+    # so we don't copy them — keeps new YAMLs minimal.
+    doc: dict = {"project_folder": "", "use_test_flow": False, "flow": []}
 
     header = (
         f"# {stem}\n"

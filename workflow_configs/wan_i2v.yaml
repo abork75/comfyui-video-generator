@@ -67,6 +67,12 @@ parameters:
     param_name: blocks_to_swap
     description: "WanVideo Block Swap - liczba bloków do swapowania (20=domyślne, 35=1024x1024)"
 
+  frame_interpolation:
+    node_id: 106
+    type: int
+    param_name: multiplier
+    description: "RIFE VFI multiplier: 1=brak interpolacji, 2=2x (domyślnie), 4=4x"
+
   frame_rate:
     node_id: 60
     type: int
@@ -95,6 +101,8 @@ constraints:
   frame_rate:
     min: 8
     max: 30
+  frame_interpolation:
+    allowed: [1, 2, 4]
 
 defaults:
   width: 672

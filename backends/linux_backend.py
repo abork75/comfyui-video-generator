@@ -259,6 +259,13 @@ class LinuxBackend(BaseBackend):
         if 'blocks_to_swap' in params:
             runner.set_parameter('blocks_to_swap', params['blocks_to_swap'])
 
+        if 'frame_interpolation' in params:
+            fi = params['frame_interpolation']
+            if fi is not None:
+                # True/False → RIFE multiplier (2 = enabled, 1 = disabled)
+                multiplier = 2 if fi else 1
+                runner.set_parameter('frame_interpolation', multiplier)
+
     def _set_seed(self, seed=None):
         """Ustawia unikalny seed (zapobiega cache ComfyUI)"""
         import random

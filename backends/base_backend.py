@@ -133,7 +133,8 @@ class BaseBackend(ABC):
     def generate_transition(self, start_frame, end_frame, output_path,
                       duration, fps, steps, cfg, seed,
                       positive_prompt, negative_prompt,
-                      width, height, blocks_to_swap=None):
+                      width, height, blocks_to_swap=None,
+                      frame_interpolation=None):
         """
         High-level wrapper for transition generation
 
@@ -155,6 +156,7 @@ class BaseBackend(ABC):
             width: Video width
             height: Video height
             blocks_to_swap: WanVideo Block Swap count (None = workflow default)
+            frame_interpolation: True/False — enable RIFE VFI 2x (None = keep workflow default)
 
         Returns:
             bool: True if successful, False otherwise
@@ -193,6 +195,8 @@ class BaseBackend(ABC):
 
             if blocks_to_swap is not None:
                 params['blocks_to_swap'] = blocks_to_swap
+            if frame_interpolation is not None:
+                params['frame_interpolation'] = frame_interpolation
             
             # Use existing interface (implemented by subclasses)
             inputs = self.prepare_inputs(pair, workflow=None)

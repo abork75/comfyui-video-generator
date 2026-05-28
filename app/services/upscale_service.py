@@ -23,6 +23,7 @@ from datetime import datetime
 from pathlib import Path
 
 from app.core.config import settings
+from app.services import app_config_service
 from app.services.media_service import (
     resolve_video,
     resolve_source_video,
@@ -219,10 +220,11 @@ async def _run_upscale(
       1. ComfyUI /history/{prompt_id} — scan ALL output nodes for mp4
       2. Directory fallback — any new mp4 in output/video since job start
     """
-    loop        = asyncio.get_running_loop()
-    upscale_url = settings.comfyui_upscale_url
-    input_dir   = Path(settings.comfyui_upscale_input_dir)
-    output_dir  = Path(settings.comfyui_upscale_output_dir)
+    loop         = asyncio.get_running_loop()
+    _win         = app_config_service.get_backend("windows")
+    upscale_url  = _win.get("api_url")  or settings.comfyui_upscale_url
+    input_dir    = Path(_win.get("input_dir")  or settings.comfyui_upscale_input_dir)
+    output_dir   = Path(_win.get("output_dir") or settings.comfyui_upscale_output_dir)
     video_dir   = output_dir / "video"
 
     ts       = datetime.now().strftime("%Y%m%d%H%M%S")

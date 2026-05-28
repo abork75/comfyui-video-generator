@@ -9,6 +9,7 @@ Environments are started/stopped manually by the user.
 import asyncio
 import urllib.request
 from app.core.config import settings
+from app.services import app_config_service
 
 
 class EnvService:
@@ -21,10 +22,12 @@ class EnvService:
             return False
 
     async def get_status(self) -> dict:
+        linux_url   = app_config_service.get_backend("linux").get("api_url")   or settings.comfyui_url
+        windows_url = app_config_service.get_backend("windows").get("api_url") or settings.comfyui_upscale_url
         loop = asyncio.get_running_loop()
         linux_ok, windows_ok = await asyncio.gather(
-            loop.run_in_executor(None, self._check_health_sync, settings.comfyui_url),
-            loop.run_in_executor(None, self._check_health_sync, settings.comfyui_upscale_url),
+            loop.run_in_executor(None, self._check_health_sync, linux_url),
+            loop.run_in_executor(None, self._check_health_sync, windows_url),
         )
         return {
             "linux":   "ready" if linux_ok   else "stopped",

@@ -1,0 +1,29 @@
+# RUN_012 - dmuchinj w oponke.yaml
+# Edited: 2026-05-28 00:04:55
+# Edit this file freely — regenerate .py with generate_py_from_yaml()
+#
+defaults:
+  fps: 16
+  steps: 6
+  cfg: 2
+  duration: 2
+  blocks_to_swap: 35
+  backend: linux
+  resolution:
+  - 1024
+  - 1024
+
+linux_backend:
+  config_path: D:\streamlit_project\comfyui_integration\workflow_configs\wan_i2v.yaml
+  workflows_path: D:\streamlit_project\comfyui_integration\workflows
+  comfyui_output_folder: D:\ComfyUI\output\Wan22_I2V
+  api_url: http://127.0.0.1:8189
+
+use_test_flow: false
+
+# ──────────────────────────────────────────────────────────
+# FLOW — lista generacji
+# ──────────────────────────────────────────────────────────
+flow: []
+
+project_folder: C:\Users\abork\AppData\Local\CapCut\Videos\muszelka_pliki\obce\oponka

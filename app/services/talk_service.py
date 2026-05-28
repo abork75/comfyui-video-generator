@@ -16,7 +16,7 @@ Multi-audio: segments are processed sequentially and concatenated with ffmpeg.
 SETUP REQUIRED:
   Export the API-format workflow from ComfyUI:
     Settings → Enable Dev Mode → click "Save (API Format)"
-  Place the JSON at the path configured in settings.talk_workflow_json.
+  Place the JSON at the path configured in app_config.yaml → models.talk.workflow_json.
 
   The service will look for nodes by class_type and patch:
     LoadImage      → inputs.image
@@ -39,6 +39,7 @@ from pathlib import Path
 
 from app.core.config import settings
 from app.services.media_service import talk_path, _project_folder
+from app.services import app_config_service
 
 
 # ── Resolution presets & auto-detection ─────────────────────────────────────
@@ -182,7 +183,9 @@ def suggest_resolution(image_path: Path, audio_paths: list[Path]) -> tuple[int, 
 
 def _load_workflow() -> dict:
     """Load the API-format workflow JSON from disk."""
-    path = Path(settings.talk_workflow_json)
+    # Priority: app_config.yaml backends.linux.models.talk → settings fallback
+    _wf = app_config_service.get_model("linux", "talk").get("workflow_json") or settings.talk_workflow_json
+    path = Path(_wf)
     if not path.exists():
         raise FileNotFoundError(
             f"Talk workflow JSON not found: {path}\n"
