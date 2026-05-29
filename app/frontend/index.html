@@ -25,9 +25,10 @@
         .thumb { width:56px; height:42px; object-fit:cover; border-radius:4px; flex-shrink:0; background:#1f2937; cursor:pointer; }
         .thumb-placeholder { width:56px; height:42px; border-radius:4px; flex-shrink:0; background:#1f2937; display:flex; align-items:center; justify-content:center; font-size:18px; }
         /* Status border colours — !important overrides Tailwind's border shorthand */
-        .sl-green { border-left: 4px solid #15803d !important; }
-        .sl-red   { border-left: 4px solid #b91c1c !important; }
-        .sl-gray  { border-left: 4px solid #374151 !important; }
+        .sl-green  { border-left: 4px solid #15803d !important; }
+        .sl-red    { border-left: 4px solid #b91c1c !important; }
+        .sl-gray   { border-left: 4px solid #374151 !important; }
+        .sl-orange { border-left: 4px solid #d97706 !important; }
         /* Log resize handle */
         .log-resize-handle { height:6px; cursor:ns-resize; background:#111827; border-top:1px solid #1f2937; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
         .log-resize-handle:hover { background:#1f2937; }
@@ -81,6 +82,9 @@
         <button @click="openAppConfig()"
                 class="text-gray-400 hover:text-white text-sm transition px-2 py-1 rounded hover:bg-gray-700"
                 title="Ustawienia aplikacji (modele, backendy, parametry domyślne)">⚙ Ustawienia</button>
+        <button @click="openGlobalPic()"
+                class="text-gray-400 hover:text-pink-300 text-sm transition px-2 py-1 rounded hover:bg-gray-700"
+                title="Globalna biblioteka promptów I2I">🗂 Prompty</button>
         <div class="h-5 w-px bg-gray-600"></div>
         <a href="/logout" class="text-gray-400 hover:text-white text-sm transition px-2 py-1 rounded hover:bg-gray-700">Wyloguj ↩</a>
     </div>
@@ -141,15 +145,19 @@
         <!-- Flow / Post tabs — only when run is active -->
         <template x-if="selectedRun && (selectedRun.compatibility === 'current' || selectedRun.compatibility === 'yaml') && !selectedRun.syntax_error">
             <div class="flex items-center border-l border-gray-700 px-2 gap-0.5 flex-shrink-0">
-                <button @click="preMode=true; postMode=false; editMode=false; loadPreClips()"
-                        :class="preMode ? 'bg-purple-900 text-purple-200' : 'text-gray-500 hover:text-gray-300 hover:bg-gray-700/50'"
+                <button @click="picMode=true; preMode=false; postMode=false; editMode=false; loadPicTiles()"
+                        :class="picMode ? 'bg-pink-900 text-pink-200' : 'text-gray-500 hover:text-gray-300 hover:bg-gray-700/50'"
                         class="text-xs px-2.5 py-1 rounded-l transition"
+                        title="Pic Studio — biblioteka promptów I2I">🖼 Pic</button>
+                <button @click="preMode=true; postMode=false; picMode=false; editMode=false; loadPreClips()"
+                        :class="preMode ? 'bg-purple-900 text-purple-200' : 'text-gray-500 hover:text-gray-300 hover:bg-gray-700/50'"
+                        class="text-xs px-2.5 py-1 transition"
                         title="Pre-processing (hurtowy upscale)">🔧 Pre</button>
-                <button @click="preMode=false; postMode=false; editMode=false"
-                        :class="!preMode && !postMode ? 'bg-gray-700 text-white' : 'text-gray-500 hover:text-gray-300 hover:bg-gray-700/50'"
+                <button @click="preMode=false; postMode=false; picMode=false; editMode=false"
+                        :class="!preMode && !postMode && !picMode ? 'bg-gray-700 text-white' : 'text-gray-500 hover:text-gray-300 hover:bg-gray-700/50'"
                         class="text-xs px-2.5 py-1 transition"
                         title="Widok FLOW">📋 Flow</button>
-                <button @click="preMode=false; postMode=true; editMode=false; loadPostClips()"
+                <button @click="preMode=false; postMode=true; picMode=false; editMode=false; loadPostClips()"
                         :class="postMode ? 'bg-blue-900 text-blue-200' : 'text-gray-500 hover:text-gray-300 hover:bg-gray-700/50'"
                         class="text-xs px-2.5 py-1 rounded-r transition"
                         title="Post-processing">🎬 Post</button>
@@ -259,8 +267,8 @@
     <!-- ─── CONTENT ────────────────────────────────────────────── -->
     <main class="flex-1 flex flex-col overflow-hidden">
 
-        <!-- TOOLBAR — hidden in post/pre-processing mode -->
-        <div x-show="selectedRun && !postMode && !preMode" class="border-b border-gray-700 px-5 py-2 flex items-center gap-3 flex-shrink-0 bg-gray-900">
+        <!-- TOOLBAR — hidden in post/pre/pic mode -->
+        <div x-show="selectedRun && !postMode && !preMode && !picMode" class="border-b border-gray-700 px-5 py-2 flex items-center gap-3 flex-shrink-0 bg-gray-900">
             <!-- Generuj -->
             <button @click="startGeneration()"
                     :disabled="!canGenerate"
@@ -370,7 +378,7 @@
             </template>
 
             <!-- Current run — FLOW view -->
-            <template x-if="selectedRun && (selectedRun.compatibility === 'current' || selectedRun.compatibility === 'yaml') && !selectedRun.syntax_error && !postMode && !preMode">
+            <template x-if="selectedRun && (selectedRun.compatibility === 'current' || selectedRun.compatibility === 'yaml') && !selectedRun.syntax_error && !postMode && !preMode && !picMode">
                 <div class="p-4 space-y-2">
                         <template x-if="flowLoading">
                             <div class="flex items-center gap-2 text-gray-500 text-sm py-4">
@@ -837,6 +845,141 @@
                             </div>
                         </template>
                     </div>
+            </template>
+
+            <!-- ═══ PIC STUDIO VIEW ═══ -->
+            <template x-if="picMode">
+                <div class="flex flex-col h-full overflow-hidden">
+
+                    <!-- No project selected -->
+                    <div x-show="!selectedRun" class="flex flex-col items-center justify-center h-full text-gray-600">
+                        <span class="text-4xl mb-3">📂</span>
+                        <p class="text-sm">Wybierz projekt z listy po lewej</p>
+                    </div>
+
+                    <!-- Project selected -->
+                    <template x-if="selectedRun">
+                        <div class="flex flex-col h-full overflow-hidden">
+
+                            <!-- Header -->
+                            <div class="flex items-center gap-3 px-5 py-3 border-b border-gray-700 bg-gray-900 flex-shrink-0">
+                                <span class="text-pink-400 text-base">🖼</span>
+                                <h2 class="text-sm font-semibold text-white">Pic Studio</h2>
+                                <span class="text-xs text-gray-600 truncate max-w-xs" x-text="selectedRun.display_name"></span>
+                                <div class="ml-auto flex items-center gap-2">
+                                    <span x-show="picTilesLoading" class="text-xs text-gray-500 animate-pulse">ładowanie...</span>
+                                    <button @click="openGlobalPic()"
+                                            class="text-xs text-pink-400 border border-pink-800 hover:border-pink-500 rounded px-2 py-1 transition">
+                                        🗂 Biblioteka promptów
+                                    </button>
+                                    <button @click="picOpenTileModal(null)"
+                                            class="text-xs text-white bg-blue-800 hover:bg-blue-700 border border-blue-700 rounded px-3 py-1.5 transition">
+                                        + Nowy kafelek
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Tile list -->
+                            <div class="flex-1 overflow-y-auto p-4 space-y-2">
+
+                                <!-- Global generation progress bar -->
+                                <template x-if="picGen.running">
+                                    <div class="bg-blue-950 border border-blue-800 rounded-lg p-3 mb-1">
+                                        <div class="flex items-center gap-2 mb-1.5">
+                                            <span class="animate-spin inline-block text-blue-400 text-xs">⟳</span>
+                                            <span class="text-xs text-blue-300 font-medium" x-text="picGen.tileName || 'Generowanie…'"></span>
+                                            <span x-show="picGen.current_prompt"
+                                                  class="text-xs text-blue-500 font-mono truncate max-w-xs"
+                                                  x-text="'→ ' + picGen.current_prompt"></span>
+                                            <span class="ml-auto text-xs text-blue-600 flex-shrink-0"
+                                                  x-text="picGen.done + ' / ' + (picGen.total || '?')"></span>
+                                        </div>
+                                        <div class="bg-gray-700 rounded-full h-1 overflow-hidden">
+                                            <div class="bg-blue-500 h-1 rounded-full transition-all duration-500"
+                                                 :style="`width:${picGen.total ? Math.round((picGen.done / picGen.total) * 100) : 0}%`"></div>
+                                        </div>
+                                        <p class="text-xs text-gray-600 mt-1">Możesz zamknąć okno kafelka — generowanie działa w tle</p>
+                                    </div>
+                                </template>
+
+                                <!-- Empty state -->
+                                <template x-if="picTiles.length === 0 && !picTilesLoading">
+                                    <div class="flex flex-col items-center justify-center h-48 text-gray-600">
+                                        <span class="text-4xl mb-3">🖼</span>
+                                        <p class="text-sm mb-3">Brak kafelków — dodaj pierwszy</p>
+                                        <button @click="picOpenTileModal(null)"
+                                                class="text-xs text-blue-400 hover:text-blue-300 border border-blue-800 hover:border-blue-500 rounded px-4 py-2 transition">
+                                            + Nowy kafelek
+                                        </button>
+                                    </div>
+                                </template>
+
+                                <!-- Tiles -->
+                                <template x-for="tile in picTiles" :key="tile.id">
+                                    <div @click="if(!$event.target.closest('button')) picOpenTileModal(tile)"
+                                         :class="picTileStatusClass(tile.id)"
+                                         class="bg-gray-800 border border-gray-700 hover:border-gray-600 rounded-lg p-4 cursor-pointer group transition flex items-center gap-4">
+
+                                        <!-- Source image thumbnail (first slot) -->
+                                        <div class="w-14 h-14 flex-shrink-0 rounded overflow-hidden bg-gray-700 flex items-center justify-center relative group/thumb">
+                                            <template x-if="tile.source_dir && tile.image_slots?.[0]?.image">
+                                                <img :src="picTileImageUrl(tile)"
+                                                     class="w-full h-full object-cover cursor-zoom-in"
+                                                     @click.stop="picImgPreview = { open: true, url: picTileImageUrl(tile), title: tile.image_slots[0].image }"
+                                                     @error="$el.style.display='none'; $el.nextElementSibling.style.display='flex'">
+                                            </template>
+                                            <span class="text-gray-500 text-2xl" :style="tile.source_dir && tile.image_slots?.[0]?.image ? 'display:none' : ''">🖼</span>
+                                            <!-- multi-image badge -->
+                                            <div x-show="(tile.image_slots?.length || 0) > 1"
+                                                 class="absolute bottom-0 right-0 bg-black/80 text-white rounded-tl px-1 leading-none"
+                                                 style="font-size:9px" x-text="'×' + tile.image_slots.length">
+                                            </div>
+                                            <div x-show="tile.source_dir && tile.image_slots?.[0]?.image"
+                                                 class="absolute inset-0 bg-black/0 group-hover/thumb:bg-black/30 transition pointer-events-none flex items-center justify-center">
+                                                <span class="text-white text-xs opacity-0 group-hover/thumb:opacity-100 transition">🔍</span>
+                                            </div>
+                                        </div>
+
+                                        <!-- Info -->
+                                        <div class="flex-1 min-w-0">
+                                            <div class="flex items-center gap-2">
+                                                <h3 class="text-sm font-medium text-white truncate" x-text="tile.name"></h3>
+                                                <!-- Status badge -->
+                                                <template x-if="picStatuses[tile.id]">
+                                                    <span :class="{
+                                                            'bg-green-900 text-green-300':  picStatuses[tile.id].overall === 'all',
+                                                            'bg-yellow-900 text-yellow-300': picStatuses[tile.id].overall === 'partial',
+                                                            'bg-gray-700 text-gray-400':    picStatuses[tile.id].overall === 'none' || picStatuses[tile.id].overall === 'empty'
+                                                          }"
+                                                          class="text-xs px-1.5 py-0.5 rounded flex-shrink-0"
+                                                          x-text="picStatuses[tile.id].done + '/' + picStatuses[tile.id].total + ' gotowych'">
+                                                    </span>
+                                                </template>
+                                            </div>
+                                            <div class="text-xs text-gray-500 mt-0.5 flex items-center gap-2">
+                                                <span x-text="(tile.image_slots?.length || 0) + ' ' + ((tile.image_slots?.length || 0) === 1 ? 'obraz' : 'obrazów')"></span>
+                                                <span class="text-gray-700">·</span>
+                                                <span x-text="(tile.image_slots?.reduce((s,sl) => s + (sl.prompts?.length||0), 0) || 0) + ' promptów'"></span>
+                                                <span class="text-gray-700">·</span>
+                                                <span class="font-mono truncate text-gray-600" x-text="tile.output_dir || '—'"></span>
+                                            </div>
+                                        </div>
+
+                                        <!-- Actions (hover) -->
+                                        <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition flex-shrink-0">
+                                            <button @click.stop="picCopyTile(tile.id)"
+                                                    class="text-xs text-gray-500 hover:text-white px-2 py-1.5 rounded hover:bg-gray-700 transition"
+                                                    title="Kopiuj kafelek">📋</button>
+                                            <button @click.stop="picDeleteTile(tile.id)"
+                                                    class="text-xs text-gray-500 hover:text-red-400 px-2 py-1.5 rounded hover:bg-gray-700 transition"
+                                                    title="Usuń kafelek">🗑</button>
+                                        </div>
+                                    </div>
+                                </template>
+                            </div>
+                        </div>
+                    </template>
+                </div>
             </template>
 
             <!-- ═══ PRE-PROCESSING VIEW ═══ -->
@@ -1972,6 +2115,931 @@
 </div>
 </template>
 
+<!-- ═══ PIC — PROMPT MODAL ═══════════════════════════════════════ -->
+<template x-if="pic.promptModal.open">
+<div class="fixed inset-0 bg-black/80 flex items-center justify-center p-4" style="z-index:62"
+     @keydown.escape.window="pic.promptModal.open = false">
+    <div class="bg-gray-900 rounded-xl border border-gray-700 w-full max-w-2xl flex flex-col" style="max-height:90vh">
+
+        <!-- Header -->
+        <div class="flex items-center justify-between px-5 py-3 border-b border-gray-700 flex-shrink-0">
+            <div>
+                <h2 class="text-sm font-semibold text-white"
+                    x-text="pic.promptModal.mode === 'create' ? '+ Nowy prompt' : '✎ Edytuj prompt'"></h2>
+                <p x-show="pic.promptModal.tileContext" class="text-xs text-blue-400 mt-0.5">
+                    💾 Zostanie zapisany do biblioteki i dodany do kafelka
+                </p>
+            </div>
+            <button @click="pic.promptModal.open = false" class="text-gray-500 hover:text-white text-xl leading-none">×</button>
+        </div>
+
+        <!-- Body -->
+        <div class="flex-1 overflow-y-auto px-5 py-4 space-y-3">
+            <!-- Name + Category -->
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-xs text-gray-400 mb-1">Nazwa</label>
+                    <input type="text" x-model="pic.promptModal.data.name" placeholder="np. Ręce pod boki"
+                           class="w-full bg-gray-800 border border-gray-600 rounded px-3 py-1.5 text-sm text-white focus:outline-none focus:border-pink-500">
+                </div>
+                <div>
+                    <label class="block text-xs text-gray-400 mb-1">Kategoria</label>
+                    <select x-model="pic.promptModal.data.category"
+                            class="w-full bg-gray-800 border border-gray-600 rounded px-3 py-1.5 text-sm text-gray-200 focus:outline-none focus:border-pink-500">
+                        <option value="">📂 Bez kategorii</option>
+                        <template x-for="cat in pic.categories" :key="cat.id">
+                            <option :value="cat.id" x-text="cat.icon + ' ' + cat.name"></option>
+                        </template>
+                    </select>
+                </div>
+            </div>
+            <!-- Note -->
+            <div>
+                <label class="block text-xs text-yellow-600 mb-1">Uwaga / ostrzeżenie (opcjonalne)</label>
+                <input type="text" x-model="pic.promptModal.data.note" placeholder="np. Uwaga: model może zmieniać strój"
+                       class="w-full bg-gray-800 border border-yellow-900 rounded px-3 py-1.5 text-sm text-yellow-200 focus:outline-none focus:border-yellow-600">
+            </div>
+            <!-- Positive -->
+            <div>
+                <label class="block text-xs text-green-400 mb-1">Prompt pozytywny</label>
+                <textarea x-model="pic.promptModal.data.positive" rows="6"
+                          class="w-full bg-gray-800 border border-gray-600 rounded px-3 py-2 text-sm text-gray-200 font-mono focus:outline-none focus:border-green-500 resize-y"></textarea>
+            </div>
+            <!-- Negative -->
+            <div>
+                <label class="block text-xs text-red-400 mb-1">Prompt negatywny</label>
+                <textarea x-model="pic.promptModal.data.negative" rows="3"
+                          class="w-full bg-gray-800 border border-gray-600 rounded px-3 py-2 text-sm text-gray-200 font-mono focus:outline-none focus:border-red-500 resize-y"></textarea>
+            </div>
+            <!-- Params -->
+            <div class="grid grid-cols-3 gap-3">
+                <div>
+                    <label class="block text-xs text-gray-400 mb-1">Steps</label>
+                    <input type="number" x-model.number="pic.promptModal.data.params.steps" min="1" max="100"
+                           class="w-full bg-gray-800 border border-gray-600 rounded px-3 py-1.5 text-sm text-gray-200 focus:outline-none focus:border-pink-500">
+                </div>
+                <div>
+                    <label class="block text-xs text-gray-400 mb-1">CFG</label>
+                    <input type="number" x-model.number="pic.promptModal.data.params.cfg" min="1" max="30" step="0.5"
+                           class="w-full bg-gray-800 border border-gray-600 rounded px-3 py-1.5 text-sm text-gray-200 focus:outline-none focus:border-pink-500">
+                </div>
+                <div>
+                    <label class="block text-xs text-gray-400 mb-1">Denoise</label>
+                    <input type="number" x-model.number="pic.promptModal.data.params.denoise" min="0" max="1" step="0.05"
+                           class="w-full bg-gray-800 border border-gray-600 rounded px-3 py-1.5 text-sm text-gray-200 focus:outline-none focus:border-pink-500">
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="flex items-center justify-between px-5 py-3 border-t border-gray-700 flex-shrink-0">
+            <p x-show="pic.promptModal.error" class="text-red-400 text-xs" x-text="pic.promptModal.error"></p>
+            <div class="ml-auto flex gap-3">
+                <button @click="pic.promptModal.open = false"
+                        class="px-4 py-2 text-sm text-gray-400 hover:text-white rounded-lg hover:bg-gray-700 transition">Anuluj</button>
+                <button @click="picSavePrompt()"
+                        :disabled="pic.promptModal.saving"
+                        class="px-4 py-2 text-sm bg-pink-700 hover:bg-pink-600 text-white rounded-lg transition disabled:opacity-50">
+                    <span x-show="pic.promptModal.saving" class="animate-spin inline-block mr-1">⟳</span>
+                    Zapisz
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+</template>
+
+<!-- ═══ PIC — CATEGORY MODAL ═════════════════════════════════════ -->
+<template x-if="pic.categoryModal.open">
+<div class="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4"
+     @keydown.escape.window="pic.categoryModal.open = false">
+    <div class="bg-gray-900 rounded-xl border border-gray-700 w-full max-w-sm flex flex-col">
+        <!-- Header -->
+        <div class="flex items-center justify-between px-5 py-3 border-b border-gray-700">
+            <h2 class="text-sm font-semibold text-white"
+                x-text="pic.categoryModal.mode === 'create' ? '+ Nowa kategoria' : '✎ Edytuj kategorię'"></h2>
+            <button @click="pic.categoryModal.open = false" class="text-gray-500 hover:text-white text-xl leading-none">×</button>
+        </div>
+        <!-- Body -->
+        <div class="px-5 py-4 space-y-3">
+            <div class="grid grid-cols-3 gap-3">
+                <div>
+                    <label class="block text-xs text-gray-400 mb-1">Ikona</label>
+                    <input type="text" x-model="pic.categoryModal.data.icon" maxlength="2"
+                           class="w-full bg-gray-800 border border-gray-600 rounded px-3 py-1.5 text-sm text-center focus:outline-none focus:border-pink-500">
+                </div>
+                <div class="col-span-2">
+                    <label class="block text-xs text-gray-400 mb-1">Nazwa</label>
+                    <input type="text" x-model="pic.categoryModal.data.name" placeholder="np. Repose"
+                           class="w-full bg-gray-800 border border-gray-600 rounded px-3 py-1.5 text-sm text-white focus:outline-none focus:border-pink-500">
+                </div>
+            </div>
+        </div>
+        <!-- Footer -->
+        <div class="flex justify-end gap-3 px-5 py-3 border-t border-gray-700">
+            <button @click="pic.categoryModal.open = false"
+                    class="px-4 py-2 text-sm text-gray-400 hover:text-white rounded-lg hover:bg-gray-700 transition">Anuluj</button>
+            <button @click="picSaveCategory()"
+                    :disabled="pic.categoryModal.saving"
+                    class="px-4 py-2 text-sm bg-pink-700 hover:bg-pink-600 text-white rounded-lg transition disabled:opacity-50">
+                <span x-show="pic.categoryModal.saving" class="animate-spin inline-block mr-1">⟳</span>
+                Zapisz
+            </button>
+        </div>
+    </div>
+</div>
+</template>
+
+<!-- ══════ GLOBAL PIC LIBRARY MODAL ══════════════════════════════ -->
+<template x-if="globalPicOpen">
+<div class="fixed inset-0 bg-black/80 z-40 flex flex-col" @keydown.escape.window="if(!pic.promptModal.open && !pic.categoryModal.open) globalPicOpen = false">
+    <div class="flex flex-col h-full w-full bg-gray-900">
+
+        <!-- Header -->
+        <div class="flex items-center gap-3 px-5 py-3 border-b border-gray-700 bg-gray-800 flex-shrink-0">
+            <span class="text-pink-400 text-base">🗂</span>
+            <h2 class="text-sm font-semibold text-white">Globalna biblioteka promptów I2I</h2>
+            <span class="text-xs text-gray-500 font-mono">— i2i_prompts.yaml</span>
+            <div class="ml-auto flex items-center gap-2">
+                <span x-show="pic.loading" class="text-xs text-gray-500 animate-pulse">ładowanie...</span>
+                <button @click="picOpenCategoryModal(null)"
+                        class="text-xs text-pink-400 border border-pink-800 hover:border-pink-500 rounded px-2 py-0.5 transition">
+                    + Kategoria
+                </button>
+                <button @click="picOpenPromptModal(null)"
+                        :disabled="pic.categories.length === 0"
+                        :class="pic.categories.length === 0 ? 'opacity-40 cursor-not-allowed' : 'hover:border-pink-500 cursor-pointer'"
+                        class="text-xs text-white bg-pink-800 hover:bg-pink-700 border border-pink-700 rounded px-3 py-0.5 transition">
+                    + Nowy prompt
+                </button>
+                <div class="h-4 w-px bg-gray-600 mx-1"></div>
+                <button @click="globalPicOpen = false"
+                        class="text-gray-400 hover:text-white text-sm px-3 py-1 rounded hover:bg-gray-700 transition">
+                    ✕ Zamknij
+                </button>
+            </div>
+        </div>
+
+        <!-- Body: two columns -->
+        <div class="flex flex-1 overflow-hidden">
+
+            <!-- Left: category list -->
+            <div class="w-52 flex-shrink-0 border-r border-gray-700 overflow-y-auto py-2">
+                <button @click="pic.activeCategoryId = null"
+                        :class="pic.activeCategoryId === null ? 'bg-pink-900/40 text-pink-200 border-l-2 border-pink-500' : 'text-gray-400 hover:text-white hover:bg-gray-800'"
+                        class="w-full text-left text-xs px-3 py-2.5 transition truncate font-medium">
+                    📋 Wszystkie
+                    <span class="text-gray-600 ml-1" x-text="'(' + pic.prompts.length + ')'"></span>
+                </button>
+                <template x-for="cat in pic.categories" :key="cat.id">
+                    <div class="relative">
+                        <button @click="pic.activeCategoryId = cat.id"
+                                :class="pic.activeCategoryId === cat.id ? 'bg-pink-900/40 text-pink-200 border-l-2 border-pink-500' : 'text-gray-400 hover:text-white hover:bg-gray-800'"
+                                class="w-full text-left text-xs px-3 py-2.5 transition truncate pr-14">
+                            <span x-text="cat.icon + ' ' + cat.name"></span>
+                            <span class="text-gray-600 ml-1" x-text="'(' + pic.prompts.filter(p => p.category === cat.id).length + ')'"></span>
+                        </button>
+                        <!-- Edit/Delete — always visible -->
+                        <div class="absolute right-1 top-1.5 flex gap-0.5">
+                            <button @click.stop="picOpenCategoryModal(cat)"
+                                    class="text-gray-500 hover:text-white text-xs px-1.5 py-1 rounded hover:bg-gray-700 transition" title="Zmień nazwę / ikonę">✎</button>
+                            <button @click.stop="picDeleteCategory(cat.id)"
+                                    class="text-gray-600 hover:text-red-400 text-xs px-1.5 py-1 rounded hover:bg-gray-800 transition" title="Usuń kategorię">✕</button>
+                        </div>
+                    </div>
+                </template>
+                <!-- Virtual "Unassigned" category -->
+                <button x-show="pic.prompts.filter(p => !p.category).length > 0"
+                        @click="pic.activeCategoryId = '__unassigned__'"
+                        :class="pic.activeCategoryId === '__unassigned__' ? 'bg-pink-900/40 text-pink-200 border-l-2 border-pink-500' : 'text-gray-400 hover:text-white hover:bg-gray-800'"
+                        class="w-full text-left text-xs px-3 py-2.5 transition truncate">
+                    📂 Nieprzypisane
+                    <span class="text-gray-600 ml-1" x-text="'(' + pic.prompts.filter(p => !p.category).length + ')'"></span>
+                </button>
+            </div>
+
+            <!-- Right: prompt cards -->
+            <div class="flex-1 overflow-y-auto p-5">
+
+                <!-- Empty state -->
+                <template x-if="picFilteredPrompts().length === 0 && !pic.loading">
+                    <div class="flex flex-col items-center justify-center h-48 text-gray-600">
+                        <span class="text-4xl mb-3">🖼</span>
+                        <p class="text-sm">Brak promptów w tej kategorii</p>
+                        <button @click="picOpenPromptModal(null)"
+                                class="mt-3 text-xs text-pink-400 hover:text-pink-300 underline">
+                            Dodaj pierwszy prompt
+                        </button>
+                    </div>
+                </template>
+
+                <!-- Prompt cards — click anywhere to edit -->
+                <div class="grid grid-cols-1 xl:grid-cols-2 gap-3">
+                    <template x-for="p in picFilteredPrompts()" :key="p.id">
+                        <div @click="if(!$event.target.closest('button')) picOpenPromptModal(p)"
+                             class="bg-gray-800 border border-gray-700 hover:border-green-700 rounded-lg p-4 transition cursor-pointer group flex flex-col gap-2">
+                            <!-- Card header -->
+                            <div class="flex items-start justify-between gap-2">
+                                <div class="flex items-center gap-2 min-w-0">
+                                    <h3 class="text-sm font-medium text-white truncate" x-text="p.name"></h3>
+                                    <template x-if="p.note">
+                                        <span class="text-xs text-yellow-600 bg-yellow-900/30 border border-yellow-800 rounded px-1.5 py-0.5 flex-shrink-0"
+                                              x-text="'⚠ ' + p.note"></span>
+                                    </template>
+                                </div>
+                                <!-- Params chip + Delete -->
+                                <div class="flex items-center gap-2 flex-shrink-0">
+                                    <span class="text-xs text-gray-600 font-mono"
+                                          x-text="'s:' + (p.params?.steps ?? pic.defaults.steps) + ' c:' + (p.params?.cfg ?? pic.defaults.cfg)"></span>
+                                    <button @click.stop="picDeletePrompt(p.id)"
+                                            class="text-xs text-gray-600 hover:text-red-400 border border-gray-700 hover:border-red-800 rounded px-2 py-0.5 transition opacity-0 group-hover:opacity-100">
+                                        Usuń
+                                    </button>
+                                </div>
+                            </div>
+                            <!-- Positive prompt preview -->
+                            <p class="text-xs text-green-400/80 leading-relaxed line-clamp-2 flex-1" x-text="p.positive"></p>
+                            <!-- Negative prompt preview -->
+                            <template x-if="p.negative">
+                                <p class="text-xs text-red-400/60 leading-relaxed line-clamp-1" x-text="'— ' + p.negative"></p>
+                            </template>
+                            <!-- Footer: category label -->
+                            <div class="flex items-center gap-1.5 pt-1 border-t border-gray-700/60">
+                                <span class="inline-flex items-center gap-1 text-xs bg-gray-700/70 border border-gray-600/60 text-gray-400 rounded px-1.5 py-0.5">
+                                    <span x-text="pic.categories.find(c => c.id === p.category)?.icon || '📂'"></span>
+                                    <span x-text="pic.categories.find(c => c.id === p.category)?.name || 'Bez kategorii'"></span>
+                                </span>
+                                <!-- Prompt ID chip -->
+                                <span class="text-xs text-gray-600 font-mono ml-auto" x-text="p.id"></span>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</template>
+
+<!-- ══════ FS BROWSER MODAL ═══════════════════════════════════════ -->
+<template x-if="fsBrowser.open">
+<div class="fixed inset-0 bg-black/80 flex items-center justify-center p-4"
+     style="z-index:70"
+     @keydown.escape.window="fsBrowser.open = false">
+    <div class="bg-gray-900 rounded-xl border border-gray-700 w-full max-w-3xl flex flex-col" style="max-height:85vh">
+
+        <!-- Header -->
+        <div class="flex items-center justify-between px-5 py-3 border-b border-gray-700 flex-shrink-0">
+            <div class="min-w-0">
+                <h2 class="text-sm font-semibold text-white" x-text="fsBrowser.title"></h2>
+                <p class="text-xs text-gray-600 font-mono mt-0.5 truncate" x-text="fsBrowser.path || '—'"></p>
+            </div>
+            <button @click="fsBrowser.open = false" class="text-gray-500 hover:text-white text-xl leading-none ml-4">×</button>
+        </div>
+
+        <!-- Navigation bar -->
+        <div class="flex items-center gap-2 px-4 py-2 border-b border-gray-800 flex-shrink-0">
+            <button @click="fsBrowser.parent && fsBrowseTo(fsBrowser.parent)"
+                    :class="fsBrowser.parent ? 'text-gray-300 hover:text-white hover:bg-gray-700' : 'text-gray-600 cursor-default'"
+                    class="text-xs px-2 py-1 rounded transition flex-shrink-0">
+                ← Wyżej
+            </button>
+            <input type="text" x-model="fsBrowser.path"
+                   @keydown.enter="fsBrowseTo($event.target.value)"
+                   @blur="fsBrowseTo($event.target.value)"
+                   class="flex-1 bg-gray-800 border border-gray-700 rounded px-3 py-1 text-xs text-gray-300 font-mono focus:outline-none focus:border-blue-500"
+                   placeholder="Wpisz ścieżkę i naciśnij Enter…">
+            <button @click="fsMkdir()"
+                    :disabled="!fsBrowser.path"
+                    class="flex-shrink-0 text-xs text-yellow-400 border border-yellow-800 hover:border-yellow-500 hover:text-yellow-300 rounded px-2 py-1 transition disabled:opacity-30"
+                    title="Utwórz nowy katalog w bieżącej lokalizacji">
+                📁+ Nowy folder
+            </button>
+        </div>
+
+        <!-- Body -->
+        <div class="flex-1 overflow-y-auto px-4 py-3 min-h-0">
+            <!-- Loading -->
+            <div x-show="fsBrowser.loading" class="text-center text-gray-500 text-sm py-10">
+                <span class="animate-spin inline-block mr-2">⟳</span> Ładowanie…
+            </div>
+
+            <!-- Directories -->
+            <template x-if="!fsBrowser.loading && fsBrowser.dirs.length > 0">
+                <div class="mb-4">
+                    <p class="text-xs text-gray-600 mb-1.5 uppercase tracking-wider">Katalogi (<span x-text="fsBrowser.dirs.length"></span>)</p>
+                    <div class="grid grid-cols-2 gap-0.5">
+                        <template x-for="dir in fsBrowser.dirs" :key="dir.path">
+                            <button @click="fsBrowseTo(dir.path)"
+                                    class="text-left text-xs text-blue-300 hover:text-white hover:bg-gray-800 rounded px-3 py-2 transition flex items-center gap-2 truncate">
+                                <span class="text-yellow-500 flex-shrink-0">📁</span>
+                                <span class="truncate" x-text="dir.name"></span>
+                            </button>
+                        </template>
+                    </div>
+                </div>
+            </template>
+
+            <!-- Images (only when mode=image) -->
+            <template x-if="!fsBrowser.loading && fsBrowser.mode === 'image' && fsBrowser.images.length > 0">
+                <div>
+                    <p class="text-xs text-gray-600 mb-2 uppercase tracking-wider">Obrazki (<span x-text="fsBrowser.images.length"></span>)</p>
+                    <div class="grid grid-cols-4 gap-2">
+                        <template x-for="img in fsBrowser.images" :key="img.path">
+                            <div @click="fsBrowser.selectedImage = img"
+                                 :class="fsBrowser.selectedImage?.path === img.path ? 'ring-2 ring-green-500 bg-gray-700' : 'hover:ring-1 hover:ring-gray-500 bg-gray-800'"
+                                 class="cursor-pointer rounded overflow-hidden transition">
+                                <img :src="`/api/fs/image?path=${encodeURIComponent(img.path)}`"
+                                     class="w-full h-20 object-cover">
+                                <p class="text-xs text-gray-400 px-1.5 py-1 truncate leading-tight" x-text="img.name"></p>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+            </template>
+
+            <!-- Empty -->
+            <template x-if="!fsBrowser.loading && fsBrowser.dirs.length === 0 && (fsBrowser.mode === 'dir' || fsBrowser.images.length === 0)">
+                <p class="text-sm text-gray-600 text-center py-10">
+                    <span x-text="fsBrowser.mode === 'image' ? 'Brak obrazków w tym katalogu' : 'Brak podkatalogów'"></span>
+                </p>
+            </template>
+        </div>
+
+        <!-- Footer -->
+        <div class="flex items-center justify-between px-5 py-3 border-t border-gray-700 flex-shrink-0">
+            <div class="text-xs text-gray-500 min-w-0 truncate">
+                <template x-if="fsBrowser.mode === 'dir'">
+                    <span>Wybrany katalog: <span class="text-white font-mono" x-text="fsBrowser.path || '—'"></span></span>
+                </template>
+                <template x-if="fsBrowser.mode === 'image'">
+                    <span>Wybrany: <span class="text-white font-mono" x-text="fsBrowser.selectedImage?.name || '—'"></span></span>
+                </template>
+            </div>
+            <div class="flex gap-2 flex-shrink-0 ml-3">
+                <button @click="fsBrowser.open = false"
+                        class="px-4 py-2 text-sm text-gray-400 hover:text-white rounded-lg hover:bg-gray-700 transition">Anuluj</button>
+                <button @click="fsBrowserConfirm()"
+                        :disabled="fsBrowser.mode === 'image' && !fsBrowser.selectedImage"
+                        class="px-4 py-2 text-sm bg-blue-700 hover:bg-blue-600 text-white rounded-lg transition disabled:opacity-50">
+                    Wybierz
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+</template>
+
+<!-- ══════ PIC IMAGE PREVIEW ══════════════════════════════════════ -->
+<template x-if="picImgPreview.open">
+<div class="fixed inset-0 bg-black/90 flex items-center justify-center p-4 cursor-zoom-out"
+     style="z-index:80"
+     @click="picImgPreview.open = false"
+     @keydown.escape.window="picImgPreview.open = false">
+    <div class="relative max-w-screen-xl max-h-full flex flex-col items-center" @click.stop>
+        <!-- Title bar -->
+        <div class="flex items-center justify-between w-full mb-2 px-1">
+            <span class="text-xs text-gray-400 font-mono truncate max-w-lg" x-text="picImgPreview.title"></span>
+            <div class="flex items-center gap-2 flex-shrink-0 ml-4">
+                <a :href="picImgPreview.url" target="_blank"
+                   class="text-xs text-blue-400 hover:text-blue-300 transition px-2 py-1 rounded bg-gray-800 hover:bg-gray-700">
+                    ↗ Pełny rozmiar
+                </a>
+                <button @click="picImgPreview.open = false"
+                        class="text-gray-400 hover:text-white text-xl leading-none px-2">×</button>
+            </div>
+        </div>
+        <!-- Image -->
+        <img :src="picImgPreview.url"
+             class="max-h-[85vh] max-w-full rounded object-contain shadow-2xl"
+             @error="$el.alt='Błąd ładowania obrazka'">
+    </div>
+</div>
+</template>
+
+<!-- ══════ TILE EDIT MODAL ════════════════════════════════════════ -->
+<template x-if="tileModal.open">
+<div class="fixed inset-0 bg-black/85 z-50 flex items-center justify-center p-4"
+     @keydown.escape.window="if(!promptImport.open && !fsBrowser.open && !pic.promptModal.open) tileModal.open = false">
+    <div class="bg-gray-900 rounded-xl border border-gray-700 w-full max-w-4xl flex flex-col" style="max-height:92vh">
+
+        <!-- Header -->
+        <div class="flex items-center justify-between px-5 py-3 border-b border-gray-700 flex-shrink-0">
+            <div>
+                <h2 class="text-sm font-semibold text-white"
+                    x-text="tileModal.mode === 'create' ? '+ Nowy kafelek' : ('✎ ' + (tileModal.data.name || 'Kafelek'))"></h2>
+                <p class="text-xs text-gray-500 mt-0.5">Typ: 1 obraz × N promptów</p>
+            </div>
+            <button @click="tileModal.open = false" class="text-gray-500 hover:text-white text-xl leading-none">×</button>
+        </div>
+
+        <!-- Tabs -->
+        <div class="flex border-b border-gray-700 flex-shrink-0 px-5 gap-1">
+            <button @click="tileModal.tab='config'"
+                    :class="tileModal.tab==='config' ? 'border-b-2 border-blue-500 text-white' : 'text-gray-500 hover:text-gray-300'"
+                    class="text-xs px-4 py-2.5 transition">📁 Konfiguracja</button>
+            <button @click="tileModal.tab='prompts'"
+                    :class="tileModal.tab==='prompts' ? 'border-b-2 border-blue-500 text-white' : 'text-gray-500 hover:text-gray-300'"
+                    class="text-xs px-4 py-2.5 transition">
+                📝 Prompty
+                <span x-show="tileModal.data.image_slots.reduce((s,sl)=>s+(sl.prompts?.length||0),0) > 0"
+                      class="ml-1 text-gray-600 text-xs"
+                      x-text="'(' + tileModal.data.image_slots.reduce((s,sl)=>s+(sl.prompts?.length||0),0) + ')'"></span>
+            </button>
+            <button @click="picSwitchToGenerate()"
+                    :class="tileModal.tab==='generate' ? 'border-b-2 border-blue-500 text-white' : 'text-gray-500 hover:text-gray-300'"
+                    class="text-xs px-4 py-2.5 transition">⚡ Generowanie</button>
+        </div>
+
+        <!-- ── CONFIG TAB ──────────────────────────────────── -->
+        <div x-show="tileModal.tab === 'config'" class="flex-1 overflow-y-auto px-5 py-4 space-y-4 min-h-0">
+
+            <!-- Name -->
+            <div>
+                <label class="block text-xs text-gray-400 mb-1">Nazwa kafelka</label>
+                <input type="text" x-model="tileModal.data.name"
+                       placeholder="np. Modele Kasia — Repose"
+                       class="w-full bg-gray-800 border border-gray-600 rounded px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500">
+            </div>
+
+            <!-- Source dir -->
+            <div>
+                <label class="block text-xs text-gray-400 mb-1">Katalog źródłowy <span class="text-gray-600">(obrazy wejściowe)</span></label>
+                <div class="flex gap-2">
+                    <input type="text" x-model="tileModal.data.source_dir"
+                           placeholder="C:\ścieżka\do\model_source"
+                           @change="loadTileSrcImages()"
+                           class="flex-1 bg-gray-800 border border-gray-600 rounded px-3 py-2 text-sm text-gray-300 font-mono focus:outline-none focus:border-blue-500">
+                    <button @click="openFsBrowser('dir', tileModal.data.source_dir, 'Wybierz katalog źródłowy', (p) => { tileModal.data.source_dir = p; loadTileSrcImages(); })"
+                            class="flex-shrink-0 text-xs text-gray-400 border border-gray-600 hover:border-gray-400 hover:text-white rounded px-3 py-2 transition">
+                        📂 Przeglądaj
+                    </button>
+                </div>
+            </div>
+
+            <!-- Output dir -->
+            <div>
+                <label class="block text-xs text-gray-400 mb-1">Katalog wyjściowy <span class="text-gray-600">(generowane obrazy)</span></label>
+                <div class="flex gap-2">
+                    <input type="text" x-model="tileModal.data.output_dir"
+                           placeholder="C:\ścieżka\do\i2i_studio\kasiaX_modele"
+                           class="flex-1 bg-gray-800 border border-gray-600 rounded px-3 py-2 text-sm text-gray-300 font-mono focus:outline-none focus:border-blue-500">
+                    <button @click="openFsBrowser('dir', tileModal.data.output_dir, 'Wybierz katalog wyjściowy', (p) => { tileModal.data.output_dir = p; })"
+                            class="flex-shrink-0 text-xs text-gray-400 border border-gray-600 hover:border-gray-400 hover:text-white rounded px-3 py-2 transition">
+                        📂 Przeglądaj
+                    </button>
+                </div>
+            </div>
+
+            <!-- Source image multi-select -->
+            <div>
+                <div class="flex items-center gap-2 mb-2">
+                    <label class="text-xs text-gray-400">Obrazy źródłowe</label>
+                    <span class="text-xs text-green-400 bg-green-900/30 border border-green-800 rounded px-2 py-0.5"
+                          x-show="tileModal.data.image_slots.length > 0"
+                          x-text="'✓ ' + tileModal.data.image_slots.length + ' ' + (tileModal.data.image_slots.length === 1 ? 'wybrany' : 'wybranych')">
+                    </span>
+                    <button @click="loadTileSrcImages()" :disabled="!tileModal.data.source_dir"
+                            class="text-xs text-gray-500 hover:text-gray-300 disabled:opacity-30 transition ml-auto">
+                        ↺ Odśwież
+                    </button>
+                </div>
+                <!-- Images grid — multi-select with checkboxes -->
+                <div x-show="tileModal.srcLoading" class="text-xs text-gray-500 py-2">Ładowanie obrazków…</div>
+                <div x-show="!tileModal.srcLoading && tileModal.srcImages.length === 0 && tileModal.data.source_dir"
+                     class="text-xs text-gray-600 py-2">Brak obrazków w katalogu źródłowym (lub katalog nie istnieje)</div>
+                <div x-show="!tileModal.srcLoading && tileModal.srcImages.length > 0"
+                     class="grid grid-cols-5 gap-2">
+                    <template x-for="img in tileModal.srcImages" :key="img.path">
+                        <div @click="picToggleImageSlot(img.name)"
+                             :class="tileModal.data.image_slots.some(s => s.image === img.name)
+                                     ? 'ring-2 ring-green-500 bg-gray-700'
+                                     : 'hover:ring-1 hover:ring-gray-500 bg-gray-800'"
+                             class="cursor-pointer rounded overflow-hidden transition relative group">
+                            <img :src="`/api/fs/image?path=${encodeURIComponent(img.path)}`"
+                                 class="w-full h-20 object-cover">
+                            <p class="text-xs text-gray-400 px-1.5 py-1 truncate leading-tight" x-text="img.name"></p>
+                            <!-- Selected checkmark with slot order number -->
+                            <template x-if="tileModal.data.image_slots.some(s => s.image === img.name)">
+                                <div class="absolute top-1 right-1 bg-green-600 rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold"
+                                     x-text="tileModal.data.image_slots.findIndex(s => s.image === img.name) + 1">
+                                </div>
+                            </template>
+                            <!-- zoom button -->
+                            <button @click.stop="picImgPreview = { open: true, url: `/api/fs/image?path=${encodeURIComponent(img.path)}`, title: img.name }"
+                                    class="absolute bottom-7 right-1 bg-black/60 hover:bg-black/80 text-white rounded px-1 py-0.5 text-xs opacity-0 group-hover:opacity-100 transition leading-none"
+                                    title="Powiększ">🔍</button>
+                        </div>
+                    </template>
+                </div>
+                <p x-show="!tileModal.srcLoading && tileModal.srcImages.length > 0"
+                   class="text-xs text-gray-600 mt-1">Kliknij obrazek aby zaznaczyć/odznaczyć. Liczba = kolejność generowania.</p>
+            </div>
+        </div>
+
+        <!-- ── PROMPTS TAB ─────────────────────────────────── -->
+        <div x-show="tileModal.tab === 'prompts'" class="flex-1 overflow-y-auto px-5 py-4 min-h-0">
+
+            <!-- Global toolbar (only shown when >1 image) -->
+            <template x-if="tileModal.data.image_slots.length > 1">
+                <div class="flex items-center gap-2 mb-3 p-2.5 bg-indigo-950/40 border border-indigo-800/50 rounded-lg">
+                    <span class="text-xs text-indigo-300 font-medium">Wszystkie obrazki:</span>
+                    <div class="ml-auto flex gap-2">
+                        <button @click="picOpenPromptImport(null)"
+                                class="text-xs text-blue-400 border border-blue-800 hover:border-blue-500 rounded px-2 py-1.5 transition">
+                            + Import do wszystkich
+                        </button>
+                        <button @click="picAddBlankPromptAll()"
+                                class="text-xs text-indigo-300 bg-indigo-900/60 hover:bg-indigo-900 border border-indigo-700 rounded px-2 py-1.5 transition">
+                            + Nowy do wszystkich
+                        </button>
+                    </div>
+                </div>
+            </template>
+
+            <!-- Global suffix -->
+            <div class="mb-4 p-3 bg-gray-800/50 border border-gray-700 rounded-lg">
+                <label class="block text-xs text-gray-400 mb-1">
+                    🌐 Global suffix
+                    <span class="text-gray-600 ml-1">(dopisywany do każdego positive przy generowaniu)</span>
+                </label>
+                <input type="text" x-model="tileModal.data.global_suffix"
+                       placeholder="np. remove background, solid white backdrop"
+                       class="w-full bg-gray-800 border border-gray-600 rounded px-3 py-1.5 text-xs text-yellow-300 focus:outline-none focus:border-yellow-500">
+            </div>
+
+            <!-- Empty state: no images selected -->
+            <div x-show="tileModal.data.image_slots.length === 0"
+                 class="text-center text-gray-600 text-sm py-10">
+                Najpierw wybierz obrazy w zakładce Konfiguracja
+            </div>
+
+            <!-- Per-slot accordion sections -->
+            <div class="space-y-4">
+                <template x-for="(slot, slotIdx) in tileModal.data.image_slots" :key="slot.image">
+                    <div class="border border-gray-700 rounded-xl overflow-hidden">
+
+                        <!-- Slot header -->
+                        <div class="flex items-center gap-3 px-3 py-2.5 bg-gray-800/80 border-b border-gray-700">
+                            <!-- Thumbnail -->
+                            <img :src="`/api/fs/image?path=${encodeURIComponent((tileModal.data.source_dir || '').replace(/[/\\]+$/, '') + '\\' + slot.image)}`"
+                                 class="w-10 h-10 rounded object-cover flex-shrink-0 cursor-zoom-in"
+                                 @click.stop="picImgPreview = { open: true, url: `/api/fs/image?path=${encodeURIComponent((tileModal.data.source_dir || '').replace(/[/\\]+$/, '') + '\\' + slot.image)}`, title: slot.image }"
+                                 @error="$el.style.display='none'">
+                            <div class="flex-1 min-w-0">
+                                <span class="text-xs font-medium text-white truncate" x-text="slot.image"></span>
+                                <span class="text-xs text-gray-500 ml-2"
+                                      x-text="'(' + (slot.prompts?.filter(p=>p.enabled!==false).length||0) + ' aktywnych / ' + (slot.prompts?.length||0) + ')'"></span>
+                            </div>
+                            <!-- Per-slot buttons -->
+                            <div class="flex gap-1.5 flex-shrink-0">
+                                <button @click="picOpenPromptImport(slotIdx)"
+                                        class="text-xs text-blue-400 border border-blue-800 hover:border-blue-500 rounded px-2 py-1 transition">
+                                    + Import
+                                </button>
+                                <button @click="picAddBlankPrompt(slotIdx)"
+                                        class="text-xs text-gray-300 bg-gray-700 hover:bg-gray-600 border border-gray-600 rounded px-2 py-1 transition">
+                                    + Nowy
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Slot prompt list -->
+                        <div class="divide-y divide-gray-700/50">
+
+                            <!-- Empty state for this slot -->
+                            <div x-show="!slot.prompts || slot.prompts.length === 0"
+                                 class="px-4 py-4 text-center text-xs text-gray-600">
+                                Brak promptów — zaimportuj z biblioteki lub dodaj własny
+                            </div>
+
+                            <template x-for="(p, pIdx) in (slot.prompts || [])" :key="p.id">
+                                <div :class="p._editing ? 'bg-yellow-950/10' : ''" class="group transition">
+                                    <!-- Prompt row -->
+                                    <div @click="if(!$event.target.closest('button,input')) picToggleTilePromptEdit(slotIdx, pIdx)"
+                                         class="flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-gray-700/30 transition">
+                                        <input type="checkbox" :checked="p.enabled !== false"
+                                               @change="p.enabled = $event.target.checked"
+                                               class="w-4 h-4 rounded accent-green-500 flex-shrink-0 cursor-pointer">
+                                        <span :class="p.enabled === false ? 'line-through text-gray-600' : 'text-white'"
+                                              class="text-xs font-medium flex-1 truncate" x-text="p.name"></span>
+                                        <span x-show="p._modified && !p._notInLibrary"
+                                              class="text-xs text-orange-400 flex-shrink-0" title="Zmieniony lokalnie">✎</span>
+                                        <span x-show="p._notInLibrary"
+                                              class="text-xs text-gray-500 flex-shrink-0" title="Spoza biblioteki">⚠</span>
+                                        <span class="text-xs text-gray-600 font-mono flex-shrink-0"
+                                              x-text="'s:' + (p.params?.steps ?? 30) + ' c:' + (p.params?.cfg ?? 8)"></span>
+                                        <span x-show="p._editing" class="text-xs text-yellow-500 flex-shrink-0">▲</span>
+                                        <span x-show="!p._editing" class="text-xs text-gray-600 group-hover:text-gray-400 flex-shrink-0 transition">▼</span>
+                                        <button @click.stop="slot.prompts.splice(pIdx, 1)"
+                                                class="text-xs text-gray-600 hover:text-red-400 rounded px-1.5 py-0.5 transition opacity-0 group-hover:opacity-100">✕</button>
+                                    </div>
+                                    <!-- Inline edit -->
+                                    <div x-show="p._editing" class="px-3 pb-3 pt-1 border-t border-gray-700/50 space-y-2 bg-gray-800/30">
+                                        <div x-show="p._modified && !p._notInLibrary"
+                                             class="flex items-center justify-between bg-orange-950/50 border border-orange-800/60 rounded px-2 py-1">
+                                            <span class="text-xs text-orange-300">✎ Zmieniony lokalnie</span>
+                                            <button @click.stop="picRestoreFromLibrary(slotIdx, pIdx)"
+                                                    class="text-xs text-blue-400 hover:text-blue-300 transition">⟲ Przywróć z biblioteki</button>
+                                        </div>
+                                        <input type="text" x-model="p.name" placeholder="Nazwa prompta"
+                                               @input="_picComputePromptFlags()"
+                                               class="w-full bg-gray-700 border border-gray-600 rounded px-2 py-1.5 text-xs text-white focus:outline-none focus:border-blue-500">
+                                        <textarea x-model="p.positive" rows="3" placeholder="Positive prompt…"
+                                                  @input="_picComputePromptFlags()"
+                                                  class="w-full bg-gray-700 border border-green-900 rounded px-2 py-1.5 text-xs text-green-300 font-mono resize-none focus:outline-none focus:border-green-600"></textarea>
+                                        <textarea x-model="p.negative" rows="2" placeholder="Negative prompt…"
+                                                  @input="_picComputePromptFlags()"
+                                                  class="w-full bg-gray-700 border border-red-900 rounded px-2 py-1.5 text-xs text-red-300 font-mono resize-none focus:outline-none focus:border-red-700"></textarea>
+                                        <div class="flex gap-4 text-xs items-center">
+                                            <label class="text-gray-500">Steps
+                                                <input type="number" x-model.number="p.params.steps" min="1" max="100"
+                                                       @change="_picComputePromptFlags()"
+                                                       class="ml-1 w-14 bg-gray-700 border border-gray-600 rounded px-1 py-0.5 text-white text-center focus:outline-none">
+                                            </label>
+                                            <label class="text-gray-500">CFG
+                                                <input type="number" x-model.number="p.params.cfg" min="1" max="30" step="0.5"
+                                                       @change="_picComputePromptFlags()"
+                                                       class="ml-1 w-14 bg-gray-700 border border-gray-600 rounded px-1 py-0.5 text-white text-center focus:outline-none">
+                                            </label>
+                                            <label class="text-gray-500">Denoise
+                                                <input type="number" x-model.number="p.params.denoise" min="0" max="1" step="0.05"
+                                                       @change="_picComputePromptFlags()"
+                                                       class="ml-1 w-16 bg-gray-700 border border-gray-600 rounded px-1 py-0.5 text-white text-center focus:outline-none">
+                                            </label>
+                                            <button @click="picToggleTilePromptEdit(slotIdx, pIdx)"
+                                                    class="ml-auto text-green-400 hover:text-green-300 transition">✓ Gotowe</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+                </template>
+            </div>
+        </div>
+
+        <!-- ── GENERATE TAB ────────────────────────────────── -->
+        <div x-show="tileModal.tab === 'generate'" class="flex-1 overflow-y-auto px-5 py-4 min-h-0">
+
+            <!-- Save reminder for create mode -->
+            <div x-show="tileModal.mode === 'create'"
+                 class="text-center text-yellow-600 text-sm py-10">
+                ⚠ Zapisz kafelek przed uruchomieniem generowania
+            </div>
+
+            <template x-if="tileModal.mode === 'edit'">
+                <div class="space-y-4">
+
+                    <!-- Global status + run buttons -->
+                    <div class="flex items-center gap-3 p-3 bg-gray-800 border border-gray-700 rounded-lg">
+                        <span :class="{
+                                'text-green-400':  tileModal.status?.overall === 'all',
+                                'text-yellow-400': tileModal.status?.overall === 'partial',
+                                'text-gray-500':   !tileModal.status || ['none','empty'].includes(tileModal.status?.overall)
+                              }"
+                              x-text="tileModal.status
+                                ? (tileModal.status.done + '/' + tileModal.status.total + ' wygenerowanych')
+                                : 'Kliknij Odśwież aby sprawdzić status'">
+                        </span>
+                        <button @click="loadTileStatus()"
+                                class="text-xs text-gray-500 hover:text-gray-300 transition">↺ Odśwież</button>
+                        <div class="ml-auto flex gap-2">
+                            <button @click="picRunTile(false)"
+                                    :disabled="picGen.running && picGen.tileId === tileModal.tileId"
+                                    class="text-xs text-white bg-green-800 hover:bg-green-700 border border-green-700 rounded px-3 py-1.5 transition disabled:opacity-50">
+                                ▶ Generuj brakujące
+                            </button>
+                            <button @click="picRunTile(true)"
+                                    :disabled="picGen.running && picGen.tileId === tileModal.tileId"
+                                    class="text-xs text-gray-400 border border-gray-600 hover:border-gray-400 hover:text-white rounded px-3 py-1.5 transition disabled:opacity-50">
+                                ▶▶ Generuj wszystkie
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Progress bar (during generation) -->
+                    <div x-show="picGen.running && picGen.tileId === tileModal.tileId" class="p-3 bg-blue-950 border border-blue-800 rounded-lg">
+                        <div class="flex items-center gap-2 mb-2">
+                            <span class="animate-spin inline-block text-blue-400 text-sm">⟳</span>
+                            <span class="text-sm text-blue-300">Generowanie…</span>
+                            <span x-show="tileModal.job?.current_prompt"
+                                  class="text-xs text-blue-400 font-mono truncate max-w-xs"
+                                  x-text="tileModal.job?.current_prompt"></span>
+                            <span class="ml-auto text-xs text-blue-500 flex-shrink-0"
+                                  x-text="(tileModal.job?.done ?? 0) + ' / ' + (tileModal.job?.total ?? '?')"></span>
+                        </div>
+                        <div class="bg-gray-700 rounded-full h-1.5 overflow-hidden">
+                            <div class="bg-blue-500 h-1.5 rounded-full transition-all duration-500"
+                                 :style="`width:${tileModal.job?.total ? Math.round((tileModal.job.done / tileModal.job.total) * 100) : 0}%`"></div>
+                        </div>
+                        <template x-if="tileModal.job?.errors?.length">
+                            <div class="mt-2 space-y-0.5">
+                                <template x-for="err in tileModal.job.errors" :key="(err.image||'') + err.prompt_id">
+                                    <div class="text-xs text-red-400">
+                                        ❌ <span x-text="(err.image ? err.image + ' × ' : '') + (err.prompt_name || err.prompt_id || '')"></span>:
+                                        <span x-text="err.error"></span>
+                                    </div>
+                                </template>
+                            </div>
+                        </template>
+                    </div>
+
+                    <!-- Post-generation errors -->
+                    <template x-if="!picGen.running && picGen.tileId === tileModal.tileId && tileModal.job?.status === 'done' && tileModal.job?.errors?.length">
+                        <div class="p-3 bg-red-950 border border-red-800 rounded-lg space-y-0.5">
+                            <p class="text-xs text-red-400 font-semibold mb-1">Błędy podczas generowania:</p>
+                            <template x-for="err in tileModal.job.errors" :key="(err.image||'') + err.prompt_id">
+                                <div class="text-xs text-red-400">
+                                    ❌ <span x-text="(err.image ? err.image + ' × ' : '') + (err.prompt_name || '')"></span>: <span x-text="err.error"></span>
+                                </div>
+                            </template>
+                        </div>
+                    </template>
+
+                    <!-- Per-slot result sections -->
+                    <template x-for="(slot, slotIdx) in tileModal.data.image_slots" :key="slot.image">
+                        <div class="border border-gray-700 rounded-xl overflow-hidden">
+
+                            <!-- Slot header + per-slot run buttons -->
+                            <div class="flex items-center gap-3 px-3 py-2.5 bg-gray-800/80 border-b border-gray-700">
+                                <img :src="`/api/fs/image?path=${encodeURIComponent((tileModal.data.source_dir||'').replace(/[/\\]+$/, '') + '\\' + slot.image)}`"
+                                     class="w-9 h-9 rounded object-cover flex-shrink-0" @error="$el.style.display='none'">
+                                <div class="flex-1 min-w-0">
+                                    <span class="text-xs font-medium text-white truncate" x-text="slot.image"></span>
+                                    <template x-if="tileModal.status?.slots?.[slotIdx]">
+                                        <span :class="{
+                                                'text-green-400':  tileModal.status.slots[slotIdx].done >= tileModal.status.slots[slotIdx].total && tileModal.status.slots[slotIdx].total > 0,
+                                                'text-yellow-400': tileModal.status.slots[slotIdx].done > 0 && tileModal.status.slots[slotIdx].done < tileModal.status.slots[slotIdx].total,
+                                                'text-gray-500':   tileModal.status.slots[slotIdx].done === 0
+                                              }"
+                                              class="ml-2 text-xs"
+                                              x-text="tileModal.status.slots[slotIdx].done + '/' + tileModal.status.slots[slotIdx].total">
+                                        </span>
+                                    </template>
+                                </div>
+                                <div class="flex gap-1.5 flex-shrink-0">
+                                    <button @click="picRunTile(false, slotIdx)"
+                                            :disabled="picGen.running && picGen.tileId === tileModal.tileId"
+                                            class="text-xs text-white bg-green-900 hover:bg-green-800 border border-green-800 rounded px-2 py-1 transition disabled:opacity-50">
+                                        ▶ Ten obrazek
+                                    </button>
+                                    <button @click="picRunTile(true, slotIdx)"
+                                            :disabled="picGen.running && picGen.tileId === tileModal.tileId"
+                                            class="text-xs text-gray-500 border border-gray-600 hover:border-gray-400 hover:text-white rounded px-2 py-1 transition disabled:opacity-50"
+                                            title="Generuj wszystkie prompty dla tego obrazka (nadpisz istniejące)">▶▶</button>
+                                </div>
+                            </div>
+
+                            <!-- Results grid for this slot -->
+                            <div class="grid grid-cols-3 gap-2 p-3">
+                                <template x-for="p in (slot.prompts || []).filter(p => p.enabled !== false)" :key="p.id">
+                                    <div class="bg-gray-800 border rounded-lg overflow-hidden"
+                                         :class="tileModal.status?.slots?.[slotIdx]?.prompts?.[p.id]?.done ? 'border-green-800' : 'border-gray-700'">
+                                        <div class="relative group/result">
+                                            <template x-if="tileModal.status?.slots?.[slotIdx]?.prompts?.[p.id]?.done && tileModal.status?.slots?.[slotIdx]?.prompts?.[p.id]?.output_path">
+                                                <img :src="`/api/fs/image?path=${encodeURIComponent(tileModal.status.slots[slotIdx].prompts[p.id].output_path)}`"
+                                                     class="w-full h-28 object-cover cursor-zoom-in"
+                                                     @click="picImgPreview = { open: true, url: `/api/fs/image?path=${encodeURIComponent(tileModal.status.slots[slotIdx].prompts[p.id].output_path)}`, title: slot.image + ' × ' + p.name }">
+                                            </template>
+                                            <template x-if="!tileModal.status?.slots?.[slotIdx]?.prompts?.[p.id]?.done">
+                                                <div class="w-full h-28 bg-gray-700 flex items-center justify-center text-gray-600 text-3xl">🖼</div>
+                                            </template>
+                                            <div class="absolute top-1 right-1">
+                                                <span x-show="tileModal.status?.slots?.[slotIdx]?.prompts?.[p.id]?.done"
+                                                      class="bg-green-700 text-green-100 text-xs px-1 py-0.5 rounded">✓</span>
+                                            </div>
+                                        </div>
+                                        <div class="px-2 pt-1.5 pb-1 flex items-center justify-between gap-1">
+                                            <span class="text-xs text-gray-300 truncate" x-text="p.name"></span>
+                                            <button x-show="tileModal.status?.slots?.[slotIdx]?.prompts?.[p.id]?.done"
+                                                    @click="picArchiveResult(p.id, slotIdx)"
+                                                    class="text-xs text-gray-600 hover:text-yellow-400 flex-shrink-0 transition" title="Archiwizuj">📦</button>
+                                        </div>
+                                        <div class="px-2 pb-1.5">
+                                            <span class="text-xs font-mono text-gray-600 select-all" x-text="p.output_id || '—'"></span>
+                                        </div>
+                                    </div>
+                                </template>
+
+                                <!-- Empty for this slot -->
+                                <div x-show="!(slot.prompts || []).filter(p => p.enabled !== false).length"
+                                     class="col-span-3 text-center text-xs text-gray-600 py-6">
+                                    Brak aktywnych promptów dla tego obrazka
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+
+                    <!-- No images selected -->
+                    <div x-show="tileModal.data.image_slots.length === 0"
+                         class="text-center text-gray-600 text-sm py-10">
+                        Brak obrazków — przejdź do zakładki <strong class="text-gray-400">Konfiguracja</strong>
+                    </div>
+                </div>
+            </template>
+        </div>
+
+        <!-- Footer -->
+        <div class="border-t border-gray-700 flex-shrink-0">
+            <p x-show="tileModal.error" class="text-red-400 text-xs px-5 pt-2" x-text="tileModal.error"></p>
+            <div class="flex justify-end gap-3 px-5 py-3">
+                <button @click="tileModal.open = false"
+                        class="px-4 py-2 text-sm text-gray-400 hover:text-white rounded-lg hover:bg-gray-700 transition">Anuluj</button>
+                <button @click="picSaveTile()"
+                        :disabled="tileModal.saving"
+                        class="px-4 py-2 text-sm bg-blue-700 hover:bg-blue-600 text-white rounded-lg transition disabled:opacity-50">
+                    <span x-show="tileModal.saving" class="animate-spin inline-block mr-1">⟳</span>
+                    Zapisz kafelek
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+</template>
+
+<!-- ══════ PROMPT IMPORT MODAL (z-[60] — above tile modal z-50) ══ -->
+<template x-if="promptImport.open">
+<div class="fixed inset-0 bg-black/70 flex items-center justify-center p-4"
+     style="z-index:60"
+     @keydown.escape.window="promptImport.open = false">
+    <div class="bg-gray-900 rounded-xl border border-gray-700 w-full max-w-2xl flex flex-col" style="max-height:80vh">
+
+        <!-- Header -->
+        <div class="flex items-center justify-between px-5 py-3 border-b border-gray-700 flex-shrink-0">
+            <h2 class="text-sm font-semibold text-white">Import promptów z biblioteki globalnej</h2>
+            <button @click="promptImport.open = false" class="text-gray-500 hover:text-white text-xl leading-none">×</button>
+        </div>
+
+        <!-- Body -->
+        <div class="flex flex-1 overflow-hidden min-h-0">
+            <!-- Categories -->
+            <div class="w-44 flex-shrink-0 border-r border-gray-700 overflow-y-auto py-2">
+                <button @click="promptImport.catFilter = null"
+                        :class="promptImport.catFilter === null ? 'bg-blue-900/40 text-blue-200 border-l-2 border-blue-500' : 'text-gray-400 hover:text-white hover:bg-gray-800'"
+                        class="w-full text-left text-xs px-3 py-2 transition truncate">
+                    Wszystkie (<span x-text="pic.prompts.length"></span>)
+                </button>
+                <template x-for="cat in pic.categories" :key="cat.id">
+                    <button @click="promptImport.catFilter = cat.id"
+                            :class="promptImport.catFilter === cat.id ? 'bg-blue-900/40 text-blue-200 border-l-2 border-blue-500' : 'text-gray-400 hover:text-white hover:bg-gray-800'"
+                            class="w-full text-left text-xs px-3 py-2 transition truncate"
+                            x-text="cat.icon + ' ' + cat.name"></button>
+                </template>
+            </div>
+
+            <!-- Prompts with checkboxes -->
+            <div class="flex-1 overflow-y-auto min-h-0 flex flex-col">
+                <!-- Select all row -->
+                <div class="flex items-center gap-2 px-3 py-2 border-b border-gray-700 flex-shrink-0 bg-gray-800/50">
+                    <input type="checkbox"
+                           :checked="picImportFilteredPrompts().length > 0 && picImportFilteredPrompts().every(p => promptImport.selected[p.id])"
+                           :indeterminate="picImportFilteredPrompts().some(p => promptImport.selected[p.id]) && !picImportFilteredPrompts().every(p => promptImport.selected[p.id])"
+                           @change="picImportToggleAll($event.target.checked)"
+                           class="w-4 h-4 rounded accent-blue-500 cursor-pointer">
+                    <span class="text-xs text-gray-400 select-none cursor-pointer"
+                          @click="picImportToggleAll(!picImportFilteredPrompts().every(p => promptImport.selected[p.id]))">
+                        Zaznacz / odznacz wszystkie
+                        <span class="text-gray-600" x-text="'(' + picImportFilteredPrompts().length + ')'"></span>
+                    </span>
+                </div>
+                <div class="flex-1 overflow-y-auto p-3 space-y-1">
+                <template x-for="p in picImportFilteredPrompts()" :key="p.id">
+                    <label class="flex items-start gap-2 p-2 rounded hover:bg-gray-800 cursor-pointer">
+                        <input type="checkbox" :checked="!!promptImport.selected[p.id]"
+                               @change="promptImport.selected[p.id] = $event.target.checked"
+                               class="w-4 h-4 mt-0.5 rounded accent-blue-500 flex-shrink-0">
+                        <div class="flex-1 min-w-0">
+                            <span class="text-xs font-medium text-white" x-text="p.name"></span>
+                            <p class="text-xs text-green-400/70 truncate mt-0.5" x-text="p.positive"></p>
+                        </div>
+                        <span x-show="tileModal.data.image_slots?.some(sl => sl.prompts?.some(tp => tp.id === p.id))"
+                              class="text-xs text-gray-600 flex-shrink-0 mt-0.5">już dodany</span>
+                    </label>
+                </template>
+                </div><!-- end scroll -->
+            </div><!-- end prompts panel -->
+        </div><!-- end body -->
+
+        <!-- Footer -->
+        <div class="flex items-center justify-between px-5 py-3 border-t border-gray-700 flex-shrink-0">
+            <span class="text-xs text-gray-500">
+                Zaznaczono: <span class="text-white font-medium"
+                                  x-text="Object.values(promptImport.selected).filter(Boolean).length"></span>
+            </span>
+            <div class="flex gap-2">
+                <button @click="promptImport.open = false"
+                        class="px-4 py-2 text-sm text-gray-400 hover:text-white rounded-lg hover:bg-gray-700 transition">Anuluj</button>
+                <button @click="picConfirmImportPrompts()"
+                        class="px-4 py-2 text-sm bg-blue-700 hover:bg-blue-600 text-white rounded-lg transition">
+                    Import zaznaczonych
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+</template>
+
 <!-- ═══ APP CONFIG MODAL ══════════════════════════════════════════ -->
 <template x-if="appCfgModal.open">
 <div class="fixed inset-0 bg-black/85 flex items-center justify-center z-50 p-4"
@@ -2614,8 +3682,10 @@ function app() {
 
         async selectRun(run) {
             this.selectedRun = run; this.flowData = null; this.flowError = null; this.statusData = null;
-            this.editMode = false;  // reset on run switch
+            this.editMode = true;   // keep edit mode on run switch
             this.postMode = false;  // reset to flow view on run switch
+            this.picMode  = false;
+            this.picTiles = []; this.picStatuses = {};
             this.logLine('sys', `Wybrano: ${run.display_name} [${run.compatibility}]`);
             if (run.syntax_error) {
                 this.logLine('sys', `❌ Błąd składni linia ${run.syntax_error.line}: ${run.syntax_error.msg}`);
@@ -3022,8 +4092,96 @@ function app() {
         _envPollTimer: null,
 
         // ─ View mode ──────────────────────────────────────
-        postMode: false,
-        preMode:  false,
+        postMode:      false,
+        preMode:       false,
+        picMode:       false,
+        globalPicOpen: false,
+
+        // ─ Pic Studio per-project ─────────────────────────
+        picTiles:        [],
+        picTilesLoading: false,
+        picStatuses:     {},   // { tile_id: {overall, done, enabled_total, prompts:{}} }
+
+        // FS/file browser modal
+        fsBrowser: {
+            open:          false,
+            mode:          'dir',   // 'dir' | 'image'
+            title:         '',
+            path:          '',
+            parent:        null,
+            dirs:          [],
+            images:        [],
+            selectedImage: null,
+            loading:       false,
+            onConfirm:     null,
+        },
+
+        // Tile edit modal
+        tileModal: {
+            open:       false,
+            mode:       'create',  // 'create' | 'edit'
+            tab:        'config',  // 'config' | 'prompts' | 'generate'
+            saving:     false,
+            error:      null,
+            tileId:     null,
+            data: {
+                type:          'one_image_many_prompts',
+                name:          '',
+                source_dir:    '',
+                output_dir:    '',
+                global_suffix: '',
+                image_slots:   [],   // [{image, prompts:[...]}]
+            },
+            srcImages:  [],
+            srcLoading: false,
+            status:     null,
+            job:        null,   // current generation job (polled from /job)
+        },
+
+        // Prompt import from global library into tile
+        // slotIndex: null = all slots; int = specific slot
+        promptImport: {
+            open:      false,
+            selected:  {},
+            catFilter: null,
+            slotIndex: null,
+        },
+
+        // Image zoom preview (Pic Studio)
+        picImgPreview: { open: false, url: '', title: '' },
+
+        // Global generation state — persists independently of tileModal
+        picGen: {
+            running:        false,
+            runId:          null,
+            tileId:         null,
+            tileName:       '',
+            total:          0,
+            done:           0,
+            skipped:        0,
+            current_prompt: null,
+            errors:         [],
+        },
+
+        // ─ Pic Studio ─────────────────────────────────────
+        pic: {
+            loading:        false,
+            categories:     [],
+            prompts:        [],
+            defaults:       { steps: 30, cfg: 8, denoise: 1.0 },
+            activeCategoryId: null,
+            promptModal: {
+                open: false, mode: 'create', saving: false, error: null,
+                tileContext: null,   // null = library only; {runId, tileId} = also add to tile
+                data: { name: '', category: '', note: '', positive: '', negative: '',
+                        params: { steps: 30, cfg: 8, denoise: 1.0 } },
+            },
+            categoryModal: {
+                open: false, mode: 'create', saving: false, error: null,
+                data: { name: '', icon: '🗂' },
+                editId: null,
+            },
+        },
 
         // ─ Pre-processing ─────────────────────────────────
         preClips:       [],
@@ -3695,7 +4853,7 @@ function app() {
         },
 
         // ─ Flow editor ────────────────────────────────────
-        editMode: false,
+        editMode: true,
         editModal: { open: false, kind: '', title: '', subtitle: '', data: {}, idx: null, saving: false, error: null, projectFiles: [], audioFiles: [], loadingFiles: false, resolvingRes: false, resHint: '' },
         addItemModal: { open: false, afterIdx: -1 },
         preflightModal: { open: false, conflicts: [], onConfirm: null },
@@ -4128,6 +5286,726 @@ function app() {
             } finally {
                 this.appCfgModal.saving = false;
             }
+        },
+
+        // ─ Pic Studio ─────────────────────────────────────
+        openGlobalPic() {
+            this.globalPicOpen = true;
+            this.loadPicLibrary();
+        },
+
+        async loadPicLibrary() {
+            this.pic.loading = true;
+            try {
+                const res = await fetch('/api/i2i/prompts');
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                const data = await res.json();
+                this.pic.categories = data.categories || [];
+                this.pic.prompts    = data.prompts    || [];
+                this.pic.defaults   = data.defaults   || { steps: 30, cfg: 8, denoise: 1.0 };
+                this._picComputePromptFlags();
+            } catch(e) {
+                this.logLine('sys', `❌ Pic: błąd ładowania biblioteki: ${e.message}`);
+            } finally {
+                this.pic.loading = false;
+            }
+        },
+
+        picFilteredPrompts() {
+            if (!this.pic.activeCategoryId) return this.pic.prompts;
+            if (this.pic.activeCategoryId === '__unassigned__')
+                return this.pic.prompts.filter(p => !p.category);
+            return this.pic.prompts.filter(p => p.category === this.pic.activeCategoryId);
+        },
+
+        /**
+         * Compute _modified and _notInLibrary flags for every prompt in the
+         * open tileModal.  Call after loading the global library or opening the modal.
+         * Fields compared: name, positive, negative, note, params.steps/cfg/denoise.
+         */
+        /**
+         * Compute _modified and _notInLibrary flags for every prompt in every
+         * image slot of the open tileModal.
+         */
+        _picComputePromptFlags() {
+            if (!this.tileModal?.open) return;
+            const libMap = {};
+            for (const p of this.pic.prompts) libMap[p.id] = p;
+            for (const slot of (this.tileModal.data.image_slots || [])) {
+                for (const p of (slot.prompts || [])) {
+                    if (!p.id || p.id.startsWith('tmp_')) {
+                        p._notInLibrary = true; p._modified = false; continue;
+                    }
+                    const lib = libMap[p.id];
+                    if (!lib) {
+                        p._notInLibrary = true;
+                        p._modified     = false;
+                    } else {
+                        p._notInLibrary = false;
+                        const fieldsMatch =
+                            p.name     === lib.name     &&
+                            p.positive === lib.positive &&
+                            p.negative === (lib.negative || '') &&
+                            p.note     === (lib.note     || '') &&
+                            (p.params?.steps   ?? 30)  === (lib.params?.steps   ?? 30)  &&
+                            (p.params?.cfg     ?? 8)    === (lib.params?.cfg     ?? 8)   &&
+                            (p.params?.denoise ?? 1.0)  === (lib.params?.denoise ?? 1.0);
+                        p._modified = !fieldsMatch;
+                    }
+                }
+            }
+        },
+
+        /**
+         * Overwrite a slot prompt's fields with the library version.
+         * slotIdx: index into image_slots; promptIdx: index into slot.prompts
+         */
+        picRestoreFromLibrary(slotIdx, promptIdx) {
+            const slot = this.tileModal.data.image_slots?.[slotIdx];
+            const p    = slot?.prompts?.[promptIdx];
+            if (!p) return;
+            const lib = this.pic.prompts.find(x => x.id === p.id);
+            if (!lib) return;
+            p.name     = lib.name;
+            p.positive = lib.positive;
+            p.negative = lib.negative || '';
+            p.note     = lib.note     || '';
+            p.params   = { ...lib.params };
+            p._modified = false;
+        },
+
+        picOpenPromptModal(prompt, tileContext = null) {
+            const defaults = this.pic.defaults;
+            // When opening from a tile, don't pre-select __unassigned__ virtual id
+            const catGuess = (this.pic.activeCategoryId && this.pic.activeCategoryId !== '__unassigned__')
+                ? this.pic.activeCategoryId
+                : (this.pic.categories[0]?.id || '');
+            this.pic.promptModal = {
+                open: true,
+                mode: prompt ? 'edit' : 'create',
+                saving: false,
+                error: null,
+                tileContext,   // null = library only; {runId, tileId} = also add to tile
+                data: prompt
+                    ? JSON.parse(JSON.stringify(prompt))
+                    : { name: '', category: catGuess,
+                        note: '', positive: '', negative: '',
+                        params: { ...defaults } },
+                editId: prompt?.id || null,
+            };
+        },
+
+        async picSavePrompt() {
+            const m = this.pic.promptModal;
+            m.saving = true; m.error = null;
+            const d = m.data;
+            if (!d.name.trim())     { m.error = 'Podaj nazwę promptu'; m.saving = false; return; }
+            if (!d.positive.trim()) { m.error = 'Positive prompt jest wymagany'; m.saving = false; return; }
+            try {
+                let res;
+                if (m.mode === 'create' && m.tileContext) {
+                    // New prompt from tile context → save to global library AND add to slot(s)
+                    const { runId, tileId, slotIdx, addToAll } = m.tileContext;
+                    const payload = { ...d, slot_index: slotIdx ?? 0, add_to_all: addToAll ?? false };
+                    res = await fetch(`/api/pic/session/${runId}/tiles/${tileId}/prompts/new`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload),
+                    });
+                    const data = await res.json();
+                    if (!res.ok) { m.error = data.detail || `HTTP ${res.status}`; return; }
+                    m.open = false;
+                    // Add returned prompt to the right slot(s) locally
+                    const newPrompt = data.prompt;
+                    if (newPrompt) {
+                        const slots = this.tileModal.data.image_slots || [];
+                        const targets = addToAll ? slots : (slotIdx != null ? [slots[slotIdx]] : []);
+                        for (const slot of targets) {
+                            if (slot && !slot.prompts.some(p => p.id === newPrompt.id)) {
+                                slot.prompts.push({ ...newPrompt, enabled: true });
+                            }
+                        }
+                    }
+                    await this.loadPicLibrary();
+                    this.logLine('sys', `✅ Nowy prompt "${d.name}" dodany do biblioteki i kafelka`);
+                } else if (m.mode === 'create') {
+                    res = await fetch('/api/i2i/prompts', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(d),
+                    });
+                    const data = await res.json();
+                    if (!res.ok) { m.error = data.detail || `HTTP ${res.status}`; return; }
+                    m.open = false;
+                    await this.loadPicLibrary();
+                    this.logLine('sys', `✅ Prompt zapisany: ${d.name}`);
+                } else {
+                    res = await fetch(`/api/i2i/prompts/${m.editId}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(d),
+                    });
+                    const data = await res.json();
+                    if (!res.ok) { m.error = data.detail || `HTTP ${res.status}`; return; }
+                    m.open = false;
+                    await this.loadPicLibrary();
+                    this.logLine('sys', `✅ Prompt zapisany: ${d.name}`);
+                }
+            } catch(e) {
+                m.error = e.message;
+            } finally {
+                m.saving = false;
+            }
+        },
+
+        async picDeletePrompt(promptId) {
+            const p = this.pic.prompts.find(x => x.id === promptId);
+            if (!confirm(`Usunąć prompt "${p?.name}"?`)) return;
+            try {
+                const res = await fetch(`/api/i2i/prompts/${promptId}`, { method: 'DELETE' });
+                if (!res.ok) { const d = await res.json(); throw new Error(d.detail); }
+                await this.loadPicLibrary();
+                this.logLine('sys', `🗑 Prompt usunięty: ${p?.name}`);
+            } catch(e) {
+                this.logLine('sys', `❌ ${e.message}`);
+            }
+        },
+
+        picOpenCategoryModal(cat) {
+            this.pic.categoryModal = {
+                open: true,
+                mode: cat ? 'edit' : 'create',
+                saving: false,
+                error: null,
+                data: cat ? { name: cat.name, icon: cat.icon } : { name: '', icon: '🗂' },
+                editId: cat?.id || null,
+            };
+        },
+
+        async picSaveCategory() {
+            const m = this.pic.categoryModal;
+            m.saving = true; m.error = null;
+            if (!m.data.name.trim()) { m.error = 'Podaj nazwę kategorii'; m.saving = false; return; }
+            try {
+                let res;
+                if (m.mode === 'create') {
+                    res = await fetch('/api/i2i/categories', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(m.data),
+                    });
+                } else {
+                    res = await fetch(`/api/i2i/categories/${m.editId}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(m.data),
+                    });
+                }
+                const data = await res.json();
+                if (!res.ok) { m.error = data.detail || `HTTP ${res.status}`; return; }
+                m.open = false;
+                await this.loadPicLibrary();
+                this.logLine('sys', `✅ Kategoria zapisana: ${m.data.name}`);
+            } catch(e) {
+                m.error = e.message;
+            } finally {
+                m.saving = false;
+            }
+        },
+
+        async picDeleteCategory(catId) {
+            const cat = this.pic.categories.find(c => c.id === catId);
+            const count = this.pic.prompts.filter(p => p.category === catId).length;
+            const msg = count > 0
+                ? `Usunąć kategorię "${cat?.name}" i ${count} prompt(ów) w niej?`
+                : `Usunąć kategorię "${cat?.name}"?`;
+            if (!confirm(msg)) return;
+            try {
+                const res = await fetch(`/api/i2i/categories/${catId}`, { method: 'DELETE' });
+                if (!res.ok) { const d = await res.json(); throw new Error(d.detail); }
+                if (this.pic.activeCategoryId === catId) this.pic.activeCategoryId = null;
+                await this.loadPicLibrary();
+                this.logLine('sys', `🗑 Kategoria usunięta: ${cat?.name}`);
+            } catch(e) {
+                this.logLine('sys', `❌ ${e.message}`);
+            }
+        },
+
+        // ─ Pic Studio per-project ─────────────────────────
+
+        async loadPicTiles() {
+            if (!this.selectedRun?.filename) return;
+            this.picTilesLoading = true;
+            try {
+                const res = await fetch(`/api/pic/session/${this.selectedRun.filename}/tiles`);
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                const data = await res.json();
+                this.picTiles = data.tiles || [];
+                // Load statuses in background
+                for (const tile of this.picTiles) {
+                    this._loadPicTileStatus(tile.id);
+                }
+            } catch(e) {
+                this.logLine('sys', `❌ Pic: błąd ładowania kafelków: ${e.message}`);
+            } finally {
+                this.picTilesLoading = false;
+            }
+        },
+
+        async _loadPicTileStatus(tileId) {
+            if (!this.selectedRun?.filename) return;
+            try {
+                const res = await fetch(`/api/pic/session/${this.selectedRun.filename}/tiles/${tileId}/status`);
+                if (!res.ok) return;
+                const data = await res.json();
+                this.picStatuses = { ...this.picStatuses, [tileId]: data };
+            } catch(e) { /* silent */ }
+        },
+
+        picTileStatusClass(tileId) {
+            const s = this.picStatuses[tileId];
+            if (!s || s.overall === 'empty' || s.overall === 'none') return 'sl-gray';
+            if (s.overall === 'all')     return 'sl-green';
+            if (s.overall === 'partial') return 'sl-orange';
+            return 'sl-gray';
+        },
+
+        picTileImageUrl(tile, slotIndex = 0) {
+            const slot  = tile.image_slots?.[slotIndex];
+            const image = slot?.image;
+            if (!tile.source_dir || !image) return '';
+            const dir = tile.source_dir.replace(/[/\\]+$/, '');
+            return `/api/fs/image?path=${encodeURIComponent(dir + '\\' + image)}`;
+        },
+
+        picOpenTileModal(tile) {
+            const projFolder = this.selectedRun?.project_folder || '';
+            let tileData;
+            if (tile) {
+                tileData = JSON.parse(JSON.stringify(tile));
+                // Migrate old format: source_image + prompts → image_slots
+                if (!tileData.image_slots && (tileData.source_image || tileData.prompts)) {
+                    tileData.image_slots = [{
+                        image:   tileData.source_image || '',
+                        prompts: tileData.prompts      || [],
+                    }];
+                    delete tileData.source_image;
+                    delete tileData.prompts;
+                }
+                tileData.image_slots = tileData.image_slots || [];
+            } else {
+                tileData = {
+                    type:          'one_image_many_prompts',
+                    name:          '',
+                    source_dir:    projFolder ? projFolder.replace(/[/\\]+$/, '') : '',
+                    output_dir:    projFolder ? projFolder.replace(/[/\\]+$/, '') : '',
+                    global_suffix: '',
+                    image_slots:   [],
+                };
+            }
+            this.tileModal = {
+                open: true,
+                mode: tile ? 'edit' : 'create',
+                tab:  'config',
+                saving:    false,
+                error:     null,
+                tileId:    tile?.id || null,
+                data:      tileData,
+                srcImages:  [],
+                srcLoading: false,
+                status:     null,
+                job:        null,
+            };
+            if (this.tileModal.data.source_dir) {
+                this.loadTileSrcImages();
+            }
+            // Ensure global library loaded for modified flags
+            if (this.pic.prompts.length === 0) {
+                this.loadPicLibrary();
+            } else {
+                this._picComputePromptFlags();
+            }
+        },
+
+        async picSaveTile(silent = false) {
+            const m = this.tileModal;
+            m.saving = true; m.error = null;
+            if (!m.data.name.trim()) {
+                if (!silent) m.error = 'Podaj nazwę kafelka';
+                m.saving = false; return;
+            }
+            // Deep-clone and strip internal display flags from all slot prompts
+            const cleanData = JSON.parse(JSON.stringify(m.data));
+            for (const slot of (cleanData.image_slots || [])) {
+                for (const p of (slot.prompts || [])) {
+                    delete p._editing;
+                    delete p._modified;
+                    delete p._notInLibrary;
+                }
+            }
+            try {
+                let res;
+                if (m.mode === 'create') {
+                    res = await fetch(`/api/pic/session/${this.selectedRun.filename}/tiles`, {
+                        method: 'POST', headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(cleanData),
+                    });
+                } else {
+                    res = await fetch(`/api/pic/session/${this.selectedRun.filename}/tiles/${m.tileId}`, {
+                        method: 'PUT', headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(cleanData),
+                    });
+                }
+                const data = await res.json();
+                if (!res.ok) { m.error = data.detail || `HTTP ${res.status}`; return; }
+                if (silent) {
+                    // Stay in modal — update tileId if this was a create
+                    if (m.mode === 'create' && data.tile?.id) {
+                        m.tileId = data.tile.id;
+                        m.mode   = 'edit';
+                    }
+                } else {
+                    m.open = false;
+                    this.logLine('sys', `✅ Kafelek zapisany: ${m.data.name}`);
+                }
+                await this.loadPicTiles();
+            } catch(e) {
+                m.error = e.message;
+            } finally {
+                m.saving = false;
+            }
+        },
+
+        async picSwitchToGenerate() {
+            this.tileModal.tab = 'generate';
+            // Auto-save silently so Generate tab always reflects current in-memory state
+            if (this.tileModal.mode === 'edit' && this.tileModal.tileId
+                    && this.tileModal.data.name?.trim()) {
+                await this.picSaveTile(true);
+            }
+            await this.loadTileStatus();
+        },
+
+        async picDeleteTile(tileId) {
+            const tile = this.picTiles.find(t => t.id === tileId);
+            if (!confirm(`Usunąć kafelek "${tile?.name}"?`)) return;
+            try {
+                const res = await fetch(`/api/pic/session/${this.selectedRun.filename}/tiles/${tileId}`, { method: 'DELETE' });
+                if (!res.ok) { const d = await res.json(); throw new Error(d.detail); }
+                await this.loadPicTiles();
+                this.logLine('sys', `🗑 Kafelek usunięty: ${tile?.name}`);
+            } catch(e) { this.logLine('sys', `❌ ${e.message}`); }
+        },
+
+        async picCopyTile(tileId) {
+            const tile = this.picTiles.find(t => t.id === tileId);
+            try {
+                const res = await fetch(`/api/pic/session/${this.selectedRun.filename}/tiles/${tileId}/copy`, { method: 'POST' });
+                if (!res.ok) { const d = await res.json(); throw new Error(d.detail); }
+                await this.loadPicTiles();
+                this.logLine('sys', `📋 Skopiowano kafelek: ${tile?.name}`);
+            } catch(e) { this.logLine('sys', `❌ ${e.message}`); }
+        },
+
+        // ── FS Browser ────────────────────────────────────────
+
+        async openFsBrowser(mode, initialPath, title, onConfirm) {
+            this.fsBrowser = {
+                open: true, mode, title,
+                path: initialPath || '', parent: null,
+                dirs: [], images: [], selectedImage: null,
+                loading: false, onConfirm,
+            };
+            if (initialPath) await this.fsBrowseTo(initialPath);
+        },
+
+        async fsBrowseTo(path) {
+            if (!path) return;
+            this.fsBrowser.loading = true;
+            this.fsBrowser.path = path;
+            try {
+                const res = await fetch(`/api/fs/browse?path=${encodeURIComponent(path)}`);
+                if (!res.ok) { const d = await res.json(); throw new Error(d.detail || `HTTP ${res.status}`); }
+                const data = await res.json();
+                this.fsBrowser.path   = data.path;
+                this.fsBrowser.parent = data.parent;
+                this.fsBrowser.dirs   = data.dirs   || [];
+                this.fsBrowser.images = data.images || [];
+                this.fsBrowser.selectedImage = null;
+            } catch(e) {
+                this.logLine('sys', `❌ Przeglądarka FS: ${e.message}`);
+            } finally {
+                this.fsBrowser.loading = false;
+            }
+        },
+
+        async fsMkdir() {
+            const name = prompt('Nazwa nowego katalogu:');
+            if (!name?.trim()) return;
+            try {
+                const res = await fetch(
+                    `/api/fs/mkdir?path=${encodeURIComponent(this.fsBrowser.path)}&name=${encodeURIComponent(name.trim())}`,
+                    { method: 'POST' }
+                );
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.detail || `HTTP ${res.status}`);
+                // Navigate into the newly created directory
+                await this.fsBrowseTo(data.path);
+            } catch(e) {
+                alert(`Błąd tworzenia katalogu: ${e.message}`);
+            }
+        },
+
+        fsBrowserConfirm() {
+            if (this.fsBrowser.mode === 'dir') {
+                this.fsBrowser.onConfirm?.(this.fsBrowser.path);
+            } else {
+                if (!this.fsBrowser.selectedImage) return;
+                this.fsBrowser.onConfirm?.(this.fsBrowser.selectedImage.path);
+            }
+            this.fsBrowser.open = false;
+        },
+
+        // ── Tile source images ────────────────────────────────
+
+        async loadTileSrcImages() {
+            const dir = this.tileModal.data.source_dir;
+            if (!dir) { this.tileModal.srcImages = []; return; }
+            this.tileModal.srcLoading = true;
+            this.tileModal.srcImages  = [];
+            try {
+                const res = await fetch(`/api/fs/browse?path=${encodeURIComponent(dir)}`);
+                if (!res.ok) return;
+                const data = await res.json();
+                this.tileModal.srcImages = data.images || [];
+            } catch(e) { /* silent — dir may not exist yet */ }
+            finally { this.tileModal.srcLoading = false; }
+        },
+
+        /**
+         * Toggle an image in/out of image_slots.
+         * Adding: create new slot with empty prompts list.
+         * Removing: warn if slot has prompts.
+         */
+        picToggleImageSlot(imageName) {
+            const slots = this.tileModal.data.image_slots;
+            const idx   = slots.findIndex(s => s.image === imageName);
+            if (idx === -1) {
+                // Add new slot
+                slots.push({ image: imageName, prompts: [] });
+            } else {
+                // Remove — warn if it has prompts
+                const count = slots[idx].prompts?.length || 0;
+                if (count > 0 && !confirm(`Obrazek "${imageName}" ma ${count} prompt(ów). Usunąć slot ze wszystkimi promptami?`))
+                    return;
+                slots.splice(idx, 1);
+            }
+        },
+
+        // ── Tile generate tab ─────────────────────────────────
+
+        async loadTileStatus() {
+            if (!this.tileModal.tileId || !this.selectedRun?.filename) return;
+            try {
+                const res = await fetch(`/api/pic/session/${this.selectedRun.filename}/tiles/${this.tileModal.tileId}/status`);
+                if (!res.ok) return;
+                this.tileModal.status = await res.json();
+            } catch(e) { /* silent */ }
+        },
+
+        async picRunTile(forceAll, slotIndex = null) {
+            if (this.picGen.running) return;
+            const runId  = this.selectedRun?.filename;
+            const tileId = this.tileModal.tileId;
+            if (!runId || !tileId) return;
+
+            try {
+                const resp = await fetch(
+                    `/api/pic/session/${runId}/tiles/${tileId}/run`,
+                    {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ force_all: forceAll, slot_index: slotIndex }),
+                    }
+                );
+                if (!resp.ok) {
+                    const err = await resp.json().catch(() => ({}));
+                    this.logLine('sys', `❌ Pic generowanie: ${err.detail || resp.statusText}`);
+                    return;
+                }
+                // Set global generating state and start background poller
+                this.picGen = {
+                    running: true, runId, tileId,
+                    tileName: this.tileModal.data.name || tileId,
+                    total: 0, done: 0, skipped: 0,
+                    current_prompt: null, errors: [],
+                };
+                this._picPollJob(runId, tileId);
+            } catch(e) {
+                this.logLine('sys', `❌ Pic generowanie: ${e.message}`);
+            }
+        },
+
+        _picPollJob(runId, tileId) {
+            // Polls independently of whether modal is open or not
+            const poll = async () => {
+                // Stop only if a different job has taken over
+                if (!this.picGen.running || this.picGen.tileId !== tileId) return;
+
+                try {
+                    const resp = await fetch(`/api/pic/session/${runId}/tiles/${tileId}/job`);
+                    if (resp.ok) {
+                        const job = await resp.json();
+                        // Merge into picGen
+                        this.picGen = {
+                            ...this.picGen,
+                            total:          job.total          ?? this.picGen.total,
+                            done:           job.done           ?? this.picGen.done,
+                            skipped:        job.skipped        ?? this.picGen.skipped,
+                            current_prompt: job.current_prompt ?? this.picGen.current_prompt,
+                            errors:         job.errors         || this.picGen.errors,
+                        };
+                        // Live-refresh status grid if Generate tab is open for this tile
+                        if (this.tileModal.open && this.tileModal.tileId === tileId
+                                && this.tileModal.tab === 'generate') {
+                            await this.loadTileStatus();
+                        }
+                        // Also sync into tileModal.job if that tile is open
+                        if (this.tileModal.open && this.tileModal.tileId === tileId) {
+                            this.tileModal.job = job;
+                        }
+
+                        if (job.status === 'done' || job.status === 'error') {
+                            this.picGen.running = false;
+                            this.picGen.current_prompt = null;
+                            // Refresh tile list (always)
+                            await this.loadPicTiles();
+                            // Refresh status grid only if this tile's modal is open
+                            if (this.tileModal.open && this.tileModal.tileId === tileId) {
+                                await this.loadTileStatus();
+                            }
+                            return;  // stop polling
+                        }
+                    }
+                } catch(e) { /* transient — keep polling */ }
+
+                setTimeout(poll, 3000);
+            };
+            setTimeout(poll, 2000);
+        },
+
+        async picArchiveResult(promptId, slotIndex = 0) {
+            const runId  = this.selectedRun?.filename;
+            const tileId = this.tileModal.tileId;
+            if (!runId || !tileId) return;
+            try {
+                const resp = await fetch(
+                    `/api/pic/session/${runId}/tiles/${tileId}/archive/${promptId}?slot_index=${slotIndex}`,
+                    { method: 'POST' }
+                );
+                if (!resp.ok) {
+                    const err = await resp.json().catch(() => ({}));
+                    this.logLine('sys', `❌ Archiwizacja: ${err.detail || resp.statusText}`);
+                    return;
+                }
+                // Refresh status (file is now gone from output_dir)
+                await this.loadTileStatus();
+            } catch(e) {
+                this.logLine('sys', `❌ Archiwizacja: ${e.message}`);
+            }
+        },
+
+        // ── Prompt import from global library ─────────────────
+
+        picOpenPromptImport(slotIndex = null) {
+            // slotIndex=null means "add to all slots"; int = specific slot
+            this.promptImport = { open: true, selected: {}, catFilter: null, slotIndex };
+            this.loadPicLibrary();
+        },
+
+        picImportFilteredPrompts() {
+            const all = this.pic.prompts;
+            if (!this.promptImport.catFilter) return all;
+            return all.filter(p => p.category === this.promptImport.catFilter);
+        },
+
+        picImportToggleAll(selectAll) {
+            const filtered = this.picImportFilteredPrompts();
+            const updated = { ...this.promptImport.selected };
+            for (const p of filtered) {
+                updated[p.id] = selectAll;
+            }
+            this.promptImport.selected = updated;
+        },
+
+        picConfirmImportPrompts() {
+            const toAdd     = this.pic.prompts.filter(p => this.promptImport.selected[p.id]);
+            const slotIndex = this.promptImport.slotIndex;
+            const slots     = this.tileModal.data.image_slots || [];
+            // Determine target slots: null = all, int = specific
+            const targets   = slotIndex == null ? slots : [slots[slotIndex]].filter(Boolean);
+            let added = 0;
+            for (const slot of targets) {
+                for (const p of toAdd) {
+                    if (slot.prompts.some(tp => tp.id === p.id)) continue;
+                    const copy = JSON.parse(JSON.stringify(p));
+                    delete copy._editing;
+                    copy.enabled = true;
+                    slot.prompts.push(copy);
+                    added++;
+                }
+            }
+            this.promptImport.open = false;
+            if (added > 0) {
+                this._picComputePromptFlags();
+                this.logLine('sys', `✅ Zaimportowano ${added} promptów do kafelka`);
+            }
+        },
+
+        picAddBlankPrompt(slotIdx) {
+            // Open global prompt modal so new prompts get library IDs.
+            const runId  = this.selectedRun?.filename;
+            const tileId = this.tileModal.tileId;
+            if (!runId || !tileId) {
+                // Tile not saved yet — inline temp prompt
+                const slot = this.tileModal.data.image_slots?.[slotIdx];
+                if (!slot) return;
+                slot.prompts.push({
+                    id: 'tmp_' + Date.now(), enabled: true,
+                    name: 'Nowy prompt', positive: '', negative: '', note: '',
+                    params: { steps: 30, cfg: 8, denoise: 1.0 },
+                    _editing: true, _notInLibrary: true,
+                });
+                return;
+            }
+            if (this.pic.categories.length === 0) this.loadPicLibrary();
+            this.picOpenPromptModal(null, { runId, tileId, slotIdx });
+        },
+
+        picAddBlankPromptAll() {
+            // Open global modal and add to all slots.
+            const runId  = this.selectedRun?.filename;
+            const tileId = this.tileModal.tileId;
+            if (!runId || !tileId) {
+                // Tile not saved yet — inline temp prompt to every slot
+                for (const slot of (this.tileModal.data.image_slots || [])) {
+                    slot.prompts.push({
+                        id: 'tmp_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
+                        enabled: true,
+                        name: 'Nowy prompt', positive: '', negative: '', note: '',
+                        params: { steps: 30, cfg: 8, denoise: 1.0 },
+                        _editing: true, _notInLibrary: true,
+                    });
+                }
+                return;
+            }
+            if (this.pic.categories.length === 0) this.loadPicLibrary();
+            this.picOpenPromptModal(null, { runId, tileId, slotIdx: null, addToAll: true });
+        },
+
+        picToggleTilePromptEdit(slotIdx, promptIdx) {
+            const p = this.tileModal.data.image_slots?.[slotIdx]?.prompts?.[promptIdx];
+            if (p) p._editing = !p._editing;
         },
 
         // ─ Log panel ──────────────────────────────────────

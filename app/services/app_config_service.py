@@ -53,6 +53,7 @@ _DEFAULTS: dict[str, Any] = {
             "output_dir": "",
             "models": {
                 "upscale": {"workflow_json": ""},
+                "i2i":     {"workflow_json": ""},
             },
         },
     },

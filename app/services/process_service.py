@@ -164,6 +164,10 @@ class ProcessService:
             "awaiting_input": self._awaiting,
         }
 
+    def log_sys(self, text: str) -> None:
+        """Push a system log message to all WebSocket subscribers (visible in log panel)."""
+        self._push({"type": "log", "stream": "sys", "text": text})
+
     # ── Internal: async wrapper ───────────────────────────────────────
 
     async def _run_in_thread(

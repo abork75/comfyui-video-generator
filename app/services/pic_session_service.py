@@ -1,0 +1,337 @@
+# -*- coding: utf-8 -*-
+"""
+Per-project Pic Studio session service.
+
+Manages the `pic_flow` key inside each project's RUN_*.yaml file.
+
+Unified tile schema (image_slots, supports 1×N and N×N):
+
+  pic_flow:
+    - id: "modelka_2"
+      type: one_image_many_prompts   # kept for backwards compat
+      name: "Modelka 2"
+      source_dir:    "C:/projekty/kasia/model_source"
+      output_dir:    "C:/projekty/kasia/i2i_studio/kasiaX_modele"
+      global_suffix: ""
+      image_slots:
+        - image: "kasia_01.jpg"
+          prompts:
+            - id:       p0000001
+              enabled:  true
+              name:     "Ręce pod boki"
+              positive: "..."
+              negative: "..."
+              note:     ""
+              params:   { steps: 30, cfg: 8, denoise: 1.0 }
+        - image: "kasia_02.jpg"
+          prompts:
+            - id: p0000001
+              ...   # independent copy — can differ from other slots
+
+Output file naming: {output_dir}/{output_id}.png
+  where output_id is an 18-char random ID stored in each prompt instance in image_slots.
+
+Old format migration (source_image + top-level prompts):
+  Tiles with `source_image` key are auto-migrated to image_slots on load.
+"""
+
+from __future__ import annotations
+
+import json
+import random
+import re
+import string
+import time
+from pathlib import Path
+from typing import Any
+
+import yaml
+
+from app.services.run_file_service import RUNS_FOLDER
+
+_IMAGE_EXTS = {".png", ".jpg", ".jpeg", ".webp", ".bmp", ".tiff", ".tif"}
+_OUTPUT_ID_CHARS = string.ascii_letters + string.digits  # 62 chars → 62^18 ≈ 1.6×10³²
+
+
+# ── Helpers ────────────────────────────────────────────────────────────────────
+
+def _slugify(text: str) -> str:
+    text = text.lower().strip()
+    text = re.sub(r"[^a-z0-9_\-]", "_", text)
+    text = re.sub(r"_+", "_", text).strip("_")
+    return text or "tile"
+
+
+def _make_output_id() -> str:
+    """Generate an 18-character random output file ID."""
+    return "".join(random.choices(_OUTPUT_ID_CHARS, k=18))
+
+
+def _ensure_output_ids(tile: dict) -> bool:
+    """
+    Assign output_id to every prompt in image_slots that is missing one.
+    Returns True if any IDs were newly assigned (caller should persist).
+    """
+    changed = False
+    for slot in tile.get("image_slots", []):
+        for p in slot.get("prompts", []):
+            if not p.get("output_id"):
+                p["output_id"] = _make_output_id()
+                changed = True
+    return changed
+
+
+def _unique_id(base: str, existing: list[str]) -> str:
+    slug = _slugify(base)
+    if slug not in existing:
+        return slug
+    for i in range(2, 999):
+        candidate = f"{slug}_{i}"
+        if candidate not in existing:
+            return candidate
+    return f"{slug}_{int(time.time())}"
+
+
+# ── Migration ──────────────────────────────────────────────────────────────────
+
+def _migrate_tile(tile: dict) -> dict:
+    """
+    Convert old format (source_image + top-level prompts) → image_slots.
+    Mutates tile in-place and returns it.
+    """
+    if "image_slots" in tile:
+        return tile  # already new format
+    old_image   = tile.pop("source_image", "")
+    old_prompts = tile.pop("prompts",      [])
+    tile["image_slots"] = (
+        [{"image": old_image, "prompts": old_prompts}] if old_image else []
+    )
+    return tile
+
+
+# ── I/O ────────────────────────────────────────────────────────────────────────
+
+def _load(run_id: str) -> dict:
+    path = RUNS_FOLDER / run_id
+    if not path.exists():
+        raise FileNotFoundError(f"Session file not found: {run_id}")
+    raw = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+    return raw if isinstance(raw, dict) else {}
+
+
+def _save(run_id: str, data: dict) -> None:
+    path = RUNS_FOLDER / run_id
+    path.write_text(
+        yaml.dump(
+            data,
+            default_flow_style=False,
+            allow_unicode=True,
+            sort_keys=False,
+            width=10_000,
+        ),
+        encoding="utf-8",
+    )
+
+
+# ── CRUD ───────────────────────────────────────────────────────────────────────
+
+def get_tiles(run_id: str) -> list[dict]:
+    data  = _load(run_id)
+    tiles = data.get("pic_flow", [])
+    # Migrate old-format tiles transparently; persist only if something changed
+    changed = False
+    for tile in tiles:
+        before = "image_slots" in tile
+        _migrate_tile(tile)
+        if not before:
+            changed = True
+        if _ensure_output_ids(tile):
+            changed = True
+    if changed:
+        data["pic_flow"] = tiles
+        _save(run_id, data)
+    return tiles
+
+
+def create_tile(run_id: str, tile_data: dict) -> dict:
+    data = _load(run_id)
+    tiles: list[dict] = data.get("pic_flow", [])
+    existing_ids = [t["id"] for t in tiles]
+    tile = dict(tile_data)
+    _migrate_tile(tile)          # normalise in case caller sends old format
+    _ensure_output_ids(tile)     # assign output_id to any new prompts
+    tile["id"] = _unique_id(tile.get("name", "tile"), existing_ids)
+    tiles.append(tile)
+    data["pic_flow"] = tiles
+    _save(run_id, data)
+    return tile
+
+
+def update_tile(run_id: str, tile_id: str, updates: dict) -> dict:
+    data = _load(run_id)
+    for tile in data.get("pic_flow", []):
+        if tile["id"] == tile_id:
+            _migrate_tile(tile)
+            for k, v in updates.items():
+                if k != "id":
+                    tile[k] = v
+            _migrate_tile(tile)      # in case updates brought old keys
+            _ensure_output_ids(tile) # assign output_id to any new/missing prompts
+            _save(run_id, data)
+            return tile
+    raise KeyError(f"Tile not found: {tile_id}")
+
+
+def delete_tile(run_id: str, tile_id: str) -> None:
+    data = _load(run_id)
+    data["pic_flow"] = [t for t in data.get("pic_flow", []) if t["id"] != tile_id]
+    _save(run_id, data)
+
+
+def add_prompt_to_slot(
+    run_id: str,
+    tile_id: str,
+    slot_index: int,
+    prompt: dict,
+) -> dict:
+    """
+    Add a prompt (from global library) to a specific image slot.
+    No-op if a prompt with the same id already exists in that slot.
+    Returns the updated tile dict.
+    """
+    data = _load(run_id)
+    for tile in data.get("pic_flow", []):
+        if tile["id"] == tile_id:
+            _migrate_tile(tile)
+            slots: list[dict] = tile.get("image_slots", [])
+            if slot_index < 0 or slot_index >= len(slots):
+                raise IndexError(
+                    f"Slot index {slot_index} out of range "
+                    f"(tile has {len(slots)} slot(s))"
+                )
+            slot    = slots[slot_index]
+            prompts = slot.setdefault("prompts", [])
+            if not any(p["id"] == prompt["id"] for p in prompts):
+                p = dict(prompt)
+                if not p.get("output_id"):
+                    p["output_id"] = _make_output_id()
+                prompts.append(p)
+                _save(run_id, data)
+            return tile
+    raise KeyError(f"Tile not found: {tile_id}")
+
+
+def add_prompt_to_all_slots(run_id: str, tile_id: str, prompt: dict) -> dict:
+    """
+    Add a prompt to every image slot that doesn't already have it.
+    Returns the updated tile dict.
+    """
+    data = _load(run_id)
+    for tile in data.get("pic_flow", []):
+        if tile["id"] == tile_id:
+            _migrate_tile(tile)
+            for slot in tile.get("image_slots", []):
+                prompts = slot.setdefault("prompts", [])
+                if not any(p["id"] == prompt["id"] for p in prompts):
+                    p = dict(prompt)
+                    if not p.get("output_id"):
+                        p["output_id"] = _make_output_id()
+                    prompts.append(p)
+            _save(run_id, data)
+            return tile
+    raise KeyError(f"Tile not found: {tile_id}")
+
+
+def copy_tile(run_id: str, tile_id: str) -> dict:
+    data = _load(run_id)
+    tiles: list[dict] = data.get("pic_flow", [])
+    original = next((t for t in tiles if t["id"] == tile_id), None)
+    if not original:
+        raise KeyError(f"Tile not found: {tile_id}")
+    _migrate_tile(original)
+    new_tile = json.loads(json.dumps(original))
+    existing_ids = [t["id"] for t in tiles]
+    new_tile["id"]   = _unique_id(new_tile.get("name", "tile") + "_kopia", existing_ids)
+    new_tile["name"] = new_tile.get("name", "") + " (kopia)"
+    tiles.append(new_tile)
+    data["pic_flow"] = tiles
+    _save(run_id, data)
+    return new_tile
+
+
+# ── Status ─────────────────────────────────────────────────────────────────────
+
+def get_tile_status(run_id: str, tile_id: str) -> dict:
+    """
+    Compute generation status by scanning output_dir for files matching
+    {output_id}.<ext>  (output_id is stored per prompt instance in image_slots).
+
+    Returns:
+        overall:  'all' | 'partial' | 'none' | 'empty'
+        done:     int   (# enabled prompt×image combos with output file)
+        total:    int   (# enabled prompt×image combos)
+        slots:    [{ image, done, total, prompts: {pid: {done, output_path, output_id}} }]
+    """
+    data = _load(run_id)
+    tile = next(
+        (t for t in data.get("pic_flow", []) if t["id"] == tile_id), None
+    )
+    if not tile:
+        raise KeyError(f"Tile not found: {tile_id}")
+
+    _migrate_tile(tile)
+
+    output_dir  = Path(tile.get("output_dir", ""))
+    image_slots = tile.get("image_slots", [])
+    slot_statuses: list[dict[str, Any]] = []
+    total_done  = 0
+    total_count = 0
+
+    for slot in image_slots:
+        image_name  = slot.get("image", "")
+        prompts     = slot.get("prompts", [])
+        enabled     = [p for p in prompts if p.get("enabled", True)]
+
+        prompt_status: dict[str, Any] = {}
+        for p in enabled:
+            pid   = p["id"]
+            oid   = p.get("output_id", "")
+            found = False
+            out_p = None
+            if oid and output_dir.is_dir():
+                for ext in _IMAGE_EXTS:
+                    candidate = output_dir / f"{oid}{ext}"
+                    if candidate.exists():
+                        found = True
+                        out_p = str(candidate)
+                        break
+            prompt_status[pid] = {"done": found, "output_path": out_p, "output_id": oid}
+
+        slot_done  = sum(1 for s in prompt_status.values() if s["done"])
+        slot_total = len(enabled)
+        total_done  += slot_done
+        total_count += slot_total
+
+        slot_statuses.append({
+            "image":   image_name,
+            "done":    slot_done,
+            "total":   slot_total,
+            "prompts": prompt_status,
+        })
+
+    if total_count == 0:
+        overall = "empty"
+    elif total_done == 0:
+        overall = "none"
+    elif total_done >= total_count:
+        overall = "all"
+    else:
+        overall = "partial"
+
+    return {
+        "tile_id": tile_id,
+        "overall": overall,
+        "done":    total_done,
+        "total":   total_count,
+        "slots":   slot_statuses,
+    }
