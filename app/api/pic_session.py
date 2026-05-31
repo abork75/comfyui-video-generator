@@ -24,6 +24,7 @@ from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel, Field
 
 from app.services import pic_session_service, pic_generation_service, i2i_prompts_service
+from app.services.pic_session_service import _get_tile_type, add_prompt_to_all_scene_slots
 
 router = APIRouter(prefix="/api/pic", tags=["pic"])
 
@@ -46,13 +47,25 @@ class ImageSlot(BaseModel):
     prompts: list[PromptItem] = Field(default_factory=list)
 
 
+class SceneSlot(BaseModel):
+    scene_image:      str              = ""
+    character_images: list[str]        = Field(default_factory=list)
+    prompts:          list[PromptItem] = Field(default_factory=list)
+
+
 class TilePayload(BaseModel):
-    type:          str             = "one_image_many_prompts"
-    name:          str             = ""
-    source_dir:    str             = ""
-    output_dir:    str             = ""
-    global_suffix: str             = ""
-    image_slots:   list[ImageSlot] = Field(default_factory=list)
+    type:             str              = "one_image_many_prompts"
+    name:             str              = ""
+    # one_image_many_prompts
+    source_dirs:      list[str]        = Field(default_factory=list)
+    image_slots:      list[ImageSlot]  = Field(default_factory=list)
+    # character_insert
+    scene_dirs:       list[str]        = Field(default_factory=list)
+    characters_dirs:  list[str]        = Field(default_factory=list)
+    scene_slots:      list[SceneSlot]  = Field(default_factory=list)
+    # common
+    output_dir:       str              = ""
+    global_suffix:    str              = ""
 
 
 # ── Tile CRUD ─────────────────────────────────────────────────────────────────
@@ -65,15 +78,27 @@ async def get_tiles(run_id: str):
         raise HTTPException(status_code=404, detail=str(exc))
 
 
+def _serialize_payload(body: TilePayload) -> dict:
+    d = body.model_dump()
+    d["image_slots"] = [
+        {"image": s.image, "prompts": [p.model_dump() for p in s.prompts]}
+        for s in body.image_slots
+    ]
+    d["scene_slots"] = [
+        {
+            "scene_image":      s.scene_image,
+            "character_images": s.character_images,
+            "prompts":          [p.model_dump() for p in s.prompts],
+        }
+        for s in body.scene_slots
+    ]
+    return d
+
+
 @router.post("/session/{run_id}/tiles")
 async def create_tile(run_id: str, body: TilePayload):
     try:
-        d = body.model_dump()
-        d["image_slots"] = [
-            {"image": s.image, "prompts": [p.model_dump() for p in s.prompts]}
-            for s in body.image_slots
-        ]
-        tile = pic_session_service.create_tile(run_id, d)
+        tile = pic_session_service.create_tile(run_id, _serialize_payload(body))
         return {"ok": True, "tile": tile}
     except Exception as exc:
         raise HTTPException(status_code=500, detail=str(exc))
@@ -82,12 +107,7 @@ async def create_tile(run_id: str, body: TilePayload):
 @router.put("/session/{run_id}/tiles/{tile_id}")
 async def update_tile(run_id: str, tile_id: str, body: TilePayload):
     try:
-        d = body.model_dump()
-        d["image_slots"] = [
-            {"image": s.image, "prompts": [p.model_dump() for p in s.prompts]}
-            for s in body.image_slots
-        ]
-        tile = pic_session_service.update_tile(run_id, tile_id, d)
+        tile = pic_session_service.update_tile(run_id, tile_id, _serialize_payload(body))
         return {"ok": True, "tile": tile}
     except KeyError as exc:
         raise HTTPException(status_code=404, detail=str(exc))
@@ -160,7 +180,10 @@ async def create_tile_prompt(run_id: str, tile_id: str, body: NewTilePromptReque
             params=body.params,
         )
 
-        if body.add_to_all:
+        tile_type = _get_tile_type(run_id, tile_id)
+        if tile_type == "character_insert":
+            add_prompt_to_all_scene_slots(run_id, tile_id, prompt)
+        elif body.add_to_all:
             pic_session_service.add_prompt_to_all_slots(run_id, tile_id, prompt)
         else:
             pic_session_service.add_prompt_to_slot(run_id, tile_id, body.slot_index, prompt)
@@ -179,13 +202,14 @@ async def create_tile_prompt(run_id: str, tile_id: str, body: NewTilePromptReque
 class RunRequest(BaseModel):
     force_all:  bool          = False
     slot_index: Optional[int] = None   # None = all slots
+    prompt_id:  Optional[str] = None   # None = all prompts in slot; str = single prompt
 
 
 @router.post("/session/{run_id}/tiles/{tile_id}/run")
 async def run_tile(run_id: str, tile_id: str, body: RunRequest):
-    """Start generation for a tile (all slots or a single slot)."""
+    """Start generation for a tile (all slots, single slot, or single prompt)."""
     result = pic_generation_service.start_tile_run(
-        run_id, tile_id, body.force_all, body.slot_index
+        run_id, tile_id, body.force_all, body.slot_index, body.prompt_id
     )
     if result == "already_running":
         raise HTTPException(status_code=409, detail="Generowanie już trwa dla tego kafelka")
@@ -196,6 +220,25 @@ async def run_tile(run_id: str, tile_id: str, body: RunRequest):
 async def get_tile_job(run_id: str, tile_id: str):
     """Return current generation job state (poll every ~3 s)."""
     return pic_generation_service.get_job(run_id, tile_id)
+
+
+@router.delete("/session/{run_id}/tiles/{tile_id}/result/{prompt_id}")
+async def delete_tile_result(
+    run_id:     str,
+    tile_id:    str,
+    prompt_id:  str,
+    slot_index: int = Query(default=0),
+):
+    """Delete the generated output file for a prompt (keeps prompt in tile config)."""
+    try:
+        deleted = pic_generation_service.delete_result(
+            run_id, tile_id, prompt_id, slot_index
+        )
+        return {"ok": True, "deleted": deleted}
+    except (KeyError, IndexError) as exc:
+        raise HTTPException(status_code=404, detail=str(exc))
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc))
 
 
 @router.post("/session/{run_id}/tiles/{tile_id}/archive/{prompt_id}")

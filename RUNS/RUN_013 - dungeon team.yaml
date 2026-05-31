@@ -1,7 +1,3 @@
-# RUN_013 - dungeon team.yaml
-# Edited: 2026-05-28 11:50:37
-# Edit this file freely — regenerate .py with generate_py_from_yaml()
-#
 defaults:
   fps: 16
   steps: 6
@@ -12,18 +8,936 @@ defaults:
   resolution:
   - 1024
   - 1024
-
 linux_backend:
   config_path: D:\streamlit_project\comfyui_integration\workflow_configs\wan_i2v.yaml
   workflows_path: D:\streamlit_project\comfyui_integration\workflows
   comfyui_output_folder: D:\ComfyUI\output\Wan22_I2V
   api_url: http://127.0.0.1:8189
-
 use_test_flow: false
-
-# ──────────────────────────────────────────────────────────
-# FLOW — lista generacji
-# ──────────────────────────────────────────────────────────
 flow: []
-
 project_folder: C:\Users\abork\AppData\Local\CapCut\Videos\dungeon_team\film
+pic_flow:
+- type: one_image_many_prompts
+  name: model
+  output_dir: C:\Users\abork\AppData\Local\CapCut\Videos\dungeon_team\models\Heroes
+  global_suffix: ''
+  image_slots:
+  - image: czarodziejka.png
+    prompts:
+    - id: p0000016
+      output_id: FhurYQRP1SnNodvO2W
+      enabled: true
+      name: usun_tlo_1
+      positive: Remove background, leave it solid white
+      negative: ''
+      note: ''
+      params:
+        steps: 30
+        cfg: 8
+        denoise: 1
+  - image: kaplan.png
+    prompts:
+    - id: p0000016
+      output_id: LlPzx9TlhDs1b1jAz4
+      enabled: true
+      name: usun_tlo_1
+      positive: Remove background, leave it solid white
+      negative: ''
+      note: ''
+      params:
+        steps: 30
+        cfg: 8
+        denoise: 1
+  - image: wojowniczka.png
+    prompts:
+    - id: p0000016
+      output_id: szQBUaNKyXboFsjwKj
+      enabled: true
+      name: usun_tlo_1
+      positive: Remove background, leave it solid white
+      negative: ''
+      note: ''
+      params:
+        steps: 30
+        cfg: 8
+        denoise: 1
+  - image: zlodziej.png
+    prompts:
+    - id: p0000016
+      output_id: RpVoUA8sVjxXA7vzcW
+      enabled: true
+      name: usun_tlo_1
+      positive: Remove background, leave it solid white
+      negative: ''
+      note: ''
+      params:
+        steps: 30
+        cfg: 8
+        denoise: 1
+  id: model
+  source_dirs:
+  - C:\Users\abork\AppData\Local\CapCut\Videos\dungeon_team\Heroes
+- type: one_image_many_prompts
+  name: Generator modeli_heroes
+  output_dir: C:\Users\abork\AppData\Local\CapCut\Videos\dungeon_team\models\Heroes
+  global_suffix: ''
+  image_slots:
+  - image: FhurYQRP1SnNodvO2W.png
+    prompts:
+    - id: p0000004
+      output_id: t51fOMNJuszxHN7r8U
+      enabled: true
+      name: Baczność tyłem
+      positive: Change the woman's pose to a very formal, strict standing position from the back. She stands perfectly straight and tall, back view, facing away from the camera. Feet joined together, legs straight, arms relaxed but formal at her sides with palms facing inward and fingers extended along her thighs. Shoulders back, excellent posture, head looking straight forward. Preserve her current outfit exactly as it is. Elegant and disciplined body alignment, realistic anatomy, high detail, photorealistic.
+      negative: different face, wrong identity, clothing change, outfit change, uniform added, background change, blurry, distorted anatomy, extra limbs, artifacts, low quality
+      note: 'Uwaga: model może zmieniać strój na mundur'
+      params:
+        steps: 30
+        cfg: 8
+        denoise: 1
+    - id: p0000008
+      output_id: S4OfWr7NwXvXZTy6Nu
+      enabled: true
+      name: Bokiem, ręka na głowie i na tyłku
+      positive: 'Change the woman''s pose to a side view (profile pose): She is standing in profile, showing her body from the side. She is slightly leaning forward at the waist. One hand is placed on her buttock (grabbing or resting on her rear), the other hand is raised and resting behind her head with fingers in her hair or on the back of her head, elbow pointing up. Keep her exact facial features, expression (looking toward the side or slightly toward camera if possible), hair, clothing, body proportions, lighting, and background unchanged. Only modify the body rotation (to side view), torso lean, and arm/hand positions. Maintain realistic anatomy, natural spine curvature, correct shoulder and hip alignment. Photorealistic, seamless edit, high detail, perfect proportions.'
+      negative: different face, wrong identity, changed facial features, clothing change, background change, blurry face, distorted anatomy, extra limbs, front view, artifacts, low quality
+      note: ''
+      params:
+        steps: 30
+        cfg: 8
+        denoise: 1
+    - id: p0000009
+      output_id: IHuqIjlAv9GPaIjTXj
+      enabled: true
+      name: Taneczna poza (klub)
+      positive: Repose the woman into a dynamic, energetic dance pose typical of a nightclub or disco party. She is dancing freely and sensually — body slightly arched, hips tilted, one leg bent with weight on one foot, the other leg more extended. Arms raised and bent in a natural, expressive club dancing gesture, hands moving near her head or body. Give the model creative freedom for a sexy, fun, and confident club dance move. Energetic, rhythmic and seductive pose, not ballet or classical dance. Keep her exact clothing, hair, facial expression and overall style. Realistic anatomy, dynamic body movement, photorealistic, seamless edit, high detail. Solid white background.
+      negative: different face, wrong identity, changed facial features, clothing change, static pose, ballet pose, classical dance, blurry face, distorted anatomy, extra limbs, artifacts, low quality
+      note: ''
+      params:
+        steps: 30
+        cfg: 8
+        denoise: 1
+  - image: szQBUaNKyXboFsjwKj.png
+    prompts:
+    - id: p0000002
+      output_id: FufPlXL4KalJ8YkERu
+      enabled: true
+      name: Ręce pod boki, rozstawione nogi
+      positive: 'Repose the woman: full frontal view, standing confidently facing the camera. Left leg stepped forward, right leg straight behind, hips cocked to the side. Both hands resting on her hips with elbows out, strong power pose. She looks straight at the viewer with a bold, defiant, provocative and seductive expression, intense eye contact, slightly raised chin. Confident and challenging attitude, sharp detailed face, realistic hands and body proportions, cinematic lighting, high detail'
+      negative: different face, wrong identity, changed facial features, altered eye color, different nose shape, different lip shape, different skin tone, clothing change, background change, blurry face, distorted face, deformed face, asymmetrical face, multiple faces, extra limbs, artifacts, low quality, bad anatomy
+      note: ''
+      params:
+        steps: 30
+        cfg: 8
+        denoise: 1
+    - id: p0000004
+      output_id: 1CT9QVB1C612jnkyX7
+      enabled: true
+      name: Baczność tyłem
+      positive: Change the woman's pose to a very formal, strict standing position from the back. She stands perfectly straight and tall, back view, facing away from the camera. Feet joined together, legs straight, arms relaxed but formal at her sides with palms facing inward and fingers extended along her thighs. Shoulders back, excellent posture, head looking straight forward. Preserve her current outfit exactly as it is. Elegant and disciplined body alignment, realistic anatomy, high detail, photorealistic.
+      negative: different face, wrong identity, clothing change, outfit change, uniform added, background change, blurry, distorted anatomy, extra limbs, artifacts, low quality
+      note: 'Uwaga: model może zmieniać strój na mundur'
+      params:
+        steps: 30
+        cfg: 8
+        denoise: 1
+  - image: 1CT9QVB1C612jnkyX7.png
+    prompts:
+    - id: p0000010
+      output_id: 9q1croTUwUzflirr6K
+      enabled: true
+      name: Klęczy tyłem
+      positive: Repose the woman into a strict kneeling position seen from behind. Back view, kneeling upright on both knees with her back to the camera, spine straight, shoulders back, head facing forward. Arms relaxed downward with hands resting on her thighs or lightly touching the back of her legs. Weight resting on her heels, natural and graceful kneeling posture. Preserve the exact same clothing and outfit as in the original image — do not change or replace any clothes. Highly detailed body, realistic skin and fabric, cinematic lighting
+      negative: different face, wrong identity, clothing change, outfit change, front view, standing pose, background change, blurry, distorted anatomy, extra limbs, artifacts, low quality
+      note: 'Uwaga: możliwy problem z rozmiarem postaci'
+      params:
+        steps: 30
+        cfg: 8
+        denoise: 1
+  - image: IHuqIjlAv9GPaIjTXj.png
+    prompts:
+    - id: p0000007
+      output_id: 1FuwTmknAmdcqZYiDJ
+      enabled: true
+      name: Stoi przodem, ręce za głową
+      positive: 'Change the woman''s pose: She is now standing with her legs spread wide apart (feet significantly wider than shoulder width). Both hands are raised and placed behind her head, fingers interlocked or resting on the back of her head, elbows pointing outwards. Keep her exact torso position, upper body orientation, facial expression, head direction, hair, clothing, lighting, and background completely unchanged. Only modify the leg position (wide stance) and arm/hand position. Maintain realistic anatomy, natural balance, correct hip alignment, shoulder positioning and muscle tension. Photorealistic, seamless edit, high detail, perfect body proportions.'
+      negative: different face, wrong identity, changed facial features, clothing change, background change, blurry face, distorted anatomy, extra limbs, artifacts, low quality
+      note: ''
+      params:
+        steps: 30
+        cfg: 8
+        denoise: 1
+  id: generator_modeli
+  source_dirs:
+  - C:\Users\abork\AppData\Local\CapCut\Videos\dungeon_team\models
+- type: one_image_many_prompts
+  name: models_undead_level
+  source_dirs:
+  - C:\Users\abork\AppData\Local\CapCut\Videos\dungeon_team\enemies\undead_level
+  output_dir: C:\Users\abork\AppData\Local\CapCut\Videos\dungeon_team\models\undead_level
+  global_suffix: ''
+  image_slots:
+  - image: adoptable_fantasy_oc_ai_art_dnd_rpg_theme_unique_by_dissunder_dm4l7rc-fullview.jpg
+    prompts:
+    - id: p0000016
+      output_id: GFOx8ZnN6A2pa2cRFl
+      enabled: true
+      name: usun_tlo_1
+      positive: Remove background, leave it solid white
+      negative: ''
+      note: ''
+      params:
+        steps: 30
+        cfg: 8
+        denoise: 1
+  - image: anchor_wight_by_mooncake43_dm1v58x-414w-2x.jpg
+    prompts:
+    - id: p0000016
+      output_id: BCpSiMcaYR9DuoMXW7
+      enabled: true
+      name: usun_tlo_1
+      positive: Remove background, leave it solid white
+      negative: ''
+      note: ''
+      params:
+        steps: 30
+        cfg: 8
+        denoise: 1
+  - image: empowered_by_da_no_maou_fierce_will_by_akindo4649_dlsno3n-414w-2x.jpg
+    prompts:
+    - id: p0000016
+      output_id: vuXgps3aULrEyfmGQq
+      enabled: true
+      name: usun_tlo_1
+      positive: Remove background, leave it solid white
+      negative: ''
+      note: ''
+      params:
+        steps: 30
+        cfg: 8
+        denoise: 1
+  - image: gen_1779879573_0_by_guymandi_dm4jiht-414w-2x.jpg
+    prompts:
+    - id: p0000016
+      output_id: fXu2xik9lBVNlr4H9p
+      enabled: true
+      name: usun_tlo_1
+      positive: Remove background, leave it solid white
+      negative: ''
+      note: ''
+      params:
+        steps: 30
+        cfg: 8
+        denoise: 1
+  - image: leah_the_amazon_by_wildheroines_dm4rv9a-pre.jpg
+    prompts:
+    - id: p0000016
+      output_id: g42z0TrqP5z41PqK3p
+      enabled: true
+      name: usun_tlo_1
+      positive: Remove background, leave it solid white
+      negative: ''
+      note: ''
+      params:
+        steps: 30
+        cfg: 8
+        denoise: 1
+  id: models_undead_level
+- type: one_image_many_prompts
+  name: models_monster_level
+  source_dirs:
+  - C:\Users\abork\AppData\Local\CapCut\Videos\dungeon_team\enemies\monster_level
+  output_dir: C:\Users\abork\AppData\Local\CapCut\Videos\dungeon_team\models\monster_level
+  global_suffix: ''
+  image_slots:
+  - image: 634___bad_day_girl__38_by_sweetloove_dlxvgbx-414w-2x.jpg
+    prompts:
+    - id: p0000016
+      output_id: NeVwsEA3iyPCxpWpzr
+      enabled: true
+      name: usun_tlo_1
+      positive: Remove background, leave it solid white
+      negative: ''
+      note: ''
+      params:
+        steps: 30
+        cfg: 8
+        denoise: 1
+  - image: _253_chapter_v___whispers_of_war_by_drezzila_dlyvgjr-414w-2x.png
+    prompts:
+    - id: p0000016
+      output_id: gQ2WxiCiBI4imlBeh4
+      enabled: true
+      name: usun_tlo_1
+      positive: Remove background, leave it solid white
+      negative: ''
+      note: ''
+      params:
+        steps: 30
+        cfg: 8
+        denoise: 1
+  - image: adoptable_by_neonpawden_dm4r5l4-375w-2x.jpg
+    prompts:
+    - id: p0000016
+      output_id: wZLUPHo7Ow6ZDDMrta
+      enabled: true
+      name: usun_tlo_1
+      positive: Remove background, leave it solid white
+      negative: ''
+      note: ''
+      params:
+        steps: 30
+        cfg: 8
+        denoise: 1
+  - image: frankensteins_creation_by_deezaster_dm4ng0q-pre.jpg
+    prompts:
+    - id: p0000016
+      output_id: z33NpzopsuWyKiGhAp
+      enabled: true
+      name: usun_tlo_1
+      positive: Remove background, leave it solid white
+      negative: ''
+      note: ''
+      params:
+        steps: 30
+        cfg: 8
+        denoise: 1
+  - image: minotaur__by_painapleasure_dm4qieu-375w-2x.jpg
+    prompts:
+    - id: p0000016
+      output_id: JvhatmCO8wLz2PAcqH
+      enabled: true
+      name: usun_tlo_1
+      positive: Remove background, leave it solid white
+      negative: ''
+      note: ''
+      params:
+        steps: 30
+        cfg: 8
+        denoise: 1
+  - image: sub_only_dungeon_witches_by_forbiddenart48_dlwu5lm-414w-2x.jpg
+    prompts:
+    - id: p0000016
+      output_id: GY2GITBAg5Ta1aW8Uk
+      enabled: true
+      name: usun_tlo_1
+      positive: Remove background, leave it solid white
+      negative: ''
+      note: ''
+      params:
+        steps: 30
+        cfg: 8
+        denoise: 1
+  - image: the_bard_s_downfall_by_vatvor_dm4kv2e-414w-2x.jpg
+    prompts:
+    - id: p0000016
+      output_id: G5pn1preDSSSGVz1Zw
+      enabled: true
+      name: usun_tlo_1
+      positive: Remove background, leave it solid white
+      negative: ''
+      note: ''
+      params:
+        steps: 30
+        cfg: 8
+        denoise: 1
+  - image: the_cave_by_chris71666_dm4rf9y-414w-2x.jpg
+    prompts:
+    - id: p0000016
+      output_id: I1TAXuOzLMnGMfLJpw
+      enabled: true
+      name: usun_tlo_1
+      positive: Remove background, leave it solid white
+      negative: ''
+      note: ''
+      params:
+        steps: 30
+        cfg: 8
+        denoise: 1
+  - image: well_endowed_red_demon_shows_his_strength_by_adriansmith31_dm3yqzs-pre.jpg
+    prompts:
+    - id: p0000016
+      output_id: Jy4i3BIRsMgBIdQAc5
+      enabled: true
+      name: usun_tlo_1
+      positive: Remove background, leave it solid white
+      negative: ''
+      note: ''
+      params:
+        steps: 30
+        cfg: 8
+        denoise: 1
+  - image: werewolf_lord_and_a_beauty_by_muldoom_dgkpemz-414w-2x.jpg
+    prompts:
+    - id: p0000016
+      output_id: ySUojiXtJj8pwHX7Yx
+      enabled: true
+      name: usun_tlo_1
+      positive: Remove background, leave it solid white
+      negative: ''
+      note: ''
+      params:
+        steps: 30
+        cfg: 8
+        denoise: 1
+  id: models_undead_level_kopia
+- type: one_image_many_prompts
+  name: models_diablo_level
+  source_dirs:
+  - C:\Users\abork\AppData\Local\CapCut\Videos\dungeon_team\enemies\diablo_level
+  output_dir: C:\Users\abork\AppData\Local\CapCut\Videos\dungeon_team\models\diablo_level
+  global_suffix: ''
+  image_slots:
+  - image: black_forest_by_violkaai_dm4ti2s-414w-2x.jpg
+    prompts:
+    - id: p0000016
+      output_id: 5AYDgjd65u3yfqWbLE
+      enabled: true
+      name: usun_tlo_1
+      positive: Remove background, leave it solid white
+      negative: ''
+      note: ''
+      params:
+        steps: 30
+        cfg: 8
+        denoise: 1
+  - image: digital_artwork_by_sinflare_arts_dm3cqm8-375w-2x.jpg
+    prompts:
+    - id: p0000016
+      output_id: WGlY9EShrAVzcw73Ok
+      enabled: true
+      name: usun_tlo_1
+      positive: Remove background, leave it solid white
+      negative: ''
+      note: ''
+      params:
+        steps: 30
+        cfg: 8
+        denoise: 1
+  - image: lilith_x_albedo_x_morrigan_by_ayararhodes_dm4tf8z-pre.jpg
+    prompts:
+    - id: p0000016
+      output_id: r8U4w9vHVX59OJW5qW
+      enabled: true
+      name: usun_tlo_1
+      positive: Remove background, leave it solid white
+      negative: ''
+      note: ''
+      params:
+        steps: 30
+        cfg: 8
+        denoise: 1
+  - image: satan_by_pixelxst_dm4r60f-414w-2x.jpg
+    prompts:
+    - id: p0000016
+      output_id: 4C2k2ErrHU0vDPrtWa
+      enabled: true
+      name: usun_tlo_1
+      positive: Remove background, leave it solid white
+      negative: ''
+      note: ''
+      params:
+        steps: 30
+        cfg: 8
+        denoise: 1
+  - image: sexy_female_demons___ai_dark_fantasy_art_by_artbyinnovation_dm4vff5-414w-2x.jpg
+    prompts:
+    - id: p0000016
+      output_id: PKPBlD8y9sGvLI0DNe
+      enabled: true
+      name: usun_tlo_1
+      positive: Remove background, leave it solid white
+      negative: ''
+      note: ''
+      params:
+        steps: 30
+        cfg: 8
+        denoise: 1
+  - image: she_goes_bump_in_the_night_by_aliceduffield_dm4vfmv-414w-2x.jpg
+    prompts:
+    - id: p0000016
+      output_id: HxgHahPOHosNX5Tvfc
+      enabled: true
+      name: usun_tlo_1
+      positive: Remove background, leave it solid white
+      negative: ''
+      note: ''
+      params:
+        steps: 30
+        cfg: 8
+        denoise: 1
+  - image: succubus_by_lydiaembrdragon_dm4mod8-414w-2x.jpg
+    prompts:
+    - id: p0000016
+      output_id: zPmG9RkrPPzJzm9z9y
+      enabled: true
+      name: usun_tlo_1
+      positive: Remove background, leave it solid white
+      negative: ''
+      note: ''
+      params:
+        steps: 30
+        cfg: 8
+        denoise: 1
+  - image: succubus_demoness_princess_1_3_3_by_tyna_xi_dm3els7-414w-2x.png
+    prompts:
+    - id: p0000016
+      output_id: Cv2qF3eyYlWueqnict
+      enabled: true
+      name: usun_tlo_1
+      positive: Remove background, leave it solid white
+      negative: ''
+      note: ''
+      params:
+        steps: 30
+        cfg: 8
+        denoise: 1
+  - image: warden_of_the_last_hour_002_by_monnoka_dlvw14c-414w-2x.jpg
+    prompts:
+    - id: p0000016
+      output_id: 8POUSpaxScdbntyY2B
+      enabled: true
+      name: usun_tlo_1
+      positive: Remove background, leave it solid white
+      negative: ''
+      note: ''
+      params:
+        steps: 30
+        cfg: 8
+        denoise: 1
+  id: models_monster_level_kopia
+- type: one_image_many_prompts
+  name: models_dark_elves_level
+  source_dirs:
+  - C:\Users\abork\AppData\Local\CapCut\Videos\dungeon_team\enemies\dark_elves_level
+  output_dir: C:\Users\abork\AppData\Local\CapCut\Videos\dungeon_team\models\dark_elves_level
+  global_suffix: ''
+  image_slots:
+  - image: adoptable_by_galaxypawdrift_dm4r2i6-375w-2x.jpg
+    prompts:
+    - id: p0000016
+      output_id: Xek4zJlFJbm693ANb9
+      enabled: true
+      name: usun_tlo_1
+      positive: Remove background, leave it solid white
+      negative: ''
+      note: ''
+      params:
+        steps: 30
+        cfg: 8
+        denoise: 1
+  - image: drow_vs_orc__by_fallen755_dm4okys-414w-2x.jpg
+    prompts:
+    - id: p0000016
+      output_id: zbfHVXLjvVJfEntepA
+      enabled: true
+      name: usun_tlo_1
+      positive: Remove background, leave it solid white
+      negative: ''
+      note: ''
+      params:
+        steps: 30
+        cfg: 8
+        denoise: 1
+  - image: if_what_doesn_t_kill_makes_you_stronger____by_notartistandrewm_dm4mtzu-pre.jpg
+    prompts:
+    - id: p0000016
+      output_id: sXxXDGNWyw4JG0oU0A
+      enabled: true
+      name: usun_tlo_1
+      positive: Remove background, leave it solid white
+      negative: ''
+      note: ''
+      params:
+        steps: 30
+        cfg: 8
+        denoise: 1
+  id: models_diablo_level_kopia
+- type: one_image_many_prompts
+  name: models_vampire_level
+  source_dirs:
+  - C:\Users\abork\AppData\Local\CapCut\Videos\dungeon_team\enemies\vampire_level
+  output_dir: C:\Users\abork\AppData\Local\CapCut\Videos\dungeon_team\models\vampire_level
+  global_suffix: ''
+  image_slots:
+  - image: blood_ritual_1_13___the_fall_of_celeste_by_secondofall_dj3a4wm-414w-2x.jpg
+    prompts:
+    - id: p0000016
+      output_id: BXWEJkl957crWfswA9
+      enabled: true
+      name: usun_tlo_1
+      positive: Remove background, leave it solid white
+      negative: ''
+      note: ''
+      params:
+        steps: 30
+        cfg: 8
+        denoise: 1
+  - image: blood_ritual_1_9__io_s_trade_by_secondofall_dj2e11r-pre.jpg
+    prompts:
+    - id: p0000016
+      output_id: 92JUMskSRtoC7s4gvZ
+      enabled: true
+      name: usun_tlo_1
+      positive: Remove background, leave it solid white
+      negative: ''
+      note: ''
+      params:
+        steps: 30
+        cfg: 8
+        denoise: 1
+  - image: blood_ritual_4_5__before_the_red_queen_by_secondofall_djpzvp8-pre.png
+    prompts:
+    - id: p0000016
+      output_id: 0W9T11U623S9zYhkoa
+      enabled: true
+      name: usun_tlo_1
+      positive: Remove background, leave it solid white
+      negative: ''
+      note: ''
+      params:
+        steps: 30
+        cfg: 8
+        denoise: 1
+  - image: hestia__vampire_succubus__v4__by_secondofall_dkk2kmb-414w-2x.png
+    prompts:
+    - id: p0000016
+      output_id: DnUSgx8zxANQXLuhBs
+      enabled: true
+      name: usun_tlo_1
+      positive: Remove background, leave it solid white
+      negative: ''
+      note: ''
+      params:
+        steps: 30
+        cfg: 8
+        denoise: 1
+  - image: lydia__slave_of_calista_by_secondofall_dkdgdm1-pre.png
+    prompts:
+    - id: p0000016
+      output_id: vu23PA8SfYqcPik211
+      enabled: true
+      name: usun_tlo_1
+      positive: Remove background, leave it solid white
+      negative: ''
+      note: ''
+      params:
+        steps: 30
+        cfg: 8
+        denoise: 1
+  - image: the_matriarchal_hierarchy_of_vampires_by_secondofall_dixjj9y-pre.jpg
+    prompts:
+    - id: p0000016
+      output_id: xVduJPiFtM2vn96nNl
+      enabled: true
+      name: usun_tlo_1
+      positive: Remove background, leave it solid white
+      negative: ''
+      note: ''
+      params:
+        steps: 30
+        cfg: 8
+        denoise: 1
+  - image: the_vampire_queen_by_secondofall_diy23k4-pre.jpg
+    prompts:
+    - id: p0000016
+      output_id: Qa3hAQdWxQsjVjQ4Cl
+      enabled: true
+      name: usun_tlo_1
+      positive: Remove background, leave it solid white
+      negative: ''
+      note: ''
+      params:
+        steps: 30
+        cfg: 8
+        denoise: 1
+  - image: vampire_codex__dark_rites_by_secondofall_dly4akm-414w-2x.jpg
+    prompts:
+    - id: p0000016
+      output_id: ut97pTli01z6oQHCC7
+      enabled: true
+      name: usun_tlo_1
+      positive: Remove background, leave it solid white
+      negative: ''
+      note: ''
+      params:
+        steps: 30
+        cfg: 8
+        denoise: 1
+  id: models_dark_elves_level_kopia
+- type: one_image_many_prompts
+  name: models_warrior_level
+  source_dirs:
+  - C:\Users\abork\AppData\Local\CapCut\Videos\dungeon_team\enemies\warrior_level
+  output_dir: C:\Users\abork\AppData\Local\CapCut\Videos\dungeon_team\models\warrior_level
+  global_suffix: ''
+  image_slots:
+  - image: corrupted_woodelf_halloween_warrior_wallpaper_by_muldoom_dgd49zd-414w-2x.jpg
+    prompts:
+    - id: p0000016
+      output_id: DYtsI6rPsikT63wm73
+      enabled: true
+      name: usun_tlo_1
+      positive: Remove background, leave it solid white
+      negative: ''
+      note: ''
+      params:
+        steps: 30
+        cfg: 8
+        denoise: 1
+  - image: dark_gladiator_girl_sexy_badass_by_muldoom_dk9lfwm-414w-2x.jpg
+    prompts:
+    - id: p0000016
+      output_id: 2GbEMfsuGzGlYYXyXF
+      enabled: true
+      name: usun_tlo_1
+      positive: Remove background, leave it solid white
+      negative: ''
+      note: ''
+      params:
+        steps: 30
+        cfg: 8
+        denoise: 1
+  - image: darkfantasy_gate_keeper_to_the_land_of_gods_by_muldoom_dlw7scj-fullview.jpg
+    prompts:
+    - id: p0000016
+      output_id: KKVDDVVdvsgCbz9hIQ
+      enabled: true
+      name: usun_tlo_1
+      positive: Remove background, leave it solid white
+      negative: ''
+      note: ''
+      params:
+        steps: 30
+        cfg: 8
+        denoise: 1
+  - image: gladiator_1_by_flashdelfin_dm3xhun-414w-2x.jpg
+    prompts:
+    - id: p0000016
+      output_id: LwVOLMTRmeJXoI7v5j
+      enabled: true
+      name: usun_tlo_1
+      positive: Remove background, leave it solid white
+      negative: ''
+      note: ''
+      params:
+        steps: 30
+        cfg: 8
+        denoise: 1
+  - image: mac4tu_art_by_mac4tu_dm2t3i5-414w-2x.jpg
+    prompts:
+    - id: p0000016
+      output_id: SYmS0ZFQzhMDuNMdAj
+      enabled: true
+      name: usun_tlo_1
+      positive: Remove background, leave it solid white
+      negative: ''
+      note: ''
+      params:
+        steps: 30
+        cfg: 8
+        denoise: 1
+  - image: oc_vampirehuntress_archer_coverart_commission_open_by_muldoom_dl8p1hy-375w-2x.jpg
+    prompts:
+    - id: p0000016
+      output_id: es5nLFZ7rbv88Dop4K
+      enabled: true
+      name: usun_tlo_1
+      positive: Remove background, leave it solid white
+      negative: ''
+      note: ''
+      params:
+        steps: 30
+        cfg: 8
+        denoise: 1
+  - image: red_sonja_and_the_necromancer_s_castle_ai_fanart_by_muldoom_dlthpz0-fullview.jpg
+    prompts:
+    - id: p0000016
+      output_id: 9RShoj68uM2Co9eWbt
+      enabled: true
+      name: usun_tlo_1
+      positive: Remove background, leave it solid white
+      negative: ''
+      note: ''
+      params:
+        steps: 30
+        cfg: 8
+        denoise: 1
+  - image: red_sonja_inspirations_2_crypt_of_the_giants_by_muldoom_dg4q1ir-fullview.jpg
+    prompts:
+    - id: p0000016
+      output_id: pZdebPrSDUzmdKez01
+      enabled: true
+      name: usun_tlo_1
+      positive: Remove background, leave it solid white
+      negative: ''
+      note: ''
+      params:
+        steps: 30
+        cfg: 8
+        denoise: 1
+  - image: viele___commission_for_jacqueofknives_by_maverickguyver_dm4na2l-414w-2x.jpg
+    prompts:
+    - id: p0000016
+      output_id: NdaohLywHwijOkVAqA
+      enabled: true
+      name: usun_tlo_1
+      positive: Remove background, leave it solid white
+      negative: ''
+      note: ''
+      params:
+        steps: 30
+        cfg: 8
+        denoise: 1
+  - image: zhulla_and_anger___friends___chronicles_of_ammerun_by_muldoom_dhl1rb1-pre.jpg
+    prompts:
+    - id: p0000016
+      output_id: H44LqRVXb39Svi21HU
+      enabled: true
+      name: usun_tlo_1
+      positive: Remove background, leave it solid white
+      negative: ''
+      note: ''
+      params:
+        steps: 30
+        cfg: 8
+        denoise: 1
+  id: models_vampire_level_kopia
+- type: one_image_many_prompts
+  name: models_which_level
+  source_dirs:
+  - C:\Users\abork\AppData\Local\CapCut\Videos\dungeon_team\enemies\which_level
+  output_dir: C:\Users\abork\AppData\Local\CapCut\Videos\dungeon_team\models\which_level
+  global_suffix: ''
+  image_slots:
+  - image: apu___the_black_pharaoh_by_merlinpinpin104_dm4v29j-414w-2x.jpg
+    prompts:
+    - id: p0000016
+      output_id: 8WsefrDvwY0RD8sWfF
+      enabled: true
+      name: usun_tlo_1
+      positive: Remove background, leave it solid white
+      negative: ''
+      note: ''
+      params:
+        steps: 30
+        cfg: 8
+        denoise: 1
+  - image: candlelit_ritual_in_ruins_by_lumenyx_dlxbi30-414w-2x.jpg
+    prompts:
+    - id: p0000016
+      output_id: 93pkbQqR4mJUeFUY9N
+      enabled: true
+      name: usun_tlo_1
+      positive: Remove background, leave it solid white
+      negative: ''
+      note: ''
+      params:
+        steps: 30
+        cfg: 8
+        denoise: 1
+  - image: eternal_prisoner_of_the_darkness_by_mindtoeyes_dm4yfk3-414w-2x.jpg
+    prompts:
+    - id: p0000016
+      output_id: 6W2WcCHPlRGjoy3ZoG
+      enabled: true
+      name: usun_tlo_1
+      positive: Remove background, leave it solid white
+      negative: ''
+      note: ''
+      params:
+        steps: 30
+        cfg: 8
+        denoise: 1
+  - image: hekate_v1_by_xspiritualwitch_dm4ivnf-375w-2x.jpg
+    prompts:
+    - id: p0000016
+      output_id: 5EvGjOrZCIo5mMHWud
+      enabled: true
+      name: usun_tlo_1
+      positive: Remove background, leave it solid white
+      negative: ''
+      note: ''
+      params:
+        steps: 30
+        cfg: 8
+        denoise: 1
+  - image: necromancer_girl_rotten_wood_spellcaster_by_muldoom_dle0w28-414w-2x.jpg
+    prompts:
+    - id: p0000016
+      output_id: sdaFZFitRxHlyhMfLJ
+      enabled: true
+      name: usun_tlo_1
+      positive: Remove background, leave it solid white
+      negative: ''
+      note: ''
+      params:
+        steps: 30
+        cfg: 8
+        denoise: 1
+  - image: occult_investigator_by_generalorder4_dm4gu1j-414w-2x.jpg
+    prompts:
+    - id: p0000016
+      output_id: 7VzldL5dT1rkIinRnX
+      enabled: true
+      name: usun_tlo_1
+      positive: Remove background, leave it solid white
+      negative: ''
+      note: ''
+      params:
+        steps: 30
+        cfg: 8
+        denoise: 1
+  - image: requiem_in_black_by_jaylyn1969_dm4oxzp-414w-2x.jpg
+    prompts:
+    - id: p0000016
+      output_id: jbjWD9innyUeifRMNf
+      enabled: true
+      name: usun_tlo_1
+      positive: Remove background, leave it solid white
+      negative: ''
+      note: ''
+      params:
+        steps: 30
+        cfg: 8
+        denoise: 1
+  - image: serava_the_red_witch_by_zauril_dm4sxde-pre.jpg
+    prompts:
+    - id: p0000016
+      output_id: rRAJW0bSi94SFyLd1L
+      enabled: true
+      name: usun_tlo_1
+      positive: Remove background, leave it solid white
+      negative: ''
+      note: ''
+      params:
+        steps: 30
+        cfg: 8
+        denoise: 1
+  - image: vampire_witches_by_secondofall_dixz3hq-pre.jpg
+    prompts:
+    - id: p0000016
+      output_id: KmB1AfSTFSr88FHWzj
+      enabled: true
+      name: usun_tlo_1
+      positive: Remove background, leave it solid white
+      negative: ''
+      note: ''
+      params:
+        steps: 30
+        cfg: 8
+        denoise: 1
+  - image: velvet_palace_seductress_by_momoe001_dm4l8la-414w-2x.jpg
+    prompts:
+    - id: p0000016
+      output_id: E7T4UMD20tlVH84Hjg
+      enabled: true
+      name: usun_tlo_1
+      positive: Remove background, leave it solid white
+      negative: ''
+      note: ''
+      params:
+        steps: 30
+        cfg: 8
+        denoise: 1
+  id: models_warrior_level_kopia

@@ -9,6 +9,7 @@ GET /api/fs/image?path=…    → serve any local image file (authenticated)
 """
 
 from pathlib import Path
+from typing import List
 
 from fastapi import APIRouter, HTTPException, Query
 from fastapi.responses import FileResponse
@@ -78,3 +79,18 @@ async def serve_image(path: str = Query(..., description="Absolute local path to
     if p.suffix.lower() not in _IMAGE_EXTS:
         raise HTTPException(status_code=400, detail="Nieobsługiwany format pliku")
     return FileResponse(str(p))
+
+
+@router.get("/image_in_dirs")
+async def serve_image_in_dirs(
+    name: str = Query(..., description="Image filename"),
+    dirs: List[str] = Query(..., description="Directories to search in order"),
+):
+    """Find image by filename across multiple directories and serve the first match."""
+    for d in dirs:
+        if not d:
+            continue
+        p = Path(d) / name
+        if p.exists() and p.is_file() and p.suffix.lower() in _IMAGE_EXTS:
+            return FileResponse(str(p))
+    raise HTTPException(status_code=404, detail=f"Plik '{name}' nie znaleziony w podanych katalogach")

@@ -67,18 +67,54 @@ def _make_output_id() -> str:
     return "".join(random.choices(_OUTPUT_ID_CHARS, k=18))
 
 
+def _get_source_dirs(tile: dict) -> list[str]:
+    """Return list of source directories; handles both source_dirs (list) and legacy source_dir (str)."""
+    dirs = tile.get("source_dirs")
+    if isinstance(dirs, list):
+        return [d for d in dirs if d]
+    single = tile.get("source_dir", "")
+    return [single] if single else []
+
+
+def _get_dirs_field(tile: dict, multi_key: str, single_key: str) -> list[str]:
+    """Generic multi-dir helper: reads `multi_key` list, falls back to `single_key` string."""
+    dirs = tile.get(multi_key)
+    if isinstance(dirs, list):
+        return [d for d in dirs if d]
+    single = tile.get(single_key, "")
+    return [single] if single else []
+
+
 def _ensure_output_ids(tile: dict) -> bool:
     """
-    Assign output_id to every prompt in image_slots that is missing one.
+    Assign output_id to every prompt that is missing one.
+    Handles:
+      - one_image_many_prompts  → image_slots[].prompts[]
+      - character_insert        → scene_slots[].prompts[]
+                                  (legacy: top-level prompts[] migrated by _migrate_tile)
     Returns True if any IDs were newly assigned (caller should persist).
     """
     changed = False
-    for slot in tile.get("image_slots", []):
-        for p in slot.get("prompts", []):
-            if not p.get("output_id"):
-                p["output_id"] = _make_output_id()
-                changed = True
+    if tile.get("type") == "character_insert":
+        for slot in tile.get("scene_slots", []):
+            for p in slot.get("prompts", []):
+                if not p.get("output_id"):
+                    p["output_id"] = _make_output_id()
+                    changed = True
+    else:
+        for slot in tile.get("image_slots", []):
+            for p in slot.get("prompts", []):
+                if not p.get("output_id"):
+                    p["output_id"] = _make_output_id()
+                    changed = True
     return changed
+
+
+def _get_tile_type(run_id: str, tile_id: str) -> str:
+    """Return the type string of a tile ('one_image_many_prompts' by default)."""
+    data = _load(run_id)
+    tile = next((t for t in data.get("pic_flow", []) if t["id"] == tile_id), None)
+    return tile.get("type", "one_image_many_prompts") if tile else "one_image_many_prompts"
 
 
 def _unique_id(base: str, existing: list[str]) -> str:
@@ -96,11 +132,54 @@ def _unique_id(base: str, existing: list[str]) -> str:
 
 def _migrate_tile(tile: dict) -> dict:
     """
-    Convert old format (source_image + top-level prompts) → image_slots.
-    Mutates tile in-place and returns it.
+    Migrate tile to current format. Mutates tile in-place and returns it.
+
+    OI migrations:
+      source_image + top-level prompts  →  image_slots
+
+    CI migrations:
+      scene_dir       →  scene_dirs  (list)
+      characters_dir  →  characters_dirs  (list)
+      scene_image + character_images + top-level prompts  →  scene_slots[0]
     """
+    tile_type = tile.get("type", "one_image_many_prompts")
+
+    if tile_type == "character_insert":
+        # 1. Migrate single-dir → multi-dir
+        if "scene_dir" in tile and "scene_dirs" not in tile:
+            tile["scene_dirs"] = [tile.pop("scene_dir")] if tile["scene_dir"] else []
+        elif "scene_dir" in tile:
+            tile.pop("scene_dir", None)
+
+        if "characters_dir" in tile and "characters_dirs" not in tile:
+            tile["characters_dirs"] = [tile.pop("characters_dir")] if tile["characters_dir"] else []
+        elif "characters_dir" in tile:
+            tile.pop("characters_dir", None)
+
+        tile.setdefault("scene_dirs", [])
+        tile.setdefault("characters_dirs", [])
+
+        # 2. Migrate flat scene_image / character_images / prompts → scene_slots
+        if "scene_slots" not in tile:
+            old_scene  = tile.pop("scene_image",      "")
+            old_chars  = tile.pop("character_images", [])
+            old_prompts = tile.pop("prompts",         [])
+            tile["scene_slots"] = (
+                [{"scene_image": old_scene, "character_images": old_chars,
+                  "prompts": old_prompts}]
+                if old_scene else []
+            )
+        else:
+            # Clean up any leftover legacy top-level keys
+            tile.pop("scene_image",      None)
+            tile.pop("character_images", None)
+            tile.pop("prompts",          None)
+
+        return tile
+
+    # ── OI migration: source_image + top-level prompts → image_slots ─────────
     if "image_slots" in tile:
-        return tile  # already new format
+        return tile
     old_image   = tile.pop("source_image", "")
     old_prompts = tile.pop("prompts",      [])
     tile["image_slots"] = (
@@ -175,6 +254,9 @@ def update_tile(run_id: str, tile_id: str, updates: dict) -> dict:
             for k, v in updates.items():
                 if k != "id":
                     tile[k] = v
+            # Clean up legacy source_dir when new source_dirs key is present
+            if "source_dirs" in updates:
+                tile.pop("source_dir", None)
             _migrate_tile(tile)      # in case updates brought old keys
             _ensure_output_ids(tile) # assign output_id to any new/missing prompts
             _save(run_id, data)
@@ -242,6 +324,30 @@ def add_prompt_to_all_slots(run_id: str, tile_id: str, prompt: dict) -> dict:
     raise KeyError(f"Tile not found: {tile_id}")
 
 
+def add_prompt_to_all_scene_slots(run_id: str, tile_id: str, prompt: dict) -> dict:
+    """
+    Add a prompt copy (with a fresh output_id) to every scene_slot of a
+    character_insert tile that doesn't already have a prompt with the same id.
+    Returns the updated tile dict.
+    """
+    data = _load(run_id)
+    for tile in data.get("pic_flow", []):
+        if tile["id"] == tile_id:
+            _migrate_tile(tile)
+            changed = False
+            for slot in tile.get("scene_slots", []):
+                prompts = slot.setdefault("prompts", [])
+                if not any(p["id"] == prompt["id"] for p in prompts):
+                    p = dict(prompt)
+                    p["output_id"] = _make_output_id()   # always fresh per slot
+                    prompts.append(p)
+                    changed = True
+            if changed:
+                _save(run_id, data)
+            return tile
+    raise KeyError(f"Tile not found: {tile_id}")
+
+
 def copy_tile(run_id: str, tile_id: str) -> dict:
     data = _load(run_id)
     tiles: list[dict] = data.get("pic_flow", [])
@@ -281,7 +387,63 @@ def get_tile_status(run_id: str, tile_id: str) -> dict:
 
     _migrate_tile(tile)
 
-    output_dir  = Path(tile.get("output_dir", ""))
+    output_dir = Path(tile.get("output_dir", ""))
+
+    # ── character_insert: scene_slots ─────────────────────────────────────────
+    if tile.get("type") == "character_insert":
+        scene_slots = tile.get("scene_slots", [])
+        slot_statuses: list[dict[str, Any]] = []
+        total_done  = 0
+        total_count = 0
+
+        for slot in scene_slots:
+            scene_image     = slot.get("scene_image", "")
+            character_images = slot.get("character_images", [])
+            prompts          = slot.get("prompts", [])
+            enabled          = [p for p in prompts if p.get("enabled", True)]
+
+            prompt_status: dict[str, Any] = {}
+            for p in enabled:
+                oid   = p.get("output_id", "")
+                found = False
+                out_p = None
+                if oid and output_dir.is_dir():
+                    for ext in _IMAGE_EXTS:
+                        candidate = output_dir / f"{oid}{ext}"
+                        if candidate.exists():
+                            found = True
+                            out_p = str(candidate)
+                            break
+                prompt_status[p["id"]] = {"done": found, "output_path": out_p, "output_id": oid}
+
+            slot_done  = sum(1 for s in prompt_status.values() if s["done"])
+            slot_total = len(enabled)
+            total_done  += slot_done
+            total_count += slot_total
+
+            slot_statuses.append({
+                "scene_image":      scene_image,
+                "character_images": character_images,
+                "done":    slot_done,
+                "total":   slot_total,
+                "prompts": prompt_status,
+            })
+
+        overall = (
+            "empty"   if total_count == 0 else
+            "none"    if total_done  == 0 else
+            "all"     if total_done  >= total_count else
+            "partial"
+        )
+        return {
+            "tile_id": tile_id,
+            "overall": overall,
+            "done":    total_done,
+            "total":   total_count,
+            "slots":   slot_statuses,
+        }
+
+    # ── one_image_many_prompts: slot-based ────────────────────────────────────
     image_slots = tile.get("image_slots", [])
     slot_statuses: list[dict[str, Any]] = []
     total_done  = 0

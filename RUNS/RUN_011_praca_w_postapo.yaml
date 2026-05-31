@@ -1,18 +1,19 @@
 # RUN_011_praca_w_postapo.yaml
-# Edited: 2026-05-23 10:50:04
+# Edited: 2026-05-28 17:43:58
 # Edit this file freely — regenerate .py with generate_py_from_yaml()
 #
 project_folder: C:\Users\abork\AppData\Local\CapCut\Videos\muszelka_pliki\MKK\praca w postapo\film
 
 defaults:
+  fps: 16
+  steps: 6
+  cfg: 2
+  duration: 2
+  blocks_to_swap: 35
+  frame_interpolation: true
   resolution:
   - 1024
   - 1024
-  fps: 16
-  steps: 6
-  cfg: 2.0
-  duration: 2
-  blocks_to_swap: 35
 
 linux_backend:
   config_path: D:\streamlit_project\comfyui_integration\workflow_configs\wan_i2v.yaml
@@ -68,6 +69,59 @@ flow:
     steps: 6
     cfg: 2
     neg: ""
+
+- break: true
+
+- file: 10.01. presentation.png
+  backend: linux
+  duration: 2
+  pos: "2-second cinematic I2V2I time-lapse: \n\nStart with empty post-apocalyptic street in bright daylight (Image 1). \n\nIn a very fast, dramatic transition the scene rapidly changes to deep night (dark blue/purple sky, strong shadows, moonlight), and at that exact moment the character instantly appears standing still in the center of the street. Then the lighting quickly transitions back to bright daylight (Image 2).\n\nThe character does not move or walk in — they simply appear during the night phase. Focus on strong, cinematic day-night-day cycle in just 2 seconds. Moody atmosphere, realistic lighting changes, photorealistic, ultra detailed."
+  neg: |-
+    slow transition, static lighting, no lighting change, character walking in, gradual appearance, fade in, low quality motion, jerky lighting, unrealistic sky, deformed character, bad composition, extra movement, long animation
+
+- file: 10.03. presentation.png
+  backend: linux
+  duration: 2
+  pos: "2-second cinematic I2V2I: \n\nStart with Image 1 — character standing in pose A on a destroyed post-apocalyptic street in bright daylight.\n\nIn a rapid time-lapse: the scene dramatically darkens to night, during which the first character fades out completely. At the peak of darkness the second character (Image 2) instantly appears in a different pose in the same spot. Then the lighting rapidly returns to daylight.\n\nFocus on the strong day-night-day cycle to show passage of time. Character switch is abrupt and sudden (no smooth morphing or walking). Cinematic, moody atmosphere, photorealistic."
+  neg: |-
+    smooth character transition, morphing, character walking, slow fade, gradual change, fluid animation, static lighting, no day-night change, low quality lighting transition, deformed character, extra movement, long animation, character moving between poses
+
+- file: 10.05. presentation.png
+  backend: linux
+  duration: 2
+  pos: "2-second cinematic I2V2I: \n\nStart with Image 1 — character standing in pose A on a destroyed post-apocalyptic street in bright daylight.\n\nIn a rapid time-lapse: the scene dramatically darkens to night, during which the first character fades out completely. At the peak of darkness the second character (Image 2) instantly appears in a different pose in the same spot. Then the lighting rapidly returns to daylight.\n\nFocus on the strong day-night-day cycle to show passage of time. Character switch is abrupt and sudden (no smooth morphing or walking). Cinematic, moody atmosphere, photorealistic."
+  neg: |-
+    smooth character transition, morphing, character walking, slow fade, gradual change, fluid animation, static lighting, no day-night change, low quality lighting transition, deformed character, extra movement, long animation, character moving between poses
+
+- file: 10.07. presentation.png
+  backend: linux
+  duration: 2
+  pos: "2-second cinematic I2V2I: \n\nStart with Image 1 — character standing in pose A on a destroyed post-apocalyptic street in bright daylight.\n\nIn a rapid time-lapse: the scene dramatically darkens to night, during which the first character fades out completely. At the peak of darkness the second character (Image 2) instantly appears in a different pose in the same spot. Then the lighting rapidly returns to daylight.\n\nFocus on the strong day-night-day cycle to show passage of time. Character switch is abrupt and sudden (no smooth morphing or walking). Cinematic, moody atmosphere, photorealistic."
+  neg: |-
+    smooth character transition, morphing, character walking, slow fade, gradual change, fluid animation, static lighting, no day-night change, low quality lighting transition, deformed character, extra movement, long animation, character moving between poses
+
+- file: 10.09. presentation.png
+  backend: linux
+  duration: 3
+  pos: |-
+    Women smoothly standing up
+  neg: |-
+    NONE
+
+- file: 10.11. presentation.png
+  backend: linux
+  duration: 2
+  pos: |-
+    Woman rapidly runs into ruined building door and disappears in it
+  neg: |-
+    NONE
+
+- file: 10.13. presentation.png
+  backend: linux
+  duration: 0
+  pos: "Woman runs into building door nearby and disappears in interior of it "
+  neg: |-
+    NONE
 
 - break: true
 
@@ -198,19 +252,15 @@ flow:
   neg: |-
     NONE
 
-- chain:
-    prefix: gra w bierki
-    transitions:
-    - duration: 2
-      pos: |-
-        Woman is touching her breasts with surprised face
-      neg: ""
-    backend: linux
-    fps: 16
-    steps: 6
-    cfg: 2
-    neg: |-
-      static, frozen, no movement
+- type: talk
+  audio:
+    file: jeki_2_3 krotkie.mp3
+    pos: |-
+      cinematic video of a beautiful young woman lying flat on her back on a bed, arms spread wide above her head. She is being rhythmically and intensely thrust into, causing her entire body to slide back and forth on the sheets in a smooth, continuous motion without lifting her head or torso off the mattress. Her hips and lower body move naturally with the rhythm while her upper back and head stay pressed against the bed.
+      Her eyes slowly open and close, fluttering with pleasure, and her mouth gently parts and closes with soft moaning breaths in sync with the thrusts. Natural breast movement, realistic fabric sliding and wrinkles under her body, detailed skin and muscle micro-movements. Passionate yet grounded sexual motion, highly realistic physics, sensual atmosphere, soft cinematic lighting, 24fps smooth motion, photorealistic
+  width: 512
+  height: 512
+  prefix: Pani_jeczy_1
 
 - break: true
 
@@ -339,20 +389,15 @@ flow:
   neg: |-
     NONE
 
-- chain:
-    prefix: nowy_chain4
-    transitions:
-    - duration: 3
-      pos: |-
-        3-second cinematic video of a beautiful young woman lying flat on her back on a bed, arms spread wide above her head. She is being rhythmically and intensely thrust into, causing her entire body to slide back and forth on the sheets in a smooth, continuous motion without lifting her head or torso off the mattress. Her hips and lower body move naturally with the rhythm while her upper back and head stay pressed against the bed.
-        Her eyes slowly open and close, fluttering with pleasure, and her mouth gently parts and closes with soft moaning breaths in sync with the thrusts. Natural breast movement, realistic fabric sliding and wrinkles under her body, detailed skin and muscle micro-movements. Passionate yet grounded sexual motion, highly realistic physics, sensual atmosphere, soft cinematic lighting, 24fps smooth motion, photorealistic
-      neg: ""
-    backend: linux
-    fps: 16
-    steps: 6
-    cfg: 2
-    neg: |-
-      static, frozen, no movement
+- type: talk
+  audio:
+    file: jeki_1_dwa_dlugie.mp3
+    pos: |-
+      cinematic video of a beautiful young woman lying flat on her back on a bed, arms spread wide above her head. She is being rhythmically and intensely thrust into, causing her entire body to slide back and forth on the sheets in a smooth, continuous motion without lifting her head or torso off the mattress. Her hips and lower body move naturally with the rhythm while her upper back and head stay pressed against the bed.
+      Her eyes slowly open and close, fluttering with pleasure, and her mouth gently parts and closes with soft moaning breaths in sync with the thrusts. Natural breast movement, realistic fabric sliding and wrinkles under her body, detailed skin and muscle micro-movements. Passionate yet grounded sexual motion, highly realistic physics, sensual atmosphere, soft cinematic lighting, 24fps smooth motion, photorealistic
+  width: 512
+  height: 512
+  prefix: Pani_jeczy_2
 
 - break: true
 
@@ -422,31 +467,6 @@ flow:
 
 - break: true
 
-- file: 17.47. zabawa w palka zapalka.mp4
-  backend: linux
-  duration: 2
-  pos: |-
-    NONE
-  neg: |-
-    NONE
-
-- chain:
-    prefix: nowy_chain7
-    transitions:
-    - duration: 3
-      pos: |-
-        3-second cinematic video of a beautiful young woman lying flat on her back on a bed, arms spread wide above her head. She is being rhythmically and intensely thrust into, causing her entire body to slide back and forth on the sheets in a smooth, continuous motion without lifting her head or torso off the mattress. Her hips and lower body move naturally with the rhythm while her upper back and head stay pressed against the bed.
-        Her eyes slowly open and close, fluttering with pleasure, and her mouth gently parts and closes with soft moaning breaths in sync with the thrusts. Natural breast movement, realistic fabric sliding and wrinkles under her body, detailed skin and muscle micro-movements. Passionate yet grounded sexual motion, highly realistic physics, sensual atmosphere, soft cinematic lighting, 24fps smooth motion, photorealistic
-      neg: ""
-    backend: linux
-    fps: 16
-    steps: 6
-    cfg: 2
-    neg: |-
-      static, frozen, no movement
-
-- break: true
-
 - file: 17.47. to maczuga.mp4
   backend: linux
   duration: 2
@@ -455,20 +475,15 @@ flow:
   neg: |-
     NONE
 
-- chain:
-    prefix: nowy_chain_1
-    transitions:
-    - duration: 3
-      pos: |-
-        3-second cinematic video of a beautiful young woman lying flat on her back on a bed, arms spread wide above her head. She is being rhythmically and intensely thrust into, causing her entire body to slide back and forth on the sheets in a smooth, continuous motion without lifting her head or torso off the mattress. Her hips and lower body move naturally with the rhythm while her upper back and head stay pressed against the bed.
-        Her eyes slowly open and close, fluttering with pleasure, and her mouth gently parts and closes with soft moaning breaths in sync with the thrusts. Natural breast movement, realistic fabric sliding and wrinkles under her body, detailed skin and muscle micro-movements. Passionate yet grounded sexual motion, highly realistic physics, sensual atmosphere, soft cinematic lighting, 24fps smooth motion, photorealistic
-      neg: ""
-    backend: linux
-    fps: 16
-    steps: 6
-    cfg: 2
-    neg: |-
-      static, frozen, no movement
+- type: talk
+  audio:
+    file: jeki_3_dwa dlugie_joy.mp3
+    pos: |-
+      3-second cinematic video of a beautiful young woman lying flat on her back on a bed, arms spread wide above her head. She is being rhythmically and intensely thrust into, causing her entire body to slide back and forth on the sheets in a smooth, continuous motion without lifting her head or torso off the mattress. Her hips and lower body move naturally with the rhythm while her upper back and head stay pressed against the bed.
+      Her eyes slowly open and close, fluttering with pleasure, and her mouth gently parts and closes with soft moaning breaths in sync with the thrusts. Natural breast movement, realistic fabric sliding and wrinkles under her body, detailed skin and muscle micro-movements. Passionate yet grounded sexual motion, highly realistic physics, sensual atmosphere, soft cinematic lighting, 24fps smooth motion, photorealistic
+  width: 512
+  height: 512
+  prefix: Pani_jeczy_3
 
 - break: true
 
@@ -559,13 +574,11 @@ flow:
 
 - file: 18.57. klient4.mp4
   backend: linux
-  duration: 2
+  duration: 5
   pos: |-
-    NONE
+    Man is turning towards camera while woman is still in position but shaking his buttock which slowly turns red.
   neg: |-
     NONE
-
-- break: true
 
 - file: 18.59. klient4.png
   backend: linux
@@ -599,27 +612,60 @@ flow:
   neg: |-
     NONE
 
-- chain:
-    prefix: bed_activity
-    transitions:
-    - duration: 5
-      pos: |-
-        5-second cinematic video of a beautiful young woman lying on her back on a bed, arms spread wide above her head. She is being rhythmically and intensely moved back and forth on the sheets by strong, fast thrusts. Her body slides up and down the bed with each powerful motion, hips slightly lifting, breasts bouncing naturally. Her head tilts back, mouth opens wide in pleasure with each forward push, eyes half-closed or rolling back. Passionate and intense sexual motion, realistic physics, natural body movement, detailed fabric wrinkles on the sheets, soft cinematic lighting, highly realistic, sensual atmosphere, 24fps smooth motion
-      neg: "camera shake, shaky cam, jitter, stuttering, sudden movements, fast motion, quick pan, rapid zoom, jerky movement, \nwoman moving, breathing, blinking, hair moving, body twitching, leg movement, arm movement, \ndeformed anatomy, extra limbs, missing limbs, distorted body, bad proportions, \nlow quality, blurry motion, motion blur, artifact, glitch, flickering, \ntext, watermark, logo, overlay, \noverexposed, underexposed, wrong lighting, warm colors, \nmultiple angles, split screen, changing camera angle too fast, \nunnatural camera movement, orbiting too quickly, spinning camera"
-      width: 1024
-      height: 1024
-      blocks_to_swap: 35
-    - duration: 5
-      pos: |-
-        5-second cinematic video of a beautiful young woman lying flat on her back on a bed, arms spread wide above her head. She is being rhythmically and intensely thrust into, causing her entire body to slide back and forth on the sheets in a smooth, continuous motion without lifting her head or torso off the mattress. Her hips and lower body move naturally with the rhythm while her upper back and head stay pressed against the bed.
-        Her eyes slowly open and close, fluttering with pleasure, and her mouth gently parts and closes with soft moaning breaths in sync with the thrusts. Natural breast movement, realistic fabric sliding and wrinkles under her body, detailed skin and muscle micro-movements. Passionate yet grounded sexual motion, highly realistic physics, sensual atmosphere, soft cinematic lighting, 24fps smooth motion, photorealistic
-      neg: "camera shake, shaky cam, jitter, stuttering, sudden movements, fast motion, quick pan, rapid zoom, jerky movement, \nwoman moving, breathing, blinking, hair moving, body twitching, leg movement, arm movement, \ndeformed anatomy, extra limbs, missing limbs, distorted body, bad proportions, \nlow quality, blurry motion, motion blur, artifact, glitch, flickering, \ntext, watermark, logo, overlay, \noverexposed, underexposed, wrong lighting, warm colors, \nmultiple angles, split screen, changing camera angle too fast, \nunnatural camera movement, orbiting too quickly, spinning camera"
-    backend: linux
-    fps: 16
-    steps: 6
-    cfg: 2
-    neg: |-
-      static, frozen, no movement, distorted, walking towards camera, facing camera, approaching viewer, coming closer, teleporting, jumping, blurry, low quality
+- type: talk
+  audio:
+  - file: jeki_2_3 krotkie.mp3
+    pos: |-
+      beautiful young woman lying on her back on a bed, arms spread wide above her head. She is being rhythmically and intensely moved back and forth on the sheets by strong, fast thrusts. Her body slides up and down the bed with each powerful motion, hips slightly lifting, breasts bouncing naturally. Her head tilts back, mouth opens wide in pleasure with each forward push, eyes half-closed or rolling back. Passionate and intense sexual motion, realistic physics, natural body movement, detailed fabric wrinkles on the sheets, soft cinematic lighting, highly realistic, sensual atmosphere, 24fps smooth motion
+  - file: jeki_3_dwa dlugie_joy.mp3
+    pos: |-
+      beautiful young woman lying flat on her back on a bed, arms spread wide above her head. She is being rhythmically and intensely thrust into, causing her entire body to slide back and forth on the sheets in a smooth, continuous motion without lifting her head or torso off the mattress. Her hips and lower body move naturally with the rhythm while her upper back and head stay pressed against the bed.
+      Her eyes slowly open and close, fluttering with pleasure, and her mouth gently parts and closes with soft moaning breaths in sync with the thrusts. Natural breast movement, realistic fabric sliding and wrinkles under her body, detailed skin and muscle micro-movements. Passionate yet grounded sexual motion, highly realistic physics, sensual atmosphere, soft cinematic lighting, 24fps smooth motion, photorealistic
+  width: 512
+  height: 512
+  prefix: Pani_jeczy_4
+
+- break: true
+
+- file: 19.53. Empty_street END.mp4
+  backend: linux
+  duration: 2
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- break: true
+
+- file: 19.55. Empty_street END.mp4
+  backend: linux
+  duration: 2
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- break: true
+
+- file: 19.57. Empty_street END.mp4
+  backend: linux
+  duration: 2
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- break: true
+
+- file: 19.59. Empty_street END.mp4
+  backend: linux
+  duration: 2
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- break: true
 
 - file: 20.49. old_one_END.png
   backend: linux

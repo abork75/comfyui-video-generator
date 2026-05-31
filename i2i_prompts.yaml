@@ -18,10 +18,6 @@ categories:
   name: Usun_tlo
   icon: 🗂
   order: 4
-- id: run_013
-  name: RUN_013
-  icon: 🗂
-  order: 5
 defaults:
   steps: 30
   cfg: 8
@@ -187,4 +183,40 @@ prompts:
     steps: 30
     cfg: 8.0
     denoise: 1.0
-last_id: 16
+- id: p0000018
+  category: character_insert
+  name: wstaw 1 kobiete
+  note: ''
+  positive: "Place the woman from image 2 into the scene from image 1. \nPreserve her exact face, skin tone, hair, body proportions and clothing. \nMatch the pose and scale to fit naturally into the scene. \nSeamless integration, photorealistic, high detail."
+  negative: ''
+  params:
+    steps: 30
+    cfg: 8.0
+    denoise: 1.0
+- id: p0000019
+  category: character_insert
+  name: wstaw 2 kobiety
+  note: ''
+  positive: 'Place the woman from image 2 and the woman from image 3 into the scene from image 1.
+
+
+    The woman from image 2: preserve her exact face, skin tone, hair, body proportions, clothing and original pose exactly as she appears in image 2.
+
+    The woman from image 3: preserve her exact face, skin tone, hair, body proportions, clothing and original pose exactly as she appears in image 3.
+
+
+    Do not mix facial features or poses between the two women.
+
+    Position both women naturally within the scene, matching their scale to the environment.
+
+    Only modify the masked area, keep the rest of image 1 unchanged.
+
+    Seamless integration, photorealistic, high detail.'
+  negative: 'smooth skin, teenager, childlike, plastic skin, unnatural aging, deformed face, bad anatomy, different pose, changed body position, different clothing, different hair, cartoonish, low detail, overdone wrinkles, makeup change, different ethnicity
+
+    blurry, soft focus, out of focus, blur, motion blur, haze, foggy, low sharpness, low detail, low quality, noise, grain'
+  params:
+    steps: 30
+    cfg: 8.0
+    denoise: 1.0
+last_id: 19
