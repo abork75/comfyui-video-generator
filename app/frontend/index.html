@@ -932,7 +932,7 @@
                                 </template>
 
                                 <!-- Tiles -->
-                                <template x-for="tile in picTiles" :key="tile.id">
+                                <template x-for="(tile, tileIdx) in picTiles" :key="tile.id">
                                     <div @click="if(!$event.target.closest('button')) picOpenTileModal(tile)"
                                          :class="picTileStatusClass(tile.id)"
                                          class="bg-gray-800 border border-gray-700 hover:border-gray-600 rounded-lg p-4 cursor-pointer group transition flex items-center gap-4">
@@ -977,12 +977,19 @@
                                                 <template x-if="tile.type === 'character_insert'">
                                                     <span class="text-purple-500">🎭</span>
                                                 </template>
+                                                <template x-if="tile.type === 'paste_character'">
+                                                    <span class="text-green-500">📌</span>
+                                                </template>
                                                 <span x-text="tile.type === 'character_insert'
-                                                    ? ((tile.character_images?.length || 0) + ' ' + (tile.character_images?.length === 1 ? 'postać' : 'postaci'))
+                                                    ? ((tile.scene_slots?.length || 0) + ' slotów')
+                                                    : tile.type === 'paste_character'
+                                                    ? ((tile.paste_slots?.length || 0) + ' slotów')
                                                     : ((tile.image_slots?.length || 0) + ' ' + ((tile.image_slots?.length || 0) === 1 ? 'obraz' : 'obrazów'))"></span>
                                                 <span class="text-gray-700">·</span>
-                                                <span x-text="tile.type === 'character_insert'
-                                                    ? ((tile.prompts?.length || 0) + ' promptów')
+                                                <span x-text="tile.type === 'paste_character'
+                                                    ? 'PIL composite'
+                                                    : tile.type === 'character_insert'
+                                                    ? ((tile.scene_slots?.reduce((s,sl) => s + (sl.prompts?.length||0), 0) || 0) + ' promptów')
                                                     : ((tile.image_slots?.reduce((s,sl) => s + (sl.prompts?.length||0), 0) || 0) + ' promptów')"></span>
                                                 <span class="text-gray-700">·</span>
                                                 <span class="font-mono truncate text-gray-600" x-text="tile.output_dir || '—'"></span>
@@ -991,6 +998,14 @@
 
                                         <!-- Actions (hover) -->
                                         <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition flex-shrink-0">
+                                            <button @click.stop="picMoveTile(tileIdx, -1)"
+                                                    :disabled="tileIdx === 0"
+                                                    class="text-xs text-gray-500 hover:text-white px-1.5 py-1.5 rounded hover:bg-gray-700 transition disabled:opacity-20 disabled:cursor-not-allowed"
+                                                    title="Przesuń wyżej">↑</button>
+                                            <button @click.stop="picMoveTile(tileIdx, 1)"
+                                                    :disabled="tileIdx === picTiles.length - 1"
+                                                    class="text-xs text-gray-500 hover:text-white px-1.5 py-1.5 rounded hover:bg-gray-700 transition disabled:opacity-20 disabled:cursor-not-allowed"
+                                                    title="Przesuń niżej">↓</button>
                                             <button @click.stop="picCopyTile(tile.id)"
                                                     class="text-xs text-gray-500 hover:text-white px-2 py-1.5 rounded hover:bg-gray-700 transition"
                                                     title="Kopiuj kafelek">📋</button>
@@ -2283,26 +2298,31 @@
 
         <!-- Header -->
         <div class="flex items-center gap-3 px-5 py-3 border-b border-gray-700 bg-gray-800 flex-shrink-0">
-            <span class="text-pink-400 text-base">🗂</span>
-            <h2 class="text-sm font-semibold text-white">Globalna biblioteka promptów I2I</h2>
-            <span class="text-xs text-gray-500 font-mono">— i2i_prompts.yaml</span>
+            <span class="text-base" :class="pic.pickerMode.active ? 'text-purple-400' : 'text-pink-400'"
+                  x-text="pic.pickerMode.active ? '📚' : '🗂'"></span>
+            <h2 class="text-sm font-semibold text-white"
+                x-text="pic.pickerMode.active ? 'Wybierz prompt blendowania' : 'Globalna biblioteka promptów I2I'"></h2>
+            <span x-show="!pic.pickerMode.active" class="text-xs text-gray-500 font-mono">— i2i_prompts.yaml</span>
             <div class="ml-auto flex items-center gap-2">
                 <span x-show="pic.loading" class="text-xs text-gray-500 animate-pulse">ładowanie...</span>
-                <button @click="picOpenCategoryModal(null)"
-                        class="text-xs text-pink-400 border border-pink-800 hover:border-pink-500 rounded px-2 py-0.5 transition">
-                    + Kategoria
-                </button>
-                <button @click="picOpenPromptModal(null)"
-                        :disabled="pic.categories.length === 0"
-                        :class="pic.categories.length === 0 ? 'opacity-40 cursor-not-allowed' : 'hover:border-pink-500 cursor-pointer'"
-                        class="text-xs text-white bg-pink-800 hover:bg-pink-700 border border-pink-700 rounded px-3 py-0.5 transition">
-                    + Nowy prompt
-                </button>
-                <div class="h-4 w-px bg-gray-600 mx-1"></div>
-                <button @click="globalPicOpen = false"
-                        class="text-gray-400 hover:text-white text-sm px-3 py-1 rounded hover:bg-gray-700 transition">
-                    ✕ Zamknij
-                </button>
+                <template x-if="!pic.pickerMode.active">
+                    <div class="flex items-center gap-2">
+                        <button @click="picOpenCategoryModal(null)"
+                                class="text-xs text-pink-400 border border-pink-800 hover:border-pink-500 rounded px-2 py-0.5 transition">
+                            + Kategoria
+                        </button>
+                        <button @click="picOpenPromptModal(null)"
+                                :disabled="pic.categories.length === 0"
+                                :class="pic.categories.length === 0 ? 'opacity-40 cursor-not-allowed' : 'hover:border-pink-500 cursor-pointer'"
+                                class="text-xs text-white bg-pink-800 hover:bg-pink-700 border border-pink-700 rounded px-3 py-0.5 transition">
+                            + Nowy prompt
+                        </button>
+                        <div class="h-4 w-px bg-gray-600 mx-1"></div>
+                    </div>
+                </template>
+                <button @click="globalPicOpen = false; pic.pickerMode.active = false; pic.pickerMode.onSelect = null"
+                        class="text-gray-400 hover:text-white text-sm px-3 py-1 rounded hover:bg-gray-700 transition"
+                        x-text="pic.pickerMode.active ? 'Anuluj' : '✕ Zamknij'"></button>
             </div>
         </div>
 
@@ -2359,11 +2379,12 @@
                     </div>
                 </template>
 
-                <!-- Prompt cards — click anywhere to edit -->
+                <!-- Prompt cards -->
                 <div class="grid grid-cols-1 xl:grid-cols-2 gap-3">
                     <template x-for="p in picFilteredPrompts()" :key="p.id">
-                        <div @click="if(!$event.target.closest('button')) picOpenPromptModal(p)"
-                             class="bg-gray-800 border border-gray-700 hover:border-green-700 rounded-lg p-4 transition cursor-pointer group flex flex-col gap-2">
+                        <div @click="pic.pickerMode.active ? (pic.pickerMode.onSelect(p), globalPicOpen = false, pic.pickerMode.active = false, pic.pickerMode.onSelect = null) : ((!$event.target.closest('button')) && picOpenPromptModal(p))"
+                             :class="pic.pickerMode.active ? 'hover:border-purple-500 cursor-pointer' : 'hover:border-green-700 cursor-pointer'"
+                             class="bg-gray-800 border border-gray-700 rounded-lg p-4 transition group flex flex-col gap-2">
                             <!-- Card header -->
                             <div class="flex items-start justify-between gap-2">
                                 <div class="flex items-center gap-2 min-w-0">
@@ -2373,14 +2394,21 @@
                                               x-text="'⚠ ' + p.note"></span>
                                     </template>
                                 </div>
-                                <!-- Params chip + Delete -->
+                                <!-- Picker mode: "Użyj" button | Normal mode: params + delete -->
                                 <div class="flex items-center gap-2 flex-shrink-0">
-                                    <span class="text-xs text-gray-600 font-mono"
-                                          x-text="'s:' + (p.params?.steps ?? pic.defaults.steps) + ' c:' + (p.params?.cfg ?? pic.defaults.cfg)"></span>
-                                    <button @click.stop="picDeletePrompt(p.id)"
-                                            class="text-xs text-gray-600 hover:text-red-400 border border-gray-700 hover:border-red-800 rounded px-2 py-0.5 transition opacity-0 group-hover:opacity-100">
-                                        Usuń
-                                    </button>
+                                    <template x-if="pic.pickerMode.active">
+                                        <span class="text-xs text-purple-400 border border-purple-700 rounded px-2 py-0.5 opacity-0 group-hover:opacity-100 transition">✔ Użyj</span>
+                                    </template>
+                                    <template x-if="!pic.pickerMode.active">
+                                        <div class="flex items-center gap-2">
+                                            <span class="text-xs text-gray-600 font-mono"
+                                                  x-text="'s:' + (p.params?.steps ?? pic.defaults.steps) + ' c:' + (p.params?.cfg ?? pic.defaults.cfg)"></span>
+                                            <button @click.stop="picDeletePrompt(p.id)"
+                                                    class="text-xs text-gray-600 hover:text-red-400 border border-gray-700 hover:border-red-800 rounded px-2 py-0.5 transition opacity-0 group-hover:opacity-100">
+                                                Usuń
+                                            </button>
+                                        </div>
+                                    </template>
                                 </div>
                             </div>
                             <!-- Positive prompt preview -->
@@ -2569,6 +2597,14 @@
                     <p class="text-xs text-gray-500 mt-1 text-center leading-relaxed">Wstaw postać z referencji do sceny docelowej</p>
                 </div>
             </button>
+            <button @click="picTypeSelectedDo('paste_character')"
+                    class="col-span-2 flex flex-col items-center gap-3 bg-gray-800 hover:bg-green-950/60 border border-gray-600 hover:border-green-500 rounded-xl p-4 transition text-left">
+                <span class="text-3xl">📌</span>
+                <div>
+                    <p class="text-xs font-semibold text-white text-center">Wstaw deterministycznie</p>
+                    <p class="text-xs text-gray-500 mt-1 text-center leading-relaxed">Wklej postać z białym tłem na scenę w określonej pozycji (PIL, bez AI)</p>
+                </div>
+            </button>
         </div>
     </div>
 </div>
@@ -2586,7 +2622,7 @@
                 <h2 class="text-sm font-semibold text-white"
                     x-text="tileModal.mode === 'create' ? '+ Nowy kafelek' : ('✎ ' + (tileModal.data.name || 'Kafelek'))"></h2>
                 <p class="text-xs text-gray-500 mt-0.5"
-                   x-text="tileModal.data.type === 'character_insert' ? 'Typ: Wstawianie z referencyjnego obrazka' : 'Typ: Obrazki z obrazków'"></p>
+                   x-text="tileModal.data.type === 'character_insert' ? 'Typ: Wstawianie z referencyjnego obrazka' : tileModal.data.type === 'paste_character' ? 'Typ: Wstaw deterministycznie (PIL)' : 'Typ: Obrazki z obrazków'"></p>
             </div>
             <button @click="tileModal.open = false" class="text-gray-500 hover:text-white text-xl leading-none">×</button>
         </div>
@@ -2597,7 +2633,7 @@
                     :class="tileModal.tab==='config' ? 'border-b-2 border-blue-500 text-white' : 'text-gray-500 hover:text-gray-300'"
                     class="text-xs px-4 py-2.5 transition">
                 📁 Konfiguracja
-                <span x-show="(tileModal.data.type === 'character_insert' ? tileModal.data.scene_slots.reduce((s,sl)=>s+(sl.prompts?.length||0),0) : tileModal.data.image_slots.reduce((s,sl)=>s+(sl.prompts?.length||0),0)) > 0"
+                <span x-show="tileModal.data.type !== 'paste_character' && (tileModal.data.type === 'character_insert' ? tileModal.data.scene_slots.reduce((s,sl)=>s+(sl.prompts?.length||0),0) : tileModal.data.image_slots.reduce((s,sl)=>s+(sl.prompts?.length||0),0)) > 0"
                       class="ml-1 text-gray-500 text-xs"
                       x-text="'(' + (tileModal.data.type === 'character_insert' ? tileModal.data.scene_slots.reduce((s,sl)=>s+(sl.prompts?.length||0),0) : tileModal.data.image_slots.reduce((s,sl)=>s+(sl.prompts?.length||0),0)) + ' prom.)'"></span>
             </button>
@@ -2615,6 +2651,20 @@
                 <input type="text" x-model="tileModal.data.name"
                        placeholder="np. Modele Kasia — Repose"
                        class="w-full bg-gray-800 border border-gray-600 rounded px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500">
+            </div>
+
+            <!-- Output dir -->
+            <div>
+                <label class="block text-xs text-gray-400 mb-1">Katalog wyjściowy <span class="text-gray-600">(generowane obrazy)</span></label>
+                <div class="flex gap-2">
+                    <input type="text" x-model="tileModal.data.output_dir"
+                           placeholder="C:\ścieżka\do\output"
+                           class="flex-1 bg-gray-800 border border-gray-600 rounded px-3 py-2 text-sm text-gray-300 font-mono focus:outline-none focus:border-blue-500">
+                    <button @click="openFsBrowser('dir', tileModal.data.output_dir, 'Wybierz katalog wyjściowy', (p) => { tileModal.data.output_dir = p; })"
+                            class="flex-shrink-0 text-xs text-gray-400 border border-gray-600 hover:border-gray-400 hover:text-white rounded px-3 py-2 transition">
+                        📂 Przeglądaj
+                    </button>
+                </div>
             </div>
 
             <!-- ── character_insert config ─────────────────────────── -->
@@ -2921,7 +2971,7 @@
             </template>
 
             <!-- ── one_image_many_prompts config (current) ────────── -->
-            <template x-if="tileModal.data.type !== 'character_insert'">
+            <template x-if="tileModal.data.type !== 'character_insert' && tileModal.data.type !== 'paste_character'">
                 <div class="space-y-4">
 
             <!-- Source dirs -->
@@ -3020,6 +3070,24 @@
                            class="w-full bg-gray-800 border border-gray-600 rounded px-3 py-1.5 text-xs text-yellow-300 focus:outline-none focus:border-yellow-500">
                 </div>
 
+                <!-- Crop to subject -->
+                <label class="flex items-center gap-3 p-3 bg-gray-800/50 border border-gray-700 rounded-lg cursor-pointer hover:border-gray-500 transition select-none">
+                    <input type="checkbox" x-model="tileModal.data.crop_to_subject" class="w-4 h-4 accent-emerald-500 flex-shrink-0">
+                    <div>
+                        <span class="text-xs text-gray-300 font-medium">✂️ Przytnij wynik do sylwetki</span>
+                        <p class="text-xs text-gray-600 mt-0.5">Po generacji automatycznie usuwa białe marginesy i przycina PNG ciasno do postaci. Przydatne po usuwaniu tła.</p>
+                    </div>
+                </label>
+
+                <!-- Pad input to project ratio -->
+                <label class="flex items-center gap-3 p-3 bg-gray-800/50 border border-gray-700 rounded-lg cursor-pointer hover:border-gray-500 transition select-none">
+                    <input type="checkbox" x-model="tileModal.data.pad_input_to_ratio" class="w-4 h-4 accent-blue-500 flex-shrink-0">
+                    <div>
+                        <span class="text-xs text-gray-300 font-medium">⬜ Dopasuj wejście do proporcji projektu</span>
+                        <p class="text-xs text-gray-600 mt-0.5">Przed generowaniem dodaje białe marginesy do obrazu źródłowego aby dopasować go do proporcji projektu (np. 1:1). Zapobiega przycinaniu rąk/nóg przy wąskich obrazach.</p>
+                    </div>
+                </label>
+
                 <!-- Import / New to all toolbar (only when >1 image) -->
                 <template x-if="tileModal.data.image_slots.length > 1">
                     <div class="flex items-center gap-2 p-2.5 bg-indigo-950/40 border border-indigo-800/50 rounded-lg">
@@ -3046,12 +3114,16 @@
                             <!-- Slot header (click to expand/collapse) -->
                             <div @click="if(!$event.target.closest('button')) tileModal.openSlots['oi_'+slotIdx] = !tileModal.openSlots['oi_'+slotIdx]"
                                  class="flex items-center gap-2 px-3 py-2 bg-gray-800/80 cursor-pointer hover:bg-gray-800 transition select-none">
-                                <img :src="`/api/fs/image?path=${encodeURIComponent((tileModal.data.source_dirs?.[0] || '').replace(/[/\\]+$/, '') + '\\' + slot.image)}`"
+                                <img :src="picOiSlotImageUrl(slot.image)"
                                      class="w-10 h-10 rounded object-cover flex-shrink-0 cursor-zoom-in"
-                                     @click.stop="picImgPreview = { open: true, url: `/api/fs/image?path=${encodeURIComponent((tileModal.data.source_dirs?.[0] || '').replace(/[/\\]+$/, '') + '\\' + slot.image)}`, title: slot.image }"
+                                     @click.stop="picImgPreview = { open: true, url: picOiSlotImageUrl(slot.image), title: slot.image }"
+                                     @load="$el.style.display=''"
                                      @error="$el.style.display='none'">
                                 <div class="flex-1 min-w-0">
                                     <span class="text-xs font-medium text-white truncate" x-text="slot.image"></span>
+                                    <span x-show="slot._missing"
+                                          class="ml-2 text-xs text-yellow-500"
+                                          title="Plik nie istnieje w katalogu źródłowym — może być zarchiwizowany lub jeszcze niegenerowany">⚠ brak pliku</span>
                                 </div>
                                 <span class="text-xs text-gray-600 flex-shrink-0"
                                       x-text="(slot.prompts?.filter(p=>p.enabled!==false).length||0) + '/' + (slot.prompts?.length||0) + ' prom.'"></span>
@@ -3168,19 +3240,165 @@
                 </div>
             </template><!-- /one_image_many_prompts -->
 
-            <!-- Output dir (shared for all types) -->
-            <div>
-                <label class="block text-xs text-gray-400 mb-1">Katalog wyjściowy <span class="text-gray-600">(generowane obrazy)</span></label>
-                <div class="flex gap-2">
-                    <input type="text" x-model="tileModal.data.output_dir"
-                           placeholder="C:\ścieżka\do\i2i_studio\output"
-                           class="flex-1 bg-gray-800 border border-gray-600 rounded px-3 py-2 text-sm text-gray-300 font-mono focus:outline-none focus:border-blue-500">
-                    <button @click="openFsBrowser('dir', tileModal.data.output_dir, 'Wybierz katalog wyjściowy', (p) => { tileModal.data.output_dir = p; })"
-                            class="flex-shrink-0 text-xs text-gray-400 border border-gray-600 hover:border-gray-400 hover:text-white rounded px-3 py-2 transition">
-                        📂 Przeglądaj
+            <!-- ── paste_character config ──────────────────────────── -->
+            <template x-if="tileModal.data.type === 'paste_character'">
+                <div class="space-y-4">
+                    <p class="text-xs text-gray-500">
+                        📌 Każdy slot = jedno deterministyczne naklejenie postaci na scenę.<br>
+                        Model postaci powinien mieć <strong class="text-gray-300">białe tło</strong> (z generatora modeli).
+                    </p>
+
+                    <!-- Slot list -->
+                    <template x-for="(slot, si) in tileModal.data.paste_slots" :key="slot.id">
+                        <div class="border border-gray-700 rounded-xl p-4 space-y-3 bg-gray-800/40">
+                            <!-- Slot header -->
+                            <div class="flex items-center justify-between">
+                                <span class="text-xs font-semibold text-gray-300" x-text="'Slot #' + (si+1)"></span>
+                                <button @click="tileModal.data.paste_slots.splice(si, 1)"
+                                        class="text-xs text-red-500 hover:text-red-300 transition">✕ Usuń slot</button>
+                            </div>
+
+                            <!-- Scene image -->
+                            <div>
+                                <label class="block text-xs text-gray-400 mb-1">🌄 Scena bazowa (pełna ścieżka)</label>
+                                <div class="flex gap-2">
+                                    <input type="text" x-model="slot.scene_image"
+                                           placeholder="C:\...\scene.jpg"
+                                           class="flex-1 bg-gray-800 border border-gray-600 rounded px-3 py-1.5 text-xs text-gray-300 font-mono focus:outline-none focus:border-blue-500">
+                                    <button @click="openFsBrowser('image', (slot.scene_image ? slot.scene_image.replace(/[^\\/]+$/, '').replace(/[\\/]+$/, '') : null) || tileModal.data.output_dir, 'Wybierz scenę bazową', (p) => { slot.scene_image = p; })"
+                                            class="flex-shrink-0 text-xs text-gray-400 border border-gray-600 hover:border-gray-400 rounded px-2 py-1.5 transition">📂</button>
+                                </div>
+                                <template x-if="slot.scene_image">
+                                    <img :src="'/api/fs/image?path=' + encodeURIComponent(slot.scene_image)"
+                                         class="mt-1 h-16 rounded object-cover cursor-zoom-in"
+                                         @click="picImgPreview = { open: true, url: '/api/fs/image?path=' + encodeURIComponent(slot.scene_image), title: slot.scene_image }"
+                                         @error="$el.style.display='none'">
+                                </template>
+                            </div>
+
+                            <!-- Characters list -->
+                            <div class="space-y-3">
+                                <div class="flex items-center gap-2">
+                                    <span class="text-xs font-semibold text-gray-400">🧍 Postacie</span>
+                                    <span class="text-xs text-gray-600" x-text="'(' + (slot.characters||[]).length + ')'"></span>
+                                    <span class="text-xs text-gray-600">— wklejane sekwencyjnie na wynik poprzedniej</span>
+                                </div>
+
+                                <template x-for="(char, ci) in (slot.characters || [])" :key="ci">
+                                    <div class="border border-gray-600/60 rounded-lg p-3 space-y-2 bg-gray-800/60">
+                                        <!-- Character header -->
+                                        <div class="flex items-center gap-1.5 mb-1">
+                                            <span class="text-xs text-gray-500 font-mono" x-text="'#' + (ci+1)"></span>
+                                            <div class="flex-1"></div>
+                                            <button @click="picMoveItem(slot.characters, ci, -1)" :disabled="ci === 0"
+                                                    class="text-xs text-gray-600 hover:text-white px-1 rounded hover:bg-gray-700 disabled:opacity-20">↑</button>
+                                            <button @click="picMoveItem(slot.characters, ci, 1)" :disabled="ci === (slot.characters||[]).length - 1"
+                                                    class="text-xs text-gray-600 hover:text-white px-1 rounded hover:bg-gray-700 disabled:opacity-20">↓</button>
+                                            <button @click="(slot.characters||[]).splice(ci, 1)"
+                                                    class="text-xs text-red-500 hover:text-red-300 px-1 rounded hover:bg-gray-700 transition">✕</button>
+                                        </div>
+
+                                        <!-- Model image -->
+                                        <div class="flex gap-2">
+                                            <input type="text" x-model="char.model_image"
+                                                   placeholder="C:\...\model.png"
+                                                   class="flex-1 bg-gray-800 border border-gray-600 rounded px-3 py-1.5 text-xs text-gray-300 font-mono focus:outline-none focus:border-purple-500">
+                                            <button @click="openFsBrowser('image', (char.model_image ? char.model_image.replace(/[^\\/]+$/, '').replace(/[\\/]+$/, '') : null) || tileModal.data.output_dir, 'Wybierz model postaci', (p) => { char.model_image = p; })"
+                                                    class="flex-shrink-0 text-xs text-gray-400 border border-gray-600 hover:border-gray-400 rounded px-2 py-1.5 transition">📂</button>
+                                        </div>
+                                        <template x-if="char.model_image">
+                                            <img :src="'/api/fs/image?path=' + encodeURIComponent(char.model_image)"
+                                                 class="h-14 rounded object-cover cursor-zoom-in"
+                                                 @click="picImgPreview = { open: true, url: '/api/fs/image?path=' + encodeURIComponent(char.model_image), title: char.model_image.split('\\\\').pop() }"
+                                                 @error="$el.style.display='none'">
+                                        </template>
+
+                                        <!-- Visual drag editor per character -->
+                                        <template x-if="slot.scene_image && char.model_image">
+                                            <div class="relative select-none overflow-hidden rounded border border-gray-600 cursor-default"
+                                                 @mousemove.window="picPasteDragMove($event)"
+                                                 @mouseup.window="picPasteStopDrag()"
+                                                 @mouseleave.window="picPasteStopDrag()">
+                                                <img :src="'/api/fs/image?path=' + encodeURIComponent(slot.scene_image)"
+                                                     class="w-full block pointer-events-none" draggable="false"
+                                                     @error="$el.style.display='none'">
+                                                <div class="absolute w-full flex items-center"
+                                                     :style="`top: ${char.top_pct}%; transform: translateY(-50%); cursor: ns-resize; z-index: 10`"
+                                                     @mousedown.prevent="picPasteStartDrag($event, char, 'top', $el.parentElement)">
+                                                    <div class="w-full border-t-2 border-dashed border-blue-400 pointer-events-none"></div>
+                                                    <span class="absolute right-2 bg-blue-700 text-white text-xs px-1.5 py-0.5 rounded pointer-events-none"
+                                                          x-text="'🔝 ' + char.top_pct + '%'"></span>
+                                                </div>
+                                                <div class="absolute w-full flex items-center"
+                                                     :style="`top: ${char.bottom_pct}%; transform: translateY(-50%); cursor: ns-resize; z-index: 10`"
+                                                     @mousedown.prevent="picPasteStartDrag($event, char, 'bottom', $el.parentElement)">
+                                                    <div class="w-full border-t-2 border-dashed border-blue-400 pointer-events-none"></div>
+                                                    <span class="absolute right-2 bg-blue-700 text-white text-xs px-1.5 py-0.5 rounded pointer-events-none"
+                                                          x-text="'👣 ' + char.bottom_pct + '%'"></span>
+                                                </div>
+                                                <div class="absolute top-0 h-full flex flex-col items-center"
+                                                     :style="`left: ${char.x_center_pct}%; transform: translateX(-50%); cursor: ew-resize; z-index: 10`"
+                                                     @mousedown.prevent="picPasteStartDrag($event, char, 'x', $el.parentElement)">
+                                                    <div class="h-full border-l-2 border-dashed border-green-400 pointer-events-none"></div>
+                                                    <span class="absolute top-2 bg-green-700 text-white text-xs px-1.5 py-0.5 rounded pointer-events-none"
+                                                          x-text="'↔ ' + char.x_center_pct + '%'"></span>
+                                                </div>
+                                                <div class="absolute w-full bg-blue-400/10 pointer-events-none"
+                                                     :style="`top: ${char.top_pct}%; height: ${char.bottom_pct - char.top_pct}%`"></div>
+                                            </div>
+                                        </template>
+
+                                        <!-- Position inputs -->
+                                        <div class="grid grid-cols-3 gap-2">
+                                            <div>
+                                                <label class="block text-xs text-gray-500 mb-1">🔝 Głowa %</label>
+                                                <input type="number" x-model.number="char.top_pct" min="0" max="99" step="1"
+                                                       class="w-full bg-gray-800 border border-gray-600 rounded px-2 py-1 text-xs text-gray-300 text-center focus:outline-none focus:border-blue-500">
+                                            </div>
+                                            <div>
+                                                <label class="block text-xs text-gray-500 mb-1">👣 Stopy %</label>
+                                                <input type="number" x-model.number="char.bottom_pct" min="1" max="100" step="1"
+                                                       class="w-full bg-gray-800 border border-gray-600 rounded px-2 py-1 text-xs text-gray-300 text-center focus:outline-none focus:border-blue-500">
+                                            </div>
+                                            <div>
+                                                <label class="block text-xs text-gray-500 mb-1">↔ X %</label>
+                                                <input type="number" x-model.number="char.x_center_pct" min="0" max="100" step="1"
+                                                       class="w-full bg-gray-800 border border-gray-600 rounded px-2 py-1 text-xs text-gray-300 text-center focus:outline-none focus:border-blue-500">
+                                            </div>
+                                        </div>
+                                        <!-- Edge feathering -->
+                                        <div class="grid grid-cols-2 gap-2">
+                                            <div>
+                                                <label class="block text-xs text-gray-500 mb-1">Erozja px <span class="text-gray-600">(frędze)</span></label>
+                                                <input type="number" x-model.number="char.erode_px" min="0" max="10" step="1"
+                                                       class="w-full bg-gray-800 border border-gray-600 rounded px-2 py-1 text-xs text-gray-300 text-center focus:outline-none focus:border-orange-500">
+                                            </div>
+                                            <div>
+                                                <label class="block text-xs text-gray-500 mb-1">Blur px <span class="text-gray-600">(miękkość)</span></label>
+                                                <input type="number" x-model.number="char.blur_px" min="0" max="10" step="1"
+                                                       class="w-full bg-gray-800 border border-gray-600 rounded px-2 py-1 text-xs text-gray-300 text-center focus:outline-none focus:border-orange-500">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </template>
+
+                                <!-- Add character button -->
+                                <button @click="(slot.characters = slot.characters || []).push({ model_image: '', top_pct: 10, bottom_pct: 85, x_center_pct: 50, erode_px: 3, blur_px: 2 })"
+                                        class="w-full text-xs text-gray-500 border border-dashed border-gray-600 hover:border-purple-500 hover:text-purple-400 rounded-lg py-2 transition">
+                                    + Dodaj postać
+                                </button>
+                            </div>
+                        </div>
+                    </template>
+
+                    <!-- Add slot button -->
+                    <button @click="tileModal.data.paste_slots.push({ id: crypto.randomUUID(), output_id: crypto.randomUUID(), scene_image: '', characters: [] })"
+                            class="w-full text-xs text-gray-400 border border-dashed border-gray-600 hover:border-green-500 hover:text-green-400 rounded-lg py-2.5 transition">
+                        + Dodaj slot
                     </button>
+
                 </div>
-            </div>
+            </template>
 
         </div><!-- /config tab -->
 
@@ -3262,6 +3480,290 @@
                         </div>
                     </template>
 
+                    <!-- ── paste_character: Pass 1 — Edge Blend ── -->
+                    <template x-if="tileModal.data.type === 'paste_character'">
+                        <div class="border rounded-xl overflow-hidden"
+                             :class="tileModal.data.edge_blend_enabled ? 'border-blue-700 bg-blue-950/20' : 'border-gray-700 bg-gray-800/20'">
+                            <div class="flex items-center gap-3 px-4 py-2.5 cursor-pointer select-none"
+                                 @click="tileModal._edgeBlendOpen = !tileModal._edgeBlendOpen; if (tileModal._edgeBlendOpen && !(tileModal.data.edge_blend_prompts||[]).length) loadSystemPromptInto('p0000021','edge_blend_prompts')">
+                                <label class="relative inline-flex items-center cursor-pointer" @click.stop>
+                                    <input type="checkbox" x-model="tileModal.data.edge_blend_enabled" class="sr-only peer">
+                                    <div class="w-9 h-5 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-600"></div>
+                                </label>
+                                <span class="text-xs font-semibold flex-1"
+                                      :class="tileModal.data.edge_blend_enabled ? 'text-blue-300' : 'text-gray-400'">
+                                    ✂️ Pass 1 — Edge Blend (krawędzie + maska)
+                                </span>
+                                <span class="text-xs text-gray-600 mr-2"
+                                      x-text="tileModal.data.edge_blend_enabled ? 'włączony' : 'wyłączony'"></span>
+                                <span class="text-gray-500 text-xs transition-transform duration-200"
+                                      :style="tileModal._edgeBlendOpen ? 'transform:rotate(180deg)' : ''">▾</span>
+                            </div>
+                            <div x-show="tileModal._edgeBlendOpen" x-collapse class="border-t border-gray-700/60">
+                                <!-- mask px + params -->
+                                <div class="flex items-center gap-4 px-4 py-2 border-b border-gray-700/40 bg-gray-800/20 flex-wrap">
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-xs text-gray-500">Maska (px):</span>
+                                        <input type="number" x-model.number="tileModal.data.edge_blend_px" min="1" max="60" step="1"
+                                               class="w-16 bg-gray-800 border border-gray-600 rounded px-2 py-0.5 text-xs text-gray-300 text-center focus:outline-none focus:border-blue-500">
+                                    </div>
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-xs text-gray-500">CFG:</span>
+                                        <input type="number" x-model.number="tileModal.data.edge_blend_cfg" min="1" max="20" step="0.5"
+                                               :placeholder="tileModal.data.edge_blend_cfg ?? 8"
+                                               class="w-16 bg-gray-800 border border-gray-600 rounded px-2 py-0.5 text-xs text-gray-300 text-center focus:outline-none focus:border-blue-500">
+                                    </div>
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-xs text-gray-500">Denoise:</span>
+                                        <input type="number" x-model.number="tileModal.data.edge_blend_denoise" min="0.1" max="1.0" step="0.05"
+                                               :placeholder="tileModal.data.edge_blend_denoise ?? 0.75"
+                                               class="w-16 bg-gray-800 border border-gray-600 rounded px-2 py-0.5 text-xs text-gray-300 text-center focus:outline-none focus:border-blue-500">
+                                    </div>
+                                    <span class="text-xs text-gray-600">inpainting wokół sylwetki • ci_1ref + ref postaci</span>
+                                </div>
+                                <!-- import / new -->
+                                <div class="flex gap-1.5 px-3 py-2 border-b border-gray-700/60 bg-gray-800/40">
+                                    <button @click="picOpenPromptImport('eb')"
+                                            class="text-xs text-blue-400 border border-blue-800 hover:border-blue-500 rounded px-2 py-1 transition">+ Import</button>
+                                    <button @click="picAddBlankPromptBlend('edge_blend_prompts', 0.6)"
+                                            class="text-xs text-gray-300 bg-gray-700 hover:bg-gray-600 border border-gray-600 rounded px-2 py-1 transition">+ Nowy</button>
+                                </div>
+                                <!-- prompt list -->
+                                <div class="divide-y divide-gray-700/50">
+                                    <div x-show="!(tileModal.data.edge_blend_prompts||[]).length"
+                                         class="px-4 py-4 text-center text-xs text-gray-600">
+                                        Brak promptów — zaimportuj z biblioteki
+                                    </div>
+                                    <template x-for="(p, pIdx) in (tileModal.data.edge_blend_prompts||[])" :key="p.id">
+                                        <div class="group transition"
+                                             :class="[p._editing ? 'bg-yellow-950/10' : '',
+                                                      p.enabled !== false && (tileModal.data.edge_blend_prompts||[]).findIndex(x => x.enabled !== false) === pIdx
+                                                        ? 'border-l-2 border-green-500' : 'border-l-2 border-transparent']">
+                                            <div @click="if(!$event.target.closest('button,input')) picTogglePromptEditBlend('edge_blend_prompts', pIdx)"
+                                                 class="flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-gray-700/30 transition">
+                                                <input type="checkbox" :checked="p.enabled !== false" @change="p.enabled = $event.target.checked"
+                                                       class="w-4 h-4 rounded accent-green-500 flex-shrink-0 cursor-pointer">
+                                                <span :class="p.enabled === false ? 'line-through text-gray-600' : 'text-white'"
+                                                      class="text-xs font-medium flex-1 truncate" x-text="p.name"></span>
+                                                <!-- "aktywny" badge on first enabled -->
+                                                <span x-show="p.enabled !== false && (tileModal.data.edge_blend_prompts||[]).findIndex(x => x.enabled !== false) === pIdx"
+                                                      class="text-xs text-green-400 border border-green-800 rounded px-1 py-0.5 flex-shrink-0 leading-none">▶ aktywny</span>
+                                                <span x-show="p._notInLibrary" class="text-xs text-gray-500 flex-shrink-0" title="Spoza biblioteki">⚠</span>
+                                                <span class="text-xs text-gray-600 font-mono flex-shrink-0"
+                                                      x-text="'s:' + (p.params?.steps??30) + ' c:' + (p.params?.cfg??8) + ' d:' + (p.params?.denoise??0.6)"></span>
+                                                <span x-show="p._editing" class="text-xs text-yellow-500 flex-shrink-0">▲</span>
+                                                <span x-show="!p._editing" class="text-xs text-gray-600 group-hover:text-gray-400 flex-shrink-0 transition">▼</span>
+                                                <button @click.stop="picDuplicateBlendPrompt('edge_blend_prompts', pIdx)" title="Duplikuj do lokalnej edycji"
+                                                        class="text-gray-500 text-xs px-1 py-0.5 rounded hover:bg-gray-700 hover:text-blue-400 transition opacity-0 group-hover:opacity-100">⎘</button>
+                                                <button @click.stop="picMoveItem(tileModal.data.edge_blend_prompts, pIdx, -1)"
+                                                        :disabled="pIdx===0" :class="pIdx===0?'opacity-30 cursor-not-allowed':'hover:text-white'"
+                                                        class="text-gray-500 text-xs px-1 py-0.5 rounded hover:bg-gray-700 transition">↑</button>
+                                                <button @click.stop="picMoveItem(tileModal.data.edge_blend_prompts, pIdx, 1)"
+                                                        :disabled="pIdx===(tileModal.data.edge_blend_prompts||[]).length-1"
+                                                        :class="pIdx===(tileModal.data.edge_blend_prompts||[]).length-1?'opacity-30 cursor-not-allowed':'hover:text-white'"
+                                                        class="text-gray-500 text-xs px-1 py-0.5 rounded hover:bg-gray-700 transition">↓</button>
+                                                <button @click.stop="(tileModal.data.edge_blend_prompts||[]).splice(pIdx,1)"
+                                                        class="text-xs text-gray-600 hover:text-red-400 rounded px-1.5 py-0.5 transition opacity-0 group-hover:opacity-100">✕</button>
+                                            </div>
+                                            <div x-show="p._editing" class="px-3 pb-3 pt-1 border-t border-gray-700/50 space-y-2 bg-gray-800/30">
+                                                <input type="text" x-model="p.name" placeholder="Nazwa prompta"
+                                                       class="w-full bg-gray-700 border border-gray-600 rounded px-2 py-1.5 text-xs text-white focus:outline-none focus:border-blue-500">
+                                                <textarea x-model="p.positive" rows="3" placeholder="Positive…"
+                                                          class="w-full bg-gray-700 border border-green-900 rounded px-2 py-1.5 text-xs text-green-300 font-mono resize-none focus:outline-none focus:border-green-600"></textarea>
+                                                <textarea x-model="p.negative" rows="2" placeholder="Negative…"
+                                                          class="w-full bg-gray-700 border border-red-900 rounded px-2 py-1.5 text-xs text-red-300 font-mono resize-none focus:outline-none focus:border-red-700"></textarea>
+                                                <div class="flex gap-4 text-xs items-center">
+                                                    <label class="text-gray-500">Steps <input type="number" x-model.number="p.params.steps" min="1" max="100"
+                                                           class="ml-1 w-14 bg-gray-700 border border-gray-600 rounded px-1 py-0.5 text-white text-center focus:outline-none"></label>
+                                                    <label class="text-gray-500">CFG <input type="number" x-model.number="p.params.cfg" min="1" max="30" step="0.5"
+                                                           class="ml-1 w-14 bg-gray-700 border border-gray-600 rounded px-1 py-0.5 text-white text-center focus:outline-none"></label>
+                                                    <label class="text-gray-500">Denoise <input type="number" x-model.number="p.params.denoise" min="0" max="1" step="0.05"
+                                                           class="ml-1 w-16 bg-gray-700 border border-gray-600 rounded px-1 py-0.5 text-white text-center focus:outline-none"></label>
+                                                    <button @click="picTogglePromptEditBlend('edge_blend_prompts', pIdx)"
+                                                            class="ml-auto text-green-400 hover:text-green-300 transition">✓ Gotowe</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </template>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+
+                    <!-- ── paste_character: Pass 2 — Scene Blend ── -->
+                    <template x-if="tileModal.data.type === 'paste_character'">
+                        <div class="border rounded-xl overflow-hidden"
+                             :class="tileModal.data.scene_blend_enabled ? 'border-purple-700 bg-purple-950/20' : 'border-gray-700 bg-gray-800/20'">
+                            <div class="flex items-center gap-3 px-4 py-2.5 cursor-pointer select-none"
+                                 @click="tileModal._sceneBlendOpen = !tileModal._sceneBlendOpen; if (tileModal._sceneBlendOpen && !(tileModal.data.scene_blend_prompts||[]).length) loadSystemPromptInto('p0000022','scene_blend_prompts')">
+                                <label class="relative inline-flex items-center cursor-pointer" @click.stop>
+                                    <input type="checkbox" x-model="tileModal.data.scene_blend_enabled" class="sr-only peer">
+                                    <div class="w-9 h-5 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-purple-600"></div>
+                                </label>
+                                <span class="text-xs font-semibold flex-1"
+                                      :class="tileModal.data.scene_blend_enabled ? 'text-purple-300' : 'text-gray-400'">
+                                    🎨 Pass 2 — Scene Blend (cienie + spójność)
+                                </span>
+                                <span class="text-xs text-gray-600 mr-2"
+                                      x-text="tileModal.data.scene_blend_enabled ? 'włączony' : 'wyłączony'"></span>
+                                <span class="text-gray-500 text-xs transition-transform duration-200"
+                                      :style="tileModal._sceneBlendOpen ? 'transform:rotate(180deg)' : ''">▾</span>
+                            </div>
+                            <div x-show="tileModal._sceneBlendOpen" x-collapse class="border-t border-gray-700/60">
+                                <!-- description + params -->
+                                <div class="flex items-center gap-4 px-4 py-2 border-b border-gray-700/40 bg-gray-800/20 flex-wrap">
+                                    <span class="text-xs text-gray-600">Pełny obrazek — niski denoise. Dodaje cienie, wyrównuje oświetlenie i spójność kolorystyczną.</span>
+                                    <div class="flex items-center gap-2 ml-auto">
+                                        <span class="text-xs text-gray-500">CFG:</span>
+                                        <input type="number" x-model.number="tileModal.data.scene_blend_cfg" min="1" max="20" step="0.5"
+                                               :placeholder="tileModal.data.scene_blend_cfg ?? 8"
+                                               class="w-16 bg-gray-800 border border-gray-600 rounded px-2 py-0.5 text-xs text-gray-300 text-center focus:outline-none focus:border-purple-500">
+                                    </div>
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-xs text-gray-500">Denoise:</span>
+                                        <input type="number" x-model.number="tileModal.data.scene_blend_denoise" min="0.1" max="1.0" step="0.05"
+                                               :placeholder="tileModal.data.scene_blend_denoise ?? 0.4"
+                                               class="w-16 bg-gray-800 border border-gray-600 rounded px-2 py-0.5 text-xs text-gray-300 text-center focus:outline-none focus:border-purple-500">
+                                    </div>
+                                </div>
+                                <!-- import / new -->
+                                <div class="flex gap-1.5 px-3 py-2 border-b border-gray-700/60 bg-gray-800/40">
+                                    <button @click="picOpenPromptImport('sb')"
+                                            class="text-xs text-purple-400 border border-purple-800 hover:border-purple-500 rounded px-2 py-1 transition">+ Import</button>
+                                    <button @click="picAddBlankPromptBlend('scene_blend_prompts', 0.4)"
+                                            class="text-xs text-gray-300 bg-gray-700 hover:bg-gray-600 border border-gray-600 rounded px-2 py-1 transition">+ Nowy</button>
+                                </div>
+                                <!-- prompt list -->
+                                <div class="divide-y divide-gray-700/50">
+                                    <div x-show="!(tileModal.data.scene_blend_prompts||[]).length"
+                                         class="px-4 py-4 text-center text-xs text-gray-600">
+                                        Brak promptów — zaimportuj z biblioteki
+                                    </div>
+                                    <template x-for="(p, pIdx) in (tileModal.data.scene_blend_prompts||[])" :key="p.id">
+                                        <div class="group transition"
+                                             :class="[p._editing ? 'bg-yellow-950/10' : '',
+                                                      p.enabled !== false && (tileModal.data.scene_blend_prompts||[]).findIndex(x => x.enabled !== false) === pIdx
+                                                        ? 'border-l-2 border-green-500' : 'border-l-2 border-transparent']">
+                                            <div @click="if(!$event.target.closest('button,input')) picTogglePromptEditBlend('scene_blend_prompts', pIdx)"
+                                                 class="flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-gray-700/30 transition">
+                                                <input type="checkbox" :checked="p.enabled !== false" @change="p.enabled = $event.target.checked"
+                                                       class="w-4 h-4 rounded accent-green-500 flex-shrink-0 cursor-pointer">
+                                                <span :class="p.enabled === false ? 'line-through text-gray-600' : 'text-white'"
+                                                      class="text-xs font-medium flex-1 truncate" x-text="p.name"></span>
+                                                <!-- "aktywny" badge on first enabled -->
+                                                <span x-show="p.enabled !== false && (tileModal.data.scene_blend_prompts||[]).findIndex(x => x.enabled !== false) === pIdx"
+                                                      class="text-xs text-green-400 border border-green-800 rounded px-1 py-0.5 flex-shrink-0 leading-none">▶ aktywny</span>
+                                                <span x-show="p._notInLibrary" class="text-xs text-gray-500 flex-shrink-0" title="Spoza biblioteki">⚠</span>
+                                                <span class="text-xs text-gray-600 font-mono flex-shrink-0"
+                                                      x-text="'s:' + (p.params?.steps??30) + ' c:' + (p.params?.cfg??8) + ' d:' + (p.params?.denoise??0.4)"></span>
+                                                <span x-show="p._editing" class="text-xs text-yellow-500 flex-shrink-0">▲</span>
+                                                <span x-show="!p._editing" class="text-xs text-gray-600 group-hover:text-gray-400 flex-shrink-0 transition">▼</span>
+                                                <button @click.stop="picDuplicateBlendPrompt('scene_blend_prompts', pIdx)" title="Duplikuj do lokalnej edycji"
+                                                        class="text-gray-500 text-xs px-1 py-0.5 rounded hover:bg-gray-700 hover:text-purple-400 transition opacity-0 group-hover:opacity-100">⎘</button>
+                                                <button @click.stop="picMoveItem(tileModal.data.scene_blend_prompts, pIdx, -1)"
+                                                        :disabled="pIdx===0" :class="pIdx===0?'opacity-30 cursor-not-allowed':'hover:text-white'"
+                                                        class="text-gray-500 text-xs px-1 py-0.5 rounded hover:bg-gray-700 transition">↑</button>
+                                                <button @click.stop="picMoveItem(tileModal.data.scene_blend_prompts, pIdx, 1)"
+                                                        :disabled="pIdx===(tileModal.data.scene_blend_prompts||[]).length-1"
+                                                        :class="pIdx===(tileModal.data.scene_blend_prompts||[]).length-1?'opacity-30 cursor-not-allowed':'hover:text-white'"
+                                                        class="text-gray-500 text-xs px-1 py-0.5 rounded hover:bg-gray-700 transition">↓</button>
+                                                <button @click.stop="(tileModal.data.scene_blend_prompts||[]).splice(pIdx,1)"
+                                                        class="text-xs text-gray-600 hover:text-red-400 rounded px-1.5 py-0.5 transition opacity-0 group-hover:opacity-100">✕</button>
+                                            </div>
+                                            <div x-show="p._editing" class="px-3 pb-3 pt-1 border-t border-gray-700/50 space-y-2 bg-gray-800/30">
+                                                <input type="text" x-model="p.name" placeholder="Nazwa prompta"
+                                                       class="w-full bg-gray-700 border border-gray-600 rounded px-2 py-1.5 text-xs text-white focus:outline-none focus:border-purple-500">
+                                                <textarea x-model="p.positive" rows="3" placeholder="Positive…"
+                                                          class="w-full bg-gray-700 border border-green-900 rounded px-2 py-1.5 text-xs text-green-300 font-mono resize-none focus:outline-none focus:border-green-600"></textarea>
+                                                <textarea x-model="p.negative" rows="2" placeholder="Negative…"
+                                                          class="w-full bg-gray-700 border border-red-900 rounded px-2 py-1.5 text-xs text-red-300 font-mono resize-none focus:outline-none focus:border-red-700"></textarea>
+                                                <div class="flex gap-4 text-xs items-center">
+                                                    <label class="text-gray-500">Steps <input type="number" x-model.number="p.params.steps" min="1" max="100"
+                                                           class="ml-1 w-14 bg-gray-700 border border-gray-600 rounded px-1 py-0.5 text-white text-center focus:outline-none"></label>
+                                                    <label class="text-gray-500">CFG <input type="number" x-model.number="p.params.cfg" min="1" max="30" step="0.5"
+                                                           class="ml-1 w-14 bg-gray-700 border border-gray-600 rounded px-1 py-0.5 text-white text-center focus:outline-none"></label>
+                                                    <label class="text-gray-500">Denoise <input type="number" x-model.number="p.params.denoise" min="0" max="1" step="0.05"
+                                                           class="ml-1 w-16 bg-gray-700 border border-gray-600 rounded px-1 py-0.5 text-white text-center focus:outline-none"></label>
+                                                    <button @click="picTogglePromptEditBlend('scene_blend_prompts', pIdx)"
+                                                            class="ml-auto text-green-400 hover:text-green-300 transition">✓ Gotowe</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </template>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+
+                    <!-- ── paste_character: per-slot results ── -->
+                    <template x-if="tileModal.data.type === 'paste_character'">
+                        <div class="space-y-3">
+                            <template x-for="(slot, si) in tileModal.data.paste_slots" :key="slot.id">
+                                <div class="border border-gray-700 rounded-xl overflow-hidden">
+                                    <!-- Slot header -->
+                                    <div class="flex items-center gap-3 px-3 py-2 bg-gray-800/80 border-b border-gray-700">
+                                        <span class="text-xs text-gray-600 flex-shrink-0" x-text="'#' + (si+1)"></span>
+                                        <template x-if="slot.scene_image">
+                                            <img :src="'/api/fs/image?path=' + encodeURIComponent(slot.scene_image)"
+                                                 class="w-10 h-8 object-cover rounded flex-shrink-0 cursor-zoom-in hover:ring-2 hover:ring-blue-400 transition"
+                                                 @click="picImgPreview = { open: true, url: '/api/fs/image?path=' + encodeURIComponent(slot.scene_image), title: 'Scena — ' + slot.scene_image.split('\\\\').pop() }"
+                                                 @error="$el.style.display='none'">
+                                        </template>
+                                        <span class="text-xs text-gray-400 truncate" x-text="slot.scene_image || '(brak sceny)'"></span>
+                                        <span class="text-gray-600 text-xs">+</span>
+                                        <!-- character thumbnails (multi-char support) -->
+                                        <template x-if="slot.characters && slot.characters.length > 0">
+                                            <div class="flex items-center gap-1">
+                                                <template x-for="(ch, chi) in slot.characters" :key="chi">
+                                                    <template x-if="ch.model_image">
+                                                        <img :src="'/api/fs/image?path=' + encodeURIComponent(ch.model_image)"
+                                                             class="w-8 h-8 object-cover rounded flex-shrink-0 cursor-zoom-in hover:ring-2 hover:ring-purple-400 transition"
+                                                             :title="'Postać ' + (chi+1) + ': ' + ch.model_image.split('\\\\').pop()"
+                                                             @click="picImgPreview = { open: true, url: '/api/fs/image?path=' + encodeURIComponent(ch.model_image), title: 'Postać ' + (chi+1) + ' — ' + ch.model_image.split('\\\\').pop() }"
+                                                             @error="$el.style.display='none'">
+                                                    </template>
+                                                </template>
+                                                <span class="text-xs text-gray-600" x-show="slot.characters.length > 1" x-text="'×' + slot.characters.length"></span>
+                                            </div>
+                                        </template>
+                                        <template x-if="!slot.characters || slot.characters.length === 0">
+                                            <span class="text-xs text-gray-600">(brak postaci)</span>
+                                        </template>
+                                        <!-- status chip -->
+                                        <span class="ml-auto text-xs flex-shrink-0"
+                                              :class="tileModal.status?.slots?.[si]?.done ? 'text-green-400' : 'text-gray-600'"
+                                              x-text="tileModal.status?.slots?.[si]?.done ? '✓' : '○'"></span>
+                                    </div>
+                                    <!-- Result -->
+                                    <div class="p-3">
+                                        <template x-if="tileModal.status?.slots?.[si]?.output_path">
+                                            <div class="flex items-start gap-3">
+                                                <img :src="'/api/fs/image?path=' + encodeURIComponent(tileModal.status.slots[si].output_path) + '&cb=' + tileModal.imgCacheBust"
+                                                     class="h-32 rounded object-cover cursor-zoom-in flex-shrink-0"
+                                                     @click="picImgPreview = { open: true, url: '/api/fs/image?path=' + encodeURIComponent(tileModal.status.slots[si].output_path) + '&cb=' + tileModal.imgCacheBust, title: 'Slot ' + (si+1) }"
+                                                     @error="$el.style.display='none'">
+                                                <div class="flex flex-col gap-1">
+                                                    <button @click="picRegenResult(slot.id, si)"
+                                                            class="text-xs text-gray-500 hover:text-yellow-400 transition" title="Generuj ponownie">🔄 Regeneruj</button>
+                                                </div>
+                                            </div>
+                                        </template>
+                                        <template x-if="!tileModal.status?.slots?.[si]?.output_path">
+                                            <div class="flex items-center gap-2">
+                                                <span class="text-xs text-gray-600">Nie wygenerowano</span>
+                                                <button @click="picRegenResult(slot.id, si)"
+                                                        class="text-xs text-gray-600 hover:text-green-400 transition" title="Generuj">▶ Generuj</button>
+                                            </div>
+                                        </template>
+                                    </div>
+                                </div>
+                            </template>
+                            <template x-if="!tileModal.data.paste_slots?.length">
+                                <p class="text-xs text-gray-600 text-center py-4">Brak slotów — dodaj slot w zakładce Konfiguracja</p>
+                            </template>
+                        </div>
+                    </template>
+
                     <!-- ── character_insert: per-slot reference + results ── -->
                     <template x-if="tileModal.data.type === 'character_insert'">
                         <div class="space-y-4">
@@ -3295,9 +3797,9 @@
                                                  :class="tileModal.status?.slots?.[slotIdx]?.prompts?.[p.id]?.done ? 'border-green-800' : 'border-gray-700'">
                                                 <div class="relative group/result">
                                                     <template x-if="tileModal.status?.slots?.[slotIdx]?.prompts?.[p.id]?.done">
-                                                        <img :src="`/api/fs/image?path=${encodeURIComponent(tileModal.status.slots[slotIdx].prompts[p.id].output_path)}`"
+                                                        <img :src="`/api/fs/image?path=${encodeURIComponent(tileModal.status.slots[slotIdx].prompts[p.id].output_path)}&cb=${tileModal.imgCacheBust}`"
                                                              class="w-full h-28 object-cover cursor-zoom-in"
-                                                             @click="picImgPreview = { open: true, url: `/api/fs/image?path=${encodeURIComponent(tileModal.status.slots[slotIdx].prompts[p.id].output_path)}`, title: slot.scene_image + ' × ' + p.name }">
+                                                             @click="picImgPreview = { open: true, url: `/api/fs/image?path=${encodeURIComponent(tileModal.status.slots[slotIdx].prompts[p.id].output_path)}&cb=${tileModal.imgCacheBust}`, title: slot.scene_image + ' × ' + p.name }">
                                                     </template>
                                                     <template x-if="!tileModal.status?.slots?.[slotIdx]?.prompts?.[p.id]?.done">
                                                         <div class="w-full h-28 bg-gray-700 flex items-center justify-center text-gray-600 text-3xl">🖼</div>
@@ -3329,7 +3831,7 @@
                     </template>
 
                     <!-- ── one_image_many_prompts: per-slot results ── -->
-                    <template x-if="tileModal.data.type !== 'character_insert'">
+                    <template x-if="tileModal.data.type !== 'character_insert' && tileModal.data.type !== 'paste_character'">
                         <div>
 
                     <!-- Per-slot result sections -->
@@ -3338,10 +3840,15 @@
 
                             <!-- Slot header + per-slot run buttons -->
                             <div class="flex items-center gap-3 px-3 py-2.5 bg-gray-800/80 border-b border-gray-700">
-                                <img :src="`/api/fs/image?path=${encodeURIComponent((tileModal.data.source_dirs?.[0]||'').replace(/[/\\]+$/, '') + '\\' + slot.image)}`"
-                                     class="w-9 h-9 rounded object-cover flex-shrink-0" @error="$el.style.display='none'">
+                                <img :src="picOiSlotImageUrl(slot.image)"
+                                     class="w-9 h-9 rounded object-cover flex-shrink-0"
+                                     @load="$el.style.display=''"
+                                     @error="$el.style.display='none'">
                                 <div class="flex-1 min-w-0">
                                     <span class="text-xs font-medium text-white truncate" x-text="slot.image"></span>
+                                    <span x-show="slot._missing"
+                                          class="ml-2 text-xs text-yellow-500"
+                                          title="Plik nie istnieje w katalogu źródłowym — może być zarchiwizowany lub jeszcze niegenerowany">⚠ brak pliku</span>
                                     <template x-if="tileModal.status?.slots?.[slotIdx]">
                                         <span :class="{
                                                 'text-green-400':  tileModal.status.slots[slotIdx].done >= tileModal.status.slots[slotIdx].total && tileModal.status.slots[slotIdx].total > 0,
@@ -3373,9 +3880,9 @@
                                          :class="tileModal.status?.slots?.[slotIdx]?.prompts?.[p.id]?.done ? 'border-green-800' : 'border-gray-700'">
                                         <div class="relative group/result">
                                             <template x-if="tileModal.status?.slots?.[slotIdx]?.prompts?.[p.id]?.done && tileModal.status?.slots?.[slotIdx]?.prompts?.[p.id]?.output_path">
-                                                <img :src="`/api/fs/image?path=${encodeURIComponent(tileModal.status.slots[slotIdx].prompts[p.id].output_path)}`"
+                                                <img :src="`/api/fs/image?path=${encodeURIComponent(tileModal.status.slots[slotIdx].prompts[p.id].output_path)}&cb=${tileModal.imgCacheBust}`"
                                                      class="w-full h-28 object-cover cursor-zoom-in"
-                                                     @click="picImgPreview = { open: true, url: `/api/fs/image?path=${encodeURIComponent(tileModal.status.slots[slotIdx].prompts[p.id].output_path)}`, title: slot.image + ' × ' + p.name }">
+                                                     @click="picImgPreview = { open: true, url: `/api/fs/image?path=${encodeURIComponent(tileModal.status.slots[slotIdx].prompts[p.id].output_path)}&cb=${tileModal.imgCacheBust}`, title: slot.image + ' × ' + p.name }">
                                             </template>
                                             <template x-if="!tileModal.status?.slots?.[slotIdx]?.prompts?.[p.id]?.done">
                                                 <div class="w-full h-28 bg-gray-700 flex items-center justify-center text-gray-600 text-3xl">🖼</div>
@@ -3619,12 +4126,44 @@
                 <p class="text-xs text-gray-500 font-semibold mt-1">Modele</p>
                 <div class="space-y-2 pl-2 border-l border-gray-700">
                     <div>
-                        <label class="text-xs text-gray-500 block mb-1">upscale — workflow_json
-                            <span class="text-gray-600">(RealESRGAN)</span>
+                        <label class="text-xs text-gray-500 block mb-1">upscale_video — workflow_json
+                            <span class="text-gray-600">(RealESRGAN video — fallback na wbudowany template jeśli puste)</span>
                         </label>
-                        <input type="text" x-model="appCfgModal.data.backends.windows.models.upscale.workflow_json"
+                        <input type="text" x-model="appCfgModal.data.backends.windows.models.upscale_video.workflow_json"
                                class="w-full text-xs bg-gray-800 text-gray-200 border border-gray-600 rounded px-3 py-1.5 focus:outline-none focus:border-yellow-600 font-mono"
-                               placeholder="(wbudowany w serwis — opcjonalne)"/>
+                               placeholder="workflow_configs\upscaler_video.json"/>
+                    </div>
+                    <div>
+                        <label class="text-xs text-gray-500 block mb-1">upscale_image — workflow_json
+                            <span class="text-gray-600">(RealESRGAN image — do przyszłego wykorzystania)</span>
+                        </label>
+                        <input type="text" x-model="appCfgModal.data.backends.windows.models.upscale_image.workflow_json"
+                               class="w-full text-xs bg-gray-800 text-gray-200 border border-gray-600 rounded px-3 py-1.5 focus:outline-none focus:border-yellow-600 font-mono"
+                               placeholder="workflow_configs\upscaler_image.json"/>
+                    </div>
+                    <div>
+                        <label class="text-xs text-gray-500 block mb-1">i2i — workflow_json
+                            <span class="text-gray-600">(Pic Studio — Image2Image / Inpaint)</span>
+                        </label>
+                        <input type="text" x-model="appCfgModal.data.backends.windows.models.i2i.workflow_json"
+                               class="w-full text-xs bg-gray-800 text-gray-200 border border-gray-600 rounded px-3 py-1.5 focus:outline-none focus:border-yellow-600 font-mono"
+                               placeholder="D:\ComfyUI\output\__IMAGE2IMAGE ....json"/>
+                    </div>
+                    <div>
+                        <label class="text-xs text-gray-500 block mb-1">ci_1ref — workflow_json
+                            <span class="text-gray-600">(Pic Studio — Character Insert z 1 ref)</span>
+                        </label>
+                        <input type="text" x-model="appCfgModal.data.backends.windows.models.ci_1ref.workflow_json"
+                               class="w-full text-xs bg-gray-800 text-gray-200 border border-gray-600 rounded px-3 py-1.5 focus:outline-none focus:border-yellow-600 font-mono"
+                               placeholder="D:\ComfyUI\output\__CHARACTER_INSERT_1REF ....json"/>
+                    </div>
+                    <div>
+                        <label class="text-xs text-gray-500 block mb-1">ci_2ref — workflow_json
+                            <span class="text-gray-600">(Pic Studio — Character Insert z 2 ref)</span>
+                        </label>
+                        <input type="text" x-model="appCfgModal.data.backends.windows.models.ci_2ref.workflow_json"
+                               class="w-full text-xs bg-gray-800 text-gray-200 border border-gray-600 rounded px-3 py-1.5 focus:outline-none focus:border-yellow-600 font-mono"
+                               placeholder="D:\ComfyUI\output\__CHARACTER_INSERT ....json"/>
                     </div>
                 </div>
             </div>
@@ -4675,6 +5214,7 @@ function app() {
             prompts:        [],
             defaults:       { steps: 30, cfg: 8, denoise: 1.0 },
             activeCategoryId: null,
+            pickerMode:     { active: false, onSelect: null },
             promptModal: {
                 open: false, mode: 'create', saving: false, error: null,
                 tileContext: null,   // null = library only; {runId, tileId} = also add to tile
@@ -5753,9 +6293,13 @@ function app() {
                 data.backends.linux.models = data.backends.linux.models || {};
                 data.backends.linux.models.video_gen = data.backends.linux.models.video_gen || { config_path: '' };
                 data.backends.linux.models.talk      = data.backends.linux.models.talk      || { workflow_json: '' };
-                data.backends.windows        = data.backends.windows        || {};
-                data.backends.windows.models = data.backends.windows.models || {};
-                data.backends.windows.models.upscale = data.backends.windows.models.upscale || { workflow_json: '' };
+                data.backends.windows          = data.backends.windows          || {};
+                data.backends.windows.models   = data.backends.windows.models   || {};
+                data.backends.windows.models.upscale_video  = data.backends.windows.models.upscale_video  || { workflow_json: '' };
+                data.backends.windows.models.upscale_image = data.backends.windows.models.upscale_image || { workflow_json: '' };
+                data.backends.windows.models.i2i     = data.backends.windows.models.i2i     || { workflow_json: '' };
+                data.backends.windows.models.ci_1ref = data.backends.windows.models.ci_1ref || { workflow_json: '' };
+                data.backends.windows.models.ci_2ref = data.backends.windows.models.ci_2ref || { workflow_json: '' };
                 data.defaults            = data.defaults            || {};
                 data.defaults.resolution = data.defaults.resolution || [1024, 1024];
                 if (data.defaults.frame_interpolation === undefined)
@@ -5814,6 +6358,49 @@ function app() {
             } finally {
                 this.pic.loading = false;
             }
+        },
+
+        /**
+         * Auto-load a specific library prompt into a blend prompts array.
+         * Called when the user first enables a blend pass (auto-seeds with system prompt).
+         */
+        async loadSystemPromptInto(promptId, arrayKey) {
+            if (!this.pic.prompts.length) await this.loadPicLibrary();
+            const p = this.pic.prompts.find(x => x.id === promptId);
+            if (!p) { this.logLine('sys', `⚠ Prompt ${promptId} nie znaleziony w bibliotece`); return; }
+            const arr = this.tileModal.data[arrayKey] = this.tileModal.data[arrayKey] || [];
+            if (arr.some(x => x.id === p.id)) return;  // already present
+            const copy = JSON.parse(JSON.stringify(p));
+            delete copy._editing; copy.enabled = true;
+            arr.push(copy);
+        },
+
+        /** Add blank prompt to a blend prompts array (edge_blend_prompts / scene_blend_prompts). */
+        picAddBlankPromptBlend(arrayKey, defaultDenoise = 1.0) {
+            this.tileModal.data[arrayKey] = this.tileModal.data[arrayKey] || [];
+            this.tileModal.data[arrayKey].push({
+                id: 'tmp_blend_' + Date.now(), enabled: true,
+                name: 'Nowy prompt', positive: '', negative: '',
+                note: '', params: { steps: 30, cfg: 8, denoise: defaultDenoise },
+                _editing: true, _notInLibrary: true,
+            });
+        },
+
+        /** Toggle inline edit for a blend prompt. */
+        picTogglePromptEditBlend(arrayKey, pIdx) {
+            const p = (this.tileModal.data[arrayKey] || [])[pIdx];
+            if (p) p._editing = !p._editing;
+        },
+
+        /** Duplicate a blend prompt and insert it below; opens it for editing. */
+        picDuplicateBlendPrompt(arrayKey, pIdx) {
+            const arr = this.tileModal.data[arrayKey] || [];
+            const copy = JSON.parse(JSON.stringify(arr[pIdx]));
+            copy.id           = 'tmp_blend_' + Date.now();
+            copy.name         = copy.name + ' (kopia)';
+            copy._editing     = true;
+            copy._notInLibrary = true;
+            arr.splice(pIdx + 1, 0, copy);
         },
 
         picFilteredPrompts() {
@@ -6089,6 +6676,27 @@ function app() {
             return `/api/fs/image?path=${encodeURIComponent(dir.replace(/[/\\]+$/, '') + '\\' + image)}`;
         },
 
+        /**
+         * Resolve a slot thumbnail URL for the tile modal.
+         * Priority:
+         *   1. tileModal.srcImages (full paths, multi-dir aware)
+         *   2. output_dir  (covers files generated by this tile, not present in source_dirs)
+         *   3. source_dirs[0] + filename  (last resort fallback)
+         */
+        picOiSlotImageUrl(imageName) {
+            if (!imageName) return '';
+            // 1. Full path from loaded srcImages (most accurate)
+            const found = (this.tileModal.srcImages || []).find(img => img.name === imageName);
+            if (found?.path) return `/api/fs/image?path=${encodeURIComponent(found.path)}`;
+            // 2. output_dir — for generated files that live outside source_dirs
+            const outDir = (this.tileModal.data.output_dir || '').trim();
+            if (outDir) return `/api/fs/image?path=${encodeURIComponent(outDir.replace(/[/\\]+$/, '') + '\\' + imageName)}`;
+            // 3. First source dir
+            const srcDir = ((this.tileModal.data.source_dirs || [])[0] || '').trim();
+            if (!srcDir) return '';
+            return `/api/fs/image?path=${encodeURIComponent(srcDir.replace(/[/\\]+$/, '') + '\\' + imageName)}`;
+        },
+
         picOpenTypeModal() {
             this.picTypeModal = { open: true };
         },
@@ -6119,6 +6727,50 @@ function app() {
                     delete tileData.source_dir;
                 }
                 // Migrate CI legacy single-dir → multi-dirs
+                if (tileData.type === 'paste_character') {
+                    tileData.paste_slots = tileData.paste_slots || [];
+                    // ── migrate old single-character slots → characters array ──────────
+                    for (const slot of tileData.paste_slots) {
+                        if (!slot.characters) {
+                            const char = {};
+                            for (const k of ['model_image','top_pct','bottom_pct','x_center_pct','erode_px','blur_px']) {
+                                if (k in slot) { char[k] = slot[k]; delete slot[k]; }
+                            }
+                            slot.characters = char.model_image ? [char] : [];
+                        }
+                    }
+                    // ── edge blend migration: all legacy shapes → edge_blend_prompts ──
+                    if (!tileData.edge_blend_prompts) {
+                        if ('blend_enabled' in tileData && !('edge_blend_enabled' in tileData))
+                            tileData.edge_blend_enabled = tileData.blend_enabled ?? false;
+                        const pos = tileData.blend_positive || tileData.edge_blend_positive || '';
+                        const neg = tileData.blend_negative || tileData.edge_blend_negative || '';
+                        const par = tileData.blend_params   || tileData.edge_blend_params
+                                 || { steps: 30, cfg: 8, denoise: 0.6 };
+                        tileData.edge_blend_prompts = pos ? [{
+                            id: 'local_eb_0', name: 'Edge Blend', positive: pos, negative: neg,
+                            params: par, enabled: true, _notInLibrary: true
+                        }] : [];
+                    }
+                    for (const k of ['blend_enabled','blend_positive','blend_negative','blend_params',
+                                     'edge_blend_positive','edge_blend_negative','edge_blend_params'])
+                        delete tileData[k];
+                    tileData.edge_blend_enabled  = tileData.edge_blend_enabled  ?? false;
+                    tileData.edge_blend_px       = tileData.edge_blend_px       ?? 15;
+                    // ── scene blend migration ─────────────────────────────────────
+                    if (!tileData.scene_blend_prompts) {
+                        const pos = tileData.scene_blend_positive || '';
+                        const neg = tileData.scene_blend_negative || '';
+                        const par = tileData.scene_blend_params || { steps: 30, cfg: 8, denoise: 0.4 };
+                        tileData.scene_blend_prompts = pos ? [{
+                            id: 'local_sb_0', name: 'Scene Blend', positive: pos, negative: neg,
+                            params: par, enabled: true, _notInLibrary: true
+                        }] : [];
+                    }
+                    for (const k of ['scene_blend_positive','scene_blend_negative','scene_blend_params'])
+                        delete tileData[k];
+                    tileData.scene_blend_enabled  = tileData.scene_blend_enabled  ?? false;
+                }
                 if (tileData.type === 'character_insert') {
                     if (!tileData.scene_dirs) {
                         tileData.scene_dirs = tileData.scene_dir ? [tileData.scene_dir] : [];
@@ -6144,17 +6796,25 @@ function app() {
                 }
             } else {
                 const folder = projFolder ? projFolder.replace(/[/\\]+$/, '') : '';
-                const isCINew = (type === 'character_insert');
+                const isCINew   = (type === 'character_insert');
+                const isPasteNew = (type === 'paste_character');
                 tileData = {
                     type:             type || 'one_image_many_prompts',
                     name:             '',
                     // OI fields
-                    source_dirs:      (!isCINew && folder) ? [folder] : [],
+                    source_dirs:      (!isCINew && !isPasteNew && folder) ? [folder] : [],
                     image_slots:      [],
                     // CI fields
                     scene_dirs:       isCINew && folder ? [folder] : [],
                     characters_dirs:  [],
                     scene_slots:      [],
+                    // paste_character fields
+                    paste_slots:          [],
+                    edge_blend_enabled:   false,
+                    edge_blend_px:        15,
+                    edge_blend_prompts:   [],
+                    scene_blend_enabled:  false,
+                    scene_blend_prompts:  [],
                     // common
                     output_dir:       folder,
                     global_suffix:    '',
@@ -6177,6 +6837,9 @@ function app() {
                 editingSlotIdx:  null,
                 status:          null,
                 job:         null,
+                imgCacheBust:    Date.now(),
+                _edgeBlendOpen:  false,
+                _sceneBlendOpen: false,
             };
             if (tileData.type === 'character_insert') {
                 if (tileData.scene_dirs?.some(d=>d))      this.loadCISceneImages();
@@ -6234,6 +6897,32 @@ function app() {
                     if (m.mode === 'create' && data.tile?.id) {
                         m.tileId = data.tile.id;
                         m.mode   = 'edit';
+                    }
+                    // Sync output_ids assigned by server back into tileModal.data.
+                    // Server calls _ensure_output_ids which assigns IDs to empty slots —
+                    // without this sync, re-saving the modal would send output_id=""
+                    // again, causing a new ID to be assigned and orphaning generated files.
+                    if (data.tile) {
+                        for (const [si, slot] of (m.data.image_slots || []).entries()) {
+                            const ss = (data.tile.image_slots || [])[si];
+                            if (!ss) continue;
+                            for (const [pi, p] of (slot.prompts || []).entries()) {
+                                const sp = (ss.prompts || [])[pi];
+                                if (sp?.output_id) p.output_id = sp.output_id;
+                            }
+                        }
+                        for (const [si, slot] of (m.data.scene_slots || []).entries()) {
+                            const ss = (data.tile.scene_slots || [])[si];
+                            if (!ss) continue;
+                            for (const [pi, p] of (slot.prompts || []).entries()) {
+                                const sp = (ss.prompts || [])[pi];
+                                if (sp?.output_id) p.output_id = sp.output_id;
+                            }
+                        }
+                        for (const [si, slot] of (m.data.paste_slots || []).entries()) {
+                            const ss = (data.tile.paste_slots || [])[si];
+                            if (ss?.output_id) slot.output_id = ss.output_id;
+                        }
                     }
                 } else {
                     m.open = false;
@@ -6361,13 +7050,11 @@ function app() {
                 }
                 this.tileModal.srcImages = images;
 
-                // Prune image slots whose filename is no longer available in any source dir.
-                // This handles the "copy tile + change directory" case where old references
-                // remain but can't be deselected because they don't appear in the image grid.
+                // Mark slots whose file is not found in any source dir — show warning,
+                // but NEVER auto-remove (file may be archived, being generated, etc.).
                 const validNames = new Set(images.map(img => img.name));
-                const orphaned = this.tileModal.data.image_slots.filter(s => s.image && !validNames.has(s.image));
-                if (orphaned.length) {
-                    this.tileModal.data.image_slots = this.tileModal.data.image_slots.filter(s => !s.image || validNames.has(s.image));
+                for (const slot of this.tileModal.data.image_slots) {
+                    slot._missing = !!(slot.image && !validNames.has(slot.image));
                 }
             } catch(e) { /* silent */ }
             finally { this.tileModal.srcLoading = false; }
@@ -6488,6 +7175,35 @@ function app() {
          * type='ci' → scene_slots (keys: 0,1,2…)
          * type='oi' → image_slots (keys: 'oi_0','oi_1'…)
          */
+
+        // ── Paste Character — visual drag editor ──────────────────────────
+        _pasteDrag: null,
+
+        picPasteStartDrag(event, slot, type, containerEl) {
+            this._pasteDrag = { slot, type, containerEl };
+            event.preventDefault();
+        },
+
+        picPasteDragMove(event) {
+            if (!this._pasteDrag) return;
+            const { slot, type, containerEl } = this._pasteDrag;
+            const rect = containerEl.getBoundingClientRect();
+            if (type === 'top') {
+                const pct = Math.round(((event.clientY - rect.top) / rect.height) * 100);
+                slot.top_pct = Math.max(0, Math.min(pct, slot.bottom_pct - 5));
+            } else if (type === 'bottom') {
+                const pct = Math.round(((event.clientY - rect.top) / rect.height) * 100);
+                slot.bottom_pct = Math.max(slot.top_pct + 5, Math.min(pct, 100));
+            } else if (type === 'x') {
+                const pct = Math.round(((event.clientX - rect.left) / rect.width) * 100);
+                slot.x_center_pct = Math.max(0, Math.min(pct, 100));
+            }
+        },
+
+        picPasteStopDrag() {
+            this._pasteDrag = null;
+        },
+
         picToggleAllSlots(type) {
             const slots  = type === 'ci' ? this.tileModal.data.scene_slots : this.tileModal.data.image_slots;
             const keyFn  = type === 'ci' ? (i => i) : (i => 'oi_' + i);
@@ -6503,6 +7219,21 @@ function app() {
                 for (const p of (slot.prompts || [])) p._editing = next;
             });
             this.tileModal.openSlots = { ...this.tileModal.openSlots, ...openSlotsPatch };
+        },
+
+        /** Move tile up/down in picTiles and persist new order to backend. */
+        async picMoveTile(idx, dir) {
+            const j = idx + dir;
+            if (j < 0 || j >= this.picTiles.length) return;
+            const tmp = this.picTiles[idx];
+            this.picTiles[idx] = this.picTiles[j];
+            this.picTiles[j]   = tmp;
+            const ids = this.picTiles.map(t => t.id);
+            await fetch(`/api/pic/session/${this.selectedRun.filename}/tiles/reorder`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ ids }),
+            });
         },
 
         /** Generic array swap — used for reordering slots and prompts (↑↓ buttons). */
@@ -6574,13 +7305,21 @@ function app() {
             const slots = this.tileModal.data.image_slots;
             const idx   = slots.findIndex(s => s.image === imageName);
             if (idx === -1) {
-                // Add new slot
-                slots.push({ image: imageName, prompts: [] });
+                // Restore from session trash if available, otherwise create empty slot
+                const trash = this.tileModal._removedSlots || {};
+                if (trash[imageName]) {
+                    slots.push(trash[imageName]);
+                    delete trash[imageName];
+                } else {
+                    slots.push({ image: imageName, prompts: [] });
+                }
             } else {
-                // Remove — warn if it has prompts
+                // Remove — warn if it has prompts, stash in session trash
                 const count = slots[idx].prompts?.length || 0;
                 if (count > 0 && !confirm(`Obrazek "${imageName}" ma ${count} prompt(ów). Usunąć slot ze wszystkimi promptami?`))
                     return;
+                this.tileModal._removedSlots = this.tileModal._removedSlots || {};
+                this.tileModal._removedSlots[imageName] = slots[idx];
                 slots.splice(idx, 1);
             }
         },
@@ -6601,6 +7340,11 @@ function app() {
             const runId  = this.selectedRun?.filename;
             const tileId = this.tileModal.tileId;
             if (!runId || !tileId) return;
+
+            // Auto-save before generation — what you see is what gets generated
+            if (this.tileModal.mode === 'edit' && this.tileModal.data.name?.trim()) {
+                await this.picSaveTile(true);
+            }
 
             try {
                 const resp = await fetch(
@@ -6736,6 +7480,8 @@ function app() {
                         if (job.status === 'done' || job.status === 'error') {
                             this.picGen.running = false;
                             this.picGen.current_prompt = null;
+                            // Bust image cache so thumbnails reload after regeneration
+                            this.tileModal.imgCacheBust = Date.now();
                             // Refresh tile list (always)
                             await this.loadPicTiles();
                             // Refresh status grid only if this tile's modal is open
@@ -6778,6 +7524,12 @@ function app() {
             const runId  = this.selectedRun?.filename;
             const tileId = this.tileModal.tileId;
             if (!runId || !tileId) return;
+
+            // Auto-save before generation — what you see is what gets generated
+            if (this.tileModal.mode === 'edit' && this.tileModal.data.name?.trim()) {
+                await this.picSaveTile(true);
+            }
+
             try {
                 // 1. Archive previous result (like Flow — never permanent delete)
                 // 404 = no file to archive yet (first generation) — that's fine, proceed
@@ -6804,8 +7556,13 @@ function app() {
                     this.logLine('sys', `❌ Regeneracja: ${err.detail || runResp.statusText}`);
                     return;
                 }
-                // 3. Reload status + start polling
-                await this.loadTileStatus();
+                // 3. Start polling (picGen.running must be true for _picPollJob to work)
+                this.picGen = {
+                    running: true, runId, tileId,
+                    tileName: this.tileModal.data.name || tileId,
+                    total: 0, done: 0, skipped: 0,
+                    current_prompt: null, errors: [],
+                };
                 this._picPollJob(runId, tileId);
             } catch(e) {
                 this.logLine('sys', `❌ Regeneracja: ${e.message}`);
@@ -6840,7 +7597,18 @@ function app() {
             const slotIndex = this.promptImport.slotIndex;
             let added = 0;
 
-            if (typeof slotIndex === 'string' && slotIndex === 'ci-all') {
+            if (slotIndex === 'eb' || slotIndex === 'sb') {
+                // blend prompts array
+                const arrayKey = slotIndex === 'eb' ? 'edge_blend_prompts' : 'scene_blend_prompts';
+                const arr = this.tileModal.data[arrayKey] = this.tileModal.data[arrayKey] || [];
+                for (const p of toAdd) {
+                    if (arr.some(tp => tp.id === p.id)) continue;
+                    const copy = JSON.parse(JSON.stringify(p));
+                    delete copy._editing; copy.enabled = true;
+                    arr.push(copy);
+                    added++;
+                }
+            } else if (typeof slotIndex === 'string' && slotIndex === 'ci-all') {
                 // character_insert: import to ALL scene_slots
                 for (const slot of (this.tileModal.data.scene_slots || [])) {
                     for (const p of toAdd) {
@@ -6874,6 +7642,7 @@ function app() {
                         if (slot.prompts.some(tp => tp.id === p.id)) continue;
                         const copy = JSON.parse(JSON.stringify(p));
                         delete copy._editing; copy.enabled = true;
+                        copy.output_id = '';   // każdy slot musi mieć własny output_id
                         slot.prompts.push(copy);
                         added++;
                     }

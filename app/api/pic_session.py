@@ -53,6 +53,22 @@ class SceneSlot(BaseModel):
     prompts:          list[PromptItem] = Field(default_factory=list)
 
 
+class CharacterEntry(BaseModel):
+    model_image:  str   = ""
+    top_pct:      float = 10.0
+    bottom_pct:   float = 85.0
+    x_center_pct: float = 50.0
+    erode_px:     int   = 3
+    blur_px:      int   = 2
+
+
+class PasteSlot(BaseModel):
+    id:           str                     = ""
+    output_id:    str                     = ""
+    scene_image:  str                     = ""
+    characters:   list[CharacterEntry]    = Field(default_factory=list)
+
+
 class TilePayload(BaseModel):
     type:             str              = "one_image_many_prompts"
     name:             str              = ""
@@ -63,9 +79,22 @@ class TilePayload(BaseModel):
     scene_dirs:       list[str]        = Field(default_factory=list)
     characters_dirs:  list[str]        = Field(default_factory=list)
     scene_slots:      list[SceneSlot]  = Field(default_factory=list)
+    # paste_character
+    paste_slots:          list[PasteSlot] = Field(default_factory=list)
+    edge_blend_enabled:   bool            = False
+    edge_blend_px:        int             = 15
+    edge_blend_cfg:       Optional[float] = None
+    edge_blend_denoise:   Optional[float] = None
+    edge_blend_prompts:   list[dict]      = Field(default_factory=list)
+    scene_blend_enabled:  bool            = False
+    scene_blend_cfg:      Optional[float] = None
+    scene_blend_denoise:  Optional[float] = None
+    scene_blend_prompts:  list[dict]      = Field(default_factory=list)
     # common
-    output_dir:       str              = ""
-    global_suffix:    str              = ""
+    output_dir:         str              = ""
+    global_suffix:      str              = ""
+    crop_to_subject:    bool             = False
+    pad_input_to_ratio: bool             = False
 
 
 # ── Tile CRUD ─────────────────────────────────────────────────────────────────
@@ -91,6 +120,15 @@ def _serialize_payload(body: TilePayload) -> dict:
             "prompts":          [p.model_dump() for p in s.prompts],
         }
         for s in body.scene_slots
+    ]
+    d["paste_slots"] = [
+        {
+            "id":          s.id,
+            "output_id":   s.output_id,
+            "scene_image": s.scene_image,
+            "characters":  [c.model_dump() for c in s.characters],
+        }
+        for s in body.paste_slots
     ]
     return d
 
@@ -120,6 +158,19 @@ async def delete_tile(run_id: str, tile_id: str):
     try:
         pic_session_service.delete_tile(run_id, tile_id)
         return {"ok": True}
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc))
+
+
+class ReorderRequest(BaseModel):
+    ids: list[str]
+
+
+@router.post("/session/{run_id}/tiles/reorder")
+async def reorder_tiles(run_id: str, body: ReorderRequest):
+    try:
+        tiles = pic_session_service.reorder_tiles(run_id, body.ids)
+        return {"ok": True, "tiles": tiles}
     except Exception as exc:
         raise HTTPException(status_code=500, detail=str(exc))
 

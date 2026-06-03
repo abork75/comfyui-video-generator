@@ -87,7 +87,10 @@ def _get_dirs_field(tile: dict, multi_key: str, single_key: str) -> list[str]:
 
 def _ensure_output_ids(tile: dict) -> bool:
     """
-    Assign output_id to every prompt that is missing one.
+    Assign output_id to every prompt that is missing one, and fix duplicates.
+    Duplicate output_ids across slots would cause two slots to write to the same
+    output file — one overwriting the other.  We detect and fix them here.
+
     Handles:
       - one_image_many_prompts  → image_slots[].prompts[]
       - character_insert        → scene_slots[].prompts[]
@@ -95,18 +98,26 @@ def _ensure_output_ids(tile: dict) -> bool:
     Returns True if any IDs were newly assigned (caller should persist).
     """
     changed = False
+    seen_output_ids: set[str] = set()
+
     if tile.get("type") == "character_insert":
         for slot in tile.get("scene_slots", []):
             for p in slot.get("prompts", []):
-                if not p.get("output_id"):
+                oid = p.get("output_id")
+                if not oid or oid in seen_output_ids:
                     p["output_id"] = _make_output_id()
                     changed = True
+                else:
+                    seen_output_ids.add(oid)
     else:
         for slot in tile.get("image_slots", []):
             for p in slot.get("prompts", []):
-                if not p.get("output_id"):
+                oid = p.get("output_id")
+                if not oid or oid in seen_output_ids:
                     p["output_id"] = _make_output_id()
                     changed = True
+                else:
+                    seen_output_ids.add(oid)
     return changed
 
 
@@ -143,6 +154,62 @@ def _migrate_tile(tile: dict) -> dict:
       scene_image + character_images + top-level prompts  →  scene_slots[0]
     """
     tile_type = tile.get("type", "one_image_many_prompts")
+
+    if tile_type == "paste_character":
+        tile.setdefault("paste_slots", [])
+
+        # ── paste_slots: migrate old single model_image → characters list ─────
+        for slot in tile["paste_slots"]:
+            if "characters" not in slot:
+                char = {}
+                for k in ("model_image", "top_pct", "bottom_pct",
+                          "x_center_pct", "erode_px", "blur_px"):
+                    if k in slot:
+                        char[k] = slot.pop(k)
+                slot["characters"] = [char] if char.get("model_image") else []
+
+        # ── edge blend: consolidate all legacy shapes → edge_blend_prompts ────
+        tile.setdefault("edge_blend_enabled", False)
+        tile.setdefault("edge_blend_px", 15)
+        if not tile.get("edge_blend_prompts"):
+            # gather from oldest → newest legacy keys
+            if "blend_enabled" in tile:
+                tile["edge_blend_enabled"] = tile.pop("blend_enabled", False)
+            pos = tile.pop("blend_positive",        None) \
+               or tile.pop("edge_blend_positive",   None) or ""
+            neg = tile.pop("blend_negative",        None) \
+               or tile.pop("edge_blend_negative",   None) or ""
+            par = tile.pop("blend_params",          None) \
+               or tile.pop("edge_blend_params",     None) \
+               or {"steps": 30, "cfg": 8, "denoise": 0.6}
+            tile["edge_blend_prompts"] = ([{
+                "id": "local_eb_0", "name": "Edge Blend",
+                "positive": pos, "negative": neg, "params": par,
+                "enabled": True, "_notInLibrary": True,
+            }] if pos else [])
+        else:
+            # clean up stale keys if prompts already present
+            for k in ("blend_positive", "blend_negative", "blend_params",
+                      "edge_blend_positive", "edge_blend_negative", "edge_blend_params"):
+                tile.pop(k, None)
+
+        # ── scene blend: same consolidation ───────────────────────────────────
+        tile.setdefault("scene_blend_enabled", False)
+        if not tile.get("scene_blend_prompts"):
+            pos = tile.pop("scene_blend_positive", None) or ""
+            neg = tile.pop("scene_blend_negative", None) or ""
+            par = tile.pop("scene_blend_params",   None) \
+               or {"steps": 30, "cfg": 8, "denoise": 0.4}
+            tile["scene_blend_prompts"] = ([{
+                "id": "local_sb_0", "name": "Scene Blend",
+                "positive": pos, "negative": neg, "params": par,
+                "enabled": True, "_notInLibrary": True,
+            }] if pos else [])
+        else:
+            for k in ("scene_blend_positive", "scene_blend_negative", "scene_blend_params"):
+                tile.pop(k, None)
+
+        return tile
 
     if tile_type == "character_insert":
         # 1. Migrate single-dir → multi-dir
@@ -270,6 +337,19 @@ def delete_tile(run_id: str, tile_id: str) -> None:
     _save(run_id, data)
 
 
+def reorder_tiles(run_id: str, ids: list[str]) -> list[dict]:
+    """Reorder pic_flow tiles to match the given id order.
+    Tiles not present in *ids* are appended at the end unchanged."""
+    data  = _load(run_id)
+    tiles = data.get("pic_flow", [])
+    by_id = {t["id"]: t for t in tiles}
+    ordered   = [by_id[i] for i in ids if i in by_id]
+    leftover  = [t for t in tiles if t["id"] not in set(ids)]
+    data["pic_flow"] = ordered + leftover
+    _save(run_id, data)
+    return data["pic_flow"]
+
+
 def add_prompt_to_slot(
     run_id: str,
     tile_id: str,
@@ -388,6 +468,47 @@ def get_tile_status(run_id: str, tile_id: str) -> dict:
     _migrate_tile(tile)
 
     output_dir = Path(tile.get("output_dir", ""))
+
+    # ── paste_character: paste_slots ──────────────────────────────────────────
+    if tile.get("type") == "paste_character":
+        paste_slots = tile.get("paste_slots", [])
+        total_done  = 0
+        total_count = len(paste_slots)
+        slot_statuses: list[dict[str, Any]] = []
+        for slot in paste_slots:
+            oid   = slot.get("output_id", slot.get("id", ""))
+            found = False
+            out_p = None
+            if oid and output_dir.is_dir():
+                for ext in _IMAGE_EXTS:
+                    candidate = output_dir / f"{oid}{ext}"
+                    if candidate.exists():
+                        found = True
+                        out_p = str(candidate)
+                        break
+            if found:
+                total_done += 1
+            slot_statuses.append({
+                "scene_image":  slot.get("scene_image", ""),
+                "model_image":  slot.get("model_image", ""),
+                "done":         1 if found else 0,
+                "total":        1,
+                "output_path":  out_p,
+                "output_id":    oid,
+            })
+        overall = (
+            "empty"   if total_count == 0 else
+            "none"    if total_done  == 0 else
+            "all"     if total_done  >= total_count else
+            "partial"
+        )
+        return {
+            "tile_id": tile_id,
+            "overall": overall,
+            "done":    total_done,
+            "total":   total_count,
+            "slots":   slot_statuses,
+        }
 
     # ── character_insert: scene_slots ─────────────────────────────────────────
     if tile.get("type") == "character_insert":
