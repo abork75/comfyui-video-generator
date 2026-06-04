@@ -52,8 +52,11 @@ _DEFAULTS: dict[str, Any] = {
             "input_dir":  "",
             "output_dir": "",
             "models": {
-                "upscale": {"workflow_json": ""},
-                "i2i":     {"workflow_json": ""},
+                "upscale_video":  {"workflow_json": ""},
+                "upscale_image":  {"workflow_json": ""},
+                "i2i":            {"workflow_json": ""},
+                "ci_1ref":        {"workflow_json": ""},
+                "ci_2ref":        {"workflow_json": ""},
             },
         },
     },

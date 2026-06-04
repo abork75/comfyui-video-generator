@@ -92,6 +92,12 @@ async def talk_suggest_resolution(request: Request):
     audio_names  = body.get("audio", [])
     if isinstance(audio_names, str):
         audio_names = [audio_names]
+    # audio items may be step dicts {audio: "...", pos: "...", neg: "..."} — extract filename
+    audio_names = [
+        (a["audio"] if isinstance(a, dict) else a)
+        for a in audio_names
+        if a and (isinstance(a, str) or (isinstance(a, dict) and a.get("audio")))
+    ]
 
     if not run_filename:
         raise HTTPException(status_code=422, detail="run_filename required")
@@ -100,18 +106,22 @@ async def talk_suggest_resolution(request: Request):
     if pf is None:
         raise HTTPException(status_code=404, detail="project_folder not found")
 
-    # If image is a video, use the extracted end-frame JPEG
-    _vid_exts = {".mp4", ".avi", ".mov", ".mkv", ".webm"}
-    if image_name and Path(image_name).suffix.lower() in _vid_exts:
-        frame_path = pf / "frames" / f"{Path(image_name).stem}_end.jpg"
-        image_path = frame_path if frame_path.exists() else (pf / image_name if image_name else None)
-    else:
-        image_path = pf / image_name if image_name else None
-    audio_paths = [pf / a for a in audio_names if a]
+    try:
+        # If image is a video, use the extracted end-frame JPEG
+        _vid_exts = {".mp4", ".avi", ".mov", ".mkv", ".webm"}
+        if image_name and Path(image_name).suffix.lower() in _vid_exts:
+            frame_path = pf / "frames" / f"{Path(image_name).stem}_end.jpg"
+            image_path = frame_path if frame_path.exists() else (pf / image_name if image_name else None)
+        else:
+            image_path = pf / image_name if image_name else None
+        audio_paths = [pf / a for a in audio_names if a]
 
-    if image_path and image_path.exists():
-        w, h = suggest_resolution(image_path, audio_paths)
-    else:
-        w, h = 480, 832   # safe default
+        if image_path and image_path.exists():
+            w, h = suggest_resolution(image_path, audio_paths)
+        else:
+            # Image not found in project_folder — fall back to safe default
+            w, h = 480, 832
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=f"suggest_resolution failed: {exc}")
 
     return {"width": w, "height": h}

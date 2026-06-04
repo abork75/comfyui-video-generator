@@ -18,6 +18,10 @@ categories:
   name: Usun_tlo
   icon: 🗂
   order: 4
+- id: system
+  name: System
+  icon: ⚙️
+  order: 99
 defaults:
   steps: 30
   cfg: 8
@@ -37,111 +41,111 @@ prompts:
   category: repose
   name: Ręce pod boki, rozstawione nogi
   note: ''
-  positive: 'Repose the woman: full frontal view, standing confidently facing the camera. Left leg stepped forward, right leg straight behind, hips cocked to the side. Both hands resting on her hips with elbows out, strong power pose. She looks straight at the viewer with a bold, defiant, provocative and seductive expression, intense eye contact, slightly raised chin. Confident and challenging attitude, sharp detailed face, realistic hands and body proportions, cinematic lighting, high detail'
+  positive: 'Repose the woman: Her full body is visible from feet to head. Full frontal view, standing confidently facing the camera. Left leg stepped forward, right leg straight behind, hips cocked to the side. Both hands resting on her hips with elbows out, strong power pose. She looks straight at the viewer with a bold, defiant, provocative and seductive expression, intense eye contact, slightly raised chin. Confident and challenging attitude, sharp detailed face, realistic hands and body proportions, cinematic lighting, high detail'
   negative: different face, wrong identity, changed facial features, altered eye color, different nose shape, different lip shape, different skin tone, clothing change, background change, blurry face, distorted face, deformed face, asymmetrical face, multiple faces, extra limbs, artifacts, low quality, bad anatomy
   params:
     steps: 30
-    cfg: 8
+    cfg: 8.0
     denoise: 1.0
 - id: p0000003
   category: repose
   name: Baczność przodem
   note: ''
-  positive: Repose the woman into a strict military 'attention' position. Standing perfectly upright and rigid, facing directly to the camera. Feet joined together, legs straight, arms hanging naturally down at her sides with palms facing inward and fingers extended touching her thighs. Shoulders pulled back, spine straight, chin slightly up, direct neutral gaze into the camera. Disciplined, formal and powerful stance, highly detailed body proportions, realistic hands, sharp focus
+  positive: Repose the woman into a strict military 'attention' position. Her full body is visible from feet to head. Standing perfectly upright and rigid, facing directly to the camera. Feet joined together, legs straight, arms hanging naturally down at her sides with palms facing inward and fingers extended touching her thighs. Shoulders pulled back, spine straight, chin slightly up, direct neutral gaze into the camera. Disciplined, formal and powerful stance, highly detailed body proportions, realistic hands, sharp focus
   negative: different face, wrong identity, changed facial features, altered skin tone, clothing change, background change, blurry face, distorted face, deformed anatomy, asymmetrical face, extra limbs, artifacts, low quality, bad anatomy, slouching
   params:
     steps: 30
-    cfg: 8
+    cfg: 8.0
     denoise: 1.0
 - id: p0000004
   category: repose
   name: Baczność tyłem
   note: 'Uwaga: model może zmieniać strój na mundur'
-  positive: Change the woman's pose to a very formal, strict standing position from the back. She stands perfectly straight and tall, back view, facing away from the camera. Feet joined together, legs straight, arms relaxed but formal at her sides with palms facing inward and fingers extended along her thighs. Shoulders back, excellent posture, head looking straight forward. Preserve her current outfit exactly as it is. Elegant and disciplined body alignment, realistic anatomy, high detail, photorealistic.
+  positive: Change the woman's pose to a very formal, strict standing position from the back. Her full body is visible from feet to head. She stands perfectly straight and tall, back view, facing away from the camera. Feet joined together, legs straight, arms relaxed but formal at her sides with palms facing inward and fingers extended along her thighs. Shoulders back, excellent posture, head looking straight forward. Preserve her current outfit exactly as it is. Elegant and disciplined body alignment, realistic anatomy, high detail, photorealistic.
   negative: different face, wrong identity, clothing change, outfit change, uniform added, background change, blurry, distorted anatomy, extra limbs, artifacts, low quality
   params:
     steps: 30
-    cfg: 8
+    cfg: 8.0
     denoise: 1.0
 - id: p0000005
   category: repose
   name: Rozchylone nogi, ręce w górze
   note: ''
-  positive: 'Edit the woman''s pose: Change her stance so she is standing with her legs spread wide apart (shoulder-width or wider) and both arms raised straight up above her head. Her hands can be either clasped together or apart, palms facing forward. Keep her exact body proportions, torso position, head orientation, facial expression, hair, clothing, and all other details unchanged. Only modify the position of her legs and arms. Maintain realistic anatomy, natural balance, correct shoulder and hip positioning. Photorealistic, seamless edit, high detail, perfect body proportions.'
+  positive: 'Edit the woman''s pose: Her full body is visible from feet to head. Change her stance so she is standing with her legs spread wide apart (shoulder-width or wider) and both arms raised straight up above her head. Her hands can be either clasped together or apart, palms facing forward. Keep her exact body proportions, torso position, head orientation, facial expression, hair, clothing, and all other details unchanged. Only modify the position of her legs and arms. Maintain realistic anatomy, natural balance, correct shoulder and hip positioning. Photorealistic, seamless edit, high detail, perfect body proportions.'
   negative: different face, wrong identity, changed facial features, clothing change, background change, blurry face, distorted anatomy, extra limbs, artifacts, low quality, bad anatomy
   params:
     steps: 30
-    cfg: 8
+    cfg: 8.0
     denoise: 1.0
 - id: p0000006
   category: repose
   name: Pochylona przodem, ręce na udach
   note: ''
-  positive: 'Change the woman''s pose: She is now leaning forward at the waist, with her upper body tilted toward the camera. Both of her hands are resting on her thighs (palms on top of thighs or fingers gripping them). She is looking directly at the camera with a strong eye contact. Keep her exact facial expression, head angle (only slight adjustment for looking at camera), hair, clothing, body proportions, lighting, and background unchanged. Only modify the torso lean, arm position, and hand placement. Maintain realistic anatomy, natural spine curvature, balanced weight distribution, and correct shoulder positioning. Photorealistic, seamless edit, high detail, perfect proportions.'
+  positive: 'Change the woman''s pose: Her full body is visible from feet to head. Her full body is visible from feet to head. She is now leaning forward at the waist, with her upper body tilted toward the camera. Both of her hands are resting on her thighs (palms on top of thighs or fingers gripping them). She is looking directly at the camera with a strong eye contact. Keep her exact facial expression, head angle (only slight adjustment for looking at camera), hair, clothing, body proportions, lighting, and background unchanged. Only modify the torso lean, arm position, and hand placement. Maintain realistic anatomy, natural spine curvature, balanced weight distribution, and correct shoulder positioning. Photorealistic, seamless edit, high detail, perfect proportions.'
   negative: different face, wrong identity, changed facial features, clothing change, background change, blurry face, distorted anatomy, unnatural spine, extra limbs, artifacts, low quality
   params:
     steps: 30
-    cfg: 8
+    cfg: 8.0
     denoise: 1.0
 - id: p0000007
   category: repose
   name: Stoi przodem, ręce za głową
   note: ''
-  positive: 'Change the woman''s pose: She is now standing with her legs spread wide apart (feet significantly wider than shoulder width). Both hands are raised and placed behind her head, fingers interlocked or resting on the back of her head, elbows pointing outwards. Keep her exact torso position, upper body orientation, facial expression, head direction, hair, clothing, lighting, and background completely unchanged. Only modify the leg position (wide stance) and arm/hand position. Maintain realistic anatomy, natural balance, correct hip alignment, shoulder positioning and muscle tension. Photorealistic, seamless edit, high detail, perfect body proportions.'
+  positive: 'Change the woman''s pose: Her full body is visible from feet to head. She is now standing with her legs spread wide apart (feet significantly wider than shoulder width). Both hands are raised and placed behind her head, fingers interlocked or resting on the back of her head, elbows pointing outwards. Keep her exact torso position, upper body orientation, facial expression, head direction, hair, clothing, lighting, and background completely unchanged. Only modify the leg position (wide stance) and arm/hand position. Maintain realistic anatomy, natural balance, correct hip alignment, shoulder positioning and muscle tension. Photorealistic, seamless edit, high detail, perfect body proportions.'
   negative: different face, wrong identity, changed facial features, clothing change, background change, blurry face, distorted anatomy, extra limbs, artifacts, low quality
   params:
     steps: 30
-    cfg: 8
+    cfg: 8.0
     denoise: 1.0
 - id: p0000008
   category: repose
   name: Bokiem, ręka na głowie i na tyłku
   note: ''
-  positive: 'Change the woman''s pose to a side view (profile pose): She is standing in profile, showing her body from the side. She is slightly leaning forward at the waist. One hand is placed on her buttock (grabbing or resting on her rear), the other hand is raised and resting behind her head with fingers in her hair or on the back of her head, elbow pointing up. Keep her exact facial features, expression (looking toward the side or slightly toward camera if possible), hair, clothing, body proportions, lighting, and background unchanged. Only modify the body rotation (to side view), torso lean, and arm/hand positions. Maintain realistic anatomy, natural spine curvature, correct shoulder and hip alignment. Photorealistic, seamless edit, high detail, perfect proportions.'
+  positive: 'Change the woman''s pose to a side view (profile pose): Her full body is visible from feet to head. She is standing in profile, showing her body from the side. She is slightly leaning forward at the waist. One hand is placed on her buttock (grabbing or resting on her rear), the other hand is raised and resting behind her head with fingers in her hair or on the back of her head, elbow pointing up. Keep her exact facial features, expression (looking toward the side or slightly toward camera if possible), hair, clothing, body proportions, lighting, and background unchanged. Only modify the body rotation (to side view), torso lean, and arm/hand positions. Maintain realistic anatomy, natural spine curvature, correct shoulder and hip alignment. Photorealistic, seamless edit, high detail, perfect proportions.'
   negative: different face, wrong identity, changed facial features, clothing change, background change, blurry face, distorted anatomy, extra limbs, front view, artifacts, low quality
   params:
     steps: 30
-    cfg: 8
+    cfg: 8.0
     denoise: 1.0
 - id: p0000009
   category: repose
   name: Taneczna poza (klub)
   note: ''
-  positive: Repose the woman into a dynamic, energetic dance pose typical of a nightclub or disco party. She is dancing freely and sensually — body slightly arched, hips tilted, one leg bent with weight on one foot, the other leg more extended. Arms raised and bent in a natural, expressive club dancing gesture, hands moving near her head or body. Give the model creative freedom for a sexy, fun, and confident club dance move. Energetic, rhythmic and seductive pose, not ballet or classical dance. Keep her exact clothing, hair, facial expression and overall style. Realistic anatomy, dynamic body movement, photorealistic, seamless edit, high detail. Solid white background.
+  positive: Repose the woman into a dynamic, energetic dance pose typical of a nightclub or disco party. Her full body is visible from feet to head. She is dancing freely and sensually — body slightly arched, hips tilted, one leg bent with weight on one foot, the other leg more extended. Arms raised and bent in a natural, expressive club dancing gesture, hands moving near her head or body. Give the model creative freedom for a sexy, fun, and confident club dance move. Energetic, rhythmic and seductive pose, not ballet or classical dance. Keep her exact clothing, hair, facial expression and overall style. Realistic anatomy, dynamic body movement, photorealistic, seamless edit, high detail. Solid white background.
   negative: different face, wrong identity, changed facial features, clothing change, static pose, ballet pose, classical dance, blurry face, distorted anatomy, extra limbs, artifacts, low quality
   params:
     steps: 30
-    cfg: 8
+    cfg: 8.0
     denoise: 1.0
 - id: p0000010
   category: repose
   name: Klęczy tyłem
   note: 'Uwaga: możliwy problem z rozmiarem postaci'
-  positive: Repose the woman into a strict kneeling position seen from behind. Back view, kneeling upright on both knees with her back to the camera, spine straight, shoulders back, head facing forward. Arms relaxed downward with hands resting on her thighs or lightly touching the back of her legs. Weight resting on her heels, natural and graceful kneeling posture. Preserve the exact same clothing and outfit as in the original image — do not change or replace any clothes. Highly detailed body, realistic skin and fabric, cinematic lighting
+  positive: Repose the woman into a strict kneeling position seen from behind. Her full body is visible from feet to head. Back view, kneeling upright on both knees with her back to the camera, spine straight, shoulders back, head facing forward. Arms relaxed downward with hands resting on her thighs or lightly touching the back of her legs. Weight resting on her heels, natural and graceful kneeling posture. Preserve the exact same clothing and outfit as in the original image — do not change or replace any clothes. Highly detailed body, realistic skin and fabric, cinematic lighting
   negative: different face, wrong identity, clothing change, outfit change, front view, standing pose, background change, blurry, distorted anatomy, extra limbs, artifacts, low quality
   params:
     steps: 30
-    cfg: 8
+    cfg: 8.0
     denoise: 1.0
 - id: p0000011
   category: repose
   name: Siedzi na łóżku, nogi szeroko
   note: ''
-  positive: Repose the woman so she is sitting on the bed facing the camera. Front view, legs wide open. Both hands placed neatly on the bed, palms facing down. Straight posture, back upright, shoulders relaxed, direct eye contact with the viewer. Natural and graceful seated position, highly detailed body proportions, realistic fabric folds, soft cinematic lighting, sharp focus
+  positive: Repose the woman so she is sitting on the bed facing the camera. Her full body is visible from feet to head. Front view, legs wide open. Both hands placed neatly on the bed, palms facing down. Straight posture, back upright, shoulders relaxed, direct eye contact with the viewer. Natural and graceful seated position, highly detailed body proportions, realistic fabric folds, soft cinematic lighting, sharp focus
   negative: different face, wrong identity, changed facial features, clothing change, background change, standing pose, blurry face, distorted anatomy, crossed legs, extra limbs, artifacts, low quality
   params:
     steps: 30
-    cfg: 8
+    cfg: 8.0
     denoise: 1.0
 - id: p0000012
   category: repose
   name: Siedzi na łóżku, nogi złączone
   note: ''
-  positive: Repose the woman so she is sitting on the bed facing the camera. Front view, legs tightly closed and pressed together, knees touching. Both hands placed neatly on her knees, palms facing down. Straight posture, back upright, shoulders relaxed, direct eye contact with the viewer. Natural and graceful seated position, highly detailed body proportions, realistic fabric folds, soft cinematic lighting, sharp focus
+  positive: Repose the woman so she is sitting on the bed facing the camera. Her full body is visible from feet to head. Front view, legs tightly closed and pressed together, knees touching. Both hands placed neatly on her knees, palms facing down. Straight posture, back upright, shoulders relaxed, direct eye contact with the viewer. Natural and graceful seated position, highly detailed body proportions, realistic fabric folds, soft cinematic lighting, sharp focus
   negative: different face, wrong identity, changed facial features, clothing change, background change, standing pose, blurry face, distorted anatomy, spread legs, extra limbs, artifacts, low quality
   params:
     steps: 30
-    cfg: 8
+    cfg: 8.0
     denoise: 1.0
 - id: p0000013
   category: repose
@@ -177,8 +181,8 @@ prompts:
   category: usun_tlo
   name: usun_tlo_1
   note: ''
-  positive: Remove background, leave it solid white
-  negative: ''
+  positive: Remove the entire background and replace it with a perfectly solid pure white (#FFFFFF) background. Remove all shadows, cast shadows, drop shadows and reflections from the floor. Keep the subject completely intact with clean, sharp edges. The result must be a clean studio cutout on flat white — no gradients, no vignette, no ground plane, no texture.
+  negative: shadow, cast shadow, drop shadow, ground shadow, floor shadow, body shadow, reflection, gradient, gray background, off-white, texture, noise, vignette, background objects, floor, surface, dark corners
   params:
     steps: 30
     cfg: 8.0
@@ -219,4 +223,64 @@ prompts:
     steps: 30
     cfg: 8.0
     denoise: 1.0
-last_id: 19
+- id: p0000020
+  category: system
+  name: Blend — woman composite
+  note: ''
+  positive: 'Fix the compositing of the woman on the image. She was manually pasted and needs to be blended naturally into the scene. Specifically:
+
+
+    Remove all hard edges, halos and visible cutout borders around her body
+
+
+    Add realistic shadows beneath her feet and cast shadows on the ground matching the light source direction in the scene
+
+
+    Match her skin tone, color temperature and overall color grading to the rest of the image
+
+
+    Match her sharpness and depth of field to the other woman
+
+
+    Blend her hair edges naturally with the background
+
+
+    Make the final result look like a single unified photograph taken with one camera. Do not move her position. Do not change her pose. Do not modify the woman on the right.'
+  negative: hard edges, visible cutout, halo, color mismatch, skin tone mismatch, sharp border, unnatural lighting, flat lighting, moved position, changed pose, artifacts, overexposed, underexposed
+  params:
+    steps: 30
+    cfg: 8.0
+    denoise: 1.0
+- id: p0000021
+  category: system
+  name: Edge Blend — krawędzie postaci
+  note: Pass 1 — inpainting w strefie maski (15px wokół sylwetki). Używany z ci_1ref (scena+maska + ref postaci).
+  positive: 'You have two inputs: image 1 is the composited scene, image 2 is the original reference character. Using image 2 as reference, repair and improve the character in image 1. Fix all of the following:
+
+
+    1. EDGES: Remove all hard cutout edges, halos and white fringing around the character''s silhouette. Blend her edges naturally into the background — match local lighting, color temperature and depth of field.
+
+
+    2. BODY RECONSTRUCTION: Where parts of the character''s body are blurry, incomplete, distorted or missing (e.g. blurry fingers, cut-off limbs, broken anatomy) — reconstruct them correctly using image 2 as the reference. Restore sharp, realistic anatomy.
+
+
+    3. SKIN AND DETAIL: Match the character''s skin tone, sharpness and detail level to image 2. Remove any softness or blur on the character''s body.
+
+
+    Do not move the character. Do not change her pose or position. Do not modify the background outside the character area. Preserve the character''s face, clothing and identity.'
+  negative: changed pose, moved character, different face, different clothing, background change, artifacts, distorted anatomy, color shift on character body, overexposed, underexposed, blurry fingers, missing limbs, broken anatomy
+  params:
+    steps: 30
+    cfg: 8.0
+    denoise: 1.0
+- id: p0000022
+  category: system
+  name: Scene Blend — cienie i spójność sceny
+  note: Pass 2 — pełny obrazek, niski denoise. Dodaje cienie i wyrównuje całą scenę.
+  positive: 'Enhance the realism of the full composited scene. Add a natural cast shadow beneath the composited character''s feet and body — match the exact direction, length, softness and intensity of the shadows already cast by the other people in the scene. Use the existing shadows as a reference: if other figures cast long soft shadows to one side, the composited character must cast an identical shadow in the same direction with the same quality. Add subtle ambient occlusion where the character meets the floor or nearby surfaces. Match the character''s overall color grading, brightness and contrast to the other figures in the scene. Make the result look like a single unified photograph taken with one camera. Do not move or change the character''s position, pose, face or clothing. Do not alter the background structure or change the other people already in the scene.'
+  negative: changed pose, moved character, different face, different clothing, background restructured, artifacts, removed character, new people added, overexposed, underexposed, blurry, inconsistent shadow direction, shadow pointing wrong way, mismatched shadow length, no shadow under feet, floating character
+  params:
+    steps: 30
+    cfg: 8.0
+    denoise: 0.4
+last_id: 22

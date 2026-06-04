@@ -54,19 +54,21 @@ class SceneSlot(BaseModel):
 
 
 class CharacterEntry(BaseModel):
-    model_image:  str   = ""
-    top_pct:      float = 10.0
-    bottom_pct:   float = 85.0
-    x_center_pct: float = 50.0
-    erode_px:     int   = 3
-    blur_px:      int   = 2
+    model_image:        str   = ""
+    top_pct:            float = 10.0
+    bottom_pct:         float = 85.0
+    x_center_pct:       float = 50.0
+    erode_px:           int   = 3
+    blur_px:            int   = 2
+    edge_blend_enabled: bool  = True   # per-character toggle
 
 
 class PasteSlot(BaseModel):
-    id:           str                     = ""
-    output_id:    str                     = ""
-    scene_image:  str                     = ""
-    characters:   list[CharacterEntry]    = Field(default_factory=list)
+    id:                  str                  = ""
+    output_id:           str                  = ""
+    scene_image:         str                  = ""
+    characters:          list[CharacterEntry] = Field(default_factory=list)
+    scene_blend_enabled: bool                 = True   # per-slot (scene is one pass)
 
 
 class TilePayload(BaseModel):
@@ -123,10 +125,11 @@ def _serialize_payload(body: TilePayload) -> dict:
     ]
     d["paste_slots"] = [
         {
-            "id":          s.id,
-            "output_id":   s.output_id,
-            "scene_image": s.scene_image,
-            "characters":  [c.model_dump() for c in s.characters],
+            "id":                  s.id,
+            "output_id":           s.output_id,
+            "scene_image":         s.scene_image,
+            "characters":          [c.model_dump() for c in s.characters],  # includes edge_blend_enabled per char
+            "scene_blend_enabled": s.scene_blend_enabled,
         }
         for s in body.paste_slots
     ]
@@ -254,17 +257,39 @@ class RunRequest(BaseModel):
     force_all:  bool          = False
     slot_index: Optional[int] = None   # None = all slots
     prompt_id:  Optional[str] = None   # None = all prompts in slot; str = single prompt
+    from_stage: int           = 0      # paste_character: 0=full, 1=skip PIL, 2=skip PIL+edge
+    end_stage:  Optional[int] = None   # None = run to end; int = stop after this linear stage (inclusive)
 
 
 @router.post("/session/{run_id}/tiles/{tile_id}/run")
 async def run_tile(run_id: str, tile_id: str, body: RunRequest):
     """Start generation for a tile (all slots, single slot, or single prompt)."""
     result = pic_generation_service.start_tile_run(
-        run_id, tile_id, body.force_all, body.slot_index, body.prompt_id
+        run_id, tile_id, body.force_all, body.slot_index, body.prompt_id, body.from_stage, body.end_stage
     )
     if result == "already_running":
         raise HTTPException(status_code=409, detail="Generowanie już trwa dla tego kafelka")
     return {"ok": True, "status": "queued"}
+
+
+class PasteStageSwapRequest(BaseModel):
+    slot_id:     str
+    stage:       int   # 0, 1 or 2
+    source_path: str   # full path to replacement image
+
+
+@router.post("/session/{run_id}/tiles/{tile_id}/paste_stage_swap")
+async def paste_stage_swap(run_id: str, tile_id: str, body: PasteStageSwapRequest):
+    """Replace a stage file for a paste_character slot (archives the old one)."""
+    try:
+        dest = pic_generation_service.swap_paste_stage(
+            run_id, tile_id, body.slot_id, body.stage, body.source_path
+        )
+        return {"ok": True, "dest": str(dest)}
+    except (KeyError, FileNotFoundError) as exc:
+        raise HTTPException(status_code=404, detail=str(exc))
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc))
 
 
 @router.get("/session/{run_id}/tiles/{tile_id}/job")
@@ -292,6 +317,24 @@ async def delete_tile_result(
         raise HTTPException(status_code=500, detail=str(exc))
 
 
+@router.post("/session/{run_id}/tiles/{tile_id}/paste_slot/{slot_id}/archive")
+async def archive_paste_slot_stages(
+    run_id:  str,
+    tile_id: str,
+    slot_id: str,
+    stage:   Optional[int] = Query(default=None),
+):
+    """Archive stage files for a paste_character slot.
+    stage=N archives only that stage; omit to archive all stages (s0, s1, s2)."""
+    try:
+        archived = pic_generation_service.archive_paste_slot(run_id, tile_id, slot_id, stage)
+        return {"ok": True, "archived": archived}
+    except (KeyError, FileNotFoundError) as exc:
+        raise HTTPException(status_code=404, detail=str(exc))
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc))
+
+
 @router.post("/session/{run_id}/tiles/{tile_id}/archive/{prompt_id}")
 async def archive_tile_result(
     run_id:     str,
@@ -306,6 +349,49 @@ async def archive_tile_result(
         )
         return {"ok": True, "archived_to": str(dest)}
     except (FileNotFoundError, KeyError, IndexError) as exc:
+        raise HTTPException(status_code=404, detail=str(exc))
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc))
+
+
+# ── Finalize (robocze → output_dir) ──────────────────────────────────────────
+
+class FinalizeRequest(BaseModel):
+    overwrite: bool = False
+
+
+@router.post("/session/{run_id}/tiles/{tile_id}/paste_slot/{slot_id}/finalize")
+async def finalize_paste_slot(
+    run_id:  str,
+    tile_id: str,
+    slot_id: str,
+    body:    FinalizeRequest = FinalizeRequest(),
+):
+    """Copy the last-enabled-stage file from robocze/ to the output_dir root."""
+    try:
+        result = pic_generation_service.finalize_paste_slot(
+            run_id, tile_id, slot_id, body.overwrite
+        )
+        return result
+    except (KeyError, FileNotFoundError) as exc:
+        raise HTTPException(status_code=404, detail=str(exc))
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc))
+
+
+@router.post("/session/{run_id}/tiles/{tile_id}/finalize_all")
+async def finalize_all_paste_slots(
+    run_id:  str,
+    tile_id: str,
+    body:    FinalizeRequest = FinalizeRequest(),
+):
+    """Finalize all ready paste_character slots (robocze/ → output_dir root)."""
+    try:
+        results = pic_generation_service.finalize_all_paste_slots(
+            run_id, tile_id, body.overwrite
+        )
+        return {"ok": True, "results": results}
+    except KeyError as exc:
         raise HTTPException(status_code=404, detail=str(exc))
     except Exception as exc:
         raise HTTPException(status_code=500, detail=str(exc))

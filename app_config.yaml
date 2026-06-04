@@ -24,13 +24,15 @@ backends:
     input_dir: D:\ComfyUI\input
     output_dir: D:\ComfyUI\output
     models:
-      upscale:                      # RealESRGAN — wbudowany w upscale_service
-        workflow_json: ""
+      upscale_video:                # RealESRGAN video — upscale_service ładuje z pliku lub fallback na wbudowany template
+        workflow_json: 'D:\streamlit_project\comfyui_integration\workflow_configs\upscaler_video.json'
+      upscale_image:                # RealESRGAN image — do przyszłego wykorzystania (np. upscale outputów Pic Studio)
+        workflow_json: 'D:\streamlit_project\comfyui_integration\workflow_configs\upscaler_image.json'
       i2i:                          # Pic Studio — Qwen Image Edit / Inpaint (one_image_many_prompts)
         workflow_json: 'D:\ComfyUI\output\__IMAGE2IMAGE qwen_inpaint_head_kontext_image.json'
       ci_1ref:                      # Pic Studio — Character Insert z 1 obrazkiem referencyjnym
         workflow_json: 'D:\ComfyUI\output\__CHARACTER_INSERT_1REF qwen_kontext_image.json'
-      ci:                           # Pic Studio — Character Insert z 2 obrazkami referencyjnymi
+      ci_2ref:                      # Pic Studio — Character Insert z 2 obrazkami referencyjnymi
         workflow_json: 'D:\ComfyUI\output\__CHARACTER_INSERT qwen_kontext_image.json'
 
   # external:                       # Przyszłość — np. RunPod, Replicate

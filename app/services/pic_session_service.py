@@ -85,6 +85,77 @@ def _get_dirs_field(tile: dict, multi_key: str, single_key: str) -> list[str]:
     return [single] if single else []
 
 
+def _archive_slot_outputs(output_dir: Path, output_ids: list[str]) -> int:
+    """Move generated files for *output_ids* into output_dir/archive/. Returns count moved."""
+    if not output_dir.is_dir() or not output_ids:
+        return 0
+    archive_dir = output_dir / "archive"
+    archive_dir.mkdir(exist_ok=True)
+    count = 0
+    for oid in output_ids:
+        for ext in _IMAGE_EXTS:
+            src = output_dir / f"{oid}{ext}"
+            if src.exists():
+                dest = archive_dir / src.name
+                if dest.exists():
+                    stem, n = src.stem, 1
+                    while dest.exists():
+                        dest = archive_dir / f"{stem}_{n}{ext}"
+                        n += 1
+                src.rename(dest)
+                count += 1
+    return count
+
+
+def _archive_changed_outputs(old_tile: dict, updates: dict) -> None:
+    """
+    Compare old tile image references with incoming updates.
+    For every slot whose source image changed, archive existing output files.
+    output_ids are preserved (not reassigned) so new generation overwrites correctly.
+    """
+    output_dir = Path(old_tile.get("output_dir") or updates.get("output_dir") or "")
+    if not output_dir.is_dir():
+        return
+
+    tile_type = old_tile.get("type", "one_image_many_prompts")
+
+    if tile_type == "one_image_many_prompts":
+        new_slots = updates.get("image_slots", [])
+        for i, old_slot in enumerate(old_tile.get("image_slots", [])):
+            if i >= len(new_slots):
+                break
+            if old_slot.get("image") != new_slots[i].get("image"):
+                oids = [p["output_id"] for p in old_slot.get("prompts", []) if p.get("output_id")]
+                _archive_slot_outputs(output_dir, oids)
+
+    elif tile_type == "character_insert":
+        new_slots = updates.get("scene_slots", [])
+        for i, old_slot in enumerate(old_tile.get("scene_slots", [])):
+            if i >= len(new_slots):
+                break
+            if old_slot.get("scene_image") != new_slots[i].get("scene_image"):
+                oids = [p["output_id"] for p in old_slot.get("prompts", []) if p.get("output_id")]
+                _archive_slot_outputs(output_dir, oids)
+
+    elif tile_type == "paste_character":
+        new_slots = updates.get("paste_slots", [])
+        for i, old_slot in enumerate(old_tile.get("paste_slots", [])):
+            if i >= len(new_slots):
+                break
+            new_slot    = new_slots[i]
+            scene_diff  = old_slot.get("scene_image") != new_slot.get("scene_image")
+            old_chars   = old_slot.get("characters", [])
+            new_chars   = new_slot.get("characters", [])
+            chars_diff  = len(old_chars) != len(new_chars) or any(
+                oc.get("model_image") != nc.get("model_image")
+                for oc, nc in zip(old_chars, new_chars)
+            )
+            if scene_diff or chars_diff:
+                oid = old_slot.get("output_id") or old_slot.get("id")
+                if oid:
+                    _archive_slot_outputs(output_dir, [oid])
+
+
 def _ensure_output_ids(tile: dict) -> bool:
     """
     Assign output_id to every prompt that is missing one, and fix duplicates.
@@ -119,6 +190,19 @@ def _ensure_output_ids(tile: dict) -> bool:
                 else:
                     seen_output_ids.add(oid)
     return changed
+
+
+def _last_active_stage(tile: dict) -> int:
+    """Return highest stage index that is configured and enabled (0=paste, 1=edge, 2=scene)."""
+    if tile.get("scene_blend_enabled") and any(
+        p.get("enabled", True) for p in tile.get("scene_blend_prompts", [])
+    ):
+        return 2
+    if tile.get("edge_blend_enabled") and any(
+        p.get("enabled", True) for p in tile.get("edge_blend_prompts", [])
+    ):
+        return 1
+    return 0
 
 
 def _get_tile_type(run_id: str, tile_id: str) -> str:
@@ -471,31 +555,107 @@ def get_tile_status(run_id: str, tile_id: str) -> dict:
 
     # ── paste_character: paste_slots ──────────────────────────────────────────
     if tile.get("type") == "paste_character":
-        paste_slots = tile.get("paste_slots", [])
-        total_done  = 0
-        total_count = len(paste_slots)
+        paste_slots  = tile.get("paste_slots", [])
+        total_done   = 0
+        total_count  = len(paste_slots)
         slot_statuses: list[dict[str, Any]] = []
+
+        work_dir = output_dir / "robocze"
+
         for slot in paste_slots:
-            oid   = slot.get("output_id", slot.get("id", ""))
-            found = False
-            out_p = None
-            if oid and output_dir.is_dir():
+            oid        = slot.get("output_id", slot.get("id", ""))
+            n_chars    = len(slot.get("characters", []))
+            slot_sb      = bool(slot.get("scene_blend_enabled", True))
+            global_eb    = bool(tile.get("edge_blend_enabled", False))
+            global_sb    = bool(tile.get("scene_blend_enabled", False))
+            chars_cfg    = slot.get("characters", [])
+            last_char_eb = bool(chars_cfg[-1].get("edge_blend_enabled", True)) if chars_cfg else True
+
+            def _find_file(stem: str) -> str | None:
+                """Check working_dir first, then output_dir root (legacy/finalized)."""
+                if not oid or not output_dir.is_dir():
+                    return None
+                for search_dir in (work_dir, output_dir):
+                    for ext in _IMAGE_EXTS:
+                        p = search_dir / f"{stem}{ext}"
+                        if p.exists():
+                            return str(p)
+                return None
+
+            def _is_final(stem: str) -> bool:
+                """True if file exists in output_dir root (finalized, not just in robocze/)."""
                 for ext in _IMAGE_EXTS:
-                    candidate = output_dir / f"{oid}{ext}"
-                    if candidate.exists():
-                        found = True
-                        out_p = str(candidate)
-                        break
+                    if (output_dir / f"{stem}{ext}").exists():
+                        return True
+                return False
+
+            # Per-character pil + edge paths
+            chars_status: list[dict] = []
+            for ci in range(n_chars):
+                chars_status.append({
+                    "pil":       _find_file(f"{oid}_c{ci}_pil"),
+                    "pil_final": _is_final(f"{oid}_c{ci}_pil"),
+                    "edge":      _find_file(f"{oid}_c{ci}_edge"),
+                    "edge_final":_is_final(f"{oid}_c{ci}_edge"),
+                })
+
+            scene_file  = _find_file(f"{oid}_scene")
+            scene_final = _is_final(f"{oid}_scene")
+
+            # Legacy fallback: old _s0/_s1/_s2 files → map to single char entry
+            if not any(c["pil"] for c in chars_status):
+                s0 = _find_file(f"{oid}_s0")
+                s1 = _find_file(f"{oid}_s1")
+                s2 = _find_file(f"{oid}_s2")
+                if s0:
+                    chars_status = [{"pil": s0, "pil_final": False,
+                                     "edge": s1, "edge_final": False}]
+                    if not scene_file:
+                        scene_file = s2
+                # Very old format: bare {oid}.png
+                elif _find_file(oid):
+                    chars_status = [{"pil": _find_file(oid), "pil_final": False,
+                                     "edge": None, "edge_final": False}]
+
+            # "done" = last configured stage (per-char edge flag, per-slot scene flag)
+            if global_sb and slot_sb:
+                done_file = scene_file
+            elif global_eb and last_char_eb and n_chars:
+                done_file = chars_status[-1]["edge"] if chars_status else None
+            else:
+                done_file = chars_status[-1]["pil"] if chars_status else None
+
+            found = bool(done_file)
             if found:
                 total_done += 1
+
+            # slot_final: last-enabled-stage file is in output_dir root
+            if global_sb and slot_sb:
+                slot_final = scene_final
+            elif global_eb and last_char_eb and n_chars:
+                slot_final = chars_status[-1]["edge_final"] if chars_status else False
+            else:
+                slot_final = chars_status[-1]["pil_final"] if chars_status else False
+
+            # output_path = most advanced file (for thumbnail / compat)
+            output_path = (
+                scene_file
+                or next((c["edge"] for c in reversed(chars_status) if c["edge"]), None)
+                or next((c["pil"]  for c in reversed(chars_status) if c["pil"]),  None)
+            )
+
             slot_statuses.append({
-                "scene_image":  slot.get("scene_image", ""),
-                "model_image":  slot.get("model_image", ""),
-                "done":         1 if found else 0,
-                "total":        1,
-                "output_path":  out_p,
-                "output_id":    oid,
+                "scene_image": slot.get("scene_image", ""),
+                "done":        1 if found else 0,
+                "total":       1,
+                "output_path": output_path,
+                "output_id":   oid,
+                "chars":       chars_status,
+                "scene":       scene_file,
+                "scene_final": scene_final,
+                "slot_final":  slot_final,
             })
+
         overall = (
             "empty"   if total_count == 0 else
             "none"    if total_done  == 0 else

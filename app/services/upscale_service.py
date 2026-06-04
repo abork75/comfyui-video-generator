@@ -242,8 +242,16 @@ async def _run_upscale(
         input_dir.mkdir(parents=True, exist_ok=True)
         shutil.copy2(str(source_path), str(tmp_in))
 
-        # 3. Build workflow
-        workflow = copy.deepcopy(_WORKFLOW_TEMPLATE)
+        # 3. Build workflow — prefer file from config, fallback to hardcoded template
+        _wf_path_str = app_config_service.get_backend("windows").get("models", {}).get("upscale_video", {}).get("workflow_json", "")
+        if _wf_path_str:
+            _wf_path = Path(_wf_path_str)
+            if _wf_path.exists():
+                workflow = json.loads(_wf_path.read_text(encoding="utf-8"))
+            else:
+                workflow = copy.deepcopy(_WORKFLOW_TEMPLATE)
+        else:
+            workflow = copy.deepcopy(_WORKFLOW_TEMPLATE)
         workflow["9"]["inputs"]["file"]    = tmp_name
         workflow["13"]["inputs"]["width"]  = width
         workflow["13"]["inputs"]["height"] = height

@@ -259,6 +259,7 @@ async def put_globals(filename: str, request: Request):
         py_error = str(exc)
 
     invalidate_run_info_cache(filename)
+    invalidate_run_cache(filename)   # bust project_folder path cache after globals change
     return {"ok": True, "py_error": py_error}
 
 

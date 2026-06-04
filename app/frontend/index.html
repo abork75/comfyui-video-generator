@@ -3127,6 +3127,10 @@
                                 </div>
                                 <span class="text-xs text-gray-600 flex-shrink-0"
                                       x-text="(slot.prompts?.filter(p=>p.enabled!==false).length||0) + '/' + (slot.prompts?.length||0) + ' prom.'"></span>
+                                <!-- Swap source image -->
+                                <button @click.stop="picSwapOiSlotImage(slotIdx)"
+                                        class="text-gray-600 hover:text-blue-400 text-xs px-1 py-0.5 rounded hover:bg-gray-700 transition flex-shrink-0"
+                                        title="Zamień obraz źródłowy (zachowuje prompty i output_id)">↺</button>
                                 <!-- Slot reorder -->
                                 <div class="flex items-center gap-0.5 flex-shrink-0">
                                     <button @click.stop="picMoveItem(tileModal.data.image_slots, slotIdx, -1)"
@@ -3352,12 +3356,12 @@
                                         <div class="grid grid-cols-3 gap-2">
                                             <div>
                                                 <label class="block text-xs text-gray-500 mb-1">🔝 Głowa %</label>
-                                                <input type="number" x-model.number="char.top_pct" min="0" max="99" step="1"
+                                                <input type="number" x-model.number="char.top_pct" min="-30" max="99" step="1"
                                                        class="w-full bg-gray-800 border border-gray-600 rounded px-2 py-1 text-xs text-gray-300 text-center focus:outline-none focus:border-blue-500">
                                             </div>
                                             <div>
                                                 <label class="block text-xs text-gray-500 mb-1">👣 Stopy %</label>
-                                                <input type="number" x-model.number="char.bottom_pct" min="1" max="100" step="1"
+                                                <input type="number" x-model.number="char.bottom_pct" min="1" max="130" step="1"
                                                        class="w-full bg-gray-800 border border-gray-600 rounded px-2 py-1 text-xs text-gray-300 text-center focus:outline-none focus:border-blue-500">
                                             </div>
                                             <div>
@@ -3438,6 +3442,13 @@
                                     class="text-xs text-gray-400 border border-gray-600 hover:border-gray-400 hover:text-white rounded px-3 py-1.5 transition disabled:opacity-50">
                                 ▶▶ Generuj wszystkie
                             </button>
+                            <template x-if="tileModal.data?.type === 'paste_character'">
+                                <button @click="picFinalizeAll()"
+                                        class="text-xs text-gray-400 border border-green-800 hover:border-green-600 hover:text-green-300 rounded px-3 py-1.5 transition"
+                                        title="Przenieś wszystkie gotowe sloty do katalogu finalnego">
+                                    📤 Przenieś gotowe
+                                </button>
+                            </template>
                         </div>
                     </div>
 
@@ -3709,52 +3720,180 @@
                                                  @click="picImgPreview = { open: true, url: '/api/fs/image?path=' + encodeURIComponent(slot.scene_image), title: 'Scena — ' + slot.scene_image.split('\\\\').pop() }"
                                                  @error="$el.style.display='none'">
                                         </template>
-                                        <span class="text-xs text-gray-400 truncate" x-text="slot.scene_image || '(brak sceny)'"></span>
-                                        <span class="text-gray-600 text-xs">+</span>
-                                        <!-- character thumbnails (multi-char support) -->
+                                        <span class="text-xs text-gray-400 truncate flex-1 min-w-0" x-text="slot.scene_image?.split('\\\\').pop() || '(brak sceny)'"></span>
+                                        <span class="text-gray-600 text-xs flex-shrink-0">+</span>
                                         <template x-if="slot.characters && slot.characters.length > 0">
-                                            <div class="flex items-center gap-1">
+                                            <div class="flex items-center gap-1 flex-shrink-0">
                                                 <template x-for="(ch, chi) in slot.characters" :key="chi">
                                                     <template x-if="ch.model_image">
                                                         <img :src="'/api/fs/image?path=' + encodeURIComponent(ch.model_image)"
-                                                             class="w-8 h-8 object-cover rounded flex-shrink-0 cursor-zoom-in hover:ring-2 hover:ring-purple-400 transition"
-                                                             :title="'Postać ' + (chi+1) + ': ' + ch.model_image.split('\\\\').pop()"
-                                                             @click="picImgPreview = { open: true, url: '/api/fs/image?path=' + encodeURIComponent(ch.model_image), title: 'Postać ' + (chi+1) + ' — ' + ch.model_image.split('\\\\').pop() }"
+                                                             class="w-8 h-8 object-cover rounded cursor-zoom-in hover:ring-2 hover:ring-purple-400 transition"
+                                                             @click="picImgPreview = { open: true, url: '/api/fs/image?path=' + encodeURIComponent(ch.model_image), title: 'Postać ' + (chi+1) }"
                                                              @error="$el.style.display='none'">
                                                     </template>
                                                 </template>
                                                 <span class="text-xs text-gray-600" x-show="slot.characters.length > 1" x-text="'×' + slot.characters.length"></span>
                                             </div>
                                         </template>
-                                        <template x-if="!slot.characters || slot.characters.length === 0">
-                                            <span class="text-xs text-gray-600">(brak postaci)</span>
-                                        </template>
-                                        <!-- status chip -->
-                                        <span class="ml-auto text-xs flex-shrink-0"
-                                              :class="tileModal.status?.slots?.[si]?.done ? 'text-green-400' : 'text-gray-600'"
-                                              x-text="tileModal.status?.slots?.[si]?.done ? '✓' : '○'"></span>
+                                        <!-- Status circle: 🟢 finalized | 🟡 in robocze | ⚪ empty -->
+                                        <span class="text-sm flex-shrink-0 leading-none"
+                                              :title="tileModal.status?.slots?.[si]?.slot_final ? 'Sfinalizowany' : tileModal.status?.slots?.[si]?.done ? 'W robocze' : 'Nie wygenerowany'"
+                                              x-text="tileModal.status?.slots?.[si]?.slot_final ? '🟢' : tileModal.status?.slots?.[si]?.done ? '🟡' : '⚪'"></span>
                                     </div>
-                                    <!-- Result -->
-                                    <div class="p-3">
-                                        <template x-if="tileModal.status?.slots?.[si]?.output_path">
-                                            <div class="flex items-start gap-3">
-                                                <img :src="'/api/fs/image?path=' + encodeURIComponent(tileModal.status.slots[si].output_path) + '&cb=' + tileModal.imgCacheBust"
-                                                     class="h-32 rounded object-cover cursor-zoom-in flex-shrink-0"
-                                                     @click="picImgPreview = { open: true, url: '/api/fs/image?path=' + encodeURIComponent(tileModal.status.slots[si].output_path) + '&cb=' + tileModal.imgCacheBust, title: 'Slot ' + (si+1) }"
-                                                     @error="$el.style.display='none'">
-                                                <div class="flex flex-col gap-1">
-                                                    <button @click="picRegenResult(slot.id, si)"
-                                                            class="text-xs text-gray-500 hover:text-yellow-400 transition" title="Generuj ponownie">🔄 Regeneruj</button>
+
+                                    <!-- Stage pipeline: per-char PIL→Edge columns + Scene -->
+                                    <div class="p-3 space-y-2">
+                                        <div class="flex items-start gap-1 overflow-x-auto pb-1">
+
+                                            <!-- Per-character columns: PIL then Edge.
+                                                 Iterate over configured characters so column count
+                                                 always matches char count, not generated file count. -->
+                                            <template x-for="(char, ci) in slot.characters" :key="ci">
+                                                <div class="flex items-start gap-1 flex-shrink-0">
+                                                    <!-- PIL column -->
+                                                    <div class="flex flex-col items-center gap-1">
+                                                        <span class="text-xs text-gray-500 font-medium" x-text="'C'+(ci+1)"></span>
+                                                        <span class="text-xs text-gray-600">PIL</span>
+                                                        <div class="w-24 h-20 relative group">
+                                                            <template x-if="tileModal.status?.slots?.[si]?.chars?.[ci]?.pil">
+                                                                <img :src="'/api/fs/image?path='+encodeURIComponent(tileModal.status.slots[si].chars[ci].pil)+'&cb='+tileModal.imgCacheBust"
+                                                                     class="w-24 h-20 rounded object-cover cursor-zoom-in ring-1 ring-gray-600 hover:ring-blue-400 transition"
+                                                                     @click="picImgPreview={open:true,url:'/api/fs/image?path='+encodeURIComponent(tileModal.status.slots[si].chars[ci].pil)+'&cb='+tileModal.imgCacheBust,title:'Slot '+(si+1)+' C'+(ci+1)+' PIL'}"
+                                                                     @error="$el.style.display='none'">
+                                                            </template>
+                                                            <template x-if="!tileModal.status?.slots?.[si]?.chars?.[ci]?.pil">
+                                                                <div class="w-24 h-20 rounded bg-gray-800/60 border border-gray-700/50 flex items-center justify-center">
+                                                                    <span class="text-gray-700 text-lg">○</span>
+                                                                </div>
+                                                            </template>
+                                                            <span x-show="tileModal.status?.slots?.[si]?.chars?.[ci]?.pil_final"
+                                                                  class="absolute top-0.5 right-0.5 w-2.5 h-2.5 rounded-full bg-green-400 border border-gray-900 z-10" title="Sfinalizowany"></span>
+                                                            <span x-show="tileModal.status?.slots?.[si]?.chars?.[ci]?.pil && !tileModal.status?.slots?.[si]?.chars?.[ci]?.pil_final"
+                                                                  class="absolute top-0.5 right-0.5 w-2.5 h-2.5 rounded-full bg-yellow-400 border border-gray-900 z-10" title="W robocze"></span>
+                                                        </div>
+                                                        <div class="flex items-center gap-1">
+                                                            <button @click="picSwapPasteStage(slot.id, ci*2)"
+                                                                    class="text-xs text-gray-600 hover:text-blue-400 px-1 py-0.5 rounded hover:bg-gray-700 transition"
+                                                                    title="Zamień plik PIL (archiwizuje stary)">↺</button>
+                                                            <button @click="picArchivePasteSlot(slot.id, ci*2)"
+                                                                    :disabled="!tileModal.status?.slots?.[si]?.chars?.[ci]?.pil"
+                                                                    class="text-xs text-gray-600 hover:text-red-400 px-1 py-0.5 rounded hover:bg-gray-700 transition disabled:opacity-30"
+                                                                    title="Archiwizuj ten obraz PIL">🗑</button>
+                                                            <button @click="picRunFromStage(slot.id, si, ci*2, ci*2)"
+                                                                    :disabled="picGen.running && picGen.tileId===tileModal.tileId"
+                                                                    class="text-xs text-gray-600 hover:text-green-400 px-1 py-0.5 rounded hover:bg-gray-700 transition"
+                                                                    :title="'Generuj tylko PIL C'+(ci+1)">▶</button>
+                                                        </div>
+                                                    </div>
+
+                                                    <span class="text-gray-700 text-xs mt-10 flex-shrink-0 px-0.5">→</span>
+
+                                                    <!-- Edge column -->
+                                                    <div class="flex flex-col items-center gap-1">
+                                                        <span class="text-xs text-gray-500 font-medium" x-text="'C'+(ci+1)"></span>
+                                                        <label class="flex items-center gap-0.5 text-xs cursor-pointer select-none" :title="'Edge blend dla C'+(ci+1)">
+                                                            <input type="checkbox" x-model="char.edge_blend_enabled" class="accent-pink-500 w-3 h-3">
+                                                            <span :class="char.edge_blend_enabled ? 'text-pink-400' : 'text-gray-600'">Edge</span>
+                                                        </label>
+                                                        <div class="w-24 h-20 relative group">
+                                                            <template x-if="tileModal.status?.slots?.[si]?.chars?.[ci]?.edge">
+                                                                <img :src="'/api/fs/image?path='+encodeURIComponent(tileModal.status.slots[si].chars[ci].edge)+'&cb='+tileModal.imgCacheBust"
+                                                                     class="w-24 h-20 rounded object-cover cursor-zoom-in ring-1 ring-gray-600 hover:ring-blue-400 transition"
+                                                                     @click="picImgPreview={open:true,url:'/api/fs/image?path='+encodeURIComponent(tileModal.status.slots[si].chars[ci].edge)+'&cb='+tileModal.imgCacheBust,title:'Slot '+(si+1)+' C'+(ci+1)+' Edge'}"
+                                                                     @error="$el.style.display='none'">
+                                                            </template>
+                                                            <template x-if="!tileModal.status?.slots?.[si]?.chars?.[ci]?.edge">
+                                                                <div class="w-24 h-20 rounded bg-gray-800/60 border border-gray-700/50 flex items-center justify-center">
+                                                                    <span class="text-gray-700 text-lg">○</span>
+                                                                </div>
+                                                            </template>
+                                                            <span x-show="tileModal.status?.slots?.[si]?.chars?.[ci]?.edge_final"
+                                                                  class="absolute top-0.5 right-0.5 w-2.5 h-2.5 rounded-full bg-green-400 border border-gray-900 z-10" title="Sfinalizowany"></span>
+                                                            <span x-show="tileModal.status?.slots?.[si]?.chars?.[ci]?.edge && !tileModal.status?.slots?.[si]?.chars?.[ci]?.edge_final"
+                                                                  class="absolute top-0.5 right-0.5 w-2.5 h-2.5 rounded-full bg-yellow-400 border border-gray-900 z-10" title="W robocze"></span>
+                                                        </div>
+                                                        <div class="flex items-center gap-1">
+                                                            <button @click="picSwapPasteStage(slot.id, ci*2+1)"
+                                                                    class="text-xs text-gray-600 hover:text-blue-400 px-1 py-0.5 rounded hover:bg-gray-700 transition"
+                                                                    title="Zamień plik Edge (archiwizuje stary)">↺</button>
+                                                            <button @click="picArchivePasteSlot(slot.id, ci*2+1)"
+                                                                    :disabled="!tileModal.status?.slots?.[si]?.chars?.[ci]?.edge"
+                                                                    class="text-xs text-gray-600 hover:text-red-400 px-1 py-0.5 rounded hover:bg-gray-700 transition disabled:opacity-30"
+                                                                    title="Archiwizuj ten obraz Edge">🗑</button>
+                                                            <button @click="picRunFromStage(slot.id, si, ci*2+1, ci*2+1)"
+                                                                    :disabled="picGen.running && picGen.tileId===tileModal.tileId"
+                                                                    class="text-xs text-gray-600 hover:text-green-400 px-1 py-0.5 rounded hover:bg-gray-700 transition"
+                                                                    :title="'Generuj tylko Edge C'+(ci+1)">▶</button>
+                                                        </div>
+                                                    </div>
+
+                                                    <span class="text-gray-700 text-xs mt-10 flex-shrink-0 px-0.5">→</span>
+                                                </div>
+                                            </template>
+
+                                            <!-- Scene column -->
+                                            <div class="flex flex-col items-center gap-1 flex-shrink-0">
+                                                <span class="text-xs text-gray-500 font-medium">🎨</span>
+                                                <label class="flex items-center gap-0.5 text-xs cursor-pointer select-none" title="Scene Blend dla tego slotu">
+                                                    <input type="checkbox" x-model="slot.scene_blend_enabled" class="accent-purple-500 w-3 h-3">
+                                                    <span :class="slot.scene_blend_enabled ? 'text-purple-400' : 'text-gray-600'">Scene</span>
+                                                </label>
+                                                <div class="w-24 h-20 relative group">
+                                                    <template x-if="tileModal.status?.slots?.[si]?.scene">
+                                                        <img :src="'/api/fs/image?path='+encodeURIComponent(tileModal.status.slots[si].scene)+'&cb='+tileModal.imgCacheBust"
+                                                             class="w-24 h-20 rounded object-cover cursor-zoom-in ring-1 ring-gray-600 hover:ring-blue-400 transition"
+                                                             @click="picImgPreview={open:true,url:'/api/fs/image?path='+encodeURIComponent(tileModal.status.slots[si].scene)+'&cb='+tileModal.imgCacheBust,title:'Slot '+(si+1)+' Scene'}"
+                                                             @error="$el.style.display='none'">
+                                                    </template>
+                                                    <template x-if="!tileModal.status?.slots?.[si]?.scene">
+                                                        <div class="w-24 h-20 rounded bg-gray-800/60 border border-gray-700/50 flex items-center justify-center">
+                                                            <span class="text-gray-700 text-lg">○</span>
+                                                        </div>
+                                                    </template>
+                                                    <span x-show="tileModal.status?.slots?.[si]?.scene_final"
+                                                          class="absolute top-0.5 right-0.5 w-2.5 h-2.5 rounded-full bg-green-400 border border-gray-900 z-10" title="Sfinalizowany"></span>
+                                                    <span x-show="tileModal.status?.slots?.[si]?.scene && !tileModal.status?.slots?.[si]?.scene_final"
+                                                          class="absolute top-0.5 right-0.5 w-2.5 h-2.5 rounded-full bg-yellow-400 border border-gray-900 z-10" title="W robocze"></span>
+                                                </div>
+                                                <div class="flex items-center gap-1">
+                                                    <button @click="picSwapPasteStage(slot.id, (tileModal.status?.slots?.[si]?.chars?.length||slot.characters.length)*2)"
+                                                            class="text-xs text-gray-600 hover:text-blue-400 px-1 py-0.5 rounded hover:bg-gray-700 transition"
+                                                            title="Zamień plik Scene (archiwizuje stary)">↺</button>
+                                                    <button @click="picArchivePasteSlot(slot.id, (tileModal.status?.slots?.[si]?.chars?.length||slot.characters.length)*2)"
+                                                            :disabled="!tileModal.status?.slots?.[si]?.scene"
+                                                            class="text-xs text-gray-600 hover:text-red-400 px-1 py-0.5 rounded hover:bg-gray-700 transition disabled:opacity-30"
+                                                            title="Archiwizuj Scene">🗑</button>
+                                                    <button @click="picRunFromStage(slot.id, si, (tileModal.status?.slots?.[si]?.chars?.length||slot.characters.length)*2, (tileModal.status?.slots?.[si]?.chars?.length||slot.characters.length)*2)"
+                                                            :disabled="picGen.running && picGen.tileId===tileModal.tileId"
+                                                            class="text-xs text-gray-600 hover:text-green-400 px-1 py-0.5 rounded hover:bg-gray-700 transition"
+                                                            title="Generuj tylko Scene blend">▶</button>
                                                 </div>
                                             </div>
-                                        </template>
-                                        <template x-if="!tileModal.status?.slots?.[si]?.output_path">
-                                            <div class="flex items-center gap-2">
-                                                <span class="text-xs text-gray-600">Nie wygenerowano</span>
-                                                <button @click="picRegenResult(slot.id, si)"
-                                                        class="text-xs text-gray-600 hover:text-green-400 transition" title="Generuj">▶ Generuj</button>
-                                            </div>
-                                        </template>
+
+                                        </div>
+
+                                        <!-- Slot actions row -->
+                                        <div class="flex items-center gap-3 pt-1 flex-wrap">
+                                            <div class="flex-1"></div>
+                                            <button @click="picRunPasteMissing(slot.id, si)"
+                                                    :disabled="picGen.running && picGen.tileId === tileModal.tileId"
+                                                    class="text-xs text-gray-500 hover:text-blue-400 transition"
+                                                    title="Uruchom od pierwszego brakującego etapu">
+                                                ▶ Generuj brakujące
+                                            </button>
+                                            <button @click="picRunPasteSlot(slot.id, si, true)"
+                                                    :disabled="picGen.running && picGen.tileId === tileModal.tileId"
+                                                    class="text-xs text-gray-500 hover:text-yellow-400 transition"
+                                                    title="Usuń wyniki i wygeneruj wszystkie etapy od nowa">
+                                                🔄 Generuj od zera
+                                            </button>
+                                            <button @click="picFinalizeSlot(slot.id)"
+                                                    :disabled="!tileModal.status?.slots?.[si]?.done || tileModal.status?.slots?.[si]?.slot_final"
+                                                    class="text-xs text-gray-500 hover:text-green-400 transition disabled:opacity-30"
+                                                    :title="tileModal.status?.slots?.[si]?.slot_final ? 'Już sfinalizowany' : 'Przenieś do katalogu finalnego'">
+                                                📤 Finalizuj
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                             </template>
@@ -3841,7 +3980,8 @@
                             <!-- Slot header + per-slot run buttons -->
                             <div class="flex items-center gap-3 px-3 py-2.5 bg-gray-800/80 border-b border-gray-700">
                                 <img :src="picOiSlotImageUrl(slot.image)"
-                                     class="w-9 h-9 rounded object-cover flex-shrink-0"
+                                     class="w-9 h-9 rounded object-cover flex-shrink-0 cursor-zoom-in"
+                                     @click="picImgPreview = { open: true, url: picOiSlotImageUrl(slot.image), title: slot.image }"
                                      @load="$el.style.display=''"
                                      @error="$el.style.display='none'">
                                 <div class="flex-1 min-w-0">
@@ -4425,7 +4565,7 @@ function app() {
         flowData: null, flowLoading: false, flowError: null,
         statusData: null,
         ws: null, wsConnected: false,
-        genStatus: 'idle', genFile: null,
+        genStatus: 'idle', genFile: null, _genRefreshTimer: null,
         awaitingInput: false, inputPrompt: '',
         frameModal: { open: false, title: '', isImage: false, startUrl: '', endUrl: '' },
         videoModal: { open: false, name: '', url: '' },
@@ -4537,9 +4677,17 @@ function app() {
                     this.genStatus = msg.status || 'idle';
                     if (msg.file) this.genFile = msg.file;
                     if (typeof msg.awaiting_input === 'boolean') this.awaitingInput = msg.awaiting_input;
-                    // Auto-refresh status when generation finishes
-                    if (msg.status === 'finished' || msg.status === 'failed' || msg.status === 'stopped') {
+                    if (msg.status === 'running') {
+                        // Start periodic status refresh so flow items turn green as files complete
+                        if (!this._genRefreshTimer) {
+                            this._genRefreshTimer = setInterval(() => {
+                                if (this.isRunning) this.refreshStatus();
+                                else this._stopGenRefresh();
+                            }, 12000);
+                        }
+                    } else if (msg.status === 'finished' || msg.status === 'failed' || msg.status === 'stopped') {
                         this._dryRunMode = false;  // always clear on process end
+                        this._stopGenRefresh();
                         this.refreshStatus();
                     }
                     return;
@@ -4558,6 +4706,14 @@ function app() {
                     if (!isDebug) this.logLine(msg.stream, t);
                 }
             };
+        },
+
+        // ─ Generation status periodic refresh ─────────────
+        _stopGenRefresh() {
+            if (this._genRefreshTimer) {
+                clearInterval(this._genRefreshTimer);
+                this._genRefreshTimer = null;
+            }
         },
 
         // ─ Environment status polling (read-only) ─────────
@@ -5511,10 +5667,15 @@ function app() {
                         audio:  audioList.filter(Boolean),
                     }),
                 });
-                const data = await res.json();
-                if (res.ok && data.width && data.height) {
+                let data = {};
+                try { data = await res.json(); } catch(_) {}
+                if (!res.ok) {
+                    this.editModal.resHint = `❌ ${data.detail || 'Błąd serwera ' + res.status}`;
+                } else if (data.width && data.height) {
                     this.editModal.data = { ...this.editModal.data, width: data.width, height: data.height };
                     this.editModal.resHint = `⚡ Auto: ${data.width}×${data.height}`;
+                } else {
+                    this.editModal.resHint = '⚠ Brak obrazu w katalogu projektu — użyj domyślnego';
                 }
             } catch(e) {
                 this.editModal.resHint = `❌ ${e.message}`;
@@ -6840,6 +7001,15 @@ function app() {
                 imgCacheBust:    Date.now(),
                 _edgeBlendOpen:  false,
                 _sceneBlendOpen: false,
+                // snapshot of source images at open time — used to detect swaps before save
+                _origImages: tile ? {
+                    image_slots: (tileData.image_slots || []).map(s => ({ image: s.image })),
+                    scene_slots: (tileData.scene_slots || []).map(s => ({ scene_image: s.scene_image })),
+                    paste_slots: (tileData.paste_slots  || []).map(s => ({
+                        scene_image: s.scene_image,
+                        characters:  (s.characters || []).map(c => ({ model_image: c.model_image })),
+                    })),
+                } : null,
             };
             if (tileData.type === 'character_insert') {
                 if (tileData.scene_dirs?.some(d=>d))      this.loadCISceneImages();
@@ -6860,6 +7030,11 @@ function app() {
             m.saving = true; m.error = null;
             if (!m.data.name.trim()) {
                 if (!silent) m.error = 'Podaj nazwę kafelka';
+                m.saving = false; return;
+            }
+            // Block save while generation is active for this tile
+            if (this.picGen.running && this.picGen.tileId === m.tileId) {
+                if (!silent) m.error = 'Nie można zapisać podczas aktywnego generowania';
                 m.saving = false; return;
             }
             // Deep-clone and strip internal display flags from prompts
@@ -7190,10 +7365,10 @@ function app() {
             const rect = containerEl.getBoundingClientRect();
             if (type === 'top') {
                 const pct = Math.round(((event.clientY - rect.top) / rect.height) * 100);
-                slot.top_pct = Math.max(0, Math.min(pct, slot.bottom_pct - 5));
+                slot.top_pct = Math.max(-30, Math.min(pct, slot.bottom_pct - 5));
             } else if (type === 'bottom') {
                 const pct = Math.round(((event.clientY - rect.top) / rect.height) * 100);
-                slot.bottom_pct = Math.max(slot.top_pct + 5, Math.min(pct, 100));
+                slot.bottom_pct = Math.max(slot.top_pct + 5, Math.min(pct, 130));
             } else if (type === 'x') {
                 const pct = Math.round(((event.clientX - rect.left) / rect.width) * 100);
                 slot.x_center_pct = Math.max(0, Math.min(pct, 100));
@@ -7321,6 +7496,251 @@ function app() {
                 this.tileModal._removedSlots = this.tileModal._removedSlots || {};
                 this.tileModal._removedSlots[imageName] = slots[idx];
                 slots.splice(idx, 1);
+            }
+        },
+
+        /**
+         * Count how many already-generated files would be archived if the current
+         * image swaps are confirmed. Uses tileModal.status (may be null = 0).
+         */
+        picCountImageSwapFiles() {
+            const m    = this.tileModal;
+            const orig = m._origImages;
+            if (!orig) return 0;
+            const status = m.status;
+            let count = 0;
+            for (const [i, slot] of (m.data.image_slots || []).entries()) {
+                if (slot.image !== orig.image_slots?.[i]?.image)
+                    count += status?.slots?.[i]?.done || 0;
+            }
+            for (const [i, slot] of (m.data.scene_slots || []).entries()) {
+                if (slot.scene_image !== orig.scene_slots?.[i]?.scene_image)
+                    count += status?.slots?.[i]?.done || 0;
+            }
+            for (const [i, slot] of (m.data.paste_slots || []).entries()) {
+                const origSlot = orig.paste_slots?.[i];
+                if (!origSlot) continue;
+                let changed = slot.scene_image !== origSlot.scene_image;
+                if (!changed) {
+                    for (const [j, char] of (slot.characters || []).entries()) {
+                        if (char.model_image !== origSlot.characters?.[j]?.model_image) { changed = true; break; }
+                    }
+                }
+                if (changed) count += status?.slots?.[i]?.done || 0;
+            }
+            return count;
+        },
+
+        /** Open file browser to swap the source image of an OI slot. */
+        picSwapOiSlotImage(slotIdx) {
+            const slot   = this.tileModal.data.image_slots[slotIdx];
+            const srcDir = (this.tileModal.data.source_dirs || [])[0] || this.tileModal.data.output_dir || '';
+            this.openFsBrowser('image', srcDir, 'Wybierz nowy obraz źródłowy', (fullPath) => {
+                slot.image = fullPath.replace(/.*[\\/]/, '');
+            });
+        },
+
+        /**
+         * Open file browser and replace a stage file (sN) for a paste_character slot.
+         * Archives the old stage file server-side, then refreshes status.
+         */
+        async picSwapPasteStage(slotId, stage) {
+            const runId  = this.selectedRun?.filename;
+            const tileId = this.tileModal.tileId;
+            if (!runId || !tileId) return;
+            const outputDir = this.tileModal.data.output_dir || '';
+            this.openFsBrowser('image', outputDir, `Wybierz nowy obraz dla etapu S${stage}`, async (fullPath) => {
+                try {
+                    const res = await fetch(`/api/pic/session/${runId}/tiles/${tileId}/paste_stage_swap`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ slot_id: slotId, stage, source_path: fullPath }),
+                    });
+                    if (!res.ok) {
+                        const err = await res.json().catch(() => ({}));
+                        alert('Błąd zamiany pliku etapu: ' + (err.detail || res.status));
+                        return;
+                    }
+                    await this.loadTileStatus();
+                } catch(e) {
+                    alert('Błąd połączenia: ' + e.message);
+                }
+            });
+        },
+
+        /**
+         * Run paste_character pipeline from a specific stage for one slot.
+         * from_stage=1 skips PIL composite; from_stage=2 skips PIL+edge blend.
+         */
+        async picRunFromStage(slotId, slotIdx, stage, endStage = null) {
+            if (this.picGen.running) return;
+            const runId  = this.selectedRun?.filename;
+            const tileId = this.tileModal.tileId;
+            if (!runId || !tileId) return;
+            if (this.tileModal.mode === 'edit' && this.tileModal.data.name?.trim()) {
+                await this.picSaveTile(true);
+            }
+            this.picGen = { running: true, tileId, log: [], progress: 0, total: 0, eta: null };
+            try {
+                const body = { force_all: true, slot_index: slotIdx, from_stage: stage };
+                if (endStage !== null) body.end_stage = endStage;
+                const res = await fetch(`/api/pic/session/${runId}/tiles/${tileId}/run`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body),
+                });
+                if (!res.ok) {
+                    const err = await res.json().catch(() => ({}));
+                    this.picGen.running = false;
+                    alert('Błąd uruchomienia od etapu S' + stage + ': ' + (err.detail || res.status));
+                    return;
+                }
+                this._picPollJob(runId, tileId);
+            } catch(e) {
+                this.picGen.running = false;
+                alert('Błąd połączenia: ' + e.message);
+            }
+        },
+
+        /**
+         * Run from the first missing stage for a paste_character slot.
+         * Respects global blend enabled flags to determine what "should" exist.
+         */
+        async picRunPasteMissing(slotId, slotIdx) {
+            const statusSlot  = this.tileModal.status?.slots?.[slotIdx];
+            const chars       = statusSlot?.chars || [];
+            const tile        = this.tileModal.data;
+            const configSlot  = (tile.paste_slots || [])[slotIdx] || {};
+            const configChars = configSlot.characters || [];
+            // Global edge/scene enabled flags (from tile-level toggles + prompts)
+            const globalEdge  = tile.edge_blend_enabled  && (tile.edge_blend_prompts  || []).some(p => p.enabled !== false);
+            const globalScene = tile.scene_blend_enabled && (tile.scene_blend_prompts || []).some(p => p.enabled !== false);
+            // Per-slot scene flag
+            const hasScene    = globalScene && (configSlot.scene_blend_enabled !== false);
+            const n           = configChars.length || chars.length || 0;
+
+            let fromStage = null;
+
+            // Walk through linear stage order: c0_pil, c0_edge, c1_pil, c1_edge, ..., scene
+            // Respect per-character edge_blend_enabled toggle
+            for (let ci = 0; ci < n; ci++) {
+                if (!chars[ci]?.pil)  { fromStage = ci * 2; break; }
+                const charEdge = globalEdge && (configChars[ci]?.edge_blend_enabled !== false);
+                if (charEdge && !chars[ci]?.edge) { fromStage = ci * 2 + 1; break; }
+            }
+            if (fromStage === null && hasScene && !statusSlot?.scene) {
+                fromStage = n * 2;
+            }
+
+            if (fromStage === null) return;  // all done
+            if (fromStage === 0) {
+                await this.picRunPasteSlot(slotId, slotIdx, false);
+            } else {
+                await this.picRunFromStage(slotId, slotIdx, fromStage);
+            }
+        },
+
+        /**
+         * Archive a single stage image (or all stages if stage is null) for a paste_character slot.
+         * Refreshes tile status so thumbnails disappear.
+         */
+        async picArchivePasteSlot(slotId, stage = null) {
+            const runId  = this.selectedRun?.filename;
+            const tileId = this.tileModal.tileId;
+            if (!runId || !tileId) return;
+            const url = `/api/pic/session/${runId}/tiles/${tileId}/paste_slot/${slotId}/archive`
+                + (stage !== null ? `?stage=${stage}` : '');
+            try {
+                const res = await fetch(url, { method: 'POST' });
+                if (!res.ok) {
+                    const err = await res.json().catch(() => ({}));
+                    alert('Błąd archiwizacji: ' + (err.detail || res.status));
+                    return;
+                }
+                await this.loadTileStatus();
+            } catch(e) {
+                alert('Błąd połączenia: ' + e.message);
+            }
+        },
+
+        /**
+         * Finalize a single paste_character slot (robocze/ → output_dir root).
+         * Warns on conflict (file already exists).
+         */
+        async picFinalizeSlot(slotId) {
+            const runId  = this.selectedRun?.filename;
+            const tileId = this.tileModal.tileId;
+            if (!runId || !tileId) return;
+            const url = `/api/pic/session/${runId}/tiles/${tileId}/paste_slot/${slotId}/finalize`;
+            try {
+                const res  = await fetch(url, { method: 'POST', headers: {'Content-Type':'application/json'}, body: '{}' });
+                const data = await res.json();
+                if (!res.ok) { alert('Błąd finalizacji: ' + (data.detail || res.status)); return; }
+                if (!data.ok && data.conflict) {
+                    if (!confirm(`Plik już istnieje w katalogu finalnym:\n${data.dest}\n\nNadpisać?`)) return;
+                    const res2 = await fetch(url, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({overwrite: true}) });
+                    const d2   = await res2.json();
+                    if (!res2.ok || !d2.ok) { alert('Błąd nadpisania: ' + (d2.detail || d2.reason || res2.status)); return; }
+                } else if (!data.ok) {
+                    alert('Brak gotowego pliku: ' + (data.reason || ''));
+                    return;
+                }
+                await this.loadTileStatus();
+            } catch(e) { alert('Błąd połączenia: ' + e.message); }
+        },
+
+        /**
+         * Finalize all ready paste_character slots.
+         */
+        async picFinalizeAll() {
+            const runId  = this.selectedRun?.filename;
+            const tileId = this.tileModal.tileId;
+            if (!runId || !tileId) return;
+            const url = `/api/pic/session/${runId}/tiles/${tileId}/finalize_all`;
+            try {
+                const res  = await fetch(url, { method: 'POST', headers: {'Content-Type':'application/json'}, body: '{}' });
+                const data = await res.json();
+                if (!res.ok) { alert('Błąd: ' + (data.detail || res.status)); return; }
+                const conflicts = (data.results || []).filter(r => r.conflict && !r.ok);
+                if (conflicts.length) {
+                    const msg = `${conflicts.length} slot(ów) ma konflikty (plik już istnieje).\nNadpisać wszystkie?`;
+                    if (confirm(msg)) {
+                        await fetch(url, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({overwrite: true}) });
+                    }
+                }
+                await this.loadTileStatus();
+            } catch(e) { alert('Błąd połączenia: ' + e.message); }
+        },
+
+        /**
+         * Run the full paste_character pipeline for one slot (from_stage=0).
+         * forceAll=true forces regeneration even if output already exists.
+         */
+        async picRunPasteSlot(slotId, slotIdx, forceAll) {
+            if (this.picGen.running) return;
+            const runId  = this.selectedRun?.filename;
+            const tileId = this.tileModal.tileId;
+            if (!runId || !tileId) return;
+            if (this.tileModal.mode === 'edit' && this.tileModal.data.name?.trim()) {
+                await this.picSaveTile(true);
+            }
+            this.picGen = { running: true, tileId, log: [], progress: 0, total: 0, eta: null };
+            try {
+                const res = await fetch(`/api/pic/session/${runId}/tiles/${tileId}/run`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ force_all: !!forceAll, slot_index: slotIdx, from_stage: 0 }),
+                });
+                if (!res.ok) {
+                    const err = await res.json().catch(() => ({}));
+                    this.picGen.running = false;
+                    alert('Błąd uruchomienia: ' + (err.detail || res.status));
+                    return;
+                }
+                this._picPollJob(runId, tileId);
+            } catch(e) {
+                this.picGen.running = false;
+                alert('Błąd połączenia: ' + e.message);
             }
         },
 

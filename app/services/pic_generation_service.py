@@ -553,6 +553,263 @@ def _archive_step(source: Path, archive_dir: Path, stem: str) -> None:
         pass  # never break generation over archiving
 
 
+def _archive_path_to(src: Path, archive_dir: Path) -> None:
+    """Move src to archive_dir with a timestamp suffix to avoid collisions."""
+    if not src.exists():
+        return
+    try:
+        archive_dir.mkdir(parents=True, exist_ok=True)
+        ts   = datetime.now().strftime("%y%m%d%H%M%S")
+        dest = archive_dir / f"{src.stem}_{ts}{src.suffix}"
+        shutil.move(str(src), str(dest))
+    except Exception:
+        pass  # never break generation over archiving
+
+
+def _working_dir(output_dir: Path) -> Path:
+    """All intermediate paste_character files go here; finalized output stays in output_dir root."""
+    return output_dir / "robocze"
+
+
+def _stage_path(output_dir: Path, output_id: str, stage: int) -> Path:
+    """Legacy stage path (kept for archive/fallback detection only)."""
+    return output_dir / f"{output_id}_s{stage}.png"
+
+
+def _char_pil_path(output_dir: Path, output_id: str, ci: int) -> Path:
+    return output_dir / f"{output_id}_c{ci}_pil.png"
+
+
+def _char_edge_path(output_dir: Path, output_id: str, ci: int) -> Path:
+    return output_dir / f"{output_id}_c{ci}_edge.png"
+
+
+def _scene_path(output_dir: Path, output_id: str) -> Path:
+    return output_dir / f"{output_id}_scene.png"
+
+
+def _stage_linear_to_path(output_dir: Path, output_id: str, stage: int, n_chars: int) -> Path:
+    """Map linear from_stage int to the corresponding file path."""
+    if stage < n_chars * 2:
+        ci   = stage // 2
+        step = stage % 2
+        return _char_pil_path(output_dir, output_id, ci) if step == 0 else _char_edge_path(output_dir, output_id, ci)
+    return _scene_path(output_dir, output_id)
+
+
+def swap_paste_stage(
+    run_id: str, tile_id: str, slot_id: str, stage: int, source_path: str
+) -> Path:
+    """
+    Replace stage file for a paste_character slot.
+    Archives the existing file and copies source_path to {output_id}_s{stage}.png.
+    Returns the destination path.
+    """
+    from app.services.pic_session_service import (
+        _load as _load_sess,
+        _migrate_tile,
+    )
+
+    data = _load_sess(run_id)
+    tile = next((t for t in data.get("pic_flow", []) if t["id"] == tile_id), None)
+    if not tile:
+        raise KeyError(f"Tile not found: {tile_id}")
+    _migrate_tile(tile)
+
+    slot = next(
+        (s for s in tile.get("paste_slots", []) if s.get("id") == slot_id),
+        None,
+    )
+    if not slot:
+        raise KeyError(f"Paste slot not found: {slot_id}")
+
+    output_id   = slot.get("output_id", slot.get("id", ""))
+    output_dir  = Path(tile.get("output_dir", ""))
+    work_dir    = _working_dir(output_dir)
+    archive_dir = work_dir / "archive"
+    n_chars     = len(slot.get("characters", []))
+
+    dest = _stage_linear_to_path(work_dir, output_id, stage, n_chars)
+    _archive_path_to(dest, archive_dir)
+
+    src = Path(source_path)
+    if not src.exists():
+        raise FileNotFoundError(f"Source file not found: {source_path}")
+
+    work_dir.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(str(src), str(dest))
+    return dest
+
+
+def archive_paste_slot(
+    run_id: str, tile_id: str, slot_id: str, stage: int | None = None
+) -> list[str]:
+    """
+    Archive stage files for a paste_character slot.
+    stage=N archives only that stage; None archives all (s0, s1, s2).
+    Returns list of source paths that were archived.
+    """
+    from app.services.pic_session_service import (
+        _load as _load_sess,
+        _migrate_tile,
+    )
+
+    data = _load_sess(run_id)
+    tile = next((t for t in data.get("pic_flow", []) if t["id"] == tile_id), None)
+    if not tile:
+        raise KeyError(f"Tile not found: {tile_id}")
+    _migrate_tile(tile)
+
+    slot = next(
+        (s for s in tile.get("paste_slots", []) if s.get("id") == slot_id),
+        None,
+    )
+    if not slot:
+        raise KeyError(f"Paste slot not found: {slot_id}")
+
+    output_id    = slot.get("output_id", slot.get("id", ""))
+    output_dir   = Path(tile.get("output_dir", ""))
+    work_dir     = _working_dir(output_dir)
+    archive_dir  = work_dir / "archive"
+    n_chars      = len(slot.get("characters", []))
+
+    if stage is not None:
+        src = _stage_linear_to_path(work_dir, output_id, stage, n_chars)
+        if not src.exists():
+            # Legacy fallback: old _s{stage} naming (output_dir root)
+            src = _stage_path(output_dir, output_id, stage)
+        if src.exists():
+            _archive_path_to(src, archive_dir)
+            return [str(src)]
+        return []
+
+    # Archive all: every char's pil + edge, then scene
+    archived: list[str] = []
+    for ci in range(n_chars):
+        for path in (_char_pil_path(work_dir, output_id, ci),
+                     _char_edge_path(work_dir, output_id, ci)):
+            if path.exists():
+                archived.append(str(path))
+                _archive_path_to(path, archive_dir)
+    scene = _scene_path(work_dir, output_id)
+    if scene.exists():
+        archived.append(str(scene))
+        _archive_path_to(scene, archive_dir)
+    # Legacy fallback: old _s0/_s1/_s2 if nothing found above
+    if not archived:
+        for s in range(3):
+            lp = _stage_path(output_dir, output_id, s)
+            if lp.exists():
+                archived.append(str(lp))
+                _archive_path_to(lp, archive_dir)
+    return archived
+
+
+def _finalize_slot_file(
+    slot: dict, tile: dict
+) -> tuple["Path | None", "Path | None", bool]:
+    """
+    Return (src, dest, conflict) for finalizing a paste_character slot.
+    src  = most-advanced file in working_dir
+    dest = output_dir root (same filename)
+    conflict = dest already exists
+    """
+    output_id  = slot.get("output_id", slot.get("id", ""))
+    output_dir = Path(tile.get("output_dir", ""))
+    work_dir   = _working_dir(output_dir)
+
+    global_eb   = bool(tile.get("edge_blend_enabled", False))
+    global_sb   = bool(tile.get("scene_blend_enabled", False))
+    slot_sb     = bool(slot.get("scene_blend_enabled", True))
+    chars       = slot.get("characters", [])
+    n_chars     = len(chars)
+    last_char_eb = bool(chars[-1].get("edge_blend_enabled", True)) if chars else True
+
+    # Determine "last enabled stage" file
+    src: "Path | None" = None
+    if global_sb and slot_sb:
+        p = _scene_path(work_dir, output_id)
+        if p.exists():
+            src = p
+    if src is None and global_eb and last_char_eb and n_chars:
+        p = _char_edge_path(work_dir, output_id, n_chars - 1)
+        if p.exists():
+            src = p
+    if src is None and n_chars:
+        p = _char_pil_path(work_dir, output_id, n_chars - 1)
+        if p.exists():
+            src = p
+
+    if src is None:
+        return None, None, False
+
+    dest     = output_dir / src.name
+    conflict = dest.exists()
+    return src, dest, conflict
+
+
+def finalize_paste_slot(
+    run_id: str, tile_id: str, slot_id: str, overwrite: bool = False
+) -> dict:
+    """
+    Move the last-enabled-stage file from robocze/ to output_dir root.
+    Returns {"ok": bool, "src": str, "dest": str, "conflict": bool, "skipped": bool}.
+    """
+    from app.services.pic_session_service import _load as _load_sess, _migrate_tile
+
+    data = _load_sess(run_id)
+    tile = next((t for t in data.get("pic_flow", []) if t["id"] == tile_id), None)
+    if not tile:
+        raise KeyError(f"Tile not found: {tile_id}")
+    _migrate_tile(tile)
+
+    slot = next((s for s in tile.get("paste_slots", []) if s.get("id") == slot_id), None)
+    if not slot:
+        raise KeyError(f"Paste slot not found: {slot_id}")
+
+    src, dest, conflict = _finalize_slot_file(slot, tile)
+    if src is None:
+        return {"ok": False, "src": None, "dest": None, "conflict": False, "skipped": True,
+                "reason": "Brak gotowego pliku w robocze/"}
+    if conflict and not overwrite:
+        return {"ok": False, "src": str(src), "dest": str(dest), "conflict": True, "skipped": False,
+                "reason": "Plik już istnieje w katalogu finalnym"}
+
+    shutil.copy2(str(src), str(dest))
+    return {"ok": True, "src": str(src), "dest": str(dest), "conflict": conflict, "skipped": False}
+
+
+def finalize_all_paste_slots(
+    run_id: str, tile_id: str, overwrite: bool = False
+) -> list[dict]:
+    """Finalize all paste_character slots that have a ready file in robocze/."""
+    from app.services.pic_session_service import _load as _load_sess, _migrate_tile
+
+    data = _load_sess(run_id)
+    tile = next((t for t in data.get("pic_flow", []) if t["id"] == tile_id), None)
+    if not tile:
+        raise KeyError(f"Tile not found: {tile_id}")
+    _migrate_tile(tile)
+
+    results = []
+    for slot in tile.get("paste_slots", []):
+        src, dest, conflict = _finalize_slot_file(slot, tile)
+        slot_id = slot.get("id", "")
+        if src is None:
+            results.append({"slot_id": slot_id, "ok": False, "skipped": True,
+                            "reason": "Brak gotowego pliku"})
+            continue
+        if conflict and not overwrite:
+            results.append({"slot_id": slot_id, "ok": False, "conflict": True,
+                            "src": str(src), "dest": str(dest),
+                            "reason": "Plik już istnieje"})
+            continue
+        shutil.copy2(str(src), str(dest))
+        results.append({"slot_id": slot_id, "ok": True, "src": str(src),
+                        "dest": str(dest), "conflict": conflict})
+    return results
+
+
 def _pad_to_ratio(src: "Path", target_w: int, target_h: int) -> "Path | None":
     """
     Pad src image with white margins so its aspect ratio matches target_w:target_h.
@@ -722,24 +979,19 @@ def _density_bbox(
 
 
 def _make_edge_mask(
-    model_path: "Path",
+    model_rgba: "Image.Image",  # pre-cropped (same bbox+pad as PIL paste step)
     scene_w: int, scene_h: int,
     paste_x: int, paste_y: int, paste_w: int, paste_h: int,
     edge_px: int,
 ) -> "Image.Image":
     """
     Create an inpainting mask covering the pasted character's footprint + edge_px border.
-    Uses the original (pre-feather) model image so white areas inside the character
-    are not accidentally excluded from the mask.
+    Accepts a pre-cropped RGBA image (same crop/padding as the PIL paste) so mask
+    and composite are always geometrically aligned.
     Returns an "L" image (scene size): white = inpaint, black = keep.
     """
     from PIL import Image, ImageFilter  # type: ignore
-    model = Image.open(model_path).convert("RGBA")
-    model = _white_to_alpha(model)
-    bbox  = model.getbbox()
-    if bbox:
-        model = model.crop(bbox)
-    model_s   = model.resize((paste_w, paste_h), Image.LANCZOS)
+    model_s   = model_rgba.resize((paste_w, paste_h), Image.LANCZOS)
     _, _, _, a = model_s.split()
     a = a.point(lambda v: 255 if v > 30 else 0)      # binarize
     for _ in range(edge_px):                          # dilate
@@ -914,20 +1166,29 @@ async def _run_paste_character_async(
     output_dir: "Path",
     force_all:  bool,
     slot_index: int | None = None,
+    from_stage: int = 0,
+    end_stage:  int | None = None,   # stop after this linear stage index (inclusive)
 ) -> None:
     """
-    Deterministic character paste using PIL — zero ComfyUI required.
-    For each paste_slot:
-      1. Load scene + model images
-      2. Convert white background → transparent
-      3. Scale model to fit [top_pct% … bottom_pct%] of scene height
-      4. Paste at x_center_pct% horizontal position
-      5. Save result to output_dir/{output_id}.png
+    Alternating PIL->Edge pipeline per character, then Scene blend.
+
+    File naming per slot:
+      {output_id}_c{N}_pil.png   - PIL composite after pasting char N (RGBA, always saved)
+      {output_id}_c{N}_edge.png  - after edge blend for char N
+      {output_id}_scene.png      - after final scene blend
+
+    from_stage is a linear index:
+      ci * 2     = PIL for char ci  (save c{ci}_pil, use previous char output as base)
+      ci * 2 + 1 = Edge for char ci (save c{ci}_edge)
+      n_chars*2  = Scene blend only
+
+    from_stage forces that specific stage regardless of enabled flags.
+    Stages after from_stage respect the global enabled flags (batch behaviour).
     """
-    from PIL import Image, ImageFilter  # type: ignore
+    from PIL import Image, ImageFilter, ImageOps  # type: ignore
 
     tile_name = tile.get("name", tile_id)
-    _log(f"📌 Paste Character: [{tile_name}] start")
+    _log(f"\U0001f4cc Paste Character: [{tile_name}] start (from_stage={from_stage})")
 
     paste_slots = tile.get("paste_slots", [])
     if not paste_slots:
@@ -939,9 +1200,12 @@ async def _run_paste_character_async(
         return
 
     output_dir.mkdir(parents=True, exist_ok=True)
+    working_dir = _working_dir(output_dir)
+    working_dir.mkdir(parents=True, exist_ok=True)
+    archive_dir = working_dir / "archive"
+    loop        = asyncio.get_running_loop()
 
-    # ── Two-pass blend config ─────────────────────────────────────────────────
-    # Pass 1 — Edge Blend: inpainting within dilated character mask (ci_1ref wf)
+    # -- Blend config ----------------------------------------------------------
     eb_enabled  = bool(tile.get("edge_blend_enabled", False))
     eb_px       = int(tile.get("edge_blend_px", 15))
     _eb_prm     = next((p for p in tile.get("edge_blend_prompts", []) if p.get("enabled", True)), None)
@@ -951,9 +1215,8 @@ async def _run_paste_character_async(
     eb_steps    = int(_eb_p.get("steps", 30))
     eb_cfg      = float(tile["edge_blend_cfg"])    if tile.get("edge_blend_cfg")    is not None else float(_eb_p.get("cfg",    8.0))
     eb_denoise  = float(tile["edge_blend_denoise"]) if tile.get("edge_blend_denoise") is not None else float(_eb_p.get("denoise", 0.6))
-    eb_wf       = None; eb_url = None; eb_in_dir = None; eb_out_dir = None
+    eb_wf = eb_url = eb_in_dir = eb_out_dir = None
 
-    # Pass 2 — Scene Blend: full-image i2i for shadows / scene coherence
     sb_enabled  = bool(tile.get("scene_blend_enabled", False))
     _sb_prm     = next((p for p in tile.get("scene_blend_prompts", []) if p.get("enabled", True)), None)
     sb_positive = (_sb_prm.get("positive", "") if _sb_prm else "").strip()
@@ -962,9 +1225,10 @@ async def _run_paste_character_async(
     sb_steps    = int(_sb_p.get("steps", 30))
     sb_cfg      = float(tile["scene_blend_cfg"])    if tile.get("scene_blend_cfg")    is not None else float(_sb_p.get("cfg",    8.0))
     sb_denoise  = float(tile["scene_blend_denoise"]) if tile.get("scene_blend_denoise") is not None else float(_sb_p.get("denoise", 0.4))
-    sb_wf       = None; sb_url = None; sb_in_dir = None; sb_out_dir = None
+    sb_wf = sb_url = sb_in_dir = sb_out_dir = None
 
-    if eb_enabled and eb_positive:
+    # Load workflows (always if prompt set -- from_stage logic handled per-char/per-slot)
+    if eb_positive:
         win        = app_config_service.get_backend("windows")
         eb_url     = win.get("api_url")    or settings.comfyui_upscale_url
         eb_in_dir  = Path(win.get("input_dir")  or settings.comfyui_upscale_input_dir)
@@ -974,13 +1238,13 @@ async def _run_paste_character_async(
             wf_p = Path(wf_str)
             if wf_p.exists():
                 eb_wf = json.loads(wf_p.read_text(encoding="utf-8"))
-                _log(f"  📋 Edge Blend workflow: {wf_p.name}")
+                _log(f"  \U0001f4cb Edge Blend workflow: {wf_p.name}")
             else:
-                _log(f"  ⚠ Edge Blend workflow nie istnieje: {wf_p} — pass 1 wyłączony")
+                _log(f"  ⚠ Edge Blend workflow nie istnieje: {wf_p} — edge wyłączony")
         else:
-            _log("  ⚠ Edge Blend: brak ścieżki ci_1ref w app_config — pass 1 wyłączony")
+            _log("  ⚠ Edge Blend: brak ścieżki ci_1ref — edge wyłączony")
 
-    if sb_enabled and sb_positive:
+    if sb_positive:
         win        = app_config_service.get_backend("windows")
         sb_url     = win.get("api_url")    or settings.comfyui_upscale_url
         sb_in_dir  = Path(win.get("input_dir")  or settings.comfyui_upscale_input_dir)
@@ -990,11 +1254,11 @@ async def _run_paste_character_async(
             wf_p = Path(wf_str)
             if wf_p.exists():
                 sb_wf = json.loads(wf_p.read_text(encoding="utf-8"))
-                _log(f"  📋 Scene Blend workflow: {wf_p.name}")
+                _log(f"  \U0001f4cb Scene Blend workflow: {wf_p.name}")
             else:
-                _log(f"  ⚠ Scene Blend workflow nie istnieje: {wf_p} — pass 2 wyłączony")
+                _log(f"  ⚠ Scene Blend workflow nie istnieje: {wf_p} — scene wyłączony")
         else:
-            _log("  ⚠ Scene Blend: brak ścieżki i2i w app_config — pass 2 wyłączony")
+            _log("  ⚠ Scene Blend: brak ścieżki i2i — scene wyłączony")
 
     # Select slots
     if slot_index is not None:
@@ -1013,166 +1277,243 @@ async def _run_paste_character_async(
     errors: list[dict] = []
 
     for idx, (si, slot) in enumerate(slots_to_run, 1):
-        output_id = slot.get("output_id", slot.get("id", f"slot_{si}"))
-        label     = f"Slot {si + 1}"
+        output_id  = slot.get("output_id", slot.get("id", f"slot_{si}"))
+        label      = f"Slot {si + 1}"
+        characters = slot.get("characters", [])
         _update_job(run_id, tile_id, current_prompt=label)
 
-        out_path = output_dir / f"{output_id}.png"
-        if not force_all and out_path.exists():
-            _log(f"  ⏭ [{idx}/{len(slots_to_run)}] {label} — już istnieje, pomijam")
+        if not characters:
+            _log(f"  ❌ [{idx}] {label}: brak postaci")
+            errors.append({"slot": si, "error": "Slot nie ma żadnych postaci"})
+            continue
+
+        n_chars         = len(characters)
+        scene_stage_idx = n_chars * 2   # linear index of the scene blend stage
+
+        # Per-slot scene flag; edge flag is per-character (checked in the loop below)
+        slot_sb      = bool(slot.get("scene_blend_enabled", True))
+        last_char_eb = bool(characters[-1].get("edge_blend_enabled", True)) if characters else True
+
+        # Determine "done" file for skip check (most advanced configured stage)
+        force_scene = from_stage >= scene_stage_idx
+        if sb_positive and sb_wf and ((sb_enabled and slot_sb) or force_scene):
+            done_path = _scene_path(working_dir, output_id)
+        elif eb_positive and eb_wf and eb_enabled and last_char_eb:
+            done_path = _char_edge_path(working_dir, output_id, n_chars - 1)
+        else:
+            done_path = _char_pil_path(working_dir, output_id, n_chars - 1)
+
+        if not force_all and from_stage == 0 and done_path.exists():
+            _log(f"  ⏭ [{idx}/{len(slots_to_run)}] {label} — ostatni etap istnieje, pomijam")
             done += 1
             _update_job(run_id, tile_id, done=done)
             continue
 
-        scene_path  = Path(slot.get("scene_image", ""))
-        characters  = slot.get("characters", [])
-
-        if not scene_path.exists():
-            err = f"Scena nie istnieje: {scene_path}"
-            _log(f"  ❌ [{idx}] {err}")
-            errors.append({"slot": si, "error": err})
-            continue
-        if not characters:
-            err = "Slot nie ma żadnych postaci"
-            _log(f"  ❌ [{idx}] {err}")
-            errors.append({"slot": si, "error": err})
-            continue
-
         try:
-            archive_dir = output_dir / "archive"
-            loop        = asyncio.get_running_loop()
-            oid         = output_id
+            scene_img_path = Path(slot.get("scene_image", ""))
+            W = H = 0
+            current_path: "Path | None" = None
 
-            # Start with the original scene; composite each character in sequence
-            scene = Image.open(scene_path).convert("RGBA")
-            W, H  = scene.size
-
-            # Save initial scene so out_path is always a valid file from the start
-            scene.convert("RGB").save(out_path, "PNG")
-
+            # -----------------------------------------------------------------
+            # Per-character: PIL -> Edge  (alternating)
+            # -----------------------------------------------------------------
             for ci, char in enumerate(characters):
-                model_path   = Path(char.get("model_image", ""))
-                top_pct      = float(char.get("top_pct",      10)) / 100.0
-                bottom_pct   = float(char.get("bottom_pct",   85)) / 100.0
-                x_center_pct = float(char.get("x_center_pct", 50)) / 100.0
-                erode_px     = int(char.get("erode_px", 3))
-                blur_px      = int(char.get("blur_px",  2))
-                char_label   = f"{label} char{ci+1}/{len(characters)}"
+                pil_stage_idx  = ci * 2
+                edge_stage_idx = ci * 2 + 1
+                char_label     = f"{label} C{ci+1}/{n_chars}"
+                model_path     = Path(char.get("model_image", ""))
 
-                if not model_path.exists():
-                    _log(f"  ⚠ [{idx}] {char_label}: model nie istnieje: {model_path} — pomijam")
-                    continue
-                if bottom_pct <= top_pct:
-                    _log(f"  ⚠ [{idx}] {char_label}: bottom_pct <= top_pct — pomijam")
-                    continue
+                # Stop if we've passed the requested end_stage
+                if end_stage is not None and pil_stage_idx > end_stage:
+                    break
 
-                # ── PIL composite ─────────────────────────────────────────
-                # Re-open current state (may have been updated by edge blend)
-                scene = Image.open(out_path).convert("RGBA")
+                # -- PIL pass -------------------------------------------------
+                do_pil = from_stage <= pil_stage_idx
+                if do_pil:
+                    if not model_path.exists():
+                        _log(f"  ⚠ [{idx}] {char_label}: model nie istnieje — pomijam")
+                        continue
 
-                # Normalize: edge blend (ComfyUI) may output a different resolution
-                if scene.size != (W, H):
-                    _log(f"  ℹ [{idx}] {char_label}: normalizacja sceny {scene.size} → ({W}×{H})")
-                    scene = scene.resize((W, H), Image.LANCZOS)
+                    # Base image: previous char best result or original scene
+                    if ci == 0:
+                        if not scene_img_path.exists():
+                            raise FileNotFoundError(f"Scena nie istnieje: {scene_img_path}")
+                        base_img = Image.open(scene_img_path).convert("RGBA")
+                    else:
+                        prev_edge = _char_edge_path(working_dir, output_id, ci - 1)
+                        prev_pil  = _char_pil_path(working_dir, output_id, ci - 1)
+                        prev_best = prev_edge if prev_edge.exists() else prev_pil
+                        if not prev_best.exists():
+                            raise FileNotFoundError(
+                                f"Brak pliku bazowego dla {char_label}: oczekiwano {prev_best.name}"
+                            )
+                        base_img = Image.open(prev_best).convert("RGBA")
 
-                _raw   = Image.open(model_path)
-                _has_alpha = _raw.mode in ("RGBA", "LA", "PA")
-                model  = _raw.convert("RGBA")
-                _orig_size = model.size
-                if not _has_alpha:
-                    # no built-in alpha → white background → convert white→transparent
-                    model = _white_to_alpha(model)
-                # else: trust the existing alpha channel (BG-removal PNG)
+                    W, H = base_img.size
 
-                # Smart bbox: ignore rows/columns that have fewer than min_px
-                # non-transparent pixels — filters out sparse artifact pixels at
-                # image edges without eroding the figure itself.
-                # Percentage-based safety padding (2% of each dimension) so hair
-                # tips and toe pixels are never clipped before scaling.
-                bbox  = _density_bbox(model.split()[3])
-                if bbox:
-                    _mw, _mh = model.size
-                    _pad_x = max(15, int(_mw * 0.10))
-                    _pad_y = max(15, int(_mh * 0.02))
-                    _bl, _bt, _br, _bb = bbox
-                    _bl = max(0,   _bl - _pad_x)
-                    _bt = max(0,   _bt - _pad_y)
-                    _br = min(_mw, _br + _pad_x)
-                    _bb = min(_mh, _bb + _pad_y)
-                    model = model.crop((_bl, _bt, _br, _bb))
-                _log(f"  🔍 [{idx}] {char_label}: model {'RGBA' if _has_alpha else 'RGB→α'} "
-                     f"{_orig_size[0]}×{_orig_size[1]} → bbox+pad {model.width}×{model.height}")
-                if erode_px > 0 or blur_px > 0:
-                    model = _feather_alpha(model, erode_px=erode_px, blur_px=blur_px)
+                    top_pct      = float(char.get("top_pct",      10)) / 100.0
+                    bottom_pct   = float(char.get("bottom_pct",   85)) / 100.0
+                    x_center_pct = float(char.get("x_center_pct", 50)) / 100.0
+                    erode_px     = int(char.get("erode_px", 3))
+                    blur_px      = int(char.get("blur_px",  2))
 
-                target_h = max(1, int((bottom_pct - top_pct) * H))
-                target_w = max(1, int(model.width * (target_h / model.height)))
-                model_s  = model.resize((target_w, target_h), Image.LANCZOS)
+                    if bottom_pct <= top_pct:
+                        _log(f"  ⚠ [{idx}] {char_label}: bottom_pct <= top_pct — pomijam")
+                        continue
 
-                x = int(x_center_pct * W) - target_w // 2
-                y = int(top_pct * H)
-                x = max(0, min(x, W - target_w))
-                y = max(0, min(y, H - target_h))
+                    _raw       = Image.open(model_path)
+                    _has_alpha = _raw.mode in ("RGBA", "LA", "PA")
+                    model      = _raw.convert("RGBA")
+                    _orig_size = model.size
+                    if not _has_alpha:
+                        model = _white_to_alpha(model)
+                    bbox = _density_bbox(model.split()[3])
+                    if bbox:
+                        _mw, _mh = model.size
+                        _pad_x = max(15, int(_mw * 0.10))
+                        _pad_y = max(15, int(_mh * 0.02))
+                        _bl, _bt, _br, _bb = bbox
+                        model = model.crop((
+                            max(0,   _bl - _pad_x), max(0,   _bt - _pad_y),
+                            min(_mw, _br + _pad_x), min(_mh, _bb + _pad_y),
+                        ))
+                    _log(f"  \U0001f50d [{idx}] {char_label}: model {'RGBA' if _has_alpha else 'RGB->a'} "
+                         f"{_orig_size[0]}x{_orig_size[1]} -> bbox+pad {model.width}x{model.height}")
+                    if erode_px > 0 or blur_px > 0:
+                        model = _feather_alpha(model, erode_px=erode_px, blur_px=blur_px)
 
-                _log(f"  📐 [{idx}] {char_label}: top={top_pct*100:.0f}% bot={bottom_pct*100:.0f}% x={x_center_pct*100:.0f}%"
-                     f" → model {target_w}×{target_h}px at ({x},{y}) na {W}×{H}")
+                    target_h = max(1, int((bottom_pct - top_pct) * H))
+                    target_w = max(1, int(model.width * (target_h / model.height)))
+                    model_s  = model.resize((target_w, target_h), Image.LANCZOS)
+                    x = max(0, min(int(x_center_pct * W) - target_w // 2, W - target_w))
+                    y = int(top_pct * H)  # no clamp — allows character to overflow above/below scene bounds
+                    _log(f"  \U0001f4d0 [{idx}] {char_label}: top={top_pct*100:.0f}% bot={bottom_pct*100:.0f}%"
+                         f" -> {target_w}x{target_h}px at ({x},{y}) na {W}x{H}")
 
-                scene.paste(model_s, (x, y), model_s)
-                scene.convert("RGB").save(out_path, "PNG")
-                _archive_step(out_path, archive_dir, f"{oid}_char{ci}_step0_pil")
-                _log(f"  🖼 [{idx}] {char_label}: PIL composite → {out_path.name}")
+                    base_img.paste(model_s, (x, y), model_s)
 
-                # ── Edge Blend per character ──────────────────────────────
-                if eb_enabled and eb_positive and eb_wf:
-                    _log(f"  ✂️ [{idx}] {char_label} — edge blend "
-                         f"(maska {eb_px}px  steps={eb_steps}  cfg={eb_cfg}  denoise={eb_denoise}) …")
-                    edge_mask  = _make_edge_mask(
-                        model_path, W, H, x, y, target_w, target_h, eb_px,
-                    )
-                    scene_rgba = Image.open(out_path).convert("RGBA")
-                    scene_rgba.putalpha(edge_mask)
+                    c_pil = _char_pil_path(working_dir, output_id, ci)
+                    _archive_path_to(c_pil, archive_dir)
+                    base_img.convert("RGB").save(c_pil, "PNG")   # flat RGB composite
 
-                    ts       = datetime.now().strftime("%Y%m%d%H%M%S%f")
-                    rgba_tmp = output_dir / f"_tmp_rgba_{ts}.png"
-                    scene_rgba.save(rgba_tmp, "PNG")
-                    try:
-                        await _generate_ci_one(
-                            loop, eb_url, eb_in_dir, eb_out_dir,
-                            eb_wf, rgba_tmp, model_path,
-                            eb_positive, eb_negative,
-                            eb_steps, eb_cfg, eb_denoise,
-                            out_path,
-                            label=f"edge_blend {char_label}",
-                        )
-                    finally:
-                        try:
-                            rgba_tmp.unlink(missing_ok=True)
-                        except Exception:
-                            pass
-                    _archive_step(out_path, archive_dir, f"{oid}_char{ci}_step1_edge")
+                    # Save companion mask file for GIMP inspection
+                    mask_debug = Image.new("L", base_img.size, 0)
+                    mask_debug.paste(model_s.split()[3], (x, y))
+                    mask_path = working_dir / f"{output_id}_c{ci}_mask.png"
+                    mask_debug.save(mask_path, "PNG")
+                    current_path = c_pil
+                    _log(f"  \U0001f5bc [{idx}] {char_label}: c{ci}_pil (RGBA) -> {c_pil.name}")
 
-            # ── Scene Blend once — after ALL characters composited ────────
-            if sb_enabled and sb_positive and sb_wf:
-                _log(f"  🎨 [{idx}/{len(slots_to_run)}] {label} — scene blend "
-                     f"(steps={sb_steps}  cfg={sb_cfg}  denoise={sb_denoise}) …")
+                else:
+                    # Skipping PIL for this char (from_stage is past it)
+                    c_pil = _char_pil_path(working_dir, output_id, ci)
+                    if c_pil.exists() and W == 0:
+                        with Image.open(c_pil) as _img:
+                            W, H = _img.size
+                    current_path = c_pil
+
+                # -- Edge blend pass ------------------------------------------
+                force_edge_this = (from_stage == edge_stage_idx)
+                char_eb = bool(char.get("edge_blend_enabled", True))
+                do_edge = (
+                    bool(eb_positive) and eb_wf is not None
+                    and from_stage <= edge_stage_idx
+                    and (end_stage is None or edge_stage_idx <= end_stage)
+                    and ((eb_enabled and char_eb) or force_edge_this)
+                )
+                if do_edge:
+                    if not model_path.exists():
+                        _log(f"  ⚠ [{idx}] {char_label}: model nie istnieje — pomijam edge blend")
+                    else:
+                        if W == 0 and current_path and current_path.exists():
+                            with Image.open(current_path) as _img:
+                                W, H = _img.size
+
+                        top_pct      = float(char.get("top_pct",      10)) / 100.0
+                        bottom_pct   = float(char.get("bottom_pct",   85)) / 100.0
+                        x_center_pct = float(char.get("x_center_pct", 50)) / 100.0
+                        if bottom_pct > top_pct:
+                            _raw       = Image.open(model_path)
+                            _has_alpha = _raw.mode in ("RGBA", "LA", "PA")
+                            model      = _raw.convert("RGBA")
+                            if not _has_alpha:
+                                model = _white_to_alpha(model)
+                            bbox = _density_bbox(model.split()[3])
+                            if bbox:
+                                _mw, _mh = model.size
+                                _pad_x = max(15, int(_mw * 0.10))
+                                _pad_y = max(15, int(_mh * 0.02))
+                                _bl, _bt, _br, _bb = bbox
+                                model = model.crop((
+                                    max(0,   _bl - _pad_x), max(0,   _bt - _pad_y),
+                                    min(_mw, _br + _pad_x), min(_mh, _bb + _pad_y),
+                                ))
+                            target_h   = max(1, int((bottom_pct - top_pct) * H))
+                            target_w   = max(1, int(model.width * (target_h / model.height)))
+                            x = max(0, min(int(x_center_pct * W) - target_w // 2, W - target_w))
+                            y = int(top_pct * H)  # no clamp — allows character to overflow above/below scene bounds
+
+                            edge_mask  = _make_edge_mask(model, W, H, x, y, target_w, target_h, eb_px)
+                            scene_rgba = Image.open(current_path).convert("RGBA")
+                            if scene_rgba.size != (W, H):
+                                scene_rgba = scene_rgba.resize((W, H), Image.LANCZOS)
+                            scene_rgba.putalpha(ImageOps.invert(edge_mask))
+
+                            ts       = datetime.now().strftime("%Y%m%d%H%M%S%f")
+                            rgba_tmp = working_dir / f"_tmp_rgba_{ts}_{ci}.png"
+                            eb_tmp   = working_dir / f"_tmp_eb_{ts}_{ci}.png"
+                            scene_rgba.save(rgba_tmp, "PNG")
+
+                            _log(f"  ✂️ [{idx}] {char_label} — edge blend "
+                                 f"(maska {eb_px}px  steps={eb_steps}  cfg={eb_cfg}  denoise={eb_denoise}) ...")
+                            try:
+                                await _generate_ci_one(
+                                    loop, eb_url, eb_in_dir, eb_out_dir,
+                                    eb_wf, rgba_tmp, model_path,
+                                    eb_positive, eb_negative,
+                                    eb_steps, eb_cfg, eb_denoise,
+                                    eb_tmp,
+                                    label=f"edge_blend {char_label}",
+                                )
+                                c_edge = _char_edge_path(working_dir, output_id, ci)
+                                _archive_path_to(c_edge, archive_dir)
+                                shutil.copy2(str(eb_tmp), str(c_edge))
+                                current_path = c_edge
+                                _log(f"  ✂️ [{idx}] {char_label}: c{ci}_edge -> {c_edge.name}")
+                            finally:
+                                rgba_tmp.unlink(missing_ok=True)
+                                eb_tmp.unlink(missing_ok=True)
+
+            # -- Scene blend --------------------------------------------------
+            run_scene = (
+                bool(sb_positive) and sb_wf is not None
+                and ((sb_enabled and slot_sb) or from_stage >= scene_stage_idx)
+                and (end_stage is None or scene_stage_idx <= end_stage)
+                and current_path is not None and current_path.exists()
+            )  # slot_sb = per-slot scene toggle
+            if run_scene:
+                _log(f"  \U0001f3a8 [{idx}/{len(slots_to_run)}] {label} — scene blend "
+                     f"(steps={sb_steps}  cfg={sb_cfg}  denoise={sb_denoise}) ...")
+                scene_out = _scene_path(working_dir, output_id)
+                _archive_path_to(scene_out, archive_dir)
                 await _generate_one(
                     loop, sb_url, sb_in_dir, sb_out_dir,
-                    sb_wf, out_path,
+                    sb_wf, current_path,
                     sb_positive, sb_negative,
                     sb_steps, sb_cfg, sb_denoise,
-                    out_path,
+                    scene_out,
                     label=f"scene_blend {label}",
                 )
-                _archive_step(out_path, archive_dir, f"{oid}_step_scene")
+                current_path = scene_out
+                _log(f"  \U0001f3a8 [{idx}] {label}: scene -> {scene_out.name}")
 
-            _log(f"  ✅ [{idx}/{len(slots_to_run)}] {label} → {out_path}")
+            _log(f"  ✅ [{idx}/{len(slots_to_run)}] {label} -> {current_path.name if current_path else '?'}")
             done += 1
             _update_job(run_id, tile_id, done=done)
 
         except Exception as exc:
-            err = str(exc)
-            _log(f"  ❌ [{idx}] {label}: {err}")
-            errors.append({"slot": si, "error": err})
+            _log(f"  ❌ [{idx}] {label}: {exc}")
+            errors.append({"slot": si, "error": str(exc)})
 
     final = "error" if (errors and done == 0) else "done"
     _update_job(run_id, tile_id, status=final, done=done, current_prompt=None, errors=errors)
@@ -1469,6 +1810,8 @@ async def _run_tile_async(
     force_all:  bool,
     slot_index: int | None = None,   # None = all slots
     prompt_id:  str | None = None,   # None = all prompts; str = single prompt
+    from_stage: int = 0,             # paste_character only: 0=full, 1=skip PIL, 2=skip PIL+edge
+    end_stage:  int | None = None,   # paste_character only: stop after this linear stage (inclusive)
 ) -> None:
     """
     Full generation pipeline for one tile.
@@ -1513,7 +1856,7 @@ async def _run_tile_async(
         # ── Route to paste_character pipeline (PIL, no ComfyUI) ──────────────
         if tile_type == "paste_character":
             await _run_paste_character_async(
-                run_id, tile_id, tile, output_dir, force_all, slot_index,
+                run_id, tile_id, tile, output_dir, force_all, slot_index, from_stage, end_stage,
             )
             return
 
@@ -1727,6 +2070,8 @@ def start_tile_run(
     force_all: bool,
     slot_index: int | None = None,
     prompt_id:  str | None = None,
+    from_stage: int = 0,
+    end_stage:  int | None = None,
 ) -> str:
     """
     Launch tile generation as a background asyncio task.
@@ -1746,5 +2091,5 @@ def start_tile_run(
         "errors":         [],
     })
 
-    asyncio.create_task(_run_tile_async(run_id, tile_id, force_all, slot_index, prompt_id))
+    asyncio.create_task(_run_tile_async(run_id, tile_id, force_all, slot_index, prompt_id, from_stage, end_stage))
     return "ok"
