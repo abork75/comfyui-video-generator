@@ -220,10 +220,22 @@ class FlowParser:
                 current_segment.add_file(virtual_file, talk_config)
                 self.all_files.append(FlowFile(virtual_file, talk_config))
 
-                # Keep prev_file pointing to the talk clip so that the next
-                # item (typically a chain) gets a proper start-frame pair.
-                # The end-frame of the talk clip is extracted in batch_transitions
-                # right after talk generation (frames/{stem}_end.jpg).
+                # Create a generation pair (source → talk) so that the talk
+                # clip becomes a first-class item in the batch retry loop.
+                # The pair uses _is_talk on to_config so the loop can dispatch
+                # it to the InfiniteTalk backend instead of ComfyUI.
+                if prev_file:
+                    pair = TransitionPair(
+                        from_file=prev_file,
+                        to_file=virtual_file,
+                        from_config=prev_config or {},
+                        to_config=talk_config,
+                    )
+                    current_segment.add_transition(pair)
+                    self.all_transitions.append(pair)
+
+                # Keep prev_file = talk clip so the next item (chain/image)
+                # gets a proper start-frame pair anchored to talk's end frame.
                 prev_file = virtual_file
                 prev_config = talk_config
                 continue

@@ -100,7 +100,7 @@ def talk_path(project_folder: Path, talk_item: dict) -> Path:
     # 1. Explicit prefix overrides everything
     explicit = (talk_item.get("prefix") or "").strip()
     if explicit:
-        return project_folder / "transitions" / f"talk_{explicit}.mp4"
+        return project_folder / "transitions" / "talks" / f"talk_{explicit}.mp4"
 
     # 2. Derive from first audio filename
     audio = talk_item.get("audio", "")
@@ -112,7 +112,7 @@ def talk_path(project_folder: Path, talk_item: dict) -> Path:
     if isinstance(first, dict):
         first = first.get("file", "unknown")
     stem = Path(str(first)).stem
-    return project_folder / "transitions" / f"talk_{stem}.mp4"
+    return project_folder / "transitions" / "talks" / f"talk_{stem}.mp4"
 
 
 # ── Status check ─────────────────────────────────────────────────────
