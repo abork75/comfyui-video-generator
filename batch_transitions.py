@@ -416,7 +416,19 @@ def run_batch_generation(config):
         if flow_file.config.get('_is_chain'):
             continue  # Skip chain files - frames extracted during generation
         if flow_file.config.get('_is_talk'):
-            continue  # Skip talk files - generated separately via web UI talk_service
+            # If talk clip already exists, extract its end-frame now so that
+            # chain transitions anchoring to it can find the frame in pass 1
+            # (without needing a retry).  Newly-generated talks get the same
+            # treatment right after they are created further below.
+            _talk_clip = project_folder / 'transitions' / flow_file.filename
+            if _talk_clip.exists():
+                _rel_talk = str(Path('transitions') / flow_file.filename)
+                _ef = extractor.extract_end_frame(_rel_talk, target_width, target_height)
+                _status = f"end-frame {'ok' if (_ef and _ef.exists()) else 'FAILED'}"
+            else:
+                _status = "not yet generated"
+            logger.info(f"[{i}] 🎙️  {flow_file.filename} ({_status})")
+            continue
         
         filename = flow_file.filename
         logger.info(f"\n[{i}] {filename}")
