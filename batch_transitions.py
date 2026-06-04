@@ -1016,7 +1016,24 @@ def run_batch_generation(config):
                         _soft_failed_this_pass.append(trans)
                         continue
                 else:
-                    end_frame = None
+                    # I2V mode — but check if flow marked an end-target image
+                    # (_chain_end_target set on last chain step by flow_parser)
+                    chain_end_target = to_config.get('_chain_end_target')
+                    if chain_end_target:
+                        _et_frame = frames_folder / f"{Path(chain_end_target).stem}_start.jpg"
+                        if _et_frame.exists():
+                            end_frame = _et_frame
+                            logger.info(
+                                f"⛓️  Using end-target frame: {_et_frame.name}"
+                            )
+                        else:
+                            logger.warning(
+                                f"⛓️  End-target frame not ready "
+                                f"({chain_end_target}) — generating I2V"
+                            )
+                            end_frame = None
+                    else:
+                        end_frame = None
 
                 output_path = chain_handler.get_chain_output_path(to_file)
 
