@@ -22,6 +22,35 @@ from backends.linux_backend import LinuxBackend
 
 from helpers.chain_handler import ChainHandler
 
+def _upscale_video_inplace(video_path: Path, width: int, height: int) -> bool:
+    """
+    Rescale a video to the target resolution using ffmpeg, replacing the file in-place.
+    Returns True on success, False on failure (original file is preserved on failure).
+    """
+    import subprocess
+    tmp = video_path.with_name(video_path.stem + "._upscale_tmp.mp4")
+    try:
+        cmd = [
+            "ffmpeg", "-y", "-i", str(video_path),
+            "-vf", f"scale={width}:{height}:flags=lanczos",
+            "-c:v", "libx264", "-crf", "18", "-preset", "fast",
+            "-c:a", "copy",
+            str(tmp),
+        ]
+        r = subprocess.run(cmd, capture_output=True, timeout=600)
+        if r.returncode == 0 and tmp.exists() and tmp.stat().st_size > 0:
+            tmp.replace(video_path)
+            return True
+    except Exception:
+        pass
+    if tmp.exists():
+        try:
+            tmp.unlink()
+        except Exception:
+            pass
+    return False
+
+
 def run_batch_generation(config):
     """
     Main orchestrator - unified batch generation
@@ -670,6 +699,35 @@ def run_batch_generation(config):
                 )
 
                 if success:
+                    # ── Upscale to project force_resolution ──────────────────
+                    _force_res = config.get('force_resolution')
+                    if (
+                        _force_res
+                        and isinstance(_force_res, (list, tuple))
+                        and len(_force_res) == 2
+                    ):
+                        _fw, _fh = int(_force_res[0]), int(_force_res[1])
+                        _tw = int(talk_cfg.get("width", 480))
+                        _th = int(talk_cfg.get("height", 832))
+                        if (_tw, _th) != (_fw, _fh):
+                            logger.info(
+                                f"      ↑ upscaling {_tw}×{_th} → {_fw}×{_fh} ..."
+                            )
+                            if _upscale_video_inplace(dest, _fw, _fh):
+                                logger.info(f"      ✓ upscaled to {_fw}×{_fh}")
+                            else:
+                                logger.warning(
+                                    "      ⚠ upscale failed – keeping original resolution"
+                                )
+
+                    # ── Extract end-frame so chains/transitions can anchor ────
+                    _rel_talk = str(Path("transitions") / talk_name)
+                    _end_frame = extractor.extract_end_frame(
+                        _rel_talk, target_width, target_height
+                    )
+                    if _end_frame and _end_frame.exists():
+                        logger.info(f"      📷 end-frame → {_end_frame.name}")
+
                     size_mb = dest.stat().st_size / (1024 * 1024)
                     logger.success(f"  ✓ {talk_name} ({size_mb:.1f} MB)")
                     talk_generated += 1
@@ -802,226 +860,243 @@ def run_batch_generation(config):
         backends['linux'] = LinuxBackend(config)
     
     # ============================================================
-    # PRE-PROCESS CHAINS
+    # GENERATE TRANSITIONS — retry loop
+    # Each pass generates what it can; items whose dependencies are
+    # not yet satisfied (soft-fail) are retried in the next pass.
+    # Two consecutive passes with the same set of failures → deadlock.
     # ============================================================
-    
-    # Group chains and resolve dependencies
-    chains_info = {}  # {chain_prefix: {'total': int, 'tasks': [...]}}
-    chain_frame_cache = {}  # {filename: last_frame_path} - for sequential generation
-    
-    for trans in to_generate:
-        to_config = trans['config'].get('to_config', {})
-        
-        if chain_handler.is_chain_file(to_config):
-            chain_prefix = to_config['_chain_prefix']
-            
-            if chain_prefix not in chains_info:
-                # First time seeing this chain - resolve dependencies
-                total_steps = to_config['_chain_total']
-                tasks = chain_handler.resolve_dependencies(chain_prefix, total_steps)
-                
-                chains_info[chain_prefix] = {
-                    'total': total_steps,
-                    'tasks': tasks
-                }
-                
-                if tasks:
-                    logger.info(f"Chain '{chain_prefix}': {len(tasks)} step(s) need generation")
-    
-    # ============================================================
-    # GENERATE TRANSITIONS
-    # ============================================================
-    
+
     results = []
-    
-    for i, trans in enumerate(to_generate, 1):
-        trans_config = trans['config']
-        backend_type = trans_config['backend']
-        
-        from_file = trans_config['from_file']
-        to_file = trans_config['to_file']
-        
-        from_config = trans_config.get('from_config', {})
-        to_config = trans_config.get('to_config', {})
-        
-        # ============================================================
-        # ✅ CHAIN FILE DETECTION (v1.3.0 LOGIC)
-        # ============================================================
-        
-        is_chain_step = chain_handler.is_chain_file(to_config)
-        
-        if is_chain_step:
-            chain_prefix = to_config['_chain_prefix']
-            chain_step = to_config['_chain_step']
-            chain_total = to_config['_chain_total']
-            
-            # Check if this step needs generation
-            chain_tasks = chains_info.get(chain_prefix, {}).get('tasks', [])
-            needs_generation = any(task['step'] == chain_step for task in chain_tasks)
-            
-            if not needs_generation:
-                # Skip - already exists
-                logger.info(f"⛓️  Chain step {chain_step}/{chain_total} ({to_file}) already exists - skipping")
-                continue
-            
-            # Check dependencies
-            task = next((t for t in chain_tasks if t['step'] == chain_step), None)
-            
-            if task and task.get('depends_on'):
-                dep_step = task['depends_on']
-                dep_file = f"{chain_prefix}_{dep_step:03d}.mp4"
-                
-                # Check if dependency was generated in this run
-                if dep_file not in chain_frame_cache:
-                    logger.error(f"⛓️  Dependency {dep_file} not found - cannot generate step {chain_step}")
-                    continue
-        
-        # ============================================================
-        # DETERMINE START/END FRAMES
-        # ============================================================
-        
-        # --- START FRAME ---
-        
-        if chain_handler.is_chain_file(from_config):
-            # Previous was chain step - use cached last frame
-            start_frame = chain_frame_cache.get(from_file)
-            
-            if not start_frame:
-                # Not in cache - extract from existing chain video
-                chain_video_path = chain_handler.get_chain_output_path(from_file)
-                if chain_video_path.exists():
-                    start_frame = chain_handler.extract_last_frame(
-                        chain_video_path,
-                        width=target_width,
-                        height=target_height
-                    )
-                    if start_frame:
-                        chain_frame_cache[from_file] = start_frame
-                
-                if not start_frame:
-                    logger.error(f"Cannot get start frame from chain file: {from_file}")
-                    continue
-        else:
-            # Normal file - use extracted frame
-            from_file_path = project_folder / from_file
-            
-            if from_file_path.suffix.lower() in ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp']:
-                # Source is image
-                start_frame = frames_folder / f"{Path(from_file).stem}_end.jpg"
-            else:
-                # Source is video
-                start_frame = frames_folder / f"{Path(from_file).stem}_end.jpg"
-        
-        # --- END FRAME ---
-        
-        if is_chain_step:
-            # ===== CHAIN FILE =====
-            task = next((t for t in chain_tasks if t['step'] == chain_step), None)
-            
-            if task and task['mode'] == 'i2v2i':
-                # Gap filling - extract first frame from next existing step
-                next_file = task['end_source']
-                next_video_path = chain_handler.get_chain_output_path(next_file)
-                
-                end_frame = chain_handler.extract_first_frame(
-                    next_video_path,
-                    width=target_width,
-                    height=target_height
-                )
-                
-                if not end_frame:
-                    logger.error(f"Cannot extract first frame from {next_file} for gap filling")
-                    continue
-            else:
-                # Normal I2V - no end frame
-                end_frame = None
-            
-            # ✅ Output to chains folder
-            output_path = chain_handler.get_chain_output_path(to_file)
-        
-        else:
-            # ===== NORMAL TRANSITION =====
-            to_file_path = project_folder / to_file
-            
-            if to_file_path.suffix.lower() in ['.mp4', '.avi', '.mov', '.mkv', '.webm']:
-                # Target is video
-                end_frame = frames_folder / f"{Path(to_file).stem}_start.jpg"
-            else:
-                # Target is image
-                end_frame = frames_folder / f"{Path(to_file).stem}_start.jpg"
-            
-            # Output to transitions folder
-            output_path = transitions_folder / trans['name']
-        
-        # ============================================================
-        # GENERATE
-        # ============================================================
-        
-        if is_chain_step:
-            mode_str = task['mode'].upper() if task else 'I2V'
-            logger.section(f"⛓️  Chain Step {chain_step}/{chain_total}: {to_file} ({mode_str}, {backend_type.upper()})")
-        else:
-            logger.section(f"Transition {i}/{len(to_generate)}: {trans['name']} ({backend_type.upper()})")
-        
-        # Show frames
-        logger.info(f"Start frame: {start_frame.name if start_frame else 'None'}")
-        logger.info(f"End frame: {end_frame.name if end_frame else 'None (I2V)'}")
-        logger.info(f"Output: {output_path.name}")
-        
-        # ✅ Show chain params in debug
-        if DEBUG_LOG and is_chain_step:
-            print(f"   ⛓️ Chain params:")
-            print(f"      Duration: {trans_config['duration']}s")
-            print(f"      FPS: {trans_config['fps']}")
-            print(f"      Steps: {trans_config['steps']}")
-            print(f"      CFG: {trans_config['cfg']}")
-            print(f"      Prompt: {trans_config['positive_prompt'][:60]}...")
-        
-        backend = backends[backend_type]
-        
-        success = backend.generate_transition(
-            start_frame=start_frame,
-            end_frame=end_frame,
-            output_path=output_path,
-            duration=trans_config['duration'],
-            fps=trans_config['fps'],
-            steps=trans_config['steps'],
-            cfg=trans_config['cfg'],
-            seed=trans_config['seed'],
-            positive_prompt=trans_config['positive_prompt'],
-            negative_prompt=trans_config['negative_prompt'],
-            width=trans_config.get('width') or target_width,
-            height=trans_config.get('height') or target_height,
-            blocks_to_swap=trans_config.get('blocks_to_swap'),
-            frame_interpolation=trans_config.get('frame_interpolation'),
-        )
-        
-        # ============================================================
-        # POST-GENERATION: Extract last frame (if chain step)
-        # ============================================================
-        
-        if success and is_chain_step:
-            # Extract last frame for next chain step
-            logger.info("Extracting last frame for next chain step...")
-            
-            last_frame = chain_handler.extract_last_frame(
-                output_path,
-                width=target_width,
-                height=target_height
+    pending_transitions   = list(to_generate)
+    chain_frame_cache     = {}   # {filename: last_frame_path} – persists across passes
+    _last_soft_failed_names: set | None = None
+    _pass_num = 0
+
+    while pending_transitions:
+        _pass_num += 1
+        if _pass_num > 1:
+            logger.section(
+                f"🔄 Retry pass {_pass_num} "
+                f"— {len(pending_transitions)} transition(s) still pending"
             )
-            
-            if last_frame:
-                # Cache for next step
-                chain_frame_cache[to_file] = last_frame
+
+        # ── Resolve chain dependencies for THIS pass ─────────────────
+        chains_info: dict = {}
+        for trans in pending_transitions:
+            to_config_pre = trans['config'].get('to_config', {})
+            if chain_handler.is_chain_file(to_config_pre):
+                chain_prefix_pre = to_config_pre['_chain_prefix']
+                if chain_prefix_pre not in chains_info:
+                    total_steps_pre = to_config_pre['_chain_total']
+                    tasks_pre = chain_handler.resolve_dependencies(
+                        chain_prefix_pre, total_steps_pre
+                    )
+                    chains_info[chain_prefix_pre] = {
+                        'total': total_steps_pre,
+                        'tasks': tasks_pre,
+                    }
+                    if tasks_pre:
+                        logger.info(
+                            f"Chain '{chain_prefix_pre}': "
+                            f"{len(tasks_pre)} step(s) need generation"
+                        )
+
+        _soft_failed_this_pass: list = []
+
+        for i, trans in enumerate(pending_transitions, 1):
+            trans_config = trans['config']
+            backend_type = trans_config['backend']
+
+            from_file   = trans_config['from_file']
+            to_file     = trans_config['to_file']
+            from_config = trans_config.get('from_config', {})
+            to_config   = trans_config.get('to_config', {})
+
+            # ── Chain file detection ──────────────────────────────────
+            is_chain_step = chain_handler.is_chain_file(to_config)
+
+            if is_chain_step:
+                chain_prefix = to_config['_chain_prefix']
+                chain_step   = to_config['_chain_step']
+                chain_total  = to_config['_chain_total']
+
+                chain_tasks     = chains_info.get(chain_prefix, {}).get('tasks', [])
+                needs_generation = any(
+                    task['step'] == chain_step for task in chain_tasks
+                )
+
+                if not needs_generation:
+                    logger.info(
+                        f"⛓️  Chain step {chain_step}/{chain_total} "
+                        f"({to_file}) already exists - skipping"
+                    )
+                    continue
+
+                task = next(
+                    (t for t in chain_tasks if t['step'] == chain_step), None
+                )
+
+                if task and task.get('depends_on'):
+                    dep_step = task['depends_on']
+                    dep_file = f"{chain_prefix}_{dep_step:03d}.mp4"
+
+                    if dep_file not in chain_frame_cache:
+                        logger.warning(
+                            f"⏳ Chain dep {dep_file} not ready "
+                            f"— will retry after other transitions"
+                        )
+                        _soft_failed_this_pass.append(trans)
+                        continue
+
+            # ── Determine start frame ─────────────────────────────────
+            if chain_handler.is_chain_file(from_config):
+                start_frame = chain_frame_cache.get(from_file)
+
+                if not start_frame:
+                    chain_video_path = chain_handler.get_chain_output_path(from_file)
+                    if chain_video_path.exists():
+                        start_frame = chain_handler.extract_last_frame(
+                            chain_video_path,
+                            width=target_width,
+                            height=target_height,
+                        )
+                        if start_frame:
+                            chain_frame_cache[from_file] = start_frame
+
+                if not start_frame:
+                    logger.warning(
+                        f"⏳ Start frame from chain {from_file} not ready "
+                        f"— will retry"
+                    )
+                    _soft_failed_this_pass.append(trans)
+                    continue
             else:
-                logger.error("⚠️  Failed to extract last frame - chain may be broken!")
-        
-        results.append({
-            'name': trans['name'],
-            'backend': backend_type,
-            'success': success,
-            'is_chain': is_chain_step
-        })
+                # Normal file (image or video incl. talk clip)
+                start_frame = frames_folder / f"{Path(from_file).stem}_end.jpg"
+                if not start_frame.exists():
+                    logger.warning(
+                        f"⏳ Start frame missing for {trans['name']} "
+                        f"(source: {from_file}) — will retry"
+                    )
+                    _soft_failed_this_pass.append(trans)
+                    continue
+
+            # ── Determine end frame ───────────────────────────────────
+            if is_chain_step:
+                task = next(
+                    (t for t in chain_tasks if t['step'] == chain_step), None
+                )
+
+                if task and task['mode'] == 'i2v2i':
+                    next_file       = task['end_source']
+                    next_video_path = chain_handler.get_chain_output_path(next_file)
+
+                    end_frame = chain_handler.extract_first_frame(
+                        next_video_path,
+                        width=target_width,
+                        height=target_height,
+                    )
+
+                    if not end_frame:
+                        logger.warning(
+                            f"⏳ Gap-fill source {next_file} not ready — will retry"
+                        )
+                        _soft_failed_this_pass.append(trans)
+                        continue
+                else:
+                    end_frame = None
+
+                output_path = chain_handler.get_chain_output_path(to_file)
+
+            else:
+                end_frame   = frames_folder / f"{Path(to_file).stem}_start.jpg"
+                output_path = transitions_folder / trans['name']
+
+            # ── Generate ──────────────────────────────────────────────
+            if is_chain_step:
+                mode_str = task['mode'].upper() if task else 'I2V'
+                logger.section(
+                    f"⛓️  Chain Step {chain_step}/{chain_total}: "
+                    f"{to_file} ({mode_str}, {backend_type.upper()})"
+                )
+            else:
+                logger.section(
+                    f"Transition {i}/{len(pending_transitions)}: "
+                    f"{trans['name']} ({backend_type.upper()})"
+                )
+
+            logger.info(f"Start frame: {start_frame.name if start_frame else 'None'}")
+            logger.info(f"End frame: {end_frame.name if end_frame else 'None (I2V)'}")
+            logger.info(f"Output: {output_path.name}")
+
+            if DEBUG_LOG and is_chain_step:
+                print(f"   ⛓️ Chain params:")
+                print(f"      Duration: {trans_config['duration']}s")
+                print(f"      FPS: {trans_config['fps']}")
+                print(f"      Steps: {trans_config['steps']}")
+                print(f"      CFG: {trans_config['cfg']}")
+                print(f"      Prompt: {trans_config['positive_prompt'][:60]}...")
+
+            backend = backends[backend_type]
+
+            success = backend.generate_transition(
+                start_frame=start_frame,
+                end_frame=end_frame,
+                output_path=output_path,
+                duration=trans_config['duration'],
+                fps=trans_config['fps'],
+                steps=trans_config['steps'],
+                cfg=trans_config['cfg'],
+                seed=trans_config['seed'],
+                positive_prompt=trans_config['positive_prompt'],
+                negative_prompt=trans_config['negative_prompt'],
+                width=trans_config.get('width') or target_width,
+                height=trans_config.get('height') or target_height,
+                blocks_to_swap=trans_config.get('blocks_to_swap'),
+                frame_interpolation=trans_config.get('frame_interpolation'),
+            )
+
+            # ── Post-generation: cache chain end-frame ────────────────
+            if success and is_chain_step:
+                logger.info("Extracting last frame for next chain step...")
+                last_frame = chain_handler.extract_last_frame(
+                    output_path,
+                    width=target_width,
+                    height=target_height,
+                )
+                if last_frame:
+                    chain_frame_cache[to_file] = last_frame
+                else:
+                    logger.error("⚠️  Failed to extract last frame - chain may be broken!")
+
+            results.append({
+                'name':     trans['name'],
+                'backend':  backend_type,
+                'success':  success,
+                'is_chain': is_chain_step,
+            })
+
+        # ── Deadlock detection ────────────────────────────────────────
+        _current_soft_names = {t['name'] for t in _soft_failed_this_pass}
+        if _current_soft_names and _current_soft_names == _last_soft_failed_names:
+            logger.error(
+                f"\n❌ Deadlock: {len(_soft_failed_this_pass)} transition(s) "
+                f"blocked by missing dependencies after {_pass_num} passes:"
+            )
+            for _t in _soft_failed_this_pass:
+                logger.error(f"    • {_t['name']}")
+                results.append({
+                    'name':     _t['name'],
+                    'backend':  _t['config']['backend'],
+                    'success':  False,
+                    'is_chain': chain_handler.is_chain_file(
+                        _t['config'].get('to_config', {})
+                    ),
+                })
+            break
+
+        _last_soft_failed_names = _current_soft_names
+        pending_transitions = _soft_failed_this_pass
     
     # ============================================================
     # SUMMARY
