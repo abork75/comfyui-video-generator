@@ -719,7 +719,7 @@
                                         <!-- TALK tile -->
                                         <template x-if="item.type === 'talk' && !item.break">
                                             <div class="bg-gray-800 border border-gray-700 rounded-lg overflow-hidden"
-                                                 :class="_si(idx)?.status === 'green' ? 'sl-green' : 'sl-red'">
+                                                 :class="_si(idx)?.status === 'green' ? 'sl-green' : _si(idx)?.status === 'partial' ? 'sl-orange' : 'sl-red'">
                                                 <!-- ── Header bar (matches chain style) ── -->
                                                 <div class="px-4 py-2.5 border-b border-gray-700 flex flex-wrap items-center gap-2"
                                                      style="background-color:#1a2332"
@@ -733,6 +733,11 @@
                                                     <template x-if="item.width && item.height">
                                                         <span class="px-1.5 py-0.5 bg-gray-700 rounded text-xs text-gray-300"
                                                               x-text="item.width + '×' + item.height"></span>
+                                                    </template>
+                                                    <!-- Transition badge -->
+                                                    <template x-if="item.transition">
+                                                        <span class="px-1.5 py-0.5 bg-blue-900/60 border border-blue-700 rounded text-xs text-blue-300"
+                                                              title="Tranzycja do następnej sceny skonfigurowana">🎬 trans</span>
                                                     </template>
                                                     <!-- Right side: status + actions + steps count + edit controls -->
                                                     <div class="ml-auto flex items-center gap-1.5">
@@ -2126,6 +2131,75 @@
                                    class="w-20 bg-gray-800 border border-gray-600 rounded px-2 py-1.5 text-sm text-gray-200 text-center focus:outline-none focus:border-teal-500">
                         </div>
                         <p x-show="editModal.resHint" class="text-xs text-teal-600 mt-1" x-text="editModal.resHint"></p>
+                    </div>
+
+                    <!-- Transition (optional accordion) -->
+                    <div class="border border-gray-700 rounded-lg overflow-hidden">
+                        <button @click="editModal.showTalkTransition = !editModal.showTalkTransition"
+                                class="w-full flex items-center justify-between px-3 py-2 text-xs text-gray-400 hover:text-gray-200 hover:bg-gray-750 transition">
+                            <span class="flex items-center gap-2">
+                                <span>🎬</span>
+                                <span>Tranzycja do następnej sceny</span>
+                                <span x-show="editModal.data.transition" class="text-blue-400">(skonfigurowana)</span>
+                            </span>
+                            <span x-text="editModal.showTalkTransition ? '▲' : '▼'" class="text-gray-600"></span>
+                        </button>
+                        <div x-show="editModal.showTalkTransition" class="px-3 pb-3 space-y-2 bg-gray-900/40 border-t border-gray-700">
+                            <p class="text-xs text-gray-600 pt-2">I2V bridge: ostatnia klatka talk → pierwsza klatka następnej sceny. Brak konfiguracji = twarde cięcie.</p>
+                            <!-- Duration / FPS / Steps / CFG -->
+                            <div class="grid grid-cols-4 gap-2">
+                                <div>
+                                    <label class="block text-xs text-gray-500 mb-0.5">Duration</label>
+                                    <input type="number" :value="editModal.data.transition?.duration ?? ''"
+                                           @input="editTalkSetTransition('duration', $event.target.value)"
+                                           min="1" max="20" step="1" placeholder="3"
+                                           class="w-full bg-gray-800 border border-gray-700 rounded px-2 py-1 text-xs text-gray-200 text-center focus:outline-none focus:border-blue-600">
+                                </div>
+                                <div>
+                                    <label class="block text-xs text-gray-500 mb-0.5">FPS</label>
+                                    <input type="number" :value="editModal.data.transition?.fps ?? ''"
+                                           @input="editTalkSetTransition('fps', $event.target.value)"
+                                           min="1" max="60" step="1" placeholder="16"
+                                           class="w-full bg-gray-800 border border-gray-700 rounded px-2 py-1 text-xs text-gray-200 text-center focus:outline-none focus:border-blue-600">
+                                </div>
+                                <div>
+                                    <label class="block text-xs text-gray-500 mb-0.5">Steps</label>
+                                    <input type="number" :value="editModal.data.transition?.steps ?? ''"
+                                           @input="editTalkSetTransition('steps', $event.target.value)"
+                                           min="1" max="100" step="1" placeholder="6"
+                                           class="w-full bg-gray-800 border border-gray-700 rounded px-2 py-1 text-xs text-gray-200 text-center focus:outline-none focus:border-blue-600">
+                                </div>
+                                <div>
+                                    <label class="block text-xs text-gray-500 mb-0.5">CFG</label>
+                                    <input type="number" :value="editModal.data.transition?.cfg ?? ''"
+                                           @input="editTalkSetTransition('cfg', $event.target.value)"
+                                           min="0" max="20" step="0.5" placeholder="2"
+                                           class="w-full bg-gray-800 border border-gray-700 rounded px-2 py-1 text-xs text-gray-200 text-center focus:outline-none focus:border-blue-600">
+                                </div>
+                            </div>
+                            <!-- Pos -->
+                            <div>
+                                <label class="block text-xs text-green-600 mb-0.5">Pos</label>
+                                <textarea rows="2"
+                                          :value="editModal.data.transition?.pos ?? ''"
+                                          @input="editTalkSetTransition('pos', $event.target.value)"
+                                          class="w-full bg-gray-800 border border-gray-700 rounded px-2 py-1 text-xs text-gray-200 font-mono focus:outline-none focus:border-green-600 resize-y"
+                                          placeholder="Smooth transition to next scene..."></textarea>
+                            </div>
+                            <!-- Neg -->
+                            <div>
+                                <label class="block text-xs text-red-400 mb-0.5">Neg</label>
+                                <textarea rows="1"
+                                          :value="editModal.data.transition?.neg ?? ''"
+                                          @input="editTalkSetTransition('neg', $event.target.value)"
+                                          class="w-full bg-gray-800 border border-gray-700 rounded px-2 py-1 text-xs text-gray-200 font-mono focus:outline-none focus:border-red-600 resize-y"
+                                          placeholder="blurry, low quality..."></textarea>
+                            </div>
+                            <!-- Clear -->
+                            <button x-show="editModal.data.transition"
+                                    @click="editModal.data.transition = null"
+                                    class="text-xs text-red-600 hover:text-red-400 transition">✕ Usuń tranzycję</button>
+                        </div>
                     </div>
 
                 </div>
@@ -5622,6 +5696,29 @@ function app() {
             let aud = this._talkAudios();
             this.editModal.data = { ...this.editModal.data, audio: [...aud, { file: '', pos: '', neg: '' }] };
         },
+        editTalkSetTransition(key, rawVal) {
+            // Parse numeric fields; keep strings as-is; treat empty string as removal
+            const numKeys = ['duration', 'fps', 'steps', 'cfg'];
+            let val;
+            if (rawVal === '' || rawVal === null || rawVal === undefined) {
+                val = undefined;
+            } else if (numKeys.includes(key)) {
+                const n = Number(rawVal);
+                val = isNaN(n) ? undefined : n;
+            } else {
+                val = rawVal;
+            }
+            let t = { ...(this.editModal.data.transition || {}) };
+            if (val === undefined) {
+                delete t[key];
+            } else {
+                t[key] = val;
+            }
+            this.editModal.data = {
+                ...this.editModal.data,
+                transition: Object.keys(t).length > 0 ? t : null,
+            };
+        },
         editTalkRemoveAudio(idx) {
             let aud = this._talkAudios();
             aud = aud.filter((_, i) => i !== idx);
@@ -6087,6 +6184,7 @@ function app() {
                 loadingFiles: false,
                 resolvingRes: false,
                 resHint: '',
+                showTalkTransition: !!(item.transition),
             };
             if ((kind === 'file' || kind === 'talk') && this.selectedRun?.filename) {
                 this.editModal.loadingFiles = true;

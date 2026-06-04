@@ -775,6 +775,11 @@ def cancel_talk() -> dict:
 
 # ── Batch-script helper ──────────────────────────────────────────────────────
 
+def _snap_to_multiple(value: int, multiple: int = 16) -> int:
+    """Round value UP to the nearest multiple of `multiple`."""
+    return ((value + multiple - 1) // multiple) * multiple
+
+
 def generate_talk_clip_sync(
     comfyui_url:     str,
     linux_input_dir: Path,
@@ -798,11 +803,17 @@ def generate_talk_clip_sync(
     source_image     : absolute Path to start-frame image
     audio_entries    : list of {path: Path, pos: str, neg: str}
     dest_path        : absolute Path where the final mp4 should land
-    width / height   : generation resolution
+    width / height   : generation resolution (will be snapped to multiple of 16)
     log_fn           : optional callable(msg) for progress messages
 
     Returns True on success, False on failure.
     """
+    # MultiTalk requires dimensions divisible by 16 (spatial token alignment)
+    width  = _snap_to_multiple(width,  16)
+    height = _snap_to_multiple(height, 16)
+    if log_fn:
+        log_fn(f"Talk resolution: {width}×{height}")
+
     _reset_state()
     _state.update({
         "status":    "queued",

@@ -121,7 +121,13 @@ def run_batch_generation(config):
     
     project_folder = Path(config['project_folder'])
     flow = config['flow']
-    
+
+    # Folder paths — defined early so all sections can reference them
+    transitions_folder = project_folder / 'transitions'
+    transitions_folder.mkdir(parents=True, exist_ok=True)
+    talks_folder = transitions_folder / 'talks'
+    talks_folder.mkdir(exist_ok=True)
+
     # Defaults
     default_backend = config.get('default_backend', 'local')
     default_duration = config.get('default_duration', 16)
@@ -449,11 +455,6 @@ def run_batch_generation(config):
     
     logger.header("CHECKING EXISTING TRANSITIONS")
     
-    transitions_folder = project_folder / 'transitions'
-    transitions_folder.mkdir(exist_ok=True)
-    talks_folder = transitions_folder / 'talks'
-    talks_folder.mkdir(exist_ok=True)
-    
     # ✅ Initialize chain handler for validation
     chain_handler = ChainHandler(project_folder, logger=logger)
     
@@ -467,7 +468,9 @@ def run_batch_generation(config):
         
         # ✅ FIX: Use correct name for display
         if to_config.get('_is_chain', False):
-            trans_name = pair_config['to_file']  # koniec_001.mp4
+            trans_name = pair_config['to_file']          # chain_001.mp4
+        elif to_config.get('_is_talk', False):
+            trans_name = pair_config['to_file']          # talk_foo.mp4
         else:
             trans_name = f"{Path(pair_config['from_file']).stem}_{Path(pair_config['to_file']).stem}_transition.mp4"
         
@@ -817,6 +820,13 @@ def run_batch_generation(config):
                     log_fn=lambda msg: logger.info(f"  {msg}"),
                 )
 
+                if not _t_success:
+                    # Backend failure (OOM, timeout, etc.) → soft-fail so retry
+                    # loop tries again after other items (model may be freed)
+                    logger.warning(f"  ⏳ {to_file}: backend failed — will retry next pass")
+                    _soft_failed_this_pass.append(trans)
+                    continue
+
                 if _t_success:
                     # Upscale to force_resolution
                     _force_res = config.get('force_resolution')
@@ -1017,12 +1027,19 @@ def run_batch_generation(config):
                 else:
                     logger.error("⚠️  Failed to extract last frame - chain may be broken!")
 
-            results.append({
-                'name':     trans['name'],
-                'backend':  backend_type,
-                'success':  success,
-                'is_chain': is_chain_step,
-            })
+            if success:
+                results.append({
+                    'name':     trans['name'],
+                    'backend':  backend_type,
+                    'success':  True,
+                    'is_chain': is_chain_step,
+                })
+            else:
+                # Backend failure (OOM, timeout, etc.) → soft-fail → retry
+                logger.warning(
+                    f"  ⏳ {trans['name']}: backend failed — will retry next pass"
+                )
+                _soft_failed_this_pass.append(trans)
 
         # ── Deadlock detection ────────────────────────────────────────
         _current_soft_names = {t['name'] for t in _soft_failed_this_pass}

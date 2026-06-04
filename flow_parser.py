@@ -249,19 +249,44 @@ class FlowParser:
                 current_segment.add_file(current_file, current_config)
                 self.all_files.append(FlowFile(current_file, current_config))
                 
-                # ✅ Add transition if prev exists
-                # This handles:
-                # - File → File (normal)
-                # - Chain_last → File (automatically, because prev_file is chain_last)
+                # Add transition pair only when appropriate:
+                # - File → File (normal bridge)
+                # - Chain_last → File only if transition_to_next is set on last step
+                # - Talk → File: NO bridge (talk clips cut to next scene by default)
+                #   (future: add bridge if talk has explicit 'transition:' config)
                 if prev_file:
-                    pair = TransitionPair(
-                        from_file=prev_file,
-                        to_file=current_file,
-                        from_config=prev_config,
-                        to_config=current_config
-                    )
-                    current_segment.add_transition(pair)
-                    self.all_transitions.append(pair)
+                    _prev_is_talk  = (prev_config or {}).get('_is_talk', False)
+                    _prev_is_chain = (prev_config or {}).get('_is_chain', False)
+
+                    _should_pair = True
+                    if _prev_is_talk:
+                        # talk → file: cut by default; bridge only if talk has 'transition:' key
+                        _should_pair = bool((prev_config or {}).get('transition'))
+                    elif _prev_is_chain:
+                        # chain → file: bridge only when explicitly requested
+                        _should_pair = bool((prev_config or {}).get('transition_to_next'))
+
+                    if _should_pair:
+                        # For talk→file bridge: overlay transition params from
+                        # talk's 'transition:' sub-dict so batch reads correct
+                        # duration/fps/steps/cfg/pos/neg for this bridge clip.
+                        _to_cfg = current_config
+                        if _prev_is_talk:
+                            _talk_trans = (prev_config or {}).get('transition') or {}
+                            if _talk_trans:
+                                _to_cfg = {**current_config}
+                                for _k in ('duration', 'fps', 'steps', 'cfg', 'pos', 'neg', 'backend'):
+                                    if _k in _talk_trans:
+                                        _to_cfg[_k] = _talk_trans[_k]
+
+                        pair = TransitionPair(
+                            from_file=prev_file,
+                            to_file=current_file,
+                            from_config=prev_config,
+                            to_config=_to_cfg
+                        )
+                        current_segment.add_transition(pair)
+                        self.all_transitions.append(pair)
                 
                 prev_file = current_file
                 prev_config = current_config
@@ -289,41 +314,50 @@ class FlowParser:
         """Get list of files for concat (with transitions)"""
         transitions_folder = project_folder / 'transitions'
         chains_folder = transitions_folder / 'chains'
+        talks_folder = transitions_folder / 'talks'
         concat_list = []
-        
+
         for segment in self.segments:
             prev_file = None
             prev_flow_file = None
-            
+
             for flow_file in segment.files:
                 current_file = flow_file.filename
                 current_is_chain = flow_file.config.get('_is_chain', False)
-                
+                current_is_talk  = flow_file.config.get('_is_talk',  False)
+
                 # ===== TRANSITION =====
                 if prev_file:
                     prev_is_chain = prev_flow_file.config.get('_is_chain', False)
-                    
+                    prev_is_talk  = prev_flow_file.config.get('_is_talk',  False)
+
                     # Determine if we should add transition
                     should_add_transition = False
-                    
-                    if not prev_is_chain and not current_is_chain:
+
+                    if not prev_is_chain and not prev_is_talk and not current_is_chain and not current_is_talk:
                         # Normal file → file
                         should_add_transition = True
                     elif prev_is_chain and not current_is_chain:
                         # Chain → file - check for transition_to_next
                         if prev_flow_file.config.get('transition_to_next'):
                             should_add_transition = True
-                    
+                    elif prev_is_talk:
+                        # Talk → next: bridge only if talk has explicit 'transition:' config
+                        if prev_flow_file.config.get('transition'):
+                            should_add_transition = True
+
                     if should_add_transition:
                         trans_name = f"{Path(prev_file).stem}_{Path(current_file).stem}_transition.mp4"
                         trans_path = transitions_folder / trans_name
-                        
+
                         if trans_path.exists():
                             concat_list.append(trans_path)
-                
+
                 # ===== SOURCE FILE =====
                 if current_is_chain:
                     current_path = chains_folder / current_file
+                elif current_is_talk:
+                    current_path = talks_folder / current_file
                 else:
                     current_path = project_folder / current_file
                 
@@ -348,47 +382,53 @@ class FlowParser:
         """Get list for numbered flow copying"""
         transitions_folder = project_folder / 'transitions'
         chains_folder = transitions_folder / 'chains'
+        talks_folder  = transitions_folder / 'talks'
         numbered_list = []
-        
+
         for segment in self.segments:
             prev_file = None
             prev_flow_file = None
-            
+
             for flow_file in segment.files:
                 current_file = flow_file.filename
                 current_is_chain = flow_file.config.get('_is_chain', False)
-                
-                # ===== TRANSITION ===== (FIXED!)
+                current_is_talk  = flow_file.config.get('_is_talk',  False)
+
+                # ===== TRANSITION =====
                 if prev_file:
                     prev_is_chain = prev_flow_file.config.get('_is_chain', False)
-                    
-                    # ========================================
-                    # FIX: Determine if we should add transition
-                    # ========================================
+                    prev_is_talk  = prev_flow_file.config.get('_is_talk',  False)
+
                     should_add_transition = False
-                    
-                    if not prev_is_chain and not current_is_chain:
+
+                    if not prev_is_chain and not prev_is_talk and not current_is_chain and not current_is_talk:
                         # Normal file → file
                         should_add_transition = True
                     elif prev_is_chain and not current_is_chain:
                         # Chain → file - check for transition_to_next
                         if prev_flow_file.config.get('transition_to_next'):
                             should_add_transition = True
-                    
+                    elif prev_is_talk:
+                        # Talk → next: bridge only if talk has explicit 'transition:' config
+                        if prev_flow_file.config.get('transition'):
+                            should_add_transition = True
+
                     if should_add_transition:
                         trans_name = f"{Path(prev_file).stem}_{Path(current_file).stem}_transition.mp4"
                         trans_path = transitions_folder / trans_name
-                        
+
                         numbered_list.append({
                             'type': 'transition',
                             'path': trans_path,
                             'name': trans_name,
                             'exists': trans_path.exists()
                         })
-                
+
                 # ===== SOURCE FILE =====
                 if current_is_chain:
                     current_path = chains_folder / current_file
+                elif current_is_talk:
+                    current_path = talks_folder / current_file
                 else:
                     current_path = project_folder / current_file
                 

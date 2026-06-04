@@ -227,10 +227,35 @@ def get_transition_status(run_filename: str) -> dict | None:
                 _audio_duration_sec(pf / fname) if fname else None
                 for fname in audio_names
             ]
+            # If talk has transition: config, check bridge clip existence too
+            talk_trans = item.get("transition")
+            trans_exists = True  # assume OK if no transition configured
+            if talk_trans and exists:
+                # Find next non-break file in flow to compute bridge filename
+                next_file = None
+                for _nxt in flow[i_flow + 1:]:
+                    if isinstance(_nxt, dict) and _nxt.get("break"):
+                        break
+                    if isinstance(_nxt, dict) and _nxt.get("file"):
+                        next_file = _nxt["file"]
+                        break
+                if next_file:
+                    bridge_name = f"{p.stem}_{Path(next_file).stem}_transition.mp4"
+                    trans_exists = (pf / "transitions" / bridge_name).exists()
+                else:
+                    trans_exists = True  # no next file → no bridge needed
+
+            if not exists:
+                talk_status = "red"
+            elif talk_trans and not trans_exists:
+                talk_status = "partial"   # clip OK, bridge missing
+            else:
+                talk_status = "green"
+
             results.append({
                 "index":           i_flow,
                 "type":            "talk",
-                "status":          "green" if exists else "red",
+                "status":          talk_status,
                 "name":            p.name,
                 "audio":           audio_names,
                 "audio_durations": audio_durations,
@@ -707,6 +732,7 @@ def resolve_video(run_filename: str, video_name: str) -> Path | None:
     for candidate in [
         pf / "transitions" / video_name,
         pf / "transitions" / "chains" / video_name,
+        pf / "transitions" / "talks"  / video_name,
     ]:
         if candidate.exists():
             return candidate

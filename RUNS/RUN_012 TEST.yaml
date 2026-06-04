@@ -1,0 +1,105 @@
+# RUN_012 TEST.yaml
+# Edited: 2026-06-04 10:52:05
+# Edit this file freely — regenerate .py with generate_py_from_yaml()
+#
+project_folder: C:\Users\abork\AppData\Local\CapCut\Videos\muszelka_pliki\obce\oponka\film
+
+use_test_flow: false
+
+# ──────────────────────────────────────────────────────────
+# FLOW — lista generacji
+# ──────────────────────────────────────────────────────────
+flow:
+- file: 10.51. prawy przod.jpeg
+  backend: linux
+  duration: 2
+  pos: |-
+    Woman appears
+  neg: |-
+    NONE
+
+- file: 10.53. on scene.png
+  backend: linux
+  duration: 2
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- chain:
+    prefix: chain source of talk
+    transitions:
+    - duration: 3
+      pos: |-
+        Move
+      neg: ""
+    backend: linux
+    fps: 16
+    steps: 6
+    cfg: 2
+    neg: |-
+      static, frozen, no movement
+
+- type: talk
+  audio: 13.79. ktos przyjechal.mp3
+  width: 448
+  height: 592
+  transition:
+    duration: 2
+    pos: |-
+      Women is running out of garrage
+
+- file: 10.51. prawy przod TEST1.jpeg
+  backend: linux
+  duration: 2
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- break: true
+
+- file: 11.53. on scene.png
+  backend: linux
+  duration: 2
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- type: talk
+  audio: 11.57. Gdzie ten lewarek.mp3
+  width: 448
+  height: 592
+
+- chain:
+    prefix: talk is source of chain
+    transitions:
+    - duration: 3
+      pos: |-
+        wave hand
+      neg: ""
+    - duration: 3
+      pos: |-
+        move and kneel at the table
+      neg: ""
+    backend: linux
+    fps: 16
+    steps: 6
+    cfg: 2
+    neg: |-
+      static, frozen, no movement
+
+- file: 11.55 gdzie ten lewarek.png
+  backend: linux
+  duration: 2
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+defaults:
+  backend: linux
+  resolution:
+  - 440
+  - 592
