@@ -153,7 +153,7 @@
                         :class="preMode ? 'bg-purple-900 text-purple-200' : 'text-gray-500 hover:text-gray-300 hover:bg-gray-700/50'"
                         class="text-xs px-2.5 py-1 transition"
                         title="Pre-processing (hurtowy upscale)">🔧 Pre</button>
-                <button @click="preMode=false; postMode=false; picMode=false; editMode=false"
+                <button @click="preMode=false; postMode=false; picMode=false; editMode=true"
                         :class="!preMode && !postMode && !picMode ? 'bg-gray-700 text-white' : 'text-gray-500 hover:text-gray-300 hover:bg-gray-700/50'"
                         class="text-xs px-2.5 py-1 transition"
                         title="Widok FLOW">📋 Flow</button>
@@ -641,24 +641,23 @@
                                                         </template>
                                                     </div>
 
-                                                    <!-- Edit mode controls for file -->
-                                                    <template x-if="editMode">
-                                                        <div class="flex-shrink-0 flex flex-col items-center gap-1 ml-2 border-l border-yellow-900/50 pl-2">
-                                                            <button @click="editOpenItem(idx)"
-                                                                    class="text-yellow-500 hover:text-yellow-300 text-sm px-1 py-0.5 rounded hover:bg-yellow-900/30 transition" title="Edytuj">✎</button>
-                                                            <button @click="editMoveItem(idx, -1)" :disabled="idx === 0"
-                                                                    :class="idx === 0 ? 'opacity-30 cursor-not-allowed' : 'hover:text-white'"
-                                                                    class="text-gray-600 text-xs px-1 rounded hover:bg-gray-700">↑</button>
-                                                            <button @click="editMoveItem(idx, 1)" :disabled="idx === flowData.flow.length - 1"
-                                                                    :class="idx === flowData.flow.length - 1 ? 'opacity-30 cursor-not-allowed' : 'hover:text-white'"
-                                                                    class="text-gray-600 text-xs px-1 rounded hover:bg-gray-700">↓</button>
-                                                            <button @click="editDeleteItem(idx)"
-                                                                    class="text-gray-700 hover:text-red-400 text-xs px-1 rounded hover:bg-gray-800 transition" title="Usuń">✕</button>
-                                                        </div>
-                                                    </template>
-
-                                                    <!-- Status + actions -->
-                                                    <div class="flex-shrink-0 flex items-center gap-2 ml-2">
+                                                    <!-- Status + actions (+ edit controls when editMode) -->
+                                                    <div class="flex-shrink-0 flex items-center gap-1 ml-2 border-l border-gray-700 pl-2">
+                                                        <!-- Edit controls inline -->
+                                                        <template x-if="editMode">
+                                                            <div class="flex items-center gap-0.5 border-r border-yellow-900/60 pr-1.5 mr-0.5">
+                                                                <button @click="editOpenItem(idx)"
+                                                                        class="text-yellow-500 hover:text-yellow-300 text-sm px-1 py-0.5 rounded hover:bg-yellow-900/30 transition" title="Edytuj">✎</button>
+                                                                <button @click="editMoveItem(idx, -1)" :disabled="idx === 0"
+                                                                        :class="idx === 0 ? 'opacity-30 cursor-not-allowed' : 'hover:text-white'"
+                                                                        class="text-gray-500 text-xs px-1 rounded hover:bg-gray-700 transition">↑</button>
+                                                                <button @click="editMoveItem(idx, 1)" :disabled="idx === flowData.flow.length - 1"
+                                                                        :class="idx === flowData.flow.length - 1 ? 'opacity-30 cursor-not-allowed' : 'hover:text-white'"
+                                                                        class="text-gray-500 text-xs px-1 rounded hover:bg-gray-700 transition">↓</button>
+                                                                <button @click="editDeleteItem(idx)"
+                                                                        class="text-gray-600 hover:text-red-400 text-xs px-1 rounded hover:bg-gray-800 transition" title="Usuń">✕</button>
+                                                            </div>
+                                                        </template>
                                                         <template x-if="fileItemIsGreen(idx)">
                                                             <div class="flex items-center gap-1">
                                                                 <span class="text-xs text-green-500" x-text="fileItemSizeMb(idx)"></span>
@@ -2009,8 +2008,6 @@
                     </div>
                 </div>
             </template>
-
-        </div>
 
             <!-- TALK fields -->
             <template x-if="editModal.kind === 'talk'">

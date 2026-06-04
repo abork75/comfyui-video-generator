@@ -455,7 +455,9 @@ def generate_capcut_project(
         subtype = clip.get("subtype", "source")
         if subtype == "chain":
             p = pf / "transitions" / "chains" / name
-        elif subtype in ("transition", "talk"):
+        elif subtype == "talk":
+            p = pf / "transitions" / "talks" / name
+        elif subtype == "transition":
             p = pf / "transitions" / name
         else:
             p = pf / name
@@ -493,7 +495,9 @@ def generate_capcut_project(
 
         if subtype == "chain":
             clip_path = pf / "transitions" / "chains" / name
-        elif subtype in ("transition", "talk"):
+        elif subtype == "talk":
+            clip_path = pf / "transitions" / "talks" / name
+        elif subtype == "transition":
             clip_path = pf / "transitions" / name
         else:
             clip_path = pf / name
