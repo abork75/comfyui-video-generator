@@ -414,16 +414,14 @@ def run_batch_generation(config):
 
     target_width, target_height = extractor.auto_detect_resolution(non_chain_files)
 
-    # Safety snap: ensure divisible by 32 even when force_resolution is set to
-    # a non-aligned value (e.g. 848 = 16×53, but not 32×n). The WanVideo
-    # ImageResizeKJv2 node (node 68) has divisible_by=32 — passing a non-aligned
-    # value causes it to silently adjust, making extracted frames inconsistent
-    # with actual video output.
-    _tw_snapped = (target_width  // 32) * 32
-    _th_snapped = (target_height // 32) * 32
+    # Safety snap: ensure divisible by 16 — WanVideo ImageResizeKJv2 (node 68)
+    # uses divisible_by=16. Passing a non-aligned value causes silent adjustment
+    # and makes extracted frames inconsistent with actual video output.
+    _tw_snapped = (target_width  // 16) * 16
+    _th_snapped = (target_height // 16) * 16
     if _tw_snapped != target_width or _th_snapped != target_height:
         logger.warning(
-            f"  Resolution {target_width}x{target_height} not divisible by 32 "
+            f"  Resolution {target_width}x{target_height} not divisible by 16 "
             f"— snapping to {_tw_snapped}x{_th_snapped}"
         )
         target_width, target_height = _tw_snapped, _th_snapped

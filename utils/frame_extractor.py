@@ -79,9 +79,9 @@ class FrameExtractor:
         width = max(self.min_width, min(width, self.max_width))
         height = max(self.min_height, min(height, self.max_height))
         
-        # Round to multiple of 32 (WanVideo workflow requires divisible_by=32)
-        width = (width // 32) * 32
-        height = (height // 32) * 32
+        # Round to multiple of 16 (WanVideo ImageResizeKJv2 node uses divisible_by=16)
+        width = (width // 16) * 16
+        height = (height // 16) * 16
         
         return (width, height)
     
