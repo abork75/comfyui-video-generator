@@ -862,13 +862,16 @@ def upload_source_file(run_filename: str, item_filename: str, content: bytes) ->
     except OSError as exc:
         return {"ok": False, "error": f"Błąd zapisu: {exc}"}
 
-    # Delete stale frame thumbnails so they get re-extracted on next generation
+    # Delete stale frame files so they get re-extracted on next generation.
+    # Two variants: .jpg (UI thumbnails) and .png (generator frames, since v1.66).
+    stem = Path(item_filename).stem
     for kind in ("start", "end"):
-        fp = frame_path(pf, item_filename, kind)
-        try:
-            fp.unlink(missing_ok=True)
-        except OSError:
-            pass
+        for ext in (".jpg", ".png"):
+            fp = pf / "frames" / f"{stem}_{kind}{ext}"
+            try:
+                fp.unlink(missing_ok=True)
+            except OSError:
+                pass
 
     return {
         "ok":       True,
