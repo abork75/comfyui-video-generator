@@ -37,6 +37,8 @@ import urllib.request
 from datetime import datetime
 from pathlib import Path
 
+from PIL import Image as _PILImage
+
 from app.core.config import settings
 from app.services.media_service import talk_path, _project_folder
 from app.services import app_config_service
@@ -375,13 +377,26 @@ async def _generate_segment(
     Raises RuntimeError on any failure.
     """
     ts = datetime.now().strftime("%Y%m%d%H%M%S%f")
-    tmp_img   = input_dir / f"talk_img_{ts}_{image_path.name}"
+    # Always deliver PNG to ComfyUI — JPEG would add a second lossy compression
+    # round on top of whatever compression the source already has.
+    _jpeg_exts = {".jpg", ".jpeg"}
+    _img_ext   = ".png" if image_path.suffix.lower() in _jpeg_exts else image_path.suffix
+    tmp_img   = input_dir / f"talk_img_{ts}_{image_path.stem}{_img_ext}"
     tmp_audio = input_dir / f"talk_aud_{ts}_{audio_path.name}"
 
     # os.makedirs is more reliable than Path.mkdir for UNC and network paths
     import os as _os
     _os.makedirs(str(input_dir), exist_ok=True)
-    shutil.copy2(str(image_path), str(tmp_img))
+
+    # Convert JPEG → PNG on the fly; other formats copied as-is
+    if image_path.suffix.lower() in _jpeg_exts:
+        with _PILImage.open(str(image_path)) as _img:
+            if _img.mode != "RGB":
+                _img = _img.convert("RGB")
+            _img.save(str(tmp_img), "PNG")
+    else:
+        shutil.copy2(str(image_path), str(tmp_img))
+
     shutil.copy2(str(audio_path), str(tmp_audio))
 
     # Snapshot existing outputs (for fallback detection)
