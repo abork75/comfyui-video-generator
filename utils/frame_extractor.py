@@ -79,9 +79,9 @@ class FrameExtractor:
         width = max(self.min_width, min(width, self.max_width))
         height = max(self.min_height, min(height, self.max_height))
         
-        # Round to multiple of 8 (for video encoding)
-        width = (width // 8) * 8
-        height = (height // 8) * 8
+        # Round to multiple of 32 (WanVideo workflow requires divisible_by=32)
+        width = (width // 32) * 32
+        height = (height // 32) * 32
         
         return (width, height)
     

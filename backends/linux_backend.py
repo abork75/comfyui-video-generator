@@ -238,10 +238,19 @@ class LinuxBackend(BaseBackend):
         runner = self.workflow_runner
 
         if 'width' in params:
-            runner.set_parameter('width', params['width'])
+            # Snap to nearest multiple of 32 — WanVideo node 68 (ImageResizeKJv2)
+            # has divisible_by=32; passing non-aligned values causes silent adjustment
+            # and makes extracted frames inconsistent with actual video output.
+            w = (int(params['width']) // 32) * 32
+            if w != params['width']:
+                self.logger.info(f"  width {params['width']} → snap to 32 → {w}")
+            runner.set_parameter('width', w)
 
         if 'height' in params:
-            runner.set_parameter('height', params['height'])
+            h = (int(params['height']) // 32) * 32
+            if h != params['height']:
+                self.logger.info(f"  height {params['height']} → snap to 32 → {h}")
+            runner.set_parameter('height', h)
 
         if 'length' in params:
             runner.set_parameter('num_frames', params['length'])

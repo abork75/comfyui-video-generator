@@ -411,9 +411,23 @@ def run_batch_generation(config):
     
     # Auto-detect resolution
     logger.section("Auto-detecting resolution")
-    
+
     target_width, target_height = extractor.auto_detect_resolution(non_chain_files)
-    
+
+    # Safety snap: ensure divisible by 32 even when force_resolution is set to
+    # a non-aligned value (e.g. 848 = 16×53, but not 32×n). The WanVideo
+    # ImageResizeKJv2 node (node 68) has divisible_by=32 — passing a non-aligned
+    # value causes it to silently adjust, making extracted frames inconsistent
+    # with actual video output.
+    _tw_snapped = (target_width  // 32) * 32
+    _th_snapped = (target_height // 32) * 32
+    if _tw_snapped != target_width or _th_snapped != target_height:
+        logger.warning(
+            f"  Resolution {target_width}x{target_height} not divisible by 32 "
+            f"— snapping to {_tw_snapped}x{_th_snapped}"
+        )
+        target_width, target_height = _tw_snapped, _th_snapped
+
     logger.success(f"Final resolution: {target_width}x{target_height}")
     
     # Extract frames (only for non-chain files)
