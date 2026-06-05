@@ -122,6 +122,16 @@ def run_batch_generation(config):
     project_folder = Path(config['project_folder'])
     flow = config['flow']
 
+    # ── Frame path helper ──────────────────────────────────────────────────────
+    # New projects: PNG (lossless). Old projects: fall back to JPEG.
+    def _frame_path(stem: str, suffix: str) -> Path:
+        """Return frames/{stem}_{suffix}.png, falling back to .jpg if .png absent."""
+        png = project_folder / 'frames' / f"{stem}_{suffix}.png"
+        if png.exists():
+            return png
+        jpg = project_folder / 'frames' / f"{stem}_{suffix}.jpg"
+        return jpg   # may not exist either — caller checks .exists()
+
     # Folder paths — defined early so all sections can reference them
     transitions_folder = project_folder / 'transitions'
     transitions_folder.mkdir(parents=True, exist_ok=True)
@@ -779,7 +789,7 @@ def run_batch_generation(config):
                             if _talk_src:
                                 chain_frame_cache[from_file] = _talk_src
                 else:
-                    _talk_src = frames_folder / f"{Path(from_file).stem}_end.jpg"
+                    _talk_src = _frame_path(Path(from_file).stem, 'end')
 
                 if not _talk_src or not Path(_talk_src).exists():
                     logger.warning(f"  ⏳ {to_file}: source frame not ready — will retry")
@@ -928,7 +938,7 @@ def run_batch_generation(config):
                     continue
             else:
                 # Normal file (image or video incl. talk clip)
-                start_frame = frames_folder / f"{Path(from_file).stem}_end.jpg"
+                start_frame = _frame_path(Path(from_file).stem, 'end')
                 if not start_frame.exists():
                     logger.warning(
                         f"⏳ Start frame missing for {trans['name']} "
@@ -964,7 +974,7 @@ def run_batch_generation(config):
                     # (_chain_end_target set on last chain step by flow_parser)
                     chain_end_target = to_config.get('_chain_end_target')
                     if chain_end_target:
-                        _et_frame = frames_folder / f"{Path(chain_end_target).stem}_start.jpg"
+                        _et_frame = _frame_path(Path(chain_end_target).stem, 'start')
                         if _et_frame.exists():
                             end_frame = _et_frame
                             logger.info(
@@ -982,7 +992,7 @@ def run_batch_generation(config):
                 output_path = chain_handler.get_chain_output_path(to_file)
 
             else:
-                end_frame   = frames_folder / f"{Path(to_file).stem}_start.jpg"
+                end_frame   = _frame_path(Path(to_file).stem, 'start')
                 output_path = transitions_folder / trans['name']
 
             # ── Generate ──────────────────────────────────────────────

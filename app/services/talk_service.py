@@ -686,7 +686,10 @@ def start_talk(
     # yet exist — extract on-the-fly with FrameExtractor (same approach as chain).
     _vid_exts = {".mp4", ".avi", ".mov", ".mkv", ".webm"}
     if Path(start_image).suffix.lower() in _vid_exts:
-        frame_path = pf / "frames" / f"{Path(start_image).stem}_end.jpg"
+        stem = Path(start_image).stem
+        frame_path = pf / "frames" / f"{stem}_end.png"
+        if not frame_path.exists():
+            frame_path = pf / "frames" / f"{stem}_end.jpg"
         if frame_path.exists():
             img_path = frame_path
         else:

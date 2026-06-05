@@ -107,10 +107,13 @@ async def talk_suggest_resolution(request: Request):
         raise HTTPException(status_code=404, detail="project_folder not found")
 
     try:
-        # If image is a video, use the extracted end-frame JPEG
+        # If image is a video, use the extracted end-frame (PNG preferred, JPEG fallback)
         _vid_exts = {".mp4", ".avi", ".mov", ".mkv", ".webm"}
         if image_name and Path(image_name).suffix.lower() in _vid_exts:
-            frame_path = pf / "frames" / f"{Path(image_name).stem}_end.jpg"
+            stem = Path(image_name).stem
+            frame_path = pf / "frames" / f"{stem}_end.png"
+            if not frame_path.exists():
+                frame_path = pf / "frames" / f"{stem}_end.jpg"
             image_path = frame_path if frame_path.exists() else (pf / image_name if image_name else None)
         else:
             image_path = pf / image_name if image_name else None

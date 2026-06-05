@@ -99,13 +99,14 @@ class FrameExtractor:
         """
         
         source_path = self.project_folder / filename
-        output_filename = f"{source_path.stem}_end.jpg"
-        
+        # PNG: lossless — eliminates second round of lossy compression
+        output_filename = f"{source_path.stem}_end.png"
+
         # Save to frames/ folder (INPUT - not in transitions/)
         frames_folder = self.project_folder / 'frames'
         frames_folder.mkdir(parents=True, exist_ok=True)
         output_path = frames_folder / output_filename
-        
+
         # Check if image
         if source_path.suffix.lower() in ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp']:
             # Process image
@@ -114,27 +115,28 @@ class FrameExtractor:
                     # Convert to RGB if needed
                     if img.mode != 'RGB':
                         img = img.convert('RGB')
-                    
+
                     # Resize
                     img_resized = img.resize((target_width, target_height), Image.LANCZOS)
-                    
-                    # Save
-                    img_resized.save(output_path, 'JPEG', quality=self.image_quality)
-                    
+
+                    # Save as PNG (lossless — even JPEG sources benefit: no second encode)
+                    img_resized.save(output_path, 'PNG')
+
                     return output_path
-                    
+
             except Exception as e:
                 print(f"Error processing image {filename}: {e}")
                 return None
-        
+
         # Check if video
         elif source_path.suffix.lower() in ['.mp4', '.avi', '.mov', '.mkv', '.webm']:
             # ============================================================
             # CRITICAL FIX: Extract ACTUAL last frame (not 1s before end)
             # Old: -sseof -1 gave frame from middle of video
             # New: Count frames → select last by index
+            # Output: PNG (lossless)
             # ============================================================
-            
+
             try:
                 # Step 1: Get total frame count
                 probe_cmd = [
@@ -146,31 +148,30 @@ class FrameExtractor:
                     '-of', 'csv=p=0',
                     str(source_path)
                 ]
-                
+
                 result = subprocess.run(probe_cmd, check=True, capture_output=True, text=True)
                 total_frames = int(result.stdout.strip())
-                
-                # Step 2: Extract last frame (index = total - 1)
+
+                # Step 2: Extract last frame (index = total - 1) as PNG
                 last_frame_idx = total_frames - 1
-                
+
                 cmd = [
                     'ffmpeg',
                     '-i', str(source_path),
                     '-vf', f'select=eq(n\\,{last_frame_idx}),scale={target_width}:{target_height}',
                     '-frames:v', '1',
-                    '-q:v', str(100 - self.image_quality),
                     '-y',
                     str(output_path)
                 ]
-                
+
                 result = subprocess.run(cmd, capture_output=True)
-                
+
                 if result.returncode == 0 and output_path.exists():
                     return output_path
                 else:
                     print(f"Error extracting last frame from {filename}")
                     return None
-                    
+
             except Exception as e:
                 print(f"Error extracting frame: {e}")
                 return None
@@ -191,13 +192,14 @@ class FrameExtractor:
         """
         
         source_path = self.project_folder / filename
-        output_filename = f"{source_path.stem}_start.jpg"
-        
+        # PNG: lossless — eliminates second round of lossy compression
+        output_filename = f"{source_path.stem}_start.png"
+
         # Save to frames/ folder (INPUT - not in transitions/)
         frames_folder = self.project_folder / 'frames'
         frames_folder.mkdir(parents=True, exist_ok=True)
         output_path = frames_folder / output_filename
-        
+
         # Check if image
         if source_path.suffix.lower() in ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp']:
             # Process image
@@ -206,41 +208,40 @@ class FrameExtractor:
                     # Convert to RGB if needed
                     if img.mode != 'RGB':
                         img = img.convert('RGB')
-                    
+
                     # Resize
                     img_resized = img.resize((target_width, target_height), Image.LANCZOS)
-                    
-                    # Save
-                    img_resized.save(output_path, 'JPEG', quality=self.image_quality)
-                    
+
+                    # Save as PNG (lossless)
+                    img_resized.save(output_path, 'PNG')
+
                     return output_path
-                    
+
             except Exception as e:
                 print(f"Error processing image {filename}: {e}")
                 return None
-        
+
         # Check if video
         elif source_path.suffix.lower() in ['.mp4', '.avi', '.mov', '.mkv', '.webm']:
-            # Extract first frame
+            # Extract first frame as PNG (lossless)
             try:
                 cmd = [
                     'ffmpeg',
                     '-i', str(source_path),
                     '-vframes', '1',
                     '-vf', f'scale={target_width}:{target_height}',
-                    '-q:v', str(100 - self.image_quality),
                     '-y',
                     str(output_path)
                 ]
-                
+
                 result = subprocess.run(cmd, capture_output=True)
-                
+
                 if result.returncode == 0 and output_path.exists():
                     return output_path
                 else:
                     print(f"Error extracting first frame from {filename}")
                     return None
-                    
+
             except Exception as e:
                 print(f"Error extracting frame: {e}")
                 return None
