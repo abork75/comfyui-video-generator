@@ -482,3 +482,132 @@ def cancel_upscale() -> dict:
         _task.cancel()
     _state.update({"status": "idle", "error": "Anulowano przez użytkownika"})
     return {"ok": True}
+
+
+# ── Lanczos (ffmpeg) upscale ─────────────────────────────────────────────────
+
+async def _run_lanczos_upscale(
+    source_path:  Path,
+    dest_path:    Path,
+    run_filename: str,
+    clip_name:    str,
+    clip_type:    str,
+    width:        int,
+    height:       int,
+) -> None:
+    """
+    Fast Lanczos resize using ffmpeg (no ComfyUI required).
+    Resizes `source_path` to WxH and replaces it in-place (with archive backup).
+    """
+    import subprocess as _sp
+
+    loop = asyncio.get_running_loop()
+    ts   = datetime.now().strftime("%Y%m%d%H%M%S")
+    tmp_out = source_path.parent / f"_tmp_lanczos_{ts}_{source_path.name}"
+
+    try:
+        _state["status"] = "running"
+
+        def _ffmpeg():
+            cmd = [
+                "ffmpeg",
+                "-i", str(source_path),
+                "-vf", f"scale={width}:{height}:flags=lanczos",
+                "-c:v", "libx264",
+                "-crf", "18",
+                "-preset", "slow",
+                "-c:a", "copy",
+                "-movflags", "+faststart",
+                "-y",
+                str(tmp_out),
+            ]
+            result = _sp.run(cmd, capture_output=True)
+            if result.returncode != 0:
+                err = result.stderr.decode("utf-8", errors="replace")[-500:]
+                raise RuntimeError(f"ffmpeg exited {result.returncode}: {err}")
+
+        await loop.run_in_executor(None, _ffmpeg)
+
+        if not tmp_out.exists() or tmp_out.stat().st_size < 1024:
+            raise RuntimeError(f"ffmpeg produced no output: {tmp_out}")
+
+        # Archive original
+        _archive_before_upscale(source_path, clip_type)
+
+        # Replace original with resized file
+        if dest_path.exists():
+            dest_path.unlink()
+        tmp_out.rename(dest_path)
+
+        # Invalidate thumbnail
+        _invalidate_thumb(dest_path)
+
+        elapsed = round(time.time() - _state["started_at"], 1)
+        _state.update({
+            "status":      "done",
+            "output_name": clip_name,
+            "elapsed_s":   elapsed,
+        })
+
+    except Exception as exc:
+        _state.update({"status": "error", "error": str(exc)})
+    finally:
+        try:
+            if tmp_out.exists():
+                tmp_out.unlink()
+        except Exception:
+            pass
+
+
+def start_lanczos_upscale(
+    run_filename: str,
+    clip_name:    str,
+    clip_type:    str,
+    width:        int,
+    height:       int,
+) -> dict:
+    """
+    Queue a Lanczos (ffmpeg) resize job.  Returns immediately.
+
+    clip_type: "generated" (transition/chain) or "external" (source video in project_folder)
+    Returns {"ok": True} or {"ok": False, "error": "..."}.
+    """
+    global _task
+
+    if _state["status"] in ("queued", "running"):
+        return {"ok": False, "error": "Upscale jest już w toku"}
+
+    if width < 64 or width > 8192 or height < 64 or height > 8192:
+        return {"ok": False, "error": "Wymiary muszą być między 64 a 8192"}
+
+    # Resolve source path based on clip type
+    if clip_type == "external":
+        source_path = resolve_source_video(run_filename, clip_name)
+        if source_path is None:
+            return {"ok": False, "error": f"Nie znaleziono pliku zewnętrznego: {clip_name}"}
+    else:
+        source_path = resolve_video(run_filename, clip_name)
+        if source_path is None:
+            return {"ok": False, "error": f"Nie znaleziono klipu: {clip_name}"}
+
+    dest_path = source_path  # resized replaces original (after archiving)
+
+    _reset_state()
+    _state.update({
+        "status":       "queued",
+        "run_filename": run_filename,
+        "clip_name":    clip_name,
+        "width":        width,
+        "height":       height,
+        "started_at":   time.time(),
+    })
+
+    try:
+        _task = asyncio.create_task(
+            _run_lanczos_upscale(source_path, dest_path, run_filename, clip_name, clip_type, width, height)
+        )
+    except RuntimeError as e:
+        _state.update({"status": "error", "error": str(e)})
+        return {"ok": False, "error": str(e)}
+
+    return {"ok": True}

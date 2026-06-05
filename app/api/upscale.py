@@ -12,6 +12,7 @@ from fastapi import APIRouter, HTTPException, Request
 
 from app.services.upscale_service import (
     start_upscale,
+    start_lanczos_upscale,
     get_upscale_status,
     cancel_upscale,
 )
@@ -51,6 +52,35 @@ async def upscale_start(request: Request):
 async def upscale_status():
     """Return the current upscale job status."""
     return get_upscale_status()
+
+
+@router.post("/start_lanczos")
+async def upscale_start_lanczos(request: Request):
+    """
+    Start a fast Lanczos (ffmpeg) resize job for a generated clip.
+    No Windows ComfyUI required — runs ffmpeg locally.
+    Body JSON: {"run": "RUN_xxx.yaml", "name": "clip.mp4", "type": "generated", "width": 1024, "height": 1024}
+    """
+    try:
+        body      = await request.json()
+        run       = str(body.get("run",       ""))
+        name      = str(body.get("name",      ""))
+        clip_type = str(body.get("type",      "generated"))
+        width     = int(body.get("width",     1024))
+        height    = int(body.get("height",    1024))
+    except Exception:
+        raise HTTPException(status_code=422, detail="Invalid JSON body")
+
+    if not run or not name:
+        raise HTTPException(status_code=422, detail="run and name are required")
+
+    if clip_type not in ("generated", "external"):
+        clip_type = "generated"
+
+    result = start_lanczos_upscale(run, name, clip_type, width, height)
+    if not result["ok"]:
+        raise HTTPException(status_code=400, detail=result["error"])
+    return result
 
 
 @router.post("/cancel")

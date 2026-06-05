@@ -233,14 +233,15 @@ def run_batch_generation(config):
             
         else:
             # === NORMAL TRANSITION or CHAIN STEP ===
-            
+
             # Determine backend
             backend = from_config.get('backend') or to_config.get('backend') or default_backend
-            
+
             # ============================================================
             # ✅ FIX: Different priority for chain files vs normal transitions
             # ============================================================
-            
+
+            is_from_talk = from_config.get('_is_talk', False)
             is_to_chain = to_config.get('_is_chain', False)
             
             if is_to_chain:
@@ -281,8 +282,10 @@ def run_batch_generation(config):
                     'seed': from_config.get('seed', to_config.get('seed', default_seed)),
                     'positive_prompt': from_config.get('pos', to_config.get('pos', default_positive_prompt)),
                     'negative_prompt': from_config.get('neg', to_config.get('neg', default_negative_prompt)),
-                    'width': from_config.get('width', to_config.get('width', None)),
-                    'height': from_config.get('height', to_config.get('height', None)),
+                    # ✅ FIX: talk clips have their own width/height (e.g. 480x832 portrait)
+                    # which must NOT be inherited as the transition resolution — skip them.
+                    'width': (None if is_from_talk else from_config.get('width', None)) or to_config.get('width', None),
+                    'height': (None if is_from_talk else from_config.get('height', None)) or to_config.get('height', None),
                     'blocks_to_swap': from_config.get('blocks_to_swap', to_config.get('blocks_to_swap', default_blocks_to_swap)),
                     'frame_interpolation': from_config.get('frame_interpolation', to_config.get('frame_interpolation', default_frame_interpolation)),
                     'is_i2v_mode': False,

@@ -540,8 +540,9 @@
                                                             </div>
                                                             <!-- Chain step video actions -->
                                                             <template x-if="item.chain_prefix">
-                                                                <div class="flex-shrink-0 flex items-center gap-1" x-data="{ fname: (item.chain_prefix + '_' + String(si+1).padStart(3,'0') + '.mp4') }">
-                                                                    <template x-if="itemExists(fname)">
+                                                                <div class="flex-shrink-0 flex items-center gap-1"
+                                                                     x-data="{ get fname() { return item.chain_prefix + '_' + String(si+1).padStart(3,'0') + '.mp4'; } }">
+                                                                    <template x-if="_si(idx)?.steps?.[si]?.exists">
                                                                         <div class="flex gap-1 items-center">
                                                                             <button @click="openVideoModal(fname)" class="text-green-500 hover:text-green-400 text-sm px-1" title="Odtwórz">▶</button>
                                                                             <button @click="regenChainFrom(item.chain_prefix, si, item.chain.length)"
@@ -559,7 +560,7 @@
                                                                             </template>
                                                                         </div>
                                                                     </template>
-                                                                    <template x-if="!itemExists(fname)">
+                                                                    <template x-if="!_si(idx)?.steps?.[si]?.exists">
                                                                         <div class="flex items-center gap-1">
                                                                             <span class="text-red-700 text-xs">○</span>
                                                                             <button @click="regenChainFrom(item.chain_prefix, si, item.chain.length)"
@@ -1254,9 +1255,17 @@
                                                 </button>
                                             </template>
                                             <template x-if="postSelectedClip().status==='ok'">
-                                                <button @click="openUpscaleModal(postSelectedClip())"
-                                                        class="text-yellow-400 hover:text-yellow-200 border border-yellow-800 hover:border-yellow-600 px-3 py-1.5 rounded transition text-center">
-                                                    ⬆ Upscaluj
+                                                <button @click="openUpscaleModal(postSelectedClip(), 'lanczos')"
+                                                        class="text-cyan-400 hover:text-cyan-200 border border-cyan-800 hover:border-cyan-600 px-3 py-1.5 rounded transition text-center"
+                                                        title="Szybki resize ffmpeg — nie wymaga Windows ComfyUI">
+                                                    ⬆ Lanczos
+                                                </button>
+                                            </template>
+                                            <template x-if="postSelectedClip().status==='ok'">
+                                                <button @click="openUpscaleModal(postSelectedClip(), 'realesrgan')"
+                                                        class="text-yellow-400 hover:text-yellow-200 border border-yellow-800 hover:border-yellow-600 px-3 py-1.5 rounded transition text-center"
+                                                        title="AI upscale RealESRGAN — wymaga Windows ComfyUI (port 8100)">
+                                                    ⬆ REALsregan
                                                 </button>
                                             </template>
                                         </div>
@@ -1717,7 +1726,19 @@
                         <input type="number" x-model.number="globalsModal.data.defaults.blocks_to_swap" min="0" placeholder="35"
                                class="w-full bg-gray-800 border border-gray-600 rounded px-3 py-1.5 text-sm text-gray-200 focus:outline-none focus:border-orange-500">
                     </div>
-                    <div class="col-span-2 flex items-center gap-3 py-1">
+                    <div>
+                        <label class="block text-xs text-gray-500 mb-1">Szer. (px) <span class="text-gray-600 font-normal">mod 16</span></label>
+                        <input type="number" x-model.number="globalsModal._resW" min="64" step="16" placeholder="1024"
+                               @change="if(globalsModal._resW) globalsModal._resW = Math.ceil(globalsModal._resW/16)*16"
+                               class="w-full bg-gray-800 border border-gray-600 rounded px-3 py-1.5 text-sm text-gray-200 focus:outline-none focus:border-orange-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs text-gray-500 mb-1">Wys. (px) <span class="text-gray-600 font-normal">mod 16</span></label>
+                        <input type="number" x-model.number="globalsModal._resH" min="64" step="16" placeholder="1024"
+                               @change="if(globalsModal._resH) globalsModal._resH = Math.ceil(globalsModal._resH/16)*16"
+                               class="w-full bg-gray-800 border border-gray-600 rounded px-3 py-1.5 text-sm text-gray-200 focus:outline-none focus:border-orange-500">
+                    </div>
+                    <div class="col-span-3 flex items-center gap-3 py-1 border-t border-gray-700/50 mt-1 pt-2">
                         <label class="block text-xs text-gray-500 whitespace-nowrap">Frame interpolation (RIFE 2×)</label>
                         <button type="button" @click="globalsModal.data.defaults.frame_interpolation = !(globalsModal.data.defaults.frame_interpolation ?? true)"
                                 class="relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 focus:outline-none"
@@ -1728,18 +1749,8 @@
                         <span class="text-xs" :class="(globalsModal.data.defaults.frame_interpolation ?? true) ? 'text-orange-400' : 'text-gray-500'"
                               x-text="(globalsModal.data.defaults.frame_interpolation ?? true) ? 'włączone (global)' : 'wyłączone'"></span>
                     </div>
-                    <div>
-                        <label class="block text-xs text-gray-500 mb-1">Szer. (px)</label>
-                        <input type="number" x-model.number="globalsModal._resW" min="64" step="64" placeholder="1024"
-                               class="w-full bg-gray-800 border border-gray-600 rounded px-3 py-1.5 text-sm text-gray-200 focus:outline-none focus:border-orange-500">
-                    </div>
-                    <div>
-                        <label class="block text-xs text-gray-500 mb-1">Wys. (px)</label>
-                        <input type="number" x-model.number="globalsModal._resH" min="64" step="64" placeholder="1024"
-                               class="w-full bg-gray-800 border border-gray-600 rounded px-3 py-1.5 text-sm text-gray-200 focus:outline-none focus:border-orange-500">
-                    </div>
                 </div>
-                <p class="text-xs text-gray-600 mt-2">Szer. i Wys. ustawiają FORCE_RESOLUTION — zostaw puste aby używać domyślnego 1024×1024</p>
+                <p class="text-xs text-gray-600 mt-2">Szer. i Wys. ustawiają FORCE_RESOLUTION — zostaw puste aby używać domyślnego 1024×1024. Wartości są automatycznie zaokrąglane do wielokrotności 16.</p>
             </div>
 
         </div>
@@ -4482,12 +4493,15 @@
 <template x-if="upscaleModal.open">
 <div class="fixed inset-0 bg-black/85 flex items-center justify-center z-50 p-4"
      @keydown.escape.window="if(upscaleModal.status!=='running' && upscaleModal.status!=='queued') closeUpscaleModal()">
-    <div class="bg-gray-900 rounded-xl border border-yellow-800 w-full max-w-sm p-5 text-sm">
+    <div :class="upscaleModal.method==='lanczos' ? 'border-cyan-800' : 'border-yellow-800'"
+         class="bg-gray-900 rounded-xl border w-full max-w-sm p-5 text-sm">
         <!-- Header -->
         <div class="flex items-center justify-between mb-4">
             <div class="flex items-center gap-2">
-                <span class="text-yellow-400 text-lg">⬆</span>
-                <h3 class="font-semibold text-yellow-300">Upscaluj klip</h3>
+                <span :class="upscaleModal.method==='lanczos' ? 'text-cyan-400' : 'text-yellow-400'" class="text-lg">⬆</span>
+                <h3 :class="upscaleModal.method==='lanczos' ? 'text-cyan-300' : 'text-yellow-300'"
+                    class="font-semibold"
+                    x-text="upscaleModal.method==='lanczos' ? 'Resize Lanczos (ffmpeg)' : 'Upscale REALsregan (AI)'"></h3>
             </div>
             <button @click="closeUpscaleModal()"
                     :disabled="upscaleModal.status==='running' || upscaleModal.status==='queued'"
@@ -4505,29 +4519,34 @@
         <!-- Dimensions -->
         <template x-if="upscaleModal.status === 'idle'">
             <div>
-                <p class="text-gray-400 text-xs mb-2">Docelowa rozdzielczość po upscalingu:</p>
+                <p class="text-gray-400 text-xs mb-2">Docelowa rozdzielczość:</p>
                 <div class="flex items-center gap-2 mb-4">
                     <div class="flex-1">
                         <label class="text-gray-500 text-xs block mb-0.5">Szerokość</label>
                         <input x-model.number="upscaleModal.width" type="number" min="64" max="8192" step="64"
-                               class="w-full bg-gray-800 border border-gray-600 rounded px-2 py-1.5 text-gray-200 text-sm focus:outline-none focus:border-yellow-600">
+                               :class="upscaleModal.method==='lanczos' ? 'focus:border-cyan-600' : 'focus:border-yellow-600'"
+                               class="w-full bg-gray-800 border border-gray-600 rounded px-2 py-1.5 text-gray-200 text-sm focus:outline-none">
                     </div>
                     <span class="text-gray-600 mt-4">×</span>
                     <div class="flex-1">
                         <label class="text-gray-500 text-xs block mb-0.5">Wysokość</label>
                         <input x-model.number="upscaleModal.height" type="number" min="64" max="8192" step="64"
-                               class="w-full bg-gray-800 border border-gray-600 rounded px-2 py-1.5 text-gray-200 text-sm focus:outline-none focus:border-yellow-600">
+                               :class="upscaleModal.method==='lanczos' ? 'focus:border-cyan-600' : 'focus:border-yellow-600'"
+                               class="w-full bg-gray-800 border border-gray-600 rounded px-2 py-1.5 text-gray-200 text-sm focus:outline-none">
                     </div>
                 </div>
-                <p class="text-gray-600 text-xs mb-4">
-                    Model 4× upscaluje każdy kadr, następnie obraz jest przeskalowany do podanych wymiarów.
-                    Plik oryginalny zostanie zarchiwizowany.
+                <p class="text-gray-600 text-xs mb-4"
+                   x-text="upscaleModal.method==='lanczos'
+                       ? 'Szybki resize ffmpeg (filtr lanczos) — nie wymaga Windows ComfyUI. Plik oryginalny zostanie zarchiwizowany.'
+                       : 'AI 4× upscale RealESRGAN — wymaga Windows ComfyUI (port 8100). Plik oryginalny zostanie zarchiwizowany.'">
                 </p>
                 <div class="flex justify-end gap-2">
                     <button @click="closeUpscaleModal()"
                             class="px-4 py-2 text-gray-400 hover:text-white rounded-lg hover:bg-gray-700 transition">Anuluj</button>
                     <button @click="startUpscale()"
-                            class="px-4 py-2 text-white bg-yellow-700 hover:bg-yellow-600 rounded-lg transition">⬆ Start Upscale</button>
+                            :class="upscaleModal.method==='lanczos' ? 'bg-cyan-800 hover:bg-cyan-700' : 'bg-yellow-700 hover:bg-yellow-600'"
+                            class="px-4 py-2 text-white rounded-lg transition"
+                            x-text="upscaleModal.method==='lanczos' ? '⬆ Resize Lanczos' : '⬆ Start REALsregan'"></button>
                 </div>
             </div>
         </template>
@@ -4538,13 +4557,17 @@
                 <div class="flex items-center justify-center gap-3 mb-3">
                     <span class="animate-spin inline-block text-yellow-400 text-2xl">⟳</span>
                     <span class="text-gray-300"
-                          x-text="upscaleModal.status === 'queued' ? 'Wysyłanie do ComfyUI…' : 'Upscaling w toku…'"></span>
+                          x-text="upscaleModal.status === 'queued'
+                              ? (upscaleModal.method==='lanczos' ? 'Przygotowywanie…' : 'Wysyłanie do ComfyUI…')
+                              : (upscaleModal.method==='lanczos' ? 'Resize w toku…' : 'Upscaling w toku…')"></span>
                 </div>
                 <p class="text-gray-500 text-xs"
                    x-show="upscaleModal.elapsed_s"
                    x-text="`Czas: ${upscaleModal.elapsed_s}s`"></p>
-                <p class="text-gray-600 text-xs mt-2">
-                    Upscaling może trwać 5–7 minut. Nie zamykaj okna.
+                <p class="text-gray-600 text-xs mt-2"
+                   x-text="upscaleModal.method==='lanczos'
+                       ? 'Resize Lanczos trwa kilka sekund. Nie zamykaj okna.'
+                       : 'Upscaling REALsregan może trwać 5–7 minut. Nie zamykaj okna.'">
                 </p>
             </div>
         </template>
@@ -4759,7 +4782,8 @@ function app() {
                     } else if (msg.status === 'finished' || msg.status === 'failed' || msg.status === 'stopped') {
                         this._dryRunMode = false;  // always clear on process end
                         this._stopGenRefresh();
-                        this.refreshStatus();
+                        this.refreshStatus();                        // natychmiast
+                        setTimeout(() => this.refreshStatus(), 2000); // +2s (RIFE/zapis końcowy)
                     }
                     return;
                 }
@@ -5494,6 +5518,7 @@ function app() {
             clip:      null,
             width:     1024,
             height:    1024,
+            method:    'realesrgan',   // 'realesrgan' | 'lanczos'
             status:    'idle',    // idle | queued | running | done | error
             error:     null,
             elapsed_s: null,
@@ -5923,7 +5948,7 @@ function app() {
         },
 
         // ─ Upscale ────────────────────────────────────────
-        openUpscaleModal(clip) {
+        openUpscaleModal(clip, method = 'realesrgan') {
             if (!clip) return;
             // Pre-fill: project force_resolution → default_resolution → 1024×1024
             const res = this.selectedRun?.force_resolution
@@ -5936,6 +5961,7 @@ function app() {
                 clip,
                 width:     w,
                 height:    h,
+                method,
                 status:    'idle',
                 error:     null,
                 elapsed_s: null,
@@ -5953,14 +5979,17 @@ function app() {
             if (!m.clip || !this.selectedRun) return;
             m.status = 'queued';
             m.error  = null;
-            // Guard: Windows ComfyUI must be running
-            if (this.envStatus.windows !== 'ready') {
+            // Guard: Windows ComfyUI must be running (REALsregan only)
+            if (m.method === 'realesrgan' && this.envStatus.windows !== 'ready') {
                 m.status = 'error';
                 m.error  = '🪟 Windows ComfyUI nie działa (port 8100) — uruchom środowisko Windows i spróbuj ponownie';
                 return;
             }
             try {
-                const res = await fetch('/api/upscale/start', {
+                const endpoint = m.method === 'lanczos'
+                    ? '/api/upscale/start_lanczos'
+                    : '/api/upscale/start';
+                const res = await fetch(endpoint, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
