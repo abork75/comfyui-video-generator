@@ -113,9 +113,12 @@ class FlowParser:
                 chain_prefix = item.get('chain_prefix', 'chain_step')
                 transition_to_next = item.get('transition_to_next', None)
 
-                # Lookahead: find the next non-break physical file after this chain.
-                # Used to set _chain_end_target on the last step so batch generation
-                # can use it as the I2V2I end frame ("dociągnij do następnego ujęcia").
+                # Lookahead: find the next physical source file after this chain.
+                # Used to set _chain_end_target on ALL steps so the entire chain
+                # is generated as I2V2I pulling toward the same destination —
+                # this prevents color drift throughout the chain.
+                # Skips talk items (they have no fixed visual) and headers,
+                # stops at break (segment boundary) or another chain.
                 _chain_end_target = None
                 for _nxt in flow_list[_idx + 1:]:
                     if isinstance(_nxt, dict) and 'break' in _nxt:
@@ -123,30 +126,35 @@ class FlowParser:
                     if isinstance(_nxt, dict) and 'chain' in _nxt:
                         break  # another chain immediately after — no target
                     if isinstance(_nxt, dict) and _nxt.get('type') == 'talk':
-                        break  # talk after chain — no end-frame target
+                        continue  # skip talk — look further for a physical file
+                    if isinstance(_nxt, dict) and 'header' in _nxt:
+                        continue  # skip display-only header
                     if isinstance(_nxt, dict) and 'file' in _nxt:
                         _chain_end_target = _nxt['file']
                         break
                     if isinstance(_nxt, str):
                         _chain_end_target = _nxt
                         break
-                
+
                 # Expand each step as virtual file
                 for step_idx, step_config in enumerate(chain_steps, 1):
                     merged_config = {**chain_base_config, **step_config}
-                    
+
                     # Add chain metadata
                     merged_config['_is_chain'] = True
                     merged_config['_chain_prefix'] = chain_prefix
                     merged_config['_chain_step'] = step_idx
                     merged_config['_chain_total'] = len(chain_steps)
-                    
+
                     # Add transition_to_next ONLY to LAST step
                     if step_idx == len(chain_steps) and transition_to_next:
                         merged_config['transition_to_next'] = transition_to_next
 
-                    # Mark last step with end-target so batch can use I2V2I
-                    if step_idx == len(chain_steps) and _chain_end_target:
+                    # ── KEY FIX: set _chain_end_target on ALL steps (not just last).
+                    # Every step now knows the final destination → I2V2I mode for all,
+                    # which means Color Match pulls the entire chain toward the target's
+                    # colour palette. Prevents the gradual hue drift typical of pure I2V.
+                    if _chain_end_target:
                         merged_config['_chain_end_target'] = _chain_end_target
                     
                     # Virtual filename
