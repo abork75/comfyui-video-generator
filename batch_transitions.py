@@ -270,8 +270,10 @@ def run_batch_generation(config):
                     'seed': to_config.get('seed', from_config.get('seed', default_seed)),
                     'positive_prompt': to_config.get('pos', from_config.get('pos', default_positive_prompt)),
                     'negative_prompt': to_config.get('neg', from_config.get('neg', default_negative_prompt)),
-                    'width': to_config.get('width', from_config.get('width', None)),
-                    'height': to_config.get('height', from_config.get('height', None)),
+                    # ✅ FIX: talk clips carry their own portrait width/height (e.g. 608x832)
+                    # which must NOT bleed into the chain resolution — skip them.
+                    'width': to_config.get('width') or (None if is_from_talk else from_config.get('width')),
+                    'height': to_config.get('height') or (None if is_from_talk else from_config.get('height')),
                     'blocks_to_swap': to_config.get('blocks_to_swap', from_config.get('blocks_to_swap', default_blocks_to_swap)),
                     'frame_interpolation': to_config.get('frame_interpolation', from_config.get('frame_interpolation', default_frame_interpolation)),
                     'is_i2v_mode': True,  # Chain is always I2V
