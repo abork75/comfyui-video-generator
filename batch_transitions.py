@@ -122,7 +122,7 @@ def run_batch_generation(config):
     project_folder = Path(config['project_folder'])
     flow = config['flow']
 
-    # ── Frame path helper ──────────────────────────────────────────────────────
+    # ── Frame path helpers ─────────────────────────────────────────────────────
     # New projects: PNG (lossless). Old projects: fall back to JPEG.
     def _frame_path(stem: str, suffix: str) -> Path:
         """Return frames/{stem}_{suffix}.png, falling back to .jpg if .png absent."""
@@ -131,6 +131,13 @@ def run_batch_generation(config):
             return png
         jpg = project_folder / 'frames' / f"{stem}_{suffix}.jpg"
         return jpg   # may not exist either — caller checks .exists()
+
+    def _real_frame_path(stem: str) -> Path:
+        """Return frames/{stem}_real.png — actual last frame of the transition
+        that generated the file 'stem'. Written after each generation so that
+        the next clip starts from exactly where the previous one ended, not from
+        the static source image (which WAN never reaches precisely)."""
+        return project_folder / 'frames' / f"{stem}_real.png"
 
     # Folder paths — defined early so all sections can reference them
     transitions_folder = project_folder / 'transitions'
@@ -474,8 +481,38 @@ def run_batch_generation(config):
             extractor.extract_end_frame(filename, target_width, target_height)
     
     logger.success(f"\nFrames ready!")
-    
-   
+
+    # ── Extract _real.png for already-existing normal transitions ──────────────
+    # When batch is re-run with skip_existed=True, existing transition videos
+    # are not regenerated — but downstream items (next transition or talk) still
+    # need _real.png to know where the video actually ended. Extract it now if
+    # the transition file exists but _real.png is missing.
+    # This block runs before the existing/missing split so it covers all cases.
+    logger.section("Pre-extracting _real.png for existing transitions")
+    _real_preextract_count = 0
+    for _pair in pairs:
+        _tc = _pair.get('to_config', {})
+        if _tc.get('_is_chain') or _tc.get('_is_talk'):
+            continue  # chains handle their own cache; talks have no _real
+        _to_stem = Path(_pair['to_file']).stem
+        _real_p  = project_folder / 'frames' / f"{_to_stem}_real.png"
+        if _real_p.exists():
+            continue  # already fresh
+        _trans_name = f"{Path(_pair['from_file']).stem}_{Path(_pair['to_file']).stem}_transition.mp4"
+        _trans_path = transitions_folder / _trans_name
+        if not _trans_path.exists():
+            continue  # not yet generated — will be written after generation
+        _extracted = extractor.extract_last_frame_to(
+            _trans_path, target_width, target_height, _real_p
+        )
+        if _extracted:
+            _real_preextract_count += 1
+            logger.info(f"  💾 {_to_stem}_real.png (from existing transition)")
+    if _real_preextract_count:
+        logger.success(f"  Pre-extracted {_real_preextract_count} _real.png file(s)")
+    else:
+        logger.info("  (none needed)")
+
     # ============================================================
     # CHECK EXISTING TRANSITIONS
     # ============================================================
@@ -791,7 +828,12 @@ def run_batch_generation(config):
                             if _talk_src:
                                 chain_frame_cache[from_file] = _talk_src
                 else:
-                    _talk_src = _frame_path(Path(from_file).stem, 'end')
+                    # Prefer _real.png (actual last frame of preceding transition)
+                    # over static _end.png (source image) to avoid visual jump.
+                    _real = _real_frame_path(Path(from_file).stem)
+                    _talk_src = _real if _real.exists() else _frame_path(Path(from_file).stem, 'end')
+                    if not _real.exists():
+                        logger.info(f"  ℹ️  Brak _real.png dla {from_file} — używam static end frame")
 
                 if not _talk_src or not Path(_talk_src).exists():
                     logger.warning(f"  ⏳ {to_file}: source frame not ready — will retry")
@@ -939,8 +981,18 @@ def run_batch_generation(config):
                     _soft_failed_this_pass.append(trans)
                     continue
             else:
-                # Normal file (image or video incl. talk clip)
-                start_frame = _frame_path(Path(from_file).stem, 'end')
+                # Normal file (image or video incl. talk clip).
+                # Prefer _real.png (actual last frame of the transition that
+                # reached this file) over _end.png (static source image).
+                # This eliminates the visual jump caused by WAN not reaching
+                # the target end frame exactly.
+                _real = _real_frame_path(Path(from_file).stem)
+                if _real.exists():
+                    start_frame = _real
+                    logger.info(f"  🎯 {Path(from_file).stem}: using _real.png as start frame")
+                else:
+                    start_frame = _frame_path(Path(from_file).stem, 'end')
+                    logger.info(f"  ℹ️  {Path(from_file).stem}: no _real.png — using static end frame")
                 if not start_frame.exists():
                     logger.warning(
                         f"⏳ Start frame missing for {trans['name']} "
@@ -1053,6 +1105,20 @@ def run_batch_generation(config):
                     chain_frame_cache[to_file] = last_frame
                 else:
                     logger.error("⚠️  Failed to extract last frame - chain may be broken!")
+
+            # ── Post-generation: save _real.png for normal transitions ─
+            # _real.png = actual last frame of the generated video.
+            # The next clip (transition or talk) will use this instead of
+            # the static _end.png so there is no jump at the boundary.
+            if success and not is_chain_step and not to_config.get('_is_talk'):
+                _real_out = _real_frame_path(Path(to_file).stem)
+                _extracted = extractor.extract_last_frame_to(
+                    output_path, target_width, target_height, _real_out
+                )
+                if _extracted:
+                    logger.info(f"  💾 _real.png saved for {to_file}")
+                else:
+                    logger.warning(f"  ⚠️  Failed to save _real.png for {to_file}")
 
             if success:
                 results.append({

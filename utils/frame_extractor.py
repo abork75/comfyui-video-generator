@@ -177,7 +177,66 @@ class FrameExtractor:
                 return None
         
         return None
-    
+
+    def extract_last_frame_to(self, source_path: Path, target_width: int, target_height: int, output_path: Path) -> Path | None:
+        """
+        Extract the last frame of a video and save to a specified output path.
+
+        Unlike extract_end_frame() (which derives the output path from the
+        source filename), this method lets the caller choose the destination —
+        used to write frames/{stem}_real.png after a transition is generated.
+
+        Args:
+            source_path: Absolute path to the source video file
+            target_width:  Scale to this width
+            target_height: Scale to this height
+            output_path:  Where to save the extracted PNG frame
+
+        Returns:
+            output_path on success, None on failure
+        """
+        if not source_path.exists():
+            return None
+        if source_path.suffix.lower() not in {'.mp4', '.avi', '.mov', '.mkv', '.webm'}:
+            return None
+
+        try:
+            output_path.parent.mkdir(parents=True, exist_ok=True)
+
+            # Step 1: count frames
+            probe_cmd = [
+                'ffprobe', '-v', 'error',
+                '-select_streams', 'v:0',
+                '-count_frames',
+                '-show_entries', 'stream=nb_read_frames',
+                '-of', 'csv=p=0',
+                str(source_path),
+            ]
+            result = subprocess.run(probe_cmd, check=True, capture_output=True, text=True)
+            total_frames = int(result.stdout.strip())
+            last_frame_idx = total_frames - 1
+
+            # Step 2: extract as PNG
+            cmd = [
+                'ffmpeg',
+                '-i', str(source_path),
+                '-vf', f'select=eq(n\\,{last_frame_idx}),scale={target_width}:{target_height}',
+                '-frames:v', '1',
+                '-y',
+                str(output_path),
+            ]
+            result = subprocess.run(cmd, capture_output=True)
+
+            if result.returncode == 0 and output_path.exists():
+                return output_path
+            else:
+                print(f"Error extracting last frame to {output_path}")
+                return None
+
+        except Exception as e:
+            print(f"Error in extract_last_frame_to: {e}")
+            return None
+
     def extract_start_frame(self, filename, target_width, target_height):
         """
         Extract first frame from video or process image
