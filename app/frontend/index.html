@@ -269,15 +269,24 @@
 
         <!-- TOOLBAR — hidden in post/pre/pic mode -->
         <div x-show="selectedRun && !postMode && !preMode && !picMode" class="border-b border-gray-700 px-5 py-2 flex items-center gap-3 flex-shrink-0 bg-gray-900">
-            <!-- Generuj -->
-            <button @click="startGeneration()"
+            <!-- Generuj brakujące -->
+            <button @click="startGeneration(false)"
                     :disabled="!canGenerate"
                     :class="[canGenerate && !isRunning ? 'bg-green-700 hover:bg-green-600 cursor-pointer'
                              : isRunning ? 'bg-green-800 cursor-not-allowed btn-running'
                              : 'bg-gray-700 opacity-40 cursor-not-allowed']"
                     class="text-white text-sm font-medium px-4 py-1.5 rounded-lg transition flex items-center gap-2">
                 <span x-text="isRunning ? '⟳' : '▶'" :class="isRunning ? 'animate-spin inline-block' : ''"></span>
-                <span x-text="isRunning ? 'Generowanie...' : 'Generuj'"></span>
+                <span x-text="isRunning ? 'Generowanie...' : 'Generuj brakujące'"></span>
+            </button>
+            <!-- Generuj wszystkie (force) -->
+            <button @click="startGeneration(true)"
+                    :disabled="!canGenerate || isRunning"
+                    :class="canGenerate && !isRunning ? 'bg-orange-700 hover:bg-orange-600 cursor-pointer' : 'bg-gray-700 opacity-40 cursor-not-allowed'"
+                    class="text-white text-sm font-medium px-4 py-1.5 rounded-lg transition flex items-center gap-2"
+                    title="Wymuś regenerację wszystkich tranzycji (nadpisze istniejące)">
+                <span>▶▶</span>
+                <span>Generuj wszystkie</span>
             </button>
             <!-- Stop -->
             <button @click="stopGeneration()" :disabled="!isRunning"
@@ -398,52 +407,68 @@
                                     <span>+</span><span>wstaw element</span>
                                 </div>
 
-                        <template x-for="(item, idx) in flowData.flow" :key="idx">
+                        <template x-for="(seg, segIdx) in flowSegments()" :key="segIdx">
+                            <div>
+
+                                <!-- ── Ujęcie wrapper box ── -->
+                                <div class="rounded-xl border mb-1 p-1.5 space-y-1.5"
+                                     :class="segmentHasMissing(seg) ? 'border-orange-800/70 bg-orange-950/15' : 'border-gray-600/50 bg-gray-800/20'">
+
+                                    <!-- Ujęcie header: label + move buttons + Regeneruj button -->
+                                    <div class="flex items-center gap-1.5 px-1.5 pb-1 border-b border-gray-700/60">
+                                        <!-- Editable segment label -->
+                                        <span class="text-xs text-gray-600 font-medium mr-0.5" x-text="(segIdx + 1) + '.'"></span>
+                                        <input type="text"
+                                               :value="seg.label || ''"
+                                               @change="setSegmentLabel(seg, segIdx, $event.target.value)"
+                                               :placeholder="'Ujęcie ' + (segIdx + 1)"
+                                               class="flex-1 text-xs bg-transparent border-0 border-b border-transparent focus:border-gray-500 focus:outline-none text-gray-400 placeholder-gray-600 font-medium tracking-wide px-0.5 py-0 min-w-0" />
+                                        <!-- Move up/down -->
+                                        <button @click="moveSegment(segIdx, -1)"
+                                                :disabled="segIdx === 0"
+                                                :class="segIdx === 0 ? 'text-gray-700 cursor-not-allowed' : 'text-gray-500 hover:text-gray-300'"
+                                                class="text-xs px-1 py-0.5 rounded hover:bg-gray-700/50 transition"
+                                                title="Przesuń ujęcie w górę">↑</button>
+                                        <button @click="moveSegment(segIdx, 1)"
+                                                :disabled="segIdx === flowSegments().length - 1"
+                                                :class="segIdx === flowSegments().length - 1 ? 'text-gray-700 cursor-not-allowed' : 'text-gray-500 hover:text-gray-300'"
+                                                class="text-xs px-1 py-0.5 rounded hover:bg-gray-700/50 transition"
+                                                title="Przesuń ujęcie w dół">↓</button>
+                                        <!-- Regeneruj -->
+                                        <button @click="regenSegment(seg, segIdx)"
+                                                :disabled="isRunning || !segmentHasMissing(seg)"
+                                                :class="!isRunning && segmentHasMissing(seg)
+                                                        ? 'text-orange-400 border-orange-700 hover:text-orange-300 hover:border-orange-500'
+                                                        : 'text-gray-500 border-gray-600 cursor-not-allowed'"
+                                                class="text-xs border rounded px-2 py-0.5 transition">
+                                            ↺ Regeneruj ujęcie
+                                        </button>
+                                    </div>
+
+                        <template x-for="entry in seg.items" :key="entry.idx">
                                     <div>
 
-                                        <!-- BREAK -->
-                                        <template x-if="item.break">
-                                            <div class="flex items-center gap-3 py-1">
-                                                <div class="flex-1 border-t border-dashed border-gray-700"></div>
-                                                <span class="text-xs text-gray-600 flex-shrink-0">✂ break</span>
-                                                <div class="flex-1 border-t border-dashed border-gray-700"></div>
-                                                <!-- Edit mode: break controls -->
-                                                <template x-if="editMode">
-                                                    <div class="flex items-center gap-1 flex-shrink-0">
-                                                        <button @click="editMoveItem(idx, -1)" :disabled="idx === 0"
-                                                                :class="idx === 0 ? 'opacity-30 cursor-not-allowed' : 'hover:text-white'"
-                                                                class="text-gray-600 text-xs px-1 py-0.5 rounded hover:bg-gray-700">↑</button>
-                                                        <button @click="editMoveItem(idx, 1)" :disabled="idx === flowData.flow.length - 1"
-                                                                :class="idx === flowData.flow.length - 1 ? 'opacity-30 cursor-not-allowed' : 'hover:text-white'"
-                                                                class="text-gray-600 text-xs px-1 py-0.5 rounded hover:bg-gray-700">↓</button>
-                                                        <button @click="editDeleteItem(idx)"
-                                                                class="text-gray-700 hover:text-red-400 text-xs px-1 py-0.5 rounded hover:bg-gray-800 transition">✕</button>
-                                                    </div>
-                                                </template>
-                                            </div>
-                                        </template>
-
                                         <!-- HEADER -->
-                                        <template x-if="item.header !== undefined && !item.break">
+                                        <template x-if="entry.item.header !== undefined">
                                             <div class="flex items-center gap-3 py-1.5 px-3 rounded-lg"
                                                  style="background:linear-gradient(90deg,#1e1b4b 0%,#2e1065 50%,#1e1b4b 100%);border:1px solid #4c1d95">
                                                 <div class="flex-1 flex items-center justify-center gap-3 min-w-0">
                                                     <div class="h-px flex-1 opacity-40" style="background:linear-gradient(90deg,transparent,#a78bfa)"></div>
-                                                    <span class="text-xs font-semibold tracking-widest text-violet-300 uppercase flex-shrink-0" x-text="item.header"></span>
+                                                    <span class="text-xs font-semibold tracking-widest text-violet-300 uppercase flex-shrink-0" x-text="entry.item.header"></span>
                                                     <div class="h-px flex-1 opacity-40" style="background:linear-gradient(90deg,#a78bfa,transparent)"></div>
                                                 </div>
                                                 <!-- Edit mode controls -->
                                                 <template x-if="editMode">
                                                     <div class="flex items-center gap-1 flex-shrink-0">
-                                                        <button @click="editOpenItem(idx)"
+                                                        <button @click="editOpenItem(entry.idx)"
                                                                 class="text-violet-400 hover:text-violet-200 text-xs px-1.5 py-0.5 rounded hover:bg-violet-900/40 transition" title="Edytuj nagłówek">✎</button>
-                                                        <button @click="editMoveItem(idx, -1)" :disabled="idx === 0"
-                                                                :class="idx === 0 ? 'opacity-30 cursor-not-allowed' : 'hover:text-white'"
+                                                        <button @click="editMoveItem(entry.idx, -1)" :disabled="entry.idx === 0"
+                                                                :class="entry.idx === 0 ? 'opacity-30 cursor-not-allowed' : 'hover:text-white'"
                                                                 class="text-gray-600 text-xs px-1 py-0.5 rounded hover:bg-gray-700">↑</button>
-                                                        <button @click="editMoveItem(idx, 1)" :disabled="idx === flowData.flow.length - 1"
-                                                                :class="idx === flowData.flow.length - 1 ? 'opacity-30 cursor-not-allowed' : 'hover:text-white'"
+                                                        <button @click="editMoveItem(entry.idx, 1)" :disabled="entry.idx === flowData.flow.length - 1"
+                                                                :class="entry.idx === flowData.flow.length - 1 ? 'opacity-30 cursor-not-allowed' : 'hover:text-white'"
                                                                 class="text-gray-600 text-xs px-1 py-0.5 rounded hover:bg-gray-700">↓</button>
-                                                        <button @click="editDeleteItem(idx)"
+                                                        <button @click="editDeleteItem(entry.idx)"
                                                                 class="text-gray-600 hover:text-red-400 text-xs px-1 py-0.5 rounded hover:bg-gray-800 transition">✕</button>
                                                     </div>
                                                 </template>
@@ -451,64 +476,64 @@
                                         </template>
 
                                         <!-- CHAIN -->
-                                        <template x-if="item.chain">
+                                        <template x-if="entry.item.chain">
                                             <div class="bg-gray-800 border border-gray-600 rounded-lg overflow-hidden"
-                                                 :class="chainBorderClass(idx)">
+                                                 :class="chainBorderClass(entry.idx)">
                                                 <div class="px-4 py-2.5 border-b border-gray-700 flex flex-wrap items-center gap-2"
                                                      style="background-color:#1a2332"
                                                      :class="editMode ? 'cursor-pointer' : ''"
-                                                     @click="if(editMode && !$event.target.closest('button,img,video,a,select,input')) editOpenItem(idx)">
+                                                     @click="if(editMode && !$event.target.closest('button,img,video,a,select,input')) editOpenItem(entry.idx)">
                                                     <span class="text-sm">⛓</span>
-                                                    <span class="font-mono text-sm text-blue-300" x-text="item.chain_prefix || 'chain'"></span>
-                                                    <template x-if="isChainPrefixDuplicate(item.chain_prefix)">
+                                                    <span class="font-mono text-sm text-blue-300" x-text="entry.item.chain_prefix || 'chain'"></span>
+                                                    <template x-if="isChainPrefixDuplicate(entry.item.chain_prefix)">
                                                         <span class="px-1.5 py-0.5 bg-yellow-900/60 border border-yellow-700 rounded text-xs text-yellow-400 font-semibold">⚠ duplikat nazwy</span>
                                                     </template>
                                                     <div class="flex flex-wrap gap-1.5 ml-1">
-                                                        <template x-if="item.backend"><span class="px-1.5 py-0.5 bg-gray-700 rounded text-xs text-gray-300" x-text="item.backend"></span></template>
-                                                        <template x-if="item.fps"><span class="px-1.5 py-0.5 bg-gray-700 rounded text-xs text-gray-400" x-text="item.fps + ' fps'"></span></template>
-                                                        <template x-if="item.steps"><span class="px-1.5 py-0.5 bg-gray-700 rounded text-xs text-gray-400" x-text="item.steps + ' steps'"></span></template>
-                                                        <template x-if="item.cfg"><span class="px-1.5 py-0.5 bg-gray-700 rounded text-xs text-gray-400" x-text="'cfg ' + item.cfg"></span></template>
-                                                        <template x-if="item.blocks_to_swap != null"><span class="px-1.5 py-0.5 bg-indigo-900 rounded text-xs text-indigo-300" x-text="'bts:' + item.blocks_to_swap"></span></template>
-                                                        <template x-if="item.frame_interpolation === false"><span class="px-1.5 py-0.5 bg-yellow-900 rounded text-xs text-yellow-500" title="RIFE VFI wyłączone">⏸ no-interp</span></template>
-                                                        <template x-if="item.frame_interpolation === true"><span class="px-1.5 py-0.5 bg-blue-900 rounded text-xs text-blue-400" title="RIFE VFI wymuszone włączone">⟳ interp</span></template>
-                                                        <template x-if="item.width && item.height"><span class="px-1.5 py-0.5 bg-gray-700 rounded text-xs text-yellow-400" x-text="item.width + '×' + item.height"></span></template>
+                                                        <template x-if="entry.item.backend"><span class="px-1.5 py-0.5 bg-gray-700 rounded text-xs text-gray-300" x-text="entry.item.backend"></span></template>
+                                                        <template x-if="entry.item.fps"><span class="px-1.5 py-0.5 bg-gray-700 rounded text-xs text-gray-400" x-text="entry.item.fps + ' fps'"></span></template>
+                                                        <template x-if="entry.item.steps"><span class="px-1.5 py-0.5 bg-gray-700 rounded text-xs text-gray-400" x-text="entry.item.steps + ' steps'"></span></template>
+                                                        <template x-if="entry.item.cfg"><span class="px-1.5 py-0.5 bg-gray-700 rounded text-xs text-gray-400" x-text="'cfg ' + entry.item.cfg"></span></template>
+                                                        <template x-if="entry.item.blocks_to_swap != null"><span class="px-1.5 py-0.5 bg-indigo-900 rounded text-xs text-indigo-300" x-text="'bts:' + entry.item.blocks_to_swap"></span></template>
+                                                        <template x-if="entry.item.frame_interpolation === false"><span class="px-1.5 py-0.5 bg-yellow-900 rounded text-xs text-yellow-500" title="RIFE VFI wyłączone">⏸ no-interp</span></template>
+                                                        <template x-if="entry.item.frame_interpolation === true"><span class="px-1.5 py-0.5 bg-blue-900 rounded text-xs text-blue-400" title="RIFE VFI wymuszone włączone">⟳ interp</span></template>
+                                                        <template x-if="entry.item.width && entry.item.height"><span class="px-1.5 py-0.5 bg-gray-700 rounded text-xs text-yellow-400" x-text="entry.item.width + '×' + entry.item.height"></span></template>
                                                     </div>
                                                     <!-- Chain status — each helper called ONCE -->
                                                     <div class="ml-auto flex items-center gap-2">
-                                                        <template x-if="chainStatusOk(idx)">
-                                                            <span :class="chainStatusClass(idx)" x-text="chainStatusLabel(idx)"></span>
+                                                        <template x-if="chainStatusOk(entry.idx)">
+                                                            <span :class="chainStatusClass(entry.idx)" x-text="chainStatusLabel(entry.idx)"></span>
                                                         </template>
-                                                        <span class="text-xs text-gray-600" x-text="item.chain.length + ' step' + (item.chain.length !== 1 ? 's' : '')"></span>
+                                                        <span class="text-xs text-gray-600" x-text="entry.item.chain.length + ' step' + (entry.item.chain.length !== 1 ? 's' : '')"></span>
                                                         <!-- Edit mode controls for chain -->
                                                         <template x-if="editMode">
                                                             <div class="flex items-center gap-1 border-l border-gray-700 pl-2 ml-1">
-                                                                <button @click="editOpenItem(idx)"
+                                                                <button @click="editOpenItem(entry.idx)"
                                                                         class="text-yellow-500 hover:text-yellow-300 text-xs px-1.5 py-0.5 rounded hover:bg-yellow-900/30 transition" title="Edytuj chain">✎</button>
-                                                                <button @click="editMoveItem(idx, -1)" :disabled="idx === 0"
-                                                                        :class="idx === 0 ? 'opacity-30 cursor-not-allowed' : 'hover:text-white'"
+                                                                <button @click="editMoveItem(entry.idx, -1)" :disabled="entry.idx === 0"
+                                                                        :class="entry.idx === 0 ? 'opacity-30 cursor-not-allowed' : 'hover:text-white'"
                                                                         class="text-gray-600 text-xs px-1 py-0.5 rounded hover:bg-gray-700">↑</button>
-                                                                <button @click="editMoveItem(idx, 1)" :disabled="idx === flowData.flow.length - 1"
-                                                                        :class="idx === flowData.flow.length - 1 ? 'opacity-30 cursor-not-allowed' : 'hover:text-white'"
+                                                                <button @click="editMoveItem(entry.idx, 1)" :disabled="entry.idx === flowData.flow.length - 1"
+                                                                        :class="entry.idx === flowData.flow.length - 1 ? 'opacity-30 cursor-not-allowed' : 'hover:text-white'"
                                                                         class="text-gray-600 text-xs px-1 py-0.5 rounded hover:bg-gray-700">↓</button>
-                                                                <button @click="editDeleteItem(idx)"
+                                                                <button @click="editDeleteItem(entry.idx)"
                                                                         class="text-gray-600 hover:text-red-400 text-xs px-1 py-0.5 rounded hover:bg-gray-800 transition" title="Usuń chain">✕</button>
                                                             </div>
                                                         </template>
                                                     </div>
                                                 </div>
                                                 <div class="divide-y divide-gray-700">
-                                                    <template x-for="(step, si) in item.chain" :key="si">
+                                                    <template x-for="(step, si) in entry.item.chain" :key="si">
                                                         <div class="px-4 py-2.5 flex items-start gap-3">
                                                             <!-- Chain step thumbnail -->
                                                             <div class="flex-shrink-0 mt-0.5">
-                                                                <template x-if="si === 0 && item.chain_prefix">
-                                                                    <img :src="thumbUrl(item.chain_prefix + '_001.mp4', 'start')"
+                                                                <template x-if="si === 0 && entry.item.chain_prefix">
+                                                                    <img :src="thumbUrl(entry.item.chain_prefix + '_001.mp4', 'start')"
                                                                          class="thumb"
                                                                          @error="$el.style.display='none'"
-                                                                         @click="openFrameModal(item.chain_prefix + '_001.mp4')"
+                                                                         @click="openFrameModal(entry.item.chain_prefix + '_001.mp4')"
                                                                          title="Kliknij aby powiększyć">
                                                                 </template>
-                                                                <template x-if="si > 0 || !item.chain_prefix">
+                                                                <template x-if="si > 0 || !entry.item.chain_prefix">
                                                                     <div class="thumb-placeholder text-gray-700">⛓</div>
                                                                 </template>
                                                             </div>
@@ -539,36 +564,36 @@
                                                                 </template>
                                                             </div>
                                                             <!-- Chain step video actions -->
-                                                            <template x-if="item.chain_prefix">
+                                                            <template x-if="entry.item.chain_prefix">
                                                                 <div class="flex-shrink-0 flex items-center gap-1"
-                                                                     x-data="{ get fname() { return item.chain_prefix + '_' + String(si+1).padStart(3,'0') + '.mp4'; } }">
-                                                                    <template x-if="_si(idx)?.steps?.[si]?.exists">
+                                                                     x-data="{ get fname() { return entry.item.chain_prefix + '_' + String(si+1).padStart(3,'0') + '.mp4'; } }">
+                                                                    <template x-if="_si(entry.idx)?.steps?.[si]?.exists">
                                                                         <div class="flex gap-1 items-center">
                                                                             <button @click="openVideoModal(fname)" class="text-green-500 hover:text-green-400 text-sm px-1" title="Odtwórz">▶</button>
-                                                                            <button @click="regenChainFrom(item.chain_prefix, si, item.chain.length)"
+                                                                            <button @click="regenChainFrom(entry.item.chain_prefix, si, entry.item.chain.length)"
                                                                                     :disabled="isRunning"
                                                                                     :class="isRunning ? 'opacity-30 cursor-not-allowed text-gray-600' : 'text-gray-500 hover:text-blue-400'"
                                                                                     class="text-sm px-1 transition"
-                                                                                    :title="'Re-generuj od step '+(si+1)+' do '+item.chain.length">↺</button>
-                                                                            <button @click="archiveChainFrom(item.chain_prefix, si, item.chain.length)"
+                                                                                    :title="'Re-generuj od step '+(si+1)+' do '+entry.item.chain.length">↺</button>
+                                                                            <button @click="archiveChainFrom(entry.item.chain_prefix, si, entry.item.chain.length)"
                                                                                     class="text-gray-600 hover:text-red-400 text-sm px-1"
-                                                                                    :title="'Archiwizuj od step '+(si+1)+' do '+item.chain.length">🗑</button>
-                                                                            <template x-if="chainStepHasArchived(idx, si)">
+                                                                                    :title="'Archiwizuj od step '+(si+1)+' do '+entry.item.chain.length">🗑</button>
+                                                                            <template x-if="chainStepHasArchived(entry.idx, si)">
                                                                                 <button @click="openVersionsModal(fname)"
                                                                                         class="text-gray-500 hover:text-yellow-400 text-sm px-1 transition"
                                                                                         title="Pokaż wersje archiwalne">📂</button>
                                                                             </template>
                                                                         </div>
                                                                     </template>
-                                                                    <template x-if="!_si(idx)?.steps?.[si]?.exists">
+                                                                    <template x-if="!_si(entry.idx)?.steps?.[si]?.exists">
                                                                         <div class="flex items-center gap-1">
                                                                             <span class="text-red-700 text-xs">○</span>
-                                                                            <button @click="regenChainFrom(item.chain_prefix, si, item.chain.length)"
+                                                                            <button @click="regenChainFrom(entry.item.chain_prefix, si, entry.item.chain.length)"
                                                                                     :disabled="isRunning"
                                                                                     :class="isRunning ? 'opacity-30 cursor-not-allowed text-gray-600' : 'text-red-600 hover:text-red-400'"
                                                                                     class="text-sm px-1 transition"
-                                                                                    :title="'Generuj od step '+(si+1)+' do '+item.chain.length">↺</button>
-                                                                            <template x-if="chainStepHasVersions(idx, si)">
+                                                                                    :title="'Generuj od step '+(si+1)+' do '+entry.item.chain.length">↺</button>
+                                                                            <template x-if="chainStepHasVersions(entry.idx, si)">
                                                                                 <button @click="openVersionsModal(fname)"
                                                                                         class="text-gray-500 hover:text-yellow-400 text-sm px-1 transition"
                                                                                         title="Pokaż wersje archiwalne">📂</button>
@@ -584,22 +609,22 @@
                                         </template>
 
                                         <!-- FILE -->
-                                        <template x-if="item.file">
+                                        <template x-if="entry.item.file">
                                             <div class="bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 hover:border-gray-600 transition"
-                                                 :class="[fileItemBorderClass(idx), editMode ? 'cursor-pointer ring-1 ring-yellow-700/40' : '']"
-                                                 @click="if(editMode && !$event.target.closest('button,img,video,a,select,input')) editOpenItem(idx)">
+                                                 :class="[fileItemBorderClass(entry.idx), editMode ? 'cursor-pointer ring-1 ring-yellow-700/40' : '']"
+                                                 @click="if(editMode && !$event.target.closest('button,img,video,a,select,input')) editOpenItem(entry.idx)">
                                                 <div class="flex items-start gap-3">
                                                     <!-- Thumbnail + upload button -->
                                                     <div class="flex-shrink-0 flex flex-col items-center gap-0.5">
-                                                        <img :src="frameUrl(item.file, 'start')"
+                                                        <img :src="frameUrl(entry.item.file, 'start')"
                                                              class="thumb"
                                                              @error="$el.style.display='none'; $el.nextElementSibling.style.display='flex'"
                                                              @load="$el.style.display=''; $el.nextElementSibling.style.display='none'"
-                                                             @click="openFrameModal(item.file)"
+                                                             @click="openFrameModal(entry.item.file)"
                                                              title="Kliknij aby zobaczyć klatki">
                                                         <div class="thumb-placeholder text-gray-600" style="display:none"
-                                                             x-text="fileIcon(item.file)"></div>
-                                                        <button @click="openSourceUpload(item.file)"
+                                                             x-text="fileIcon(entry.item.file)"></div>
+                                                        <button @click="openSourceUpload(entry.item.file)"
                                                                 class="text-gray-600 hover:text-blue-400 text-xs leading-none transition cursor-pointer"
                                                                 title="Podmień plik źródłowy">⬆</button>
                                                     </div>
@@ -607,37 +632,37 @@
                                                     <div class="flex-1 min-w-0">
                                                         <!-- Header row -->
                                                         <div class="flex flex-wrap items-center gap-2">
-                                                            <span class="font-mono text-sm text-gray-200 flex-shrink-0" x-text="item.file"></span>
+                                                            <span class="font-mono text-sm text-gray-200 flex-shrink-0" x-text="entry.item.file"></span>
                                                             <div class="flex flex-wrap gap-1.5">
-                                                                <template x-if="item.backend"><span class="px-1.5 py-0.5 bg-gray-700 rounded text-xs text-gray-300" x-text="item.backend"></span></template>
-                                                                <template x-if="item.duration"><span class="px-1.5 py-0.5 bg-gray-700 rounded text-xs text-gray-300" x-text="item.duration + 's'"></span></template>
-                                                                <template x-if="item.fps"><span class="px-1.5 py-0.5 bg-gray-700 rounded text-xs text-gray-400" x-text="item.fps + ' fps'"></span></template>
-                                                                <template x-if="item.steps"><span class="px-1.5 py-0.5 bg-gray-700 rounded text-xs text-gray-400" x-text="item.steps + ' steps'"></span></template>
-                                                                <template x-if="item.cfg"><span class="px-1.5 py-0.5 bg-gray-700 rounded text-xs text-gray-400" x-text="'cfg ' + item.cfg"></span></template>
-                                                                <template x-if="item.blocks_to_swap != null"><span class="px-1.5 py-0.5 bg-indigo-900 rounded text-xs text-indigo-300" x-text="'bts:' + item.blocks_to_swap"></span></template>
-                                                                <template x-if="item.frame_interpolation === false"><span class="px-1.5 py-0.5 bg-yellow-900 rounded text-xs text-yellow-500" title="RIFE VFI wyłączone">⏸ no-interp</span></template>
-                                                                <template x-if="item.frame_interpolation === true"><span class="px-1.5 py-0.5 bg-blue-900 rounded text-xs text-blue-400" title="RIFE VFI wymuszone włączone">⟳ interp</span></template>
-                                                                <template x-if="item.width && item.height"><span class="px-1.5 py-0.5 bg-gray-700 rounded text-xs text-yellow-400" x-text="item.width + '×' + item.height"></span></template>
+                                                                <template x-if="entry.item.backend"><span class="px-1.5 py-0.5 bg-gray-700 rounded text-xs text-gray-300" x-text="entry.item.backend"></span></template>
+                                                                <template x-if="entry.item.duration"><span class="px-1.5 py-0.5 bg-gray-700 rounded text-xs text-gray-300" x-text="entry.item.duration + 's'"></span></template>
+                                                                <template x-if="entry.item.fps"><span class="px-1.5 py-0.5 bg-gray-700 rounded text-xs text-gray-400" x-text="entry.item.fps + ' fps'"></span></template>
+                                                                <template x-if="entry.item.steps"><span class="px-1.5 py-0.5 bg-gray-700 rounded text-xs text-gray-400" x-text="entry.item.steps + ' steps'"></span></template>
+                                                                <template x-if="entry.item.cfg"><span class="px-1.5 py-0.5 bg-gray-700 rounded text-xs text-gray-400" x-text="'cfg ' + entry.item.cfg"></span></template>
+                                                                <template x-if="entry.item.blocks_to_swap != null"><span class="px-1.5 py-0.5 bg-indigo-900 rounded text-xs text-indigo-300" x-text="'bts:' + entry.item.blocks_to_swap"></span></template>
+                                                                <template x-if="entry.item.frame_interpolation === false"><span class="px-1.5 py-0.5 bg-yellow-900 rounded text-xs text-yellow-500" title="RIFE VFI wyłączone">⏸ no-interp</span></template>
+                                                                <template x-if="entry.item.frame_interpolation === true"><span class="px-1.5 py-0.5 bg-blue-900 rounded text-xs text-blue-400" title="RIFE VFI wymuszone włączone">⟳ interp</span></template>
+                                                                <template x-if="entry.item.width && entry.item.height"><span class="px-1.5 py-0.5 bg-gray-700 rounded text-xs text-yellow-400" x-text="entry.item.width + '×' + entry.item.height"></span></template>
                                                             </div>
                                                         </div>
                                                         <!-- Positive prompt — green when active (generates transition), gray when last-before-break -->
-                                                        <template x-if="item.pos && item.pos !== 'NONE'">
+                                                        <template x-if="entry.item.pos && entry.item.pos !== 'NONE'">
                                                             <p class="text-xs mt-2 line-clamp-2 leading-relaxed"
-                                                               :class="_si(idx)?.status === 'gray' ? 'text-gray-600' : 'text-green-400/80'"
-                                                               x-text="item.pos"></p>
+                                                               :class="_si(entry.idx)?.status === 'gray' ? 'text-gray-600' : 'text-green-400/80'"
+                                                               x-text="entry.item.pos"></p>
                                                         </template>
                                                         <!-- Negative prompt -->
-                                                        <template x-if="item.neg && item.neg !== 'NONE'">
+                                                        <template x-if="entry.item.neg && entry.item.neg !== 'NONE'">
                                                             <div class="mt-1">
-                                                                <button @click="negOpen[idx] = !negOpen[idx]"
+                                                                <button @click="negOpen[entry.idx] = !negOpen[entry.idx]"
                                                                         class="text-xs transition"
-                                                                        :class="_si(idx)?.status === 'gray' ? 'text-gray-700 hover:text-gray-500' : 'text-gray-600 hover:text-gray-400'">
-                                                                    <span x-text="negOpen[idx] ? '▲ neg' : '▼ neg'"></span>
+                                                                        :class="_si(entry.idx)?.status === 'gray' ? 'text-gray-700 hover:text-gray-500' : 'text-gray-600 hover:text-gray-400'">
+                                                                    <span x-text="negOpen[entry.idx] ? '▲ neg' : '▼ neg'"></span>
                                                                 </button>
-                                                                <p x-show="negOpen[idx]"
+                                                                <p x-show="negOpen[entry.idx]"
                                                                    class="text-xs mt-1 leading-relaxed line-clamp-4"
-                                                                   :class="_si(idx)?.status === 'gray' ? 'text-gray-700' : 'text-red-400/60'"
-                                                                   x-text="item.neg"></p>
+                                                                   :class="_si(entry.idx)?.status === 'gray' ? 'text-gray-700' : 'text-red-400/60'"
+                                                                   x-text="entry.item.neg"></p>
                                                             </div>
                                                         </template>
                                                     </div>
@@ -647,67 +672,67 @@
                                                         <!-- Edit controls inline -->
                                                         <template x-if="editMode">
                                                             <div class="flex items-center gap-0.5 border-r border-yellow-900/60 pr-1.5 mr-0.5">
-                                                                <button @click="editOpenItem(idx)"
+                                                                <button @click="editOpenItem(entry.idx)"
                                                                         class="text-yellow-500 hover:text-yellow-300 text-sm px-1 py-0.5 rounded hover:bg-yellow-900/30 transition" title="Edytuj">✎</button>
-                                                                <button @click="editMoveItem(idx, -1)" :disabled="idx === 0"
-                                                                        :class="idx === 0 ? 'opacity-30 cursor-not-allowed' : 'hover:text-white'"
+                                                                <button @click="editMoveItem(entry.idx, -1)" :disabled="entry.idx === 0"
+                                                                        :class="entry.idx === 0 ? 'opacity-30 cursor-not-allowed' : 'hover:text-white'"
                                                                         class="text-gray-500 text-xs px-1 rounded hover:bg-gray-700 transition">↑</button>
-                                                                <button @click="editMoveItem(idx, 1)" :disabled="idx === flowData.flow.length - 1"
-                                                                        :class="idx === flowData.flow.length - 1 ? 'opacity-30 cursor-not-allowed' : 'hover:text-white'"
+                                                                <button @click="editMoveItem(entry.idx, 1)" :disabled="entry.idx === flowData.flow.length - 1"
+                                                                        :class="entry.idx === flowData.flow.length - 1 ? 'opacity-30 cursor-not-allowed' : 'hover:text-white'"
                                                                         class="text-gray-500 text-xs px-1 rounded hover:bg-gray-700 transition">↓</button>
-                                                                <button @click="editDeleteItem(idx)"
+                                                                <button @click="editDeleteItem(entry.idx)"
                                                                         class="text-gray-600 hover:text-red-400 text-xs px-1 rounded hover:bg-gray-800 transition" title="Usuń">✕</button>
                                                             </div>
                                                         </template>
-                                                        <template x-if="fileItemIsGreen(idx)">
+                                                        <template x-if="fileItemIsGreen(entry.idx)">
                                                             <div class="flex items-center gap-1">
-                                                                <span class="text-xs text-green-500" x-text="fileItemSizeMb(idx)"></span>
-                                                                <button @click="openVideoModal(fileItemName(idx))"
+                                                                <span class="text-xs text-green-500" x-text="fileItemSizeMb(entry.idx)"></span>
+                                                                <button @click="openVideoModal(fileItemName(entry.idx))"
                                                                         class="text-green-500 hover:text-green-400 text-sm px-1 py-0.5 rounded"
                                                                         title="Odtwórz film">▶</button>
-                                                                <button @click="regenFile(fileItemName(idx))"
+                                                                <button @click="regenFile(fileItemName(entry.idx))"
                                                                         :disabled="isRunning"
                                                                         :class="isRunning ? 'opacity-30 cursor-not-allowed text-gray-600' : 'text-gray-500 hover:text-blue-400'"
                                                                         class="text-sm px-1 py-0.5 rounded transition"
                                                                         title="Re-generuj (zarchiwizuj i uruchom ponownie)">↺</button>
-                                                                <button @click="archiveFile(fileItemName(idx))"
+                                                                <button @click="archiveFile(fileItemName(entry.idx))"
                                                                         class="text-gray-600 hover:text-red-400 text-sm px-1 py-0.5 rounded"
                                                                         title="Archiwizuj bez re-generowania">🗑</button>
-                                                                <template x-if="fileItemHasArchived(idx)">
-                                                                    <button @click="openVersionsModal(fileItemName(idx))"
+                                                                <template x-if="fileItemHasArchived(entry.idx)">
+                                                                    <button @click="openVersionsModal(fileItemName(entry.idx))"
                                                                             class="text-gray-500 hover:text-yellow-400 text-sm px-1 py-0.5 rounded transition"
                                                                             title="Pokaż wersje archiwalne">📂</button>
                                                                 </template>
                                                             </div>
                                                         </template>
-                                                        <template x-if="fileItemIsRed(idx)">
+                                                        <template x-if="fileItemIsRed(entry.idx)">
                                                             <div class="flex items-center gap-1">
                                                                 <span class="text-red-500 text-xs">○ brak</span>
-                                                                <button @click="_startOnly([fileItemName(idx)])"
+                                                                <button @click="_startOnly([fileItemName(entry.idx)])"
                                                                         :disabled="isRunning"
                                                                         :class="isRunning ? 'opacity-30 cursor-not-allowed text-gray-600' : 'text-red-600 hover:text-red-400'"
                                                                         class="text-sm px-1 py-0.5 rounded transition"
                                                                         title="Generuj tylko tę tranzycję">↺</button>
-                                                                <template x-if="fileItemHasVersions(idx)">
-                                                                    <button @click="openVersionsModal(fileItemName(idx))"
+                                                                <template x-if="fileItemHasVersions(entry.idx)">
+                                                                    <button @click="openVersionsModal(fileItemName(entry.idx))"
                                                                             class="text-gray-500 hover:text-yellow-400 text-sm px-1 py-0.5 rounded transition"
                                                                             title="Pokaż wersje archiwalne">📂</button>
                                                                 </template>
                                                             </div>
                                                         </template>
-                                                        <template x-if="fileItemIsGray(idx)">
+                                                        <template x-if="fileItemIsGray(entry.idx)">
                                                             <div class="flex items-center gap-1">
-                                                                <template x-if="/\.(mp4|mov|avi|mkv|webm)$/i.test(item.file || '')">
-                                                                    <span class="text-xs text-blue-600" x-text="fileItemSourceSizeMb(idx)"></span>
+                                                                <template x-if="/\.(mp4|mov|avi|mkv|webm)$/i.test(entry.item.file || '')">
+                                                                    <span class="text-xs text-blue-600" x-text="fileItemSourceSizeMb(entry.idx)"></span>
                                                                 </template>
-                                                                <template x-if="!/\.(mp4|mov|avi|mkv|webm)$/i.test(item.file || '')">
+                                                                <template x-if="!/\.(mp4|mov|avi|mkv|webm)$/i.test(entry.item.file || '')">
                                                                     <span class="text-gray-600 text-xs" title="Ten plik nie generuje przejścia">—</span>
                                                                 </template>
                                                             </div>
                                                         </template>
                                                         <!-- Source video play — only for mp4/video source files -->
-                                                        <template x-if="/\.(mp4|mov|avi|mkv|webm)$/i.test(item.file || '')">
-                                                            <button @click.stop="openSourceVideoModal(item.file)"
+                                                        <template x-if="/\.(mp4|mov|avi|mkv|webm)$/i.test(entry.item.file || '')">
+                                                            <button @click.stop="openSourceVideoModal(entry.item.file)"
                                                                     class="text-blue-500 hover:text-blue-300 text-sm px-1 py-0.5 rounded transition"
                                                                     title="Odtwórz plik źródłowy">▶</button>
                                                         </template>
@@ -717,80 +742,80 @@
                                         </template>
 
                                         <!-- TALK tile -->
-                                        <template x-if="item.type === 'talk' && !item.break">
+                                        <template x-if="entry.item.type === 'talk'">
                                             <div class="bg-gray-800 border border-gray-700 rounded-lg overflow-hidden"
-                                                 :class="_si(idx)?.status === 'green' ? 'sl-green' : _si(idx)?.status === 'partial' ? 'sl-orange' : 'sl-red'">
+                                                 :class="_si(entry.idx)?.status === 'green' ? 'sl-green' : _si(entry.idx)?.status === 'partial' ? 'sl-orange' : 'sl-red'">
                                                 <!-- ── Header bar (matches chain style) ── -->
                                                 <div class="px-4 py-2.5 border-b border-gray-700 flex flex-wrap items-center gap-2"
                                                      style="background-color:#1a2332"
                                                      :class="editMode ? 'cursor-pointer' : ''"
-                                                     @click="if(editMode && !$event.target.closest('button,img,video,a,select,input')) editOpenItem(idx)">
+                                                     @click="if(editMode && !$event.target.closest('button,img,video,a,select,input')) editOpenItem(entry.idx)">
                                                     <span class="text-sm">🎙</span>
                                                     <!-- Name: explicit prefix → else stem from first audio -->
                                                     <span class="font-mono text-sm text-teal-300"
-                                                          x-text="item.prefix || _talkFirstStem(item)"></span>
+                                                          x-text="entry.item.prefix || _talkFirstStem(entry.item)"></span>
                                                     <!-- Resolution badge -->
-                                                    <template x-if="item.width && item.height">
+                                                    <template x-if="entry.item.width && entry.item.height">
                                                         <span class="px-1.5 py-0.5 bg-gray-700 rounded text-xs text-gray-300"
-                                                              x-text="item.width + '×' + item.height"></span>
+                                                              x-text="entry.item.width + '×' + entry.item.height"></span>
                                                     </template>
                                                     <!-- Transition badge -->
-                                                    <template x-if="item.transition">
+                                                    <template x-if="entry.item.transition">
                                                         <span class="px-1.5 py-0.5 bg-blue-900/60 border border-blue-700 rounded text-xs text-blue-300"
                                                               title="Tranzycja do następnej sceny skonfigurowana">🎬 trans</span>
                                                     </template>
                                                     <!-- Right side: status + actions + steps count + edit controls -->
                                                     <div class="ml-auto flex items-center gap-1.5">
                                                         <!-- Green: size + play + archive -->
-                                                        <template x-if="_si(idx)?.status === 'green'">
+                                                        <template x-if="_si(entry.idx)?.status === 'green'">
                                                             <div class="flex items-center gap-1">
                                                                 <span class="text-xs text-green-500"
-                                                                      x-text="_si(idx)?.size_mb ? _si(idx).size_mb + ' MB' : ''"></span>
-                                                                <button @click.stop="openVideoModal(_si(idx).name)"
+                                                                      x-text="_si(entry.idx)?.size_mb ? _si(entry.idx).size_mb + ' MB' : ''"></span>
+                                                                <button @click.stop="openVideoModal(_si(entry.idx).name)"
                                                                         class="text-green-500 hover:text-green-400 text-sm px-1"
                                                                         title="Odtwórz">▶</button>
-                                                                <button @click.stop="archiveFile(_si(idx).name)"
+                                                                <button @click.stop="archiveFile(_si(entry.idx).name)"
                                                                         class="text-gray-600 hover:text-red-400 text-sm px-1"
                                                                         title="Archiwizuj talk clip">🗑</button>
                                                             </div>
                                                         </template>
                                                         <!-- Red: missing indicator -->
-                                                        <template x-if="_si(idx)?.status !== 'green'">
+                                                        <template x-if="_si(entry.idx)?.status !== 'green'">
                                                             <span class="text-xs text-red-700">○</span>
                                                         </template>
                                                         <!-- Versions (always when archived exist) -->
-                                                        <template x-if="_si(idx)?.has_versions">
-                                                            <button @click.stop="openVersionsModal(_si(idx).name)"
+                                                        <template x-if="_si(entry.idx)?.has_versions">
+                                                            <button @click.stop="openVersionsModal(_si(entry.idx).name)"
                                                                     class="text-gray-500 hover:text-yellow-400 text-sm px-1 transition"
                                                                     title="Pokaż wersje archiwalne">📂</button>
                                                         </template>
                                                         <!-- Steps count -->
                                                         <span class="text-xs text-gray-600"
-                                                              x-text="(Array.isArray(item.audio) ? item.audio.length : 1) + ' step' + ((Array.isArray(item.audio) ? item.audio.length : 1) !== 1 ? 's' : '')"></span>
+                                                              x-text="(Array.isArray(entry.item.audio) ? entry.item.audio.length : 1) + ' step' + ((Array.isArray(entry.item.audio) ? entry.item.audio.length : 1) !== 1 ? 's' : '')"></span>
                                                         <!-- Generate / re-generate -->
-                                                        <button @click.stop="startTalkGen(idx)"
+                                                        <button @click.stop="startTalkGen(entry.idx)"
                                                                 :disabled="talkStatus.status === 'running' || talkStatus.status === 'queued' || envStatus.linux !== 'ready'"
-                                                                :class="(talkStatus.status === 'running' || talkStatus.status === 'queued' || envStatus.linux !== 'ready') ? 'opacity-30 cursor-not-allowed text-gray-600' : (_si(idx)?.status === 'green' ? 'text-gray-500 hover:text-blue-400' : 'text-teal-500 hover:text-teal-300')"
+                                                                :class="(talkStatus.status === 'running' || talkStatus.status === 'queued' || envStatus.linux !== 'ready') ? 'opacity-30 cursor-not-allowed text-gray-600' : (_si(entry.idx)?.status === 'green' ? 'text-gray-500 hover:text-blue-400' : 'text-teal-500 hover:text-teal-300')"
                                                                 class="text-sm px-1 py-0.5 rounded transition"
-                                                                :title="envStatus.linux !== 'ready' ? '🐧 Linux nieaktywny' : (_si(idx)?.status === 'green' ? 'Re-generuj talk' : 'Generuj Talk')">
-                                                            <span x-show="talkStatus.status === 'running' && talkStatus.talk_name === _si(idx)?.name" class="animate-spin inline-block">⟳</span>
-                                                            <span x-show="!(talkStatus.status === 'running' && talkStatus.talk_name === _si(idx)?.name)">🎙</span>
+                                                                :title="envStatus.linux !== 'ready' ? '🐧 Linux nieaktywny' : (_si(entry.idx)?.status === 'green' ? 'Re-generuj talk' : 'Generuj Talk')">
+                                                            <span x-show="talkStatus.status === 'running' && talkStatus.talk_name === _si(entry.idx)?.name" class="animate-spin inline-block">⟳</span>
+                                                            <span x-show="!(talkStatus.status === 'running' && talkStatus.talk_name === _si(entry.idx)?.name)">↺</span>
                                                         </button>
                                                         <!-- Edit mode controls -->
                                                         <template x-if="editMode">
                                                             <div class="flex items-center gap-1 border-l border-gray-700 pl-2 ml-1">
-                                                                <button @click.stop="editOpenItem(idx)"
+                                                                <button @click.stop="editOpenItem(entry.idx)"
                                                                         class="text-teal-500 hover:text-teal-300 text-xs px-1.5 py-0.5 rounded hover:bg-teal-900/30 transition"
                                                                         title="Edytuj talk">✎</button>
-                                                                <button @click.stop="editMoveItem(idx, -1)"
-                                                                        :disabled="idx === 0"
-                                                                        :class="idx === 0 ? 'opacity-30 cursor-not-allowed' : 'hover:text-white'"
+                                                                <button @click.stop="editMoveItem(entry.idx, -1)"
+                                                                        :disabled="entry.idx === 0"
+                                                                        :class="entry.idx === 0 ? 'opacity-30 cursor-not-allowed' : 'hover:text-white'"
                                                                         class="text-gray-600 text-xs px-1 py-0.5 rounded hover:bg-gray-700">↑</button>
-                                                                <button @click.stop="editMoveItem(idx, 1)"
-                                                                        :disabled="idx === flowData.flow.length - 1"
-                                                                        :class="idx === flowData.flow.length - 1 ? 'opacity-30 cursor-not-allowed' : 'hover:text-white'"
+                                                                <button @click.stop="editMoveItem(entry.idx, 1)"
+                                                                        :disabled="entry.idx === flowData.flow.length - 1"
+                                                                        :class="entry.idx === flowData.flow.length - 1 ? 'opacity-30 cursor-not-allowed' : 'hover:text-white'"
                                                                         class="text-gray-600 text-xs px-1 py-0.5 rounded hover:bg-gray-700">↓</button>
-                                                                <button @click.stop="editDeleteItem(idx)"
+                                                                <button @click.stop="editDeleteItem(entry.idx)"
                                                                         class="text-gray-600 hover:text-red-400 text-xs px-1 py-0.5 rounded hover:bg-gray-800 transition"
                                                                         title="Usuń">✕</button>
                                                             </div>
@@ -799,7 +824,7 @@
                                                 </div>
                                                 <!-- ── Steps body (divide-y like chain) ── -->
                                                 <div class="divide-y divide-gray-700">
-                                                    <template x-for="(aud, ai) in (Array.isArray(item.audio) ? item.audio : [item.audio])" :key="ai">
+                                                    <template x-for="(aud, ai) in (Array.isArray(entry.item.audio) ? entry.item.audio : [entry.item.audio])" :key="ai">
                                                         <div class="px-4 py-2.5 flex items-start gap-3">
                                                             <div class="flex-1 min-w-0">
                                                                 <div class="flex items-start gap-2">
@@ -809,9 +834,9 @@
                                                                         <span class="px-1.5 py-0.5 bg-gray-700 border border-teal-900 rounded text-xs font-mono text-teal-400"
                                                                               x-text="typeof aud === 'object' ? aud.file : aud"></span>
                                                                         <!-- duration badge -->
-                                                                        <template x-if="_si(idx)?.audio_durations?.[ai] != null">
+                                                                        <template x-if="_si(entry.idx)?.audio_durations?.[ai] != null">
                                                                             <span class="px-1 py-0.5 bg-gray-700 rounded text-xs text-gray-400"
-                                                                                  x-text="_si(idx).audio_durations[ai] + 's'"></span>
+                                                                                  x-text="_si(entry.idx).audio_durations[ai] + 's'"></span>
                                                                         </template>
                                                                     </div>
                                                                 </div>
@@ -839,14 +864,47 @@
                                             </div>
                                         </template>
 
-                                        <!-- Add-zone after each item — INSIDE x-for root div -->
+                                        <!-- Add-zone after each item — INSIDE inner x-for root div -->
                                         <div :class="editMode ? 'add-zone active' : 'add-zone'"
-                                             @click="openAddItemModal(idx)"
+                                             @click="openAddItemModal(entry.idx)"
                                              class="w-full items-center justify-center gap-2 py-1 mt-1 text-xs font-medium text-blue-400 bg-blue-950/40 border border-dashed border-blue-800 rounded hover:bg-blue-900/50 hover:border-blue-500 hover:text-blue-300 transition cursor-pointer">
                                             <span>+</span><span>wstaw element</span>
                                         </div>
                                     </div>
                                 </template>
+                                </div><!-- /segment wrapper box -->
+
+                                <!-- Break separator between segments -->
+                                <template x-if="seg.breakIdx !== null">
+                                    <div>
+                                        <div class="flex items-center gap-3 py-1">
+                                            <div class="flex-1 border-t border-dashed border-gray-700"></div>
+                                            <span class="text-xs text-gray-600 flex-shrink-0">✂ break</span>
+                                            <div class="flex-1 border-t border-dashed border-gray-700"></div>
+                                            <!-- Edit mode: break controls -->
+                                            <template x-if="editMode">
+                                                <div class="flex items-center gap-1 flex-shrink-0">
+                                                    <button @click="editMoveItem(seg.breakIdx, -1)" :disabled="seg.breakIdx === 0"
+                                                            :class="seg.breakIdx === 0 ? 'opacity-30 cursor-not-allowed' : 'hover:text-white'"
+                                                            class="text-gray-600 text-xs px-1 py-0.5 rounded hover:bg-gray-700">↑</button>
+                                                    <button @click="editMoveItem(seg.breakIdx, 1)" :disabled="seg.breakIdx === flowData.flow.length - 1"
+                                                            :class="seg.breakIdx === flowData.flow.length - 1 ? 'opacity-30 cursor-not-allowed' : 'hover:text-white'"
+                                                            class="text-gray-600 text-xs px-1 py-0.5 rounded hover:bg-gray-700">↓</button>
+                                                    <button @click="editDeleteItem(seg.breakIdx)"
+                                                            class="text-gray-700 hover:text-red-400 text-xs px-1 py-0.5 rounded hover:bg-gray-800 transition">✕</button>
+                                                </div>
+                                            </template>
+                                        </div>
+                                        <!-- Add-zone after break -->
+                                        <div :class="editMode ? 'add-zone active' : 'add-zone'"
+                                             @click="openAddItemModal(seg.breakIdx)"
+                                             class="w-full items-center justify-center gap-2 py-1 mt-1 text-xs font-medium text-blue-400 bg-blue-950/40 border border-dashed border-blue-800 rounded hover:bg-blue-900/50 hover:border-blue-500 hover:text-blue-300 transition cursor-pointer">
+                                            <span>+</span><span>wstaw element</span>
+                                        </div>
+                                    </div>
+                                </template>
+                            </div>
+                        </template>
                             </div>
                         </template>
                     </div>
@@ -3580,7 +3638,8 @@
                             <div class="flex items-center gap-3 px-4 py-2.5 cursor-pointer select-none"
                                  @click="tileModal._edgeBlendOpen = !tileModal._edgeBlendOpen; if (tileModal._edgeBlendOpen && !(tileModal.data.edge_blend_prompts||[]).length) loadSystemPromptInto('p0000021','edge_blend_prompts')">
                                 <label class="relative inline-flex items-center cursor-pointer" @click.stop>
-                                    <input type="checkbox" x-model="tileModal.data.edge_blend_enabled" class="sr-only peer">
+                                    <input type="checkbox" x-model="tileModal.data.edge_blend_enabled" class="sr-only peer"
+                                           @change="if (tileModal.data.edge_blend_enabled && !(tileModal.data.edge_blend_prompts||[]).length) { loadSystemPromptInto('p0000021','edge_blend_prompts'); tileModal._edgeBlendOpen = true; }">
                                     <div class="w-9 h-5 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-600"></div>
                                 </label>
                                 <span class="text-xs font-semibold flex-1"
@@ -3690,7 +3749,8 @@
                             <div class="flex items-center gap-3 px-4 py-2.5 cursor-pointer select-none"
                                  @click="tileModal._sceneBlendOpen = !tileModal._sceneBlendOpen; if (tileModal._sceneBlendOpen && !(tileModal.data.scene_blend_prompts||[]).length) loadSystemPromptInto('p0000022','scene_blend_prompts')">
                                 <label class="relative inline-flex items-center cursor-pointer" @click.stop>
-                                    <input type="checkbox" x-model="tileModal.data.scene_blend_enabled" class="sr-only peer">
+                                    <input type="checkbox" x-model="tileModal.data.scene_blend_enabled" class="sr-only peer"
+                                           @change="if (tileModal.data.scene_blend_enabled && !(tileModal.data.scene_blend_prompts||[]).length) { loadSystemPromptInto('p0000022','scene_blend_prompts'); tileModal._sceneBlendOpen = true; }">
                                     <div class="w-9 h-5 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-purple-600"></div>
                                 </label>
                                 <span class="text-xs font-semibold flex-1"
@@ -4822,9 +4882,15 @@ function app() {
         },
 
         // ─ Generation ─────────────────────────────────────
-        async startGeneration() {
+        async startGeneration(forceAll = false) {
             if (!this.canGenerate) return;
             this._dryRunMode = false;   // safety: clear any stale dry-run flag
+            this._forceAll = forceAll;
+
+            if (forceAll) {
+                if (!confirm('Czy na pewno chcesz wygenerować WSZYSTKIE tranzycje od nowa?\n\nIstniejące pliki zostaną nadpisane.')) return;
+            }
+
             const conflicts = this._getFlowConflicts();
             if (conflicts.length > 0) {
                 this.preflightModal = { open: true, conflicts, onConfirm: () => this._doStartGeneration() };
@@ -4840,10 +4906,57 @@ function app() {
                 this.logLine('sys', '❌ 🐧 Linux ComfyUI nie działa (port 8189) — uruchom środowisko Linux i spróbuj ponownie');
                 return;
             }
+
+            // Force-all: archive all existing transitions first so the UI shows
+            // red (missing) for everything and the user sees real-time progress.
+            if (this._forceAll && this.statusData) {
+                const names = [];
+                for (const item of this.statusData.items) {
+                    if (!item || !item.name) continue;
+                    if (item.type === 'file' && item.status === 'green') {
+                        names.push(item.name);
+                    } else if (item.type === 'chain') {
+                        for (const step of (item.steps || [])) {
+                            if (step.exists) names.push(step.filename);
+                        }
+                    } else if (item.type === 'talk') {
+                        if (item.status !== 'red') names.push(item.name);
+                        if (item.bridge_exists && item.bridge_name) names.push(item.bridge_name);
+                    }
+                }
+                if (names.length > 0) {
+                    this.logLine('sys', `📦 Archiwizuję ${names.length} istniejących plików...`);
+                    try {
+                        const ar = await fetch('/api/media/batch-archive', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ run: this.selectedRun.filename, names }),
+                        });
+                        const arData = await ar.json();
+                        if (ar.ok) {
+                            const archived = arData.results.filter(r => r.ok).length;
+                            this.logLine('sys', `📦 Zarchiwizowano ${archived} plików (ts: ${arData.ts})`);
+                        } else {
+                            this.logLine('sys', `⚠ batch-archive: ${arData.detail || ar.status} — kontynuuję`);
+                        }
+                    } catch(e) {
+                        this.logLine('sys', `⚠ batch-archive błąd: ${e.message} — kontynuuję`);
+                    }
+                    // Refresh status so UI immediately shows everything as red
+                    await this.refreshStatus();
+                }
+            }
+
             try {
-                const res = await fetch(`/api/generate/${encodeURIComponent(this.selectedRun.filename)}`, { method: 'POST' });
+                const body = this._forceAll ? { force_all: true } : {};
+                const res = await fetch(`/api/generate/${encodeURIComponent(this.selectedRun.filename)}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body),
+                });
                 if (!res.ok) { const e = await res.json(); this.logLine('sys', `❌ ${e.detail}`); }
             } catch(e) { this.logLine('sys', `❌ ${e.message}`); }
+            this._forceAll = false;
         },
         async stopGeneration() {
             if (!this.isRunning) return;
@@ -5251,6 +5364,158 @@ function app() {
         // Re-generate a chain step AND all subsequent steps.
         // fromSi: 0-based index of the step to start from.
         // totalSteps: item.chain.length
+        // ─── Segment helpers ───────────────────────────────────────────
+        // Split flowData.flow into segments separated by break items.
+        // Each segment: { items: [{item, idx}, ...], breakIdx: Number|null }
+        // The break item ends the segment (separator shown after the box).
+        // Move an entire segment (all its items + trailing break) one position up or down.
+        async setSegmentLabel(seg, segIdx, value) {
+            if (seg.breakIdx === null) return; // last segment has no break item to persist to
+            const newFlow = JSON.parse(JSON.stringify(this.flowData.flow));
+            const breakItem = newFlow[seg.breakIdx];
+            if (value.trim()) {
+                breakItem.label = value.trim();
+            } else {
+                delete breakItem.label;
+            }
+            const ok = await this._saveFlow(newFlow);
+            if (ok) this.flowData.flow = newFlow;
+        },
+
+        async moveSegment(segIdx, dir) {
+            const segs = this.flowSegments();
+            const targetIdx = segIdx + dir;
+            if (targetIdx < 0 || targetIdx >= segs.length) return;
+
+            const segA = segs[Math.min(segIdx, targetIdx)];
+            const segB = segs[Math.max(segIdx, targetIdx)];
+
+            // Build contiguous index lists for each block (items + optional break)
+            const indicesA = [...segA.items.map(e => e.idx), ...(segA.breakIdx !== null ? [segA.breakIdx] : [])];
+            const indicesB = [...segB.items.map(e => e.idx), ...(segB.breakIdx !== null ? [segB.breakIdx] : [])];
+
+            const newFlow = JSON.parse(JSON.stringify(this.flowData.flow));
+            const blockA = indicesA.map(i => newFlow[i]);
+            const blockB = indicesB.map(i => newFlow[i]);
+
+            // Both blocks are contiguous; A starts at indicesA[0]
+            const start = indicesA[0];
+            [...blockB, ...blockA].forEach((item, i) => { newFlow[start + i] = item; });
+
+            const ok = await this._saveFlow(newFlow);
+            if (ok) {
+                this.flowData.flow = newFlow;
+                this.statusData = null; await this.refreshStatus();
+            }
+        },
+
+        flowSegments() {
+            if (!this.flowData) return [];
+            const segs = [];
+            let current = { items: [] };
+            this.flowData.flow.forEach((item, idx) => {
+                if (item.break) {
+                    current.breakIdx = idx;
+                    current.label = item.label || '';
+                    segs.push(current);
+                    current = { items: [] };
+                } else {
+                    current.items.push({ item, idx });
+                }
+            });
+            // Always push the last segment (may have no trailing break)
+            if (current.items.length > 0) {
+                current.breakIdx = null;
+                current.label = '';
+                segs.push(current);
+            }
+            // Edge case: flow is empty or only breaks
+            if (segs.length === 0) segs.push({ items: [], breakIdx: null, label: '' });
+            return segs;
+        },
+
+        // Returns true if any generatable item in the segment has a missing output.
+        segmentHasMissing(seg) {
+            if (!this.statusData || !seg) return false;
+            for (const { item, idx } of seg.items) {
+                const si = this._si(idx);
+                if (!si) continue;
+                if (item.file) {
+                    if (si.status === 'red') return true;
+                } else if (item.chain) {
+                    if (si.steps && si.steps.some(s => !s.exists)) return true;
+                    if (!si.steps && si.status !== 'green') return true;
+                } else if (item.type === 'talk') {
+                    if (si.status !== 'green') return true;
+                }
+            }
+            return false;
+        },
+
+        // Dirty-propagation regen: find first missing in segment →
+        // batch-archive from there to end of segment → _startOnly all.
+        async regenSegment(seg, segIdx) {
+            if (!this.selectedRun || this.isRunning || !this.statusData) return;
+
+            // Find first item with any missing output
+            let firstMissingPos = -1;
+            for (let i = 0; i < seg.items.length; i++) {
+                const { item, idx } = seg.items[i];
+                const si = this._si(idx);
+                if (!si) continue;
+                let hasMissing = false;
+                if (item.file)              hasMissing = si.status === 'red';
+                else if (item.chain)        hasMissing = si.steps ? si.steps.some(s => !s.exists) : si.status !== 'green';
+                else if (item.type === 'talk') hasMissing = si.status !== 'green';
+                if (hasMissing) { firstMissingPos = i; break; }
+            }
+            if (firstMissingPos < 0) return; // nothing missing
+
+            // Collect all output filenames from firstMissingPos to end
+            const names = [];
+            for (let i = firstMissingPos; i < seg.items.length; i++) {
+                const { item, idx } = seg.items[i];
+                const si = this._si(idx);
+                if (item.file && si?.name) {
+                    names.push(si.name);
+                } else if (item.chain && item.chain_prefix) {
+                    for (let step = 0; step < item.chain.length; step++) {
+                        names.push(`${item.chain_prefix}_${String(step+1).padStart(3,'0')}.mp4`);
+                    }
+                } else if (item.type === 'talk' && si?.name) {
+                    names.push(si.name);
+                }
+            }
+            if (!names.length) return;
+
+            const label = names.length === 1
+                ? names[0]
+                : `${names.length} pliki (od: ${names[0]})`;
+            if (!confirm(`Regenerować ujęcie ${segIdx+1} od pierwszego brakującego?\n\n${label}\n\nIstniejące pliki zostaną zarchiwizowane.`)) return;
+
+            // Batch-archive all (non-existent files are silently skipped)
+            this.logLine('sys', `📦 Regen ujęcie ${segIdx+1}: archiwizuję ${names.length} pliki...`);
+            try {
+                const res = await fetch('/api/media/batch-archive', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ run: this.selectedRun.filename, names }),
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    for (const r of data.results) {
+                        if (r.ok) this.logLine('sys', `📦 Backup: ${r.new_name}`);
+                    }
+                } else {
+                    this.logLine('sys', `❌ batch-archive: ${data.detail || res.status}`);
+                    return;
+                }
+            } catch(e) { this.logLine('sys', `❌ batch-archive: ${e.message}`); return; }
+
+            this.logLine('sys', `▶ Regen ujęcie ${segIdx+1}: ${names.length} pliki`);
+            await this._startOnly(names);
+        },
+
         async regenChainFrom(chainPrefix, fromSi, totalSteps) {
             if (!chainPrefix || !this.selectedRun || this.isRunning) return;
 
@@ -8216,6 +8481,8 @@ function app() {
                 });
                 return;
             }
+            // Auto-save first so backend has current image_slots before prompt is added
+            await this.picSaveTile(true);
             if (this.pic.categories.length === 0) await this.loadPicLibrary();
             this.picOpenPromptModal(null, { runId, tileId, slotIdx });
         },
@@ -8237,6 +8504,7 @@ function app() {
                 }
                 return;
             }
+            await this.picSaveTile(true);
             if (this.pic.categories.length === 0) await this.loadPicLibrary();
             this.picOpenPromptModal(null, { runId, tileId, slotIdx: null, addToAll: true });
         },

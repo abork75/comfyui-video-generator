@@ -48,6 +48,7 @@ from typing import Any
 import yaml
 
 from app.services.run_file_service import RUNS_FOLDER
+from app.services import i2i_prompts_service
 
 _IMAGE_EXTS = {".png", ".jpg", ".jpeg", ".webp", ".bmp", ".tiff", ".tif"}
 _OUTPUT_ID_CHARS = string.ascii_letters + string.digits  # 62 chars → 62^18 ≈ 1.6×10³²
@@ -266,11 +267,18 @@ def _migrate_tile(tile: dict) -> dict:
             par = tile.pop("blend_params",          None) \
                or tile.pop("edge_blend_params",     None) \
                or {"steps": 30, "cfg": 8, "denoise": 0.6}
-            tile["edge_blend_prompts"] = ([{
-                "id": "local_eb_0", "name": "Edge Blend",
-                "positive": pos, "negative": neg, "params": par,
-                "enabled": True, "_notInLibrary": True,
-            }] if pos else [])
+            if pos:
+                tile["edge_blend_prompts"] = [{
+                    "id": "local_eb_0", "name": "Edge Blend",
+                    "positive": pos, "negative": neg, "params": par,
+                    "enabled": True, "_notInLibrary": True,
+                }]
+            elif tile.get("edge_blend_enabled"):
+                # Pass enabled but no prompt — auto-load system default p0000021
+                sys_p = i2i_prompts_service.get_prompt("p0000021")
+                tile["edge_blend_prompts"] = ([dict(sys_p)] if sys_p else [])
+            else:
+                tile["edge_blend_prompts"] = []
         else:
             # clean up stale keys if prompts already present
             for k in ("blend_positive", "blend_negative", "blend_params",
@@ -284,11 +292,18 @@ def _migrate_tile(tile: dict) -> dict:
             neg = tile.pop("scene_blend_negative", None) or ""
             par = tile.pop("scene_blend_params",   None) \
                or {"steps": 30, "cfg": 8, "denoise": 0.4}
-            tile["scene_blend_prompts"] = ([{
-                "id": "local_sb_0", "name": "Scene Blend",
-                "positive": pos, "negative": neg, "params": par,
-                "enabled": True, "_notInLibrary": True,
-            }] if pos else [])
+            if pos:
+                tile["scene_blend_prompts"] = [{
+                    "id": "local_sb_0", "name": "Scene Blend",
+                    "positive": pos, "negative": neg, "params": par,
+                    "enabled": True, "_notInLibrary": True,
+                }]
+            elif tile.get("scene_blend_enabled"):
+                # Pass enabled but no prompt — auto-load system default p0000022
+                sys_p = i2i_prompts_service.get_prompt("p0000022")
+                tile["scene_blend_prompts"] = ([dict(sys_p)] if sys_p else [])
+            else:
+                tile["scene_blend_prompts"] = []
         else:
             for k in ("scene_blend_positive", "scene_blend_negative", "scene_blend_params"):
                 tile.pop(k, None)
@@ -617,25 +632,33 @@ def get_tile_status(run_id: str, tile_id: str) -> dict:
                     chars_status = [{"pil": _find_file(oid), "pil_final": False,
                                      "edge": None, "edge_final": False}]
 
-            # "done" = last configured stage (per-char edge flag, per-slot scene flag)
-            if global_sb and slot_sb:
-                done_file = scene_file
-            elif global_eb and last_char_eb and n_chars:
-                done_file = chars_status[-1]["edge"] if chars_status else None
+            # "done" = last stage that generation can actually produce.
+            # Mirrors the skip-check in _run_paste_character_async: a pass only
+            # counts as "expected" if it is enabled AND has a configured prompt.
+            def _has_prompt(prompts_list: list) -> bool:
+                return any(
+                    (p.get("positive") or "").strip()
+                    for p in prompts_list
+                    if p.get("enabled", True)
+                )
+            sb_has_prompt = _has_prompt(tile.get("scene_blend_prompts", []))
+            eb_has_prompt = _has_prompt(tile.get("edge_blend_prompts", []))
+
+            if global_sb and slot_sb and sb_has_prompt:
+                done_file  = scene_file
+                final_file = scene_final
+            elif global_eb and last_char_eb and n_chars and eb_has_prompt:
+                done_file  = chars_status[-1]["edge"] if chars_status else None
+                final_file = chars_status[-1]["edge_final"] if chars_status else False
             else:
-                done_file = chars_status[-1]["pil"] if chars_status else None
+                done_file  = chars_status[-1]["pil"] if chars_status else None
+                final_file = chars_status[-1]["pil_final"] if chars_status else False
 
             found = bool(done_file)
             if found:
                 total_done += 1
 
-            # slot_final: last-enabled-stage file is in output_dir root
-            if global_sb and slot_sb:
-                slot_final = scene_final
-            elif global_eb and last_char_eb and n_chars:
-                slot_final = chars_status[-1]["edge_final"] if chars_status else False
-            else:
-                slot_final = chars_status[-1]["pil_final"] if chars_status else False
+            slot_final = final_file
 
             # output_path = most advanced file (for thumbnail / compat)
             output_path = (

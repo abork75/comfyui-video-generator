@@ -1,0 +1,500 @@
+# RUN_014_skakanie_na _pilce.yaml
+# Edited: 2026-06-06 21:19:50
+# Edit this file freely — regenerate .py with generate_py_from_yaml()
+#
+project_folder: C:\Users\abork\AppData\Local\CapCut\Videos\muszelka_pliki\EM\skakanie_na_pilce\film
+
+use_test_flow: false
+
+# ──────────────────────────────────────────────────────────
+# FLOW — lista generacji
+# ──────────────────────────────────────────────────────────
+flow:
+- file: 10.51. siedzi.png
+  backend: linux
+  duration: 2
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- type: talk
+  audio:
+    file: Coby tu zrobic_Ewa Maj.mp3
+    pos: |-
+      Woman is scratching her head with hand looks at camera
+  width: 608
+  height: 816
+  transition:
+    pos: |-
+      Woman is slowly standing up an moving towards camera
+
+- file: 10.53. wstala.png
+  backend: linux
+  duration: 2
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- type: talk
+  audio:
+    file: Kupilam_nowa_pilka_Ewa Maj.mp3
+    pos: "Woman is smiling seductively "
+  width: 608
+  height: 816
+
+- break: true
+
+- file: 11.51. stoi.png
+  backend: linux
+  duration: 2
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- type: talk
+  audio:
+    file: najpierw troche gimnastyki_Ewa Maj.mp3
+    pos: |-
+      Woman is looking at camera
+  width: 608
+  height: 816
+
+- chain:
+    prefix: gimnasytka
+    transitions:
+    - duration: 4
+      pos: "4-second video: Woman standing frontally to the camera performs two full torso bends. She bends forward at the hips with straight legs, lowering her torso and arms down towards the floor, then rises back up to standing position. She does this movement clearly and rhythmically two times (down-up, down-up). \n\nSmooth but visible motion, natural body mechanics, slight hair movement, realistic muscle engagement. Front view, full body visible, photorealistic, cinematic, high detail."
+      neg: |-
+        static pose, no bending, only one repetition, three or more bends, wrong movement count, minimal movement, lazy bending, bent legs, bad posture, deformed spine, unnatural flexibility, motion artifacts, blurry motion, low quality, deformed hands, extra fingers, face deformation, looking at side, turning head, side view, back view, twisting body, squatting instead of bending, overly smooth animation, rubbery limbs, floating feet, changed clothing, different lighting
+    - duration: 5
+      pos: "Cinematic video of a beautiful woman sensually sitting down on a large exercise ball. She approaches the ball slowly, then lowers her body in a very seductive and controlled way — hips swaying gently, back slightly arched, chest forward. She places her hands on the ball for balance and slowly sits on it, letting her hips sink into the ball. \n\nMovement is elegant, smooth and highly sensual, with emphasis on her curves, slow hip motion and graceful posture. Soft, seductive eye contact with the camera. Dramatic cinematic lighting, photorealistic, ultra detailed, 4K."
+      neg: |-
+        static pose, sudden sitting, fast movement, jerky motion, bad anatomy, deformed body, extra limbs, distorted proportions, bent awkwardly, falling, unbalanced pose, stiff posture, no hip movement, flat back, hunched shoulders, looking away from camera, ugly face, deformed hands, blurry, low quality, artifacts, rubbery motion, unnatural physics, ball deformation, ball moving too much, floating, bad lighting, overexposed, underexposed, cartoonish, plastic skin, low detail, different clothing, modest pose, unsexy movement, boring pose, legs closed, knees together
+    backend: linux
+    fps: 16
+    steps: 6
+    cfg: 2
+    neg: |-
+      static, frozen, no movement
+
+- file: 11.53. siedzi na pilce.png
+  backend: linux
+  duration: 5
+  pos: ""
+  neg: ""
+
+- type: talk
+  audio: Teraz_skakac_Ewa Maj.mp3
+  width: 608
+  height: 816
+
+- chain:
+    prefix: Skacze na pilce
+    transitions:
+    - duration: 3
+      pos: "Cinematic 4-second I2V video: A beautiful woman sitting on a large exercise ball performs a dynamic, rhythmic bouncing exercise. She pushes her hips upward forcefully, lifting her body off the ball with each bounce, creating visible separation between her body and the ball. The ball compresses and rebounds naturally on the floor with each bounce.\n\nShe does several clear, energetic up-and-down bounces. Her body moves naturally with the rhythm — breasts and hair bouncing freely. Hands resting on the sides of the ball or thighs for balance. Realistic physics: the ball bounces independently, compresses on impact, and the woman lifts and lands with slight separation. \n\nFront view, visible realistic bouncing motion, natural ball deformation and rebound, sensual and athletic movement, photorealistic, highly detailed, cinematic lighting, 4K."
+      neg: |-
+        glued to ball, stuck to ball, ball attached to body, woman and ball moving as one rigid object, no separation between woman and ball, floating together, unnatural ball physics, ball not compressing, ball not rebounding, ball deformed unnaturally, static ball, minimal bouncing, bad physics, rubbery motion, jerky movement, stiff body, bad anatomy, deformed ball, exaggerated floating, woman not lifting off ball, ball stuck to buttocks, low quality motion, artifacts, blurry
+    - duration: 3
+      pos: "Cinematic 4-second I2V video: A beautiful woman sitting on a large exercise ball performs a dynamic, rhythmic bouncing exercise. She pushes her hips upward forcefully, lifting her body off the ball with each bounce, creating visible separation between her body and the ball. The ball compresses and rebounds naturally on the floor with each bounce.\n\nShe does several clear, energetic up-and-down bounces. Her body moves naturally with the rhythm — breasts and hair bouncing freely. Hands resting on the sides of the ball or thighs for balance. Realistic physics: the ball bounces independently, compresses on impact, and the woman lifts and lands with slight separation. \n\nFront view, visible realistic bouncing motion, natural ball deformation and rebound, sensual and athletic movement, photorealistic, highly detailed, cinematic lighting, 4K."
+      neg: |-
+        glued to ball, stuck to ball, ball attached to body, woman and ball moving as one rigid object, no separation between woman and ball, floating together, unnatural ball physics, ball not compressing, ball not rebounding, ball deformed unnaturally, static ball, minimal bouncing, bad physics, rubbery motion, jerky movement, stiff body, bad anatomy, deformed ball, exaggerated floating, woman not lifting off ball, ball stuck to buttocks, low quality motion, artifacts, blurry
+    backend: linux
+    fps: 16
+    steps: 6
+    cfg: 2
+    neg: |-
+      static, frozen, no movement
+
+- file: 11.55. siedzi na pilce 2.png
+  backend: linux
+  duration: 3
+  pos: |-
+    Smooth transition woman is moving with ball
+  neg: |-
+    NONE
+
+- file: 12.51. siedzi na pilce 2.png
+  backend: linux
+  duration: 2
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- chain:
+    prefix: idzie do przedpokoju
+    transitions:
+    - duration: 4
+      pos: |-
+        Woman is standing up and going towards corridor
+      neg: ""
+    backend: linux
+    fps: 16
+    steps: 6
+    cfg: 2
+    neg: |-
+      static, frozen, no movement
+
+- file: 12.53. przedpokoj.png
+  backend: linux
+  duration: 2
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- type: talk
+  audio: Ide_na_gorke_Ewa Maj.mp3
+  width: 608
+  height: 816
+
+- chain:
+    prefix: idzie na gorke
+    transitions:
+    - duration: 3
+      pos: |-
+        Woman is turning towards staris an climbing upstairs
+      neg: ""
+    - duration: 3
+      pos: |-
+        Woman dissapearing from scen climbing upstairs, empty scene seen at last 2 seconds
+      neg: ""
+    backend: linux
+    fps: 16
+    steps: 6
+    cfg: 2
+    neg: |-
+      static, frozen, no movement
+
+defaults:
+  backend: linux
+  resolution:
+  - 880
+  - 1184
+
+pic_flow:
+- type: one_image_many_prompts
+  name: usun_tlo
+  source_dirs:
+  - C:\Users\abork\AppData\Local\CapCut\Videos\muszelka_pliki\EM\skakanie_na_pilce\postacie_na_scenie
+  image_slots:
+  - image: 931dBL9DXAe11No4Fv.png
+    prompts:
+    - id: p0000016
+      output_id: OWjR2vxgTNVPSl55Mp
+      enabled: true
+      name: usun_tlo_1
+      positive: Remove the entire background and replace it with a perfectly solid pure white (#FFFFFF) background. Remove all shadows, cast shadows, drop shadows and reflections from the floor. Keep the subject completely intact with clean, sharp edges. The result must be a clean studio cutout on flat white — no gradients, no vignette, no ground plane, no texture.
+      negative: shadow, cast shadow, drop shadow, ground shadow, floor shadow, body shadow, reflection, gradient, gray background, off-white, texture, noise, vignette, background objects, floor, surface, dark corners
+      note: ''
+      params:
+        steps: 30
+        cfg: 8
+        denoise: 1
+  scene_dirs: []
+  characters_dirs: []
+  scene_slots: []
+  paste_slots: []
+  edge_blend_enabled: false
+  edge_blend_px: 15
+  edge_blend_cfg: null
+  edge_blend_denoise: null
+  edge_blend_prompts: []
+  scene_blend_enabled: false
+  scene_blend_cfg: null
+  scene_blend_denoise: null
+  scene_blend_prompts: []
+  output_dir: C:\Users\abork\AppData\Local\CapCut\Videos\muszelka_pliki\EM\skakanie_na_pilce\modelEM_modele
+  global_suffix: ''
+  crop_to_subject: true
+  pad_input_to_ratio: true
+  id: usun_tlo
+
+- type: one_image_many_prompts
+  name: ModelEM - nowe pozy
+  source_dirs:
+  - C:\Users\abork\AppData\Local\CapCut\Videos\muszelka_pliki\EM\skakanie_na_pilce\modelEM_modele
+  image_slots:
+  - image: ComfyUI_00126_.png
+    prompts:
+    - id: p0000006
+      output_id: F1fZ5fUhwByd8VIa0T
+      enabled: true
+      name: Pochylona przodem, ręce na udach
+      positive: 'Change the woman''s pose: Her full body is visible from feet to head. She is now leaning forward at the waist, with her upper body tilted toward the camera. Both of her hands are resting on her thighs (palms on top of thighs or fingers gripping them). She is looking directly at the camera with a strong eye contact. Keep her exact facial expression, head angle (only slight adjustment for looking at camera), hair, clothing, body proportions, lighting, and background unchanged. Only modify the torso lean, arm position, and hand placement. Maintain realistic anatomy, natural spine curvature, balanced weight distribution, and correct shoulder positioning. Photorealistic, seamless edit, high detail, perfect proportions.'
+      negative: different face, wrong identity, changed facial features, clothing change, background change, blurry face, distorted anatomy, unnatural spine, extra limbs, artifacts, low quality
+      note: ''
+      params:
+        steps: 30
+        cfg: 8
+        denoise: 1
+    - id: p0000005
+      output_id: YrZXnCWgak4SmGgdxA
+      enabled: true
+      name: Rozchylone nogi, ręce w górze
+      positive: 'Edit the woman''s pose: Her full body is visible from feet to head. Change her stance so she is standing with her legs spread wide apart (shoulder-width or wider) and both arms raised straight up above her head. Her hands can be either clasped together or apart, palms facing forward. Keep her exact body proportions, torso position, head orientation, facial expression, hair, clothing, and all other details unchanged. Only modify the position of her legs and arms. Maintain realistic anatomy, natural balance, correct shoulder and hip positioning. Photorealistic, seamless edit, high detail, perfect body proportions.'
+      negative: different face, wrong identity, changed facial features, clothing change, background change, blurry face, distorted anatomy, extra limbs, artifacts, low quality, bad anatomy
+      note: ''
+      params:
+        steps: 30
+        cfg: 8
+        denoise: 1
+    - id: p0000024
+      output_id: ziIFTIRGEQYnwYXMN5
+      enabled: true
+      name: Pochylona przodem ręce na udach - cała postać
+      positive: 'Change the woman''s pose: Her full body is visible from feet to head. Very important feet are visible and are placed flat. She is now leaning forward at the waist, with her upper body tilted toward the camera. Both of her hands are resting on her thighs (palms on top of thighs or fingers gripping them). She is looking directly at the camera with a strong eye contact. Keep her exact facial expression, head angle (only slight adjustment for looking at camera), hair, clothing, body proportions, lighting, and background unchanged. Only modify the torso lean, arm position, and hand placement. Maintain realistic anatomy, natural spine curvature, balanced weight distribution, and correct shoulder positioning. Photorealistic, seamless edit, high detail, perfect proportions.'
+      negative: different face, wrong identity, changed facial features, clothing change, background change, blurry face, distorted anatomy, unnatural spine, extra limbs, artifacts, low quality
+      note: ''
+      params:
+        steps: 30
+        cfg: 8
+        denoise: 1
+    - id: p0000007
+      output_id: vjWXwqO2aujwr17cUd
+      enabled: true
+      name: Stoi przodem, ręce za głową
+      positive: 'Change the woman''s pose: Her full body is visible from feet to head. She is now standing with her legs spread wide apart (feet significantly wider than shoulder width). Both hands are raised and placed behind her head, fingers interlocked or resting on the back of her head, elbows pointing outwards. Keep her exact torso position, upper body orientation, facial expression, head direction, hair, clothing, lighting, and background completely unchanged. Only modify the leg position (wide stance) and arm/hand position. Maintain realistic anatomy, natural balance, correct hip alignment, shoulder positioning and muscle tension. Photorealistic, seamless edit, high detail, perfect body proportions.'
+      negative: different face, wrong identity, changed facial features, clothing change, background change, blurry face, distorted anatomy, extra limbs, artifacts, low quality
+      note: ''
+      params:
+        steps: 30
+        cfg: 8
+        denoise: 1
+  scene_dirs: []
+  characters_dirs: []
+  scene_slots: []
+  paste_slots: []
+  edge_blend_enabled: false
+  edge_blend_px: 15
+  edge_blend_cfg: null
+  edge_blend_denoise: null
+  edge_blend_prompts: []
+  scene_blend_enabled: false
+  scene_blend_cfg: null
+  scene_blend_denoise: null
+  scene_blend_prompts: []
+  output_dir: C:\Users\abork\AppData\Local\CapCut\Videos\muszelka_pliki\EM\skakanie_na_pilce\modelEM_modele
+  global_suffix: ''
+  crop_to_subject: true
+  pad_input_to_ratio: true
+  id: modelem_-_nowe_pozy
+
+- type: character_insert
+  name: Umieszczanie na scenie - free
+  source_dirs: []
+  image_slots: []
+  scene_dirs:
+  - C:\Users\abork\AppData\Local\CapCut\Videos\muszelka_pliki\EM\skakanie_na_pilce\scena
+  characters_dirs:
+  - C:\Users\abork\AppData\Local\CapCut\Videos\muszelka_pliki\EM\skakanie_na_pilce\modelEM_modele
+  scene_slots:
+  - scene_image: pokoj.jpg
+    character_images:
+    - ComfyUI_00126_.png
+    prompts:
+    - id: tmp_ci_1780718356500
+      output_id: fdWNbQdexp2LWW2CTc
+      enabled: true
+      name: Sitting on couch
+      positive: Woman sits on the couch with her hand resting on the back of the couch
+      negative: ''
+      note: ''
+      params:
+        steps: 30
+        cfg: 8
+        denoise: 1
+  - scene_image: pokoj_z_pilka.jpg
+    character_images:
+    - ComfyUI_00126_.png
+    prompts:
+    - id: tmp_ci_1780718456291
+      output_id: 6jSGZCO0bNoZUvvlGk
+      enabled: true
+      name: Sitting on ball
+      positive: Woman is sitting on blue ball hands on legs looking at camera
+      negative: ''
+      note: ''
+      params:
+        steps: 30
+        cfg: 8
+        denoise: 1
+  - scene_image: pokoj_z_pilka.jpg
+    character_images:
+    - ComfyUI_00126_.png
+    prompts:
+    - id: tmp_ci_1780736230077
+      output_id: 931dBL9DXAe11No4Fv
+      enabled: true
+      name: Dynamiczna poza na piłce
+      positive: |-
+        Woman sitting on the exercise ball: Hands more dynamic and active pose. She now firmly grips the sides of the ball with both hands — palms pressing strongly against the left and right sides of the ball, fingers spread and engaged. Arms bent, shoulders slightly forward, upper body leaning a bit more dynamically over the ball. The pose looks energetic, stable and controlled.
+
+        Keep her exact facial expression, head position, hair, clothing, leg position, lighting, shadows and background completely unchanged. Only modify the arms, hands and slight torso lean. Realistic hand grip and pressure on the ball, natural muscle tension, perfect anatomy, photorealistic, seamless edit, high detail.
+      negative: hands on knees, hands in lap, resting hands, static pose, arms straight, hands not touching ball, weak grip, floating hands, deformed hands, extra fingers, bad hand anatomy, stiff arms, hunched back, overly leaned forward, bad balance, unnatural posture, deformed ball, ball deformation, changed leg position, changed facial expression, different clothing, different hair, altered lighting, shadows changed, low quality, artifacts, blurry hands, rubbery arms, unrealistic grip, minimal movement, no dynamic pose
+      note: ''
+      params:
+        steps: 30
+        cfg: 8
+        denoise: 1
+  paste_slots: []
+  edge_blend_enabled: false
+  edge_blend_px: 15
+  edge_blend_cfg: null
+  edge_blend_denoise: null
+  edge_blend_prompts: []
+  scene_blend_enabled: false
+  scene_blend_cfg: null
+  scene_blend_denoise: null
+  scene_blend_prompts: []
+  output_dir: C:\Users\abork\AppData\Local\CapCut\Videos\muszelka_pliki\EM\skakanie_na_pilce\postacie_na_scenie
+  global_suffix: ''
+  crop_to_subject: false
+  pad_input_to_ratio: false
+  id: umieszczanie_na_scenie_-_free
+
+- type: paste_character
+  name: Umieszczanie na scenie - deterministyczne
+  source_dirs: []
+  image_slots: []
+  scene_dirs: []
+  characters_dirs: []
+  scene_slots: []
+  paste_slots:
+  - id: 0efcc604-f7bc-4eba-81e1-b1070c7599e1
+    output_id: 66f62127-4676-490d-a519-189cc01392ed
+    scene_image: C:\Users\abork\AppData\Local\CapCut\Videos\muszelka_pliki\EM\skakanie_na_pilce\scena\pokoj.jpg
+    characters:
+    - model_image: C:\Users\abork\AppData\Local\CapCut\Videos\muszelka_pliki\EM\skakanie_na_pilce\modelEM_modele\ziIFTIRGEQYnwYXMN5.png
+      top_pct: 46.0
+      bottom_pct: 100.0
+      x_center_pct: 50.0
+      erode_px: 3
+      blur_px: 2
+      edge_blend_enabled: true
+    scene_blend_enabled: true
+  - id: 61374569-6109-4b74-b257-630e8297452c
+    output_id: e1918407-fa1d-4dc1-8d23-14c2e362a6ec
+    scene_image: C:\Users\abork\AppData\Local\CapCut\Videos\muszelka_pliki\EM\skakanie_na_pilce\scena\pokoj_z_pilka.jpg
+    characters:
+    - model_image: C:\Users\abork\AppData\Local\CapCut\Videos\muszelka_pliki\EM\skakanie_na_pilce\modelEM_modele\YrZXnCWgak4SmGgdxA.png
+      top_pct: 34.0
+      bottom_pct: 94.0
+      x_center_pct: 49.0
+      erode_px: 3
+      blur_px: 2
+      edge_blend_enabled: true
+    scene_blend_enabled: false
+  - id: 272e7017-fb5c-4eab-8d8c-ca6216d2108f
+    output_id: 7dd4a8d4-83af-402d-bb51-261372094f6e
+    scene_image: C:\Users\abork\AppData\Local\CapCut\Videos\muszelka_pliki\EM\skakanie_na_pilce\scena\pokoj_z_pilka.jpg
+    characters:
+    - model_image: C:\Users\abork\AppData\Local\CapCut\Videos\muszelka_pliki\EM\skakanie_na_pilce\modelEM_modele\OWjR2vxgTNVPSl55Mp.png
+      top_pct: 36.0
+      bottom_pct: 80.0
+      x_center_pct: 50.0
+      erode_px: 3
+      blur_px: 2
+      edge_blend_enabled: true
+    scene_blend_enabled: true
+  - id: c1c60c27-1936-42e3-a26f-059b16212bbd
+    output_id: 78a9b032-881e-4498-ad2e-0bc53a5da74b
+    scene_image: C:\Users\abork\AppData\Local\CapCut\Videos\muszelka_pliki\EM\skakanie_na_pilce\scena\korytarz.jpg
+    characters:
+    - model_image: C:\Users\abork\AppData\Local\CapCut\Videos\muszelka_pliki\EM\skakanie_na_pilce\modelEM_modele\vjWXwqO2aujwr17cUd.png
+      top_pct: 28.0
+      bottom_pct: 78.0
+      x_center_pct: 26.0
+      erode_px: 3
+      blur_px: 2
+      edge_blend_enabled: true
+    scene_blend_enabled: true
+  edge_blend_enabled: true
+  edge_blend_px: 15
+  edge_blend_cfg: null
+  edge_blend_denoise: null
+  edge_blend_prompts:
+  - id: p0000021
+    category: system
+    name: Edge Blend — krawędzie postaci
+    note: Pass 1 — inpainting w strefie maski (15px wokół sylwetki). Używany z ci_1ref (scena+maska + ref postaci).
+    positive: |-
+      You have two inputs: image 1 is the composited scene, image 2 is the original reference character. Using image 2 as reference, repair and improve the character in image 1. Fix all of the following:
+
+      1. EDGES: Remove all hard cutout edges, halos and white fringing around the character's silhouette. Blend her edges naturally into the background — match local lighting, color temperature and depth of field.
+
+      2. BODY RECONSTRUCTION: Where parts of the character's body are blurry, incomplete, distorted or missing (e.g. blurry fingers, cut-off limbs, broken anatomy) — reconstruct them correctly using image 2 as the reference. Restore sharp, realistic anatomy.
+
+      3. SKIN AND DETAIL: Match the character's skin tone, sharpness and detail level to image 2. Remove any softness or blur on the character's body.
+
+      Do not move the character. Do not change her pose or position. Do not modify the background outside the character area. Preserve the character's face, clothing and identity.
+    negative: changed pose, moved character, different face, different clothing, background change, artifacts, distorted anatomy, color shift on character body, overexposed, underexposed, blurry fingers, missing limbs, broken anatomy
+    params:
+      steps: 30
+      cfg: 8
+      denoise: 1
+    enabled: true
+  scene_blend_enabled: true
+  scene_blend_cfg: null
+  scene_blend_denoise: null
+  scene_blend_prompts:
+  - id: p0000022
+    category: system
+    name: Scene Blend — cienie i spójność sceny
+    note: Pass 2 — pełny obrazek, niski denoise. Dodaje cienie i wyrównuje całą scenę.
+    positive: 'Enhance the realism of the full composited scene. Add a natural cast shadow beneath the composited character''s feet and body — match the exact direction, length, softness and intensity of the shadows already cast by the other people in the scene. Use the existing shadows as a reference: if other figures cast long soft shadows to one side, the composited character must cast an identical shadow in the same direction with the same quality. Add subtle ambient occlusion where the character meets the floor or nearby surfaces. Match the character''s overall color grading, brightness and contrast to the other figures in the scene. Make the result look like a single unified photograph taken with one camera. Do not move or change the character''s position, pose, face or clothing. Do not alter the background structure or change the other people already in the scene.'
+    negative: changed pose, moved character, different face, different clothing, background restructured, artifacts, removed character, new people added, overexposed, underexposed, blurry, inconsistent shadow direction, shadow pointing wrong way, mismatched shadow length, no shadow under feet, floating character
+    params:
+      steps: 30
+      cfg: 8
+      denoise: 0.4
+    enabled: true
+  output_dir: C:\Users\abork\AppData\Local\CapCut\Videos\muszelka_pliki\EM\skakanie_na_pilce\postacie_na_scenie
+  global_suffix: ''
+  crop_to_subject: false
+  pad_input_to_ratio: false
+  id: umieszczanie_na_scenie_-_deterministyczne
+
+- type: one_image_many_prompts
+  name: zmiany na obrazku
+  source_dirs:
+  - C:\Users\abork\AppData\Local\CapCut\Videos\muszelka_pliki\EM\skakanie_na_pilce\postacie_na_scenie
+  image_slots:
+  - image: 6jSGZCO0bNoZUvvlGk.png
+    prompts:
+    - id: p0000012
+      output_id: tE2cvyShXTwizZGogP
+      enabled: true
+      name: Siedzi na łóżku, nogi złączone
+      positive: |-
+        Repose the woman sitting on the exercise ball: Change from hands resting on her knees to a more dynamic and active pose. She now firmly grips the sides of the ball with both hands — palms pressing strongly against the left and right sides of the ball, fingers spread and engaged. Arms bent, shoulders slightly forward, upper body leaning a bit more dynamically over the ball. The pose looks energetic, stable and controlled.
+
+        Keep her exact facial expression, head position, hair, clothing, leg position, lighting, shadows and background completely unchanged. Only modify the arms, hands and slight torso lean. Realistic hand grip and pressure on the ball, natural muscle tension, perfect anatomy, photorealistic, seamless edit, high detail.
+      negative: hands on knees, hands in lap, resting hands, static pose, arms straight, hands not touching ball, weak grip, floating hands, deformed hands, extra fingers, bad hand anatomy, stiff arms, hunched back, overly leaned forward, bad balance, unnatural posture, deformed ball, ball deformation, changed leg position, changed facial expression, different clothing, different hair, altered lighting, shadows changed, low quality, artifacts, blurry hands, rubbery arms, unrealistic grip, minimal movement, no dynamic pose
+      note: ''
+      params:
+        steps: 30
+        cfg: 8
+        denoise: 1
+  scene_dirs: []
+  characters_dirs: []
+  scene_slots: []
+  paste_slots: []
+  edge_blend_enabled: false
+  edge_blend_px: 15
+  edge_blend_cfg: null
+  edge_blend_denoise: null
+  edge_blend_prompts: []
+  scene_blend_enabled: false
+  scene_blend_cfg: null
+  scene_blend_denoise: null
+  scene_blend_prompts: []
+  output_dir: C:\Users\abork\AppData\Local\CapCut\Videos\muszelka_pliki\EM\skakanie_na_pilce\postacie_na_scenie
+  global_suffix: ''
+  crop_to_subject: false
+  pad_input_to_ratio: false
+  id: zmiany_na_obrazku

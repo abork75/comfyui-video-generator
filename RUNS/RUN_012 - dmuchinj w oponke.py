@@ -4,7 +4,7 @@
 # Edit RUN_012 - dmuchinj w oponke.yaml and regenerate with:
 #     from app.services.yaml_service import generate_py_from_yaml
 #     generate_py_from_yaml(Path("RUNS/RUN_012 - dmuchinj w oponke.yaml"))
-# Generated: 2026-06-04 07:24:36
+# Generated: 2026-06-06 05:47:54
 # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 import sys
@@ -89,14 +89,18 @@ Magical, fantastical atmosphere, dramatic lighting, sparkling particles, beautif
             'pos': 'Woman is waving a hand',
         },
         'width': 608,
-        'height': 832,
+        'height': 816,
+        'transition': {
+            'duration': 2,
+            'pos': 'Woman is waving hand and smiles',
+        },
     },
 
     {
         "chain": [
             {
                 'duration': 3,
-                'pos': 'Woman is standing up, turning back to camera and leaves garrage',
+                'pos': 'Woman is standing up, turning back to go straight to open garrage doors leaving garrage.',
                 'neg': '',
             },
         ],
@@ -130,10 +134,10 @@ Strong emphasis on magical transfer, glowing effects, sparkles, and light burst.
         'type': 'talk',
         'audio': {
             'file': '11.55. przykrecac kolka.mp3',
-            'pos': 'Woman is rising both hands and waving them',
+            'pos': 'Woman standing in front is rising both hands and waving them. Woman on poster are not moving and talking at all.',
         },
         'width': 608,
-        'height': 832,
+        'height': 816,
     },
 
     {"break": True},
@@ -168,7 +172,7 @@ Strong emphasis on magical transfer, glowing effects, sparkles, and light burst.
             'pos': 'Woman is chaotically looking for something on table',
         },
         'width': 608,
-        'height': 832,
+        'height': 816,
     },
 
     {"break": True},
@@ -218,25 +222,16 @@ Smooth, fluid and erotic choreography, slow-motion elements during the kiss, sen
         'file': '13.77. taniec.png',
         'backend': 'linux',
         'duration': 2,
-        'pos': 'NONE',
+        'pos': 'Zoom on woman in black black lace bodysuit with blonde hair other woman is not visible',
         'neg': 'NONE',
     },
     {
-        "chain": [
-            {
-                'duration': 3,
-                'pos': 'Zoom on woman in black black lace bodysuit with blonde hair other woman is not visible',
-                'neg': '',
-            },
-        ],
-        "chain_prefix": 'zoom on blonde',
+        'file': '13.79. taniec.png',
         'backend': 'linux',
-        'fps': 16,
-        'steps': 6,
-        'cfg': 2,
-        'neg': 'static, frozen, no movement',
+        'duration': 2,
+        'pos': 'NONE',
+        'neg': 'NONE',
     },
-
     {
         'type': 'talk',
         'audio': {
@@ -244,7 +239,7 @@ Smooth, fluid and erotic choreography, slow-motion elements during the kiss, sen
             'pos': 'Face is little frighetned and courious',
         },
         'width': 608,
-        'height': 832,
+        'height': 816,
     },
 
     {"break": True},
@@ -263,7 +258,23 @@ Smooth, fluid and erotic choreography, slow-motion elements during the kiss, sen
             'pos': 'Women is waving hand with greetings',
         },
         'width': 608,
-        'height': 832,
+        'height': 816,
+    },
+
+    {
+        "chain": [
+            {
+                'duration': 3,
+                'pos': 'NONE',
+                'neg': '',
+            },
+        ],
+        "chain_prefix": 'zaproszenie',
+        'backend': 'linux',
+        'fps': 16,
+        'steps': 6,
+        'cfg': 2,
+        'neg': 'Women is waving hands with greetings',
     },
 
 ]

@@ -487,13 +487,45 @@ def run_batch_generation(config):
     # are not regenerated — but downstream items (next transition or talk) still
     # need _real.png to know where the video actually ended. Extract it now if
     # the transition file exists but _real.png is missing.
+    # Initialize chain handler early — needed by pre-extraction pass below
+    # (also used again at line ~551 but ChainHandler is cheap to create once here)
+    chain_handler = ChainHandler(project_folder, logger=logger)
+
     # This block runs before the existing/missing split so it covers all cases.
     logger.section("Pre-extracting _real.png for existing transitions")
     _real_preextract_count = 0
     for _pair in pairs:
         _tc = _pair.get('to_config', {})
-        if _tc.get('_is_chain') or _tc.get('_is_talk'):
-            continue  # chains handle their own cache; talks have no _real
+
+        # ── Chain last step with end-target image ────────────────────────
+        # When the last chain step targets a static image (e.g. chain ends
+        # with _chain_end_target='11.53. siedzi na pilce.png'), the next
+        # item anchored to that image (typically a talk clip) should start
+        # from the chain's actual last frame, not the static source image.
+        # Write the chain's last frame as {target}_real.png so the existing
+        # talk-source-frame logic picks it up without any other changes.
+        if _tc.get('_is_chain'):
+            _end_target = _tc.get('_chain_end_target')
+            _is_last    = (_tc.get('_chain_step') == _tc.get('_chain_total'))
+            if _end_target and _is_last:
+                _target_real = _real_frame_path(Path(_end_target).stem)
+                if not _target_real.exists():
+                    _chain_vid = chain_handler.get_chain_output_path(_pair['to_file'])
+                    if _chain_vid.exists():
+                        _extracted = extractor.extract_last_frame_to(
+                            _chain_vid, target_width, target_height, _target_real
+                        )
+                        if _extracted:
+                            _real_preextract_count += 1
+                            logger.info(
+                                f"  💾 {Path(_end_target).stem}_real.png "
+                                f"(from chain last step {_pair['to_file']})"
+                            )
+            continue  # chains have no _real of their own in this pass
+
+        if _tc.get('_is_talk'):
+            continue  # talks have no _real
+
         _to_stem = Path(_pair['to_file']).stem
         _real_p  = project_folder / 'frames' / f"{_to_stem}_real.png"
         if _real_p.exists():
@@ -518,9 +550,6 @@ def run_batch_generation(config):
     # ============================================================
     
     logger.header("CHECKING EXISTING TRANSITIONS")
-    
-    # ✅ Initialize chain handler for validation
-    chain_handler = ChainHandler(project_folder, logger=logger)
     
     existing_transitions = []
     missing_transitions = []
@@ -573,6 +602,30 @@ def run_batch_generation(config):
 
         # Check if exists
         if output_path.exists():
+            # ── Resolution sanity check ───────────────────────────────────
+            # Files generated with old workflow (divisible_by=32) come out at
+            # 864×1184 instead of 880×1184. Show warning — do NOT auto-delete.
+            # User decides what to regenerate manually via UI.
+            _is_talk_out = to_config.get('_is_talk', False)
+            if not _is_talk_out:
+                try:
+                    _probe = subprocess.run(
+                        ['ffprobe', '-v', 'error', '-select_streams', 'v:0',
+                         '-show_entries', 'stream=width,height',
+                         '-of', 'csv=p=0', str(output_path)],
+                        capture_output=True, text=True, timeout=15
+                    )
+                    _res_str = _probe.stdout.strip()
+                    if _res_str:
+                        _fw, _fh = map(int, _res_str.split(','))
+                        if _fw != target_width or _fh != target_height:
+                            logger.warning(
+                                f"  ⚠️  Resolution mismatch: {output_path.name} "
+                                f"is {_fw}x{_fh}, expected {target_width}x{target_height} "
+                                f"— delete manually to regenerate"
+                            )
+                except Exception as _probe_err:
+                    logger.warning(f"  Could not probe {output_path.name}: {_probe_err}")
             existing_transitions.append(trans)
         else:
             missing_transitions.append(trans)
@@ -620,16 +673,6 @@ def run_batch_generation(config):
     logger.info(f"  Existing : {len(existing_transitions)}")
     logger.info(f"  Missing  : {len(missing_transitions)}")
 
-    if len(missing_transitions) == 0:
-        logger.success(f"\n✓ All items already exist! Nothing to do.")
-        return {
-            'success': True,
-            'total': len(all_transitions),
-            'generated': 0,
-            'skipped': len(existing_transitions),
-            'failed': 0,
-        }
-
     # ============================================================
     # SETUP: Talk service (used in retry loop for _is_talk items)
     # ============================================================
@@ -646,14 +689,31 @@ def run_batch_generation(config):
         _gen_fn       = generate_talk_clip_sync
     except Exception as _e:
         logger.warning(f"⚠ Talk service not available ({_e}) — talk items will be skipped.")
-    
+
+    # Allow force-regen via env var (set by process_service when force_all=True)
+    # IMPORTANT: must be checked BEFORE the "all exist" early exit below.
+    if os.environ.get('FORCE_REGEN', '').strip() == '1':
+        config['skip_existed'] = False
+
+    # Early exit only when skip_existed=True (normal mode) and nothing is missing.
+    # When force_all / skip_existed=False we must continue to regenerate everything.
+    if len(missing_transitions) == 0 and config.get('skip_existed', True):
+        logger.success(f"\n✓ All items already exist! Nothing to do.")
+        return {
+            'success': True,
+            'total': len(all_transitions),
+            'generated': 0,
+            'skipped': len(existing_transitions),
+            'failed': 0,
+        }
+
     # Check skip_existed flag
     if config.get('skip_existed', True):
         logger.info(f"\nSkipping {len(existing_transitions)} existing transitions")
         to_generate = missing_transitions
     else:
         logger.warning("\nRegenerating ALL transitions (skip_existed=False)")
-        to_generate = [{'name': f"{Path(p['from_file']).stem}_{Path(p['to_file']).stem}_transition.mp4", 'config': p} for p in pairs]
+        to_generate = all_transitions
 
     # ============================================================
     # FILTER: only_transitions  (targeted single-file re-generation)
@@ -831,9 +891,52 @@ def run_batch_generation(config):
                     # Prefer _real.png (actual last frame of preceding transition)
                     # over static _end.png (source image) to avoid visual jump.
                     _real = _real_frame_path(Path(from_file).stem)
-                    _talk_src = _real if _real.exists() else _frame_path(Path(from_file).stem, 'end')
                     if not _real.exists():
-                        logger.info(f"  ℹ️  Brak _real.png dla {from_file} — używam static end frame")
+                        # Check if a chain step targeted from_file as its end-target.
+                        # In chain→image→talk sequences the chain's last step should
+                        # "reach" the static image, so the talk clip must start from
+                        # the chain's actual last frame (not the static source image).
+                        _chain_targeting = None
+                        for _p in pairs:
+                            _ptc = _p.get('to_config', {})
+                            if (_ptc.get('_is_chain')
+                                    and _ptc.get('_chain_end_target') == from_file
+                                    and _ptc.get('_chain_step') == _ptc.get('_chain_total')):
+                                _chain_targeting = _p
+                                break
+                        if _chain_targeting:
+                            _ct_file = _chain_targeting['to_file']
+                            _talk_src = chain_frame_cache.get(_ct_file)
+                            if not _talk_src:
+                                _ct_vid = chain_handler.get_chain_output_path(_ct_file)
+                                if _ct_vid.exists():
+                                    _talk_src = chain_handler.extract_last_frame(
+                                        _ct_vid, target_width, target_height)
+                                    if _talk_src:
+                                        chain_frame_cache[_ct_file] = _talk_src
+                                        logger.info(
+                                            f"  💾 Extracted last frame of chain "
+                                            f"'{_ct_file}' for talk source")
+                            if _talk_src:
+                                # Also persist as _real.png so next runs skip extraction
+                                _extracted = extractor.extract_last_frame_to(
+                                    chain_handler.get_chain_output_path(_ct_file),
+                                    target_width, target_height, _real)
+                                if _extracted:
+                                    logger.info(
+                                        f"  💾 {Path(from_file).stem}_real.png "
+                                        f"(from chain end-target)")
+                            else:
+                                logger.info(
+                                    f"  ℹ️  Chain video for '{_ct_file}' not ready — "
+                                    f"używam static end frame dla {from_file}")
+                                _talk_src = _frame_path(Path(from_file).stem, 'end')
+                        else:
+                            logger.info(
+                                f"  ℹ️  Brak _real.png dla {from_file} — używam static end frame")
+                            _talk_src = _frame_path(Path(from_file).stem, 'end')
+                    else:
+                        _talk_src = _real
 
                 if not _talk_src or not Path(_talk_src).exists():
                     logger.warning(f"  ⏳ {to_file}: source frame not ready — will retry")
@@ -1062,17 +1165,24 @@ def run_batch_generation(config):
                     f"{trans['name']} ({backend_type.upper()})"
                 )
 
-            logger.info(f"Start frame: {start_frame.name if start_frame else 'None'}")
-            logger.info(f"End frame: {end_frame.name if end_frame else 'None (I2V)'}")
-            logger.info(f"Output: {output_path.name}")
-
-            if DEBUG_LOG and is_chain_step:
-                print(f"   ⛓️ Chain params:")
-                print(f"      Duration: {trans_config['duration']}s")
-                print(f"      FPS: {trans_config['fps']}")
-                print(f"      Steps: {trans_config['steps']}")
-                print(f"      CFG: {trans_config['cfg']}")
-                print(f"      Prompt: {trans_config['positive_prompt'][:60]}...")
+            # ── Generation summary ────────────────────────────────────
+            _sf_name = start_frame.name if start_frame else 'None'
+            _sf_tag  = (' 🎯 real' if '_real' in _sf_name
+                        else ' (static)' if '_end' in _sf_name
+                        else '')
+            _ef_name = end_frame.name if end_frame else 'I2V'
+            logger.info(f"  start : {_sf_name}{_sf_tag}")
+            logger.info(f"  end   : {_ef_name}")
+            logger.info(f"  output: {output_path.name}")
+            logger.info(
+                f"  params: {trans_config['duration']}s · "
+                f"{trans_config['fps']}fps · "
+                f"steps={trans_config['steps']} · "
+                f"cfg={trans_config['cfg']}"
+            )
+            _pw = trans_config.get('width') or target_width
+            _ph = trans_config.get('height') or target_height
+            logger.info(f"  size  : {_pw}x{_ph}")
 
             backend = backends[backend_type]
 
@@ -1105,6 +1215,24 @@ def run_batch_generation(config):
                     chain_frame_cache[to_file] = last_frame
                 else:
                     logger.error("⚠️  Failed to extract last frame - chain may be broken!")
+
+                # If this is the last chain step and it has an end-target image,
+                # write the chain's real last frame as {target}_real.png.
+                # This lets the next item anchored to that image (e.g. a talk clip)
+                # start from where the chain actually ended instead of the static
+                # source image — eliminating the visual jump at the boundary.
+                _end_target = to_config.get('_chain_end_target')
+                _is_last    = (to_config.get('_chain_step') == to_config.get('_chain_total'))
+                if _end_target and _is_last and last_frame:
+                    _target_real = _real_frame_path(Path(_end_target).stem)
+                    _extracted = extractor.extract_last_frame_to(
+                        output_path, target_width, target_height, _target_real
+                    )
+                    if _extracted:
+                        logger.info(
+                            f"  💾 {Path(_end_target).stem}_real.png "
+                            f"(chain end-target — eliminates jump to next talk/item)"
+                        )
 
             # ── Post-generation: save _real.png for normal transitions ─
             # _real.png = actual last frame of the generated video.

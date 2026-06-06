@@ -229,8 +229,10 @@ def get_transition_status(run_filename: str) -> dict | None:
             ]
             # If talk has transition: config, check bridge clip existence too
             talk_trans = item.get("transition")
-            trans_exists = True  # assume OK if no transition configured
-            if talk_trans and exists:
+            has_bridge = False
+            bridge_exists = False
+            bridge_name = None
+            if talk_trans:
                 # Find next non-break file in flow to compute bridge filename
                 next_file = None
                 for _nxt in flow[i_flow + 1:]:
@@ -240,14 +242,15 @@ def get_transition_status(run_filename: str) -> dict | None:
                         next_file = _nxt["file"]
                         break
                 if next_file:
+                    has_bridge = True
                     bridge_name = f"{p.stem}_{Path(next_file).stem}_transition.mp4"
-                    trans_exists = (pf / "transitions" / bridge_name).exists()
-                else:
-                    trans_exists = True  # no next file → no bridge needed
+                    bridge_exists = (pf / "transitions" / bridge_name).exists()
+
+            trans_exists = bridge_exists if has_bridge else True
 
             if not exists:
                 talk_status = "red"
-            elif talk_trans and not trans_exists:
+            elif has_bridge and not bridge_exists:
                 talk_status = "partial"   # clip OK, bridge missing
             else:
                 talk_status = "green"
@@ -265,6 +268,9 @@ def get_transition_status(run_filename: str) -> dict | None:
                 "has_archived":    has_arch,
                 "size_mb":         round(p.stat().st_size / 1_048_576, 1) if exists else None,
                 "path":            str(p) if exists else None,
+                "has_bridge":      has_bridge,
+                "bridge_exists":   bridge_exists,
+                "bridge_name":     bridge_name,
             })
             continue
 
@@ -323,10 +329,17 @@ def get_transition_status(run_filename: str) -> dict | None:
                 else:
                     red += 1
         elif r["type"] == "talk":
-            if r["status"] == "green":
-                green += 1
+            # Count the talk clip itself
+            if r["status"] in ("green", "partial"):
+                green += 1   # talk clip exists
             else:
-                red += 1
+                red += 1     # talk clip missing
+            # Count the bridge/transition clip separately (if configured)
+            if r.get("has_bridge"):
+                if r.get("bridge_exists"):
+                    green += 1
+                else:
+                    red += 1
 
     return {
         "project_folder": str(pf),
@@ -424,7 +437,7 @@ def get_post_clips(run_filename: str) -> list | None:
     seq = 0
     chains_dir = pf / "transitions" / "chains"
 
-    for item in flow:
+    for i_flow, item in enumerate(flow):
         if item.get("break"):
             continue
 
@@ -447,6 +460,36 @@ def get_post_clips(run_filename: str) -> list | None:
                 **meta,
             })
             seq += 1
+
+            # Bridge/transition after talk (talk → next file)
+            if item.get("transition"):
+                next_file = None
+                for _nxt in flow[i_flow + 1:]:
+                    if _nxt.get("break"):
+                        break
+                    if _nxt.get("file"):
+                        next_file = _nxt["file"]
+                        break
+                if next_file:
+                    bridge_name = f"{p.stem}_{Path(next_file).stem}_transition.mp4"
+                    bridge_path = pf / "transitions" / bridge_name
+                    b_exists  = bridge_path.exists()
+                    b_has_arch = _has_archived(bridge_path.parent, bridge_path.stem)
+                    b_meta = _get_clip_meta(bridge_path) if b_exists else {"duration_s": None, "width": None, "height": None}
+                    clips.append({
+                        "seq":          seq,
+                        "name":         bridge_name,
+                        "type":         "generated",
+                        "subtype":      "transition",
+                        "status":       "ok" if b_exists else "missing",
+                        "has_versions": b_exists or b_has_arch,
+                        "has_archived": b_has_arch,
+                        "size_mb":      round(bridge_path.stat().st_size / 1_048_576, 1) if b_exists else None,
+                        "mtime":        int(bridge_path.stat().st_mtime) if b_exists else None,
+                        **b_meta,
+                    })
+                    seq += 1
+
             continue
 
         # ── CHAIN ──────────────────────────────────────────────────

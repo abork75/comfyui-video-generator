@@ -357,6 +357,115 @@ def _newest_mp4_added_after(directory: Path, known: set[str]) -> Path | None:
     return max(candidates, key=lambda p: p.stat().st_mtime) if candidates else None
 
 
+# ── Color correction helper ─────────────────────────────────────────────────
+
+def _color_correct_to_source(video_path: Path, source_image: Path) -> bool:
+    """
+    Correct systematic color shift introduced by the talk model's VAE.
+
+    The model often desaturates reds (red wall → orange) due to VAE encoding.
+    This applies a per-channel linear scale so that the video's mean R/G/B
+    statistics match the source image.
+
+    Steps:
+      1. Read source image → compute mean per channel (R, G, B).
+      2. Extract first frame of the generated video → same stats.
+      3. Compute scale = src_mean / gen_mean per channel, clamped to [0.70, 1.50].
+      4. Apply via ffmpeg colorchannelmixer (in-place replacement).
+
+    Returns True if correction was applied, False if skipped or failed.
+    """
+    import tempfile
+
+    # ── 1. Source image channel means ────────────────────────────────────
+    try:
+        with _PILImage.open(str(source_image)) as _img:
+            _rgb = _img.convert("RGB")
+            _w, _h = _rgb.size
+            _pixels = list(_rgb.getdata())  # list of (R, G, B) tuples
+        n = len(_pixels)
+        src_means = [sum(p[c] for p in _pixels) / n for c in range(3)]
+    except Exception:
+        return False
+
+    # ── 2. Extract first frame from generated video ───────────────────────
+    tmp_frame = video_path.with_name(f"_cc_frame_{video_path.stem}.png")
+    try:
+        r = subprocess.run(
+            ["ffmpeg", "-y", "-i", str(video_path), "-vframes", "1", str(tmp_frame)],
+            capture_output=True,
+            timeout=30,
+        )
+        if r.returncode != 0 or not tmp_frame.exists():
+            return False
+
+        with _PILImage.open(str(tmp_frame)) as _img:
+            _rgb = _img.convert("RGB")
+            _pixels = list(_rgb.getdata())
+        n2 = len(_pixels)
+        gen_means = [sum(p[c] for p in _pixels) / n2 for c in range(3)]
+    except Exception:
+        return False
+    finally:
+        try:
+            tmp_frame.unlink()
+        except Exception:
+            pass
+
+    # ── 3. Compute per-channel scale factors ──────────────────────────────
+    scales = []
+    significant = False
+    for c in range(3):
+        gm = gen_means[c]
+        if gm < 2.0:                       # nearly-black channel — skip
+            scales.append(1.0)
+            continue
+        s = max(0.70, min(src_means[c] / gm, 1.50))
+        if abs(s - 1.0) > 0.04:           # > 4 % → correction is meaningful
+            significant = True
+        scales.append(s)
+
+    if not significant:
+        return False                        # colors already close — skip
+
+    r_s, g_s, b_s = scales
+
+    # ── 4. Apply via ffmpeg colorchannelmixer ─────────────────────────────
+    tmp_out = video_path.with_name(f"_cc_{video_path.name}")
+    try:
+        rv = subprocess.run(
+            [
+                "ffmpeg", "-y",
+                "-i", str(video_path),
+                "-vf",
+                f"colorchannelmixer="
+                f"{r_s:.4f}:0:0:0:"    # R output
+                f"0:{g_s:.4f}:0:0:"    # G output
+                f"0:0:{b_s:.4f}:0",    # B output
+                "-c:v", "libx264", "-crf", "18", "-preset", "fast",
+                "-c:a", "copy",
+                "-movflags", "+faststart",
+                str(tmp_out),
+            ],
+            capture_output=True,
+            timeout=300,
+        )
+        if rv.returncode == 0 and tmp_out.exists() and tmp_out.stat().st_size > 0:
+            video_path.unlink()
+            tmp_out.rename(video_path)
+            return True
+    except Exception:
+        pass
+    finally:
+        try:
+            if tmp_out.exists():
+                tmp_out.unlink()
+        except Exception:
+            pass
+
+    return False
+
+
 # ── Single-segment generator ─────────────────────────────────────────────────
 
 async def _generate_segment(
@@ -546,6 +655,15 @@ async def _generate_segment(
             # Non-fatal: keep original file, log the problem
             raise RuntimeError(f"Audio mux error: {exc}") from exc
 
+        # Color-correct output to match source image (fixes VAE red→orange shift)
+        def _do_color_correct():
+            applied = _color_correct_to_source(out_video_path, image_path)
+            return applied
+
+        corrected = await loop.run_in_executor(None, _do_color_correct)
+        # (result logged by caller; correction is non-fatal — proceed regardless)
+        _ = corrected   # suppress unused-var warning
+
         return out_video_path
 
     finally:
@@ -728,7 +846,15 @@ def start_talk(
             else:
                 return {"ok": False, "error": f"Nie znaleziono pliku źródłowego: {start_image}"}
     else:
-        img_path = pf / start_image
+        # For static images, prefer _real.png (actual last frame of the preceding
+        # transition/chain) over the original source image.  This eliminates the
+        # visual jump caused by WAN not reaching the target end-frame exactly.
+        _stem      = Path(start_image).stem
+        _real_path = pf / "frames" / f"{_stem}_real.png"
+        if _real_path.exists():
+            img_path = _real_path
+        else:
+            img_path = pf / start_image
     if not img_path.exists():
         return {"ok": False, "error": f"Nie znaleziono klatki startowej: {start_image}"}
 
@@ -762,6 +888,16 @@ def start_talk(
 
     dest_path = talk_path(pf, talk_item)
     talk_name = dest_path.name
+
+    # ── Log generation summary ────────────────────────────────────────────
+    _sf_tag = (' 🎯 real (last frame of preceding clip)'
+               if '_real' in img_path.name
+               else ' (static source image)')
+    print(f"  🎙️ Talk start:")
+    print(f"     start frame : {img_path.name}{_sf_tag}")
+    print(f"     audio       : {', '.join(e['path'].name for e in audio_entries)}")
+    print(f"     size        : {width}x{height}")
+    print(f"     output      : {talk_name}")
 
     _reset_state()
     _state.update({

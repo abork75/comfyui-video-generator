@@ -45,20 +45,23 @@ async def start_generation(filename: str, request: Request):
     """
     Start generation for the given RUN file.
 
-    Optional JSON body: {"only": ["transition_name.mp4", ...]}
-    When 'only' is provided, only those specific transitions are (re-)generated,
-    bypassing skip_existed — useful for targeted single-file regeneration.
+    Optional JSON body:
+      {"only": ["transition_name.mp4", ...]}   — re-generate only listed files
+      {"force_all": true}                       — regenerate ALL (skip_existed=False)
     """
     only: list[str] | None = None
+    force_all: bool = False
     try:
         body = await request.json()
         raw = body.get("only")
         if isinstance(raw, list) and raw:
             only = [str(x) for x in raw if x]
+        if body.get("force_all"):
+            force_all = True
     except Exception:
         pass
 
-    result = await process_service.start(filename, only=only)
+    result = await process_service.start(filename, only=only, force_all=force_all)
     if not result["ok"]:
         raise HTTPException(status_code=400, detail=result["error"])
     return result

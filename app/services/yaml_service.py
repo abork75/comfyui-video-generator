@@ -179,7 +179,10 @@ def _yaml_item_to_internal(item: dict) -> dict:
     Internal talk format: same dict, passed through verbatim.
     """
     if item.get("break"):
-        return {"break": True}
+        result = {"break": True}
+        if item.get("label"):
+            result["label"] = item["label"]
+        return result
     if "header" in item:
         return {"header": item["header"]}
     if "chain" in item:
@@ -208,7 +211,10 @@ def _internal_item_to_yaml(item: dict) -> dict:
     Inverse of _yaml_item_to_internal().
     """
     if item.get("break"):
-        return {"break": True}
+        result = {"break": True}
+        if item.get("label"):
+            result["label"] = item["label"]
+        return result
     if "header" in item:
         return {"header": item["header"]}
     if "chain" in item:

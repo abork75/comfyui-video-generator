@@ -43,6 +43,7 @@ class ProcessService:
         self._current_file: str | None = None
         self._log_queues:   set[asyncio.Queue] = set()
         self._only_transitions: list[str] | None = None   # targeted re-gen filter
+        self._force_all:        bool = False               # force regenerate all
 
         # Thread-safe input synchronisation
         self._input_event:   threading.Event = threading.Event()
@@ -79,10 +80,13 @@ class ProcessService:
 
     # ── Public control API (called from async context) ───────────────
 
-    async def start(self, filename: str, only: list[str] | None = None) -> dict:
+    async def start(
+        self, filename: str, only: list[str] | None = None, force_all: bool = False
+    ) -> dict:
         if self.is_running:
             return {"ok": False, "error": "Proces już działa — poczekaj lub zatrzymaj."}
         self._only_transitions = only or None
+        self._force_all = force_all
 
         if not filename.startswith("RUN_"):
             return {"ok": False, "error": f"Nieprawidłowa nazwa pliku: {filename}"}
@@ -191,6 +195,7 @@ class ProcessService:
             self._task              = None
             self._awaiting          = False
             self._only_transitions  = None
+            self._force_all         = False
 
     # ── Internal: synchronous subprocess runner (runs in thread) ─────
 
@@ -200,6 +205,8 @@ class ProcessService:
         env = {**os.environ, "PYTHONUNBUFFERED": "1", "PYTHONUTF8": "1"}
         if self._only_transitions:
             env["ONLY_TRANSITIONS"] = ",".join(self._only_transitions)
+        if self._force_all:
+            env["FORCE_REGEN"] = "1"
 
         # CREATE_NEW_PROCESS_GROUP isolates the subprocess from uvicorn's
         # process group — so uvicorn --reload restarts don't send Ctrl+C/

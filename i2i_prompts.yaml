@@ -283,4 +283,174 @@ prompts:
     steps: 30
     cfg: 8.0
     denoise: 0.4
-last_id: 22
+- id: p0000023
+  category: ''
+  name: usuwa postać z plakatu
+  note: ''
+  positive: "Edit the image: Completely remove the woman/model from the poster on the wall. The poster itself must stay exactly where it is, with the same frame, edges, lighting and texture, but now it should be completely blank and empty — no person visible on it at all. \n\nDo not remove or change the poster paper, only erase the figure printed on it. Perfect seamless inpainting, natural blank poster appearance, consistent lighting and shadows with the rest of the room, photorealistic, high detail."
+  negative: changed room, altered background, modified walls, different lighting, changed shadows, removed furniture, altered objects, changed perspective, deformed poster, damaged poster, torn poster, wrinkled poster, extra objects, missing objects, new elements added, different composition, blurry, artifacts, low quality, poster moved, poster resized, woman still visible on poster, partial removal, ghosting, residue of person, text on poster, logo on poster, different poster style
+  params:
+    steps: 30
+    cfg: 8
+    denoise: 1
+- id: p0000024
+  category: ''
+  name: Pochylona przodem ręce na udach - cała postać
+  note: ''
+  positive: 'Change the woman''s pose: Her full body is visible from feet to head. She is now leaning forward at the waist, with her upper body tilted toward the camera. Both of her hands are resting on her thighs (palms on top of thighs or fingers gripping them). She is looking directly at the camera with a strong eye contact. Keep her exact facial expression, head angle (only slight adjustment for looking at camera), hair, clothing, body proportions, lighting, and background unchanged. Only modify the torso lean, arm position, and hand placement. Maintain realistic anatomy, natural spine curvature, balanced weight distribution, and correct shoulder positioning. Photorealistic, seamless edit, high detail, perfect proportions.'
+  negative: ''
+  params:
+    steps: 30
+    cfg: 8
+    denoise: 1
+- id: p0000025
+  category: ''
+  name: Zmiana pozy na pilce
+  note: ''
+  positive: "Change the woman's pose on the large exercise ball to a more dynamic and active position. She is now firmly gripping the sides of the ball with both hands — palms pressing against the left and right sides of the ball, fingers spread and engaged. \n\nHer arms are bent, shoulders slightly forward, upper body leaning a bit more dynamically over the ball. The pose looks energetic, controlled and stable. \n\nKeep her exact facial expression, head position, hair, clothing, leg position, lighting, shadows and background completely unchanged. Only modify the position of her arms and hands and make a slight adjustment to the torso lean for a more dynamic feel. \n\nRealistic hand grip and pressure on the ball, natural muscle tension, perfect anatomy, photorealistic, seamless edit, high detail."
+  negative: hands on knees, hands in lap, resting hands, static pose, arms straight, hands not touching ball, weak grip, floating hands, deformed hands, extra fingers, bad hand anatomy, stiff arms, hunched back, overly leaned forward, bad balance, unnatural posture, deformed ball, ball deformation, changed leg position, changed facial expression, different clothing, different hair, altered lighting, shadows changed, low quality, artifacts, blurry hands, rubbery arms, unrealistic grip, minimal movement, no dynamic pose
+  params:
+    steps: 30
+    cfg: 8
+    denoise: 1
+- id: p0000026
+  category: ''
+  name: Zmiana pozy na pilce
+  note: ''
+  positive: "Change the woman's pose on the large exercise ball to a more dynamic and active position. She is now firmly gripping the sides of the ball with both hands — palms pressing against the left and right sides of the ball, fingers spread and engaged. \n\nHer arms are bent, shoulders slightly forward, upper body leaning a bit more dynamically over the ball. The pose looks energetic, controlled and stable. \n\nKeep her exact facial expression, head position, hair, clothing, leg position, lighting, shadows and background completely unchanged. Only modify the position of her arms and hands and make a slight adjustment to the torso lean for a more dynamic feel. \n\nRealistic hand grip and pressure on the ball, natural muscle tension, perfect anatomy, photorealistic, seamless edit, high detail."
+  negative: hands on knees, hands in lap, resting hands, static pose, arms straight, hands not touching ball, weak grip, floating hands, deformed hands, extra fingers, bad hand anatomy, stiff arms, hunched back, overly leaned forward, bad balance, unnatural posture, deformed ball, ball deformation, changed leg position, changed facial expression, different clothing, different hair, altered lighting, shadows changed, low quality, artifacts, blurry hands, rubbery arms, unrealistic grip, minimal movement, no dynamic pose
+  params:
+    steps: 30
+    cfg: 8
+    denoise: 1
+- id: p0000027
+  category: ''
+  name: Zmiana pozy na pilce
+  note: ''
+  positive: "Change the woman's pose on the large exercise ball to a more dynamic and active position. She is now firmly gripping the sides of the ball with both hands — palms pressing against the left and right sides of the ball, fingers spread and engaged. \n\nHer arms are bent, shoulders slightly forward, upper body leaning a bit more dynamically over the ball. The pose looks energetic, controlled and stable. \n\nKeep her exact facial expression, head position, hair, clothing, leg position, lighting, shadows and background completely unchanged. Only modify the position of her arms and hands and make a slight adjustment to the torso lean for a more dynamic feel. \n\nRealistic hand grip and pressure on the ball, natural muscle tension, perfect anatomy, photorealistic, seamless edit, high detail."
+  negative: hands on knees, hands in lap, resting hands, static pose, arms straight, hands not touching ball, weak grip, floating hands, deformed hands, extra fingers, bad hand anatomy, stiff arms, hunched back, overly leaned forward, bad balance, unnatural posture, deformed ball, ball deformation, changed leg position, changed facial expression, different clothing, different hair, altered lighting, shadows changed, low quality, artifacts, blurry hands, rubbery arms, unrealistic grip, minimal movement, no dynamic pose
+  params:
+    steps: 30
+    cfg: 8
+    denoise: 1
+- id: p0000028
+  category: ''
+  name: Zmiana pozy na pilce
+  note: ''
+  positive: "Change the woman's pose on the large exercise ball to a more dynamic and active position. She is now firmly gripping the sides of the ball with both hands — palms pressing against the left and right sides of the ball, fingers spread and engaged. \n\nHer arms are bent, shoulders slightly forward, upper body leaning a bit more dynamically over the ball. The pose looks energetic, controlled and stable. \n\nKeep her exact facial expression, head position, hair, clothing, leg position, lighting, shadows and background completely unchanged. Only modify the position of her arms and hands and make a slight adjustment to the torso lean for a more dynamic feel. \n\nRealistic hand grip and pressure on the ball, natural muscle tension, perfect anatomy, photorealistic, seamless edit, high detail."
+  negative: hands on knees, hands in lap, resting hands, static pose, arms straight, hands not touching ball, weak grip, floating hands, deformed hands, extra fingers, bad hand anatomy, stiff arms, hunched back, overly leaned forward, bad balance, unnatural posture, deformed ball, ball deformation, changed leg position, changed facial expression, different clothing, different hair, altered lighting, shadows changed, low quality, artifacts, blurry hands, rubbery arms, unrealistic grip, minimal movement, no dynamic pose
+  params:
+    steps: 30
+    cfg: 8
+    denoise: 1
+- id: p0000029
+  category: ''
+  name: Zmiana pozy na pilce
+  note: ''
+  positive: "Change the woman's pose on the large exercise ball to a more dynamic and active position. She is now firmly gripping the sides of the ball with both hands — palms pressing against the left and right sides of the ball, fingers spread and engaged. \n\nHer arms are bent, shoulders slightly forward, upper body leaning a bit more dynamically over the ball. The pose looks energetic, controlled and stable. \n\nKeep her exact facial expression, head position, hair, clothing, leg position, lighting, shadows and background completely unchanged. Only modify the position of her arms and hands and make a slight adjustment to the torso lean for a more dynamic feel. \n\nRealistic hand grip and pressure on the ball, natural muscle tension, perfect anatomy, photorealistic, seamless edit, high detail."
+  negative: hands on knees, hands in lap, resting hands, static pose, arms straight, hands not touching ball, weak grip, floating hands, deformed hands, extra fingers, bad hand anatomy, stiff arms, hunched back, overly leaned forward, bad balance, unnatural posture, deformed ball, ball deformation, changed leg position, changed facial expression, different clothing, different hair, altered lighting, shadows changed, low quality, artifacts, blurry hands, rubbery arms, unrealistic grip, minimal movement, no dynamic pose
+  params:
+    steps: 30
+    cfg: 8
+    denoise: 1
+- id: p0000030
+  category: ''
+  name: Zmiana pozy na pilce
+  note: ''
+  positive: "Change the woman's pose on the large exercise ball to a more dynamic and active position. She is now firmly gripping the sides of the ball with both hands — palms pressing against the left and right sides of the ball, fingers spread and engaged. \n\nHer arms are bent, shoulders slightly forward, upper body leaning a bit more dynamically over the ball. The pose looks energetic, controlled and stable. \n\nKeep her exact facial expression, head position, hair, clothing, leg position, lighting, shadows and background completely unchanged. Only modify the position of her arms and hands and make a slight adjustment to the torso lean for a more dynamic feel. \n\nRealistic hand grip and pressure on the ball, natural muscle tension, perfect anatomy, photorealistic, seamless edit, high detail."
+  negative: hands on knees, hands in lap, resting hands, static pose, arms straight, hands not touching ball, weak grip, floating hands, deformed hands, extra fingers, bad hand anatomy, stiff arms, hunched back, overly leaned forward, bad balance, unnatural posture, deformed ball, ball deformation, changed leg position, changed facial expression, different clothing, different hair, altered lighting, shadows changed, low quality, artifacts, blurry hands, rubbery arms, unrealistic grip, minimal movement, no dynamic pose
+  params:
+    steps: 30
+    cfg: 8
+    denoise: 1
+- id: p0000031
+  category: ''
+  name: Zmiana pozy na pilce
+  note: ''
+  positive: "Change the woman's pose on the large exercise ball to a more dynamic and active position. She is now firmly gripping the sides of the ball with both hands — palms pressing against the left and right sides of the ball, fingers spread and engaged. \n\nHer arms are bent, shoulders slightly forward, upper body leaning a bit more dynamically over the ball. The pose looks energetic, controlled and stable. \n\nKeep her exact facial expression, head position, hair, clothing, leg position, lighting, shadows and background completely unchanged. Only modify the position of her arms and hands and make a slight adjustment to the torso lean for a more dynamic feel. \n\nRealistic hand grip and pressure on the ball, natural muscle tension, perfect anatomy, photorealistic, seamless edit, high detail."
+  negative: hands on knees, hands in lap, resting hands, static pose, arms straight, hands not touching ball, weak grip, floating hands, deformed hands, extra fingers, bad hand anatomy, stiff arms, hunched back, overly leaned forward, bad balance, unnatural posture, deformed ball, ball deformation, changed leg position, changed facial expression, different clothing, different hair, altered lighting, shadows changed, low quality, artifacts, blurry hands, rubbery arms, unrealistic grip, minimal movement, no dynamic pose
+  params:
+    steps: 30
+    cfg: 8
+    denoise: 1
+- id: p0000032
+  category: ''
+  name: Zmiana pozy na pilce
+  note: ''
+  positive: "Change the woman's pose on the large exercise ball to a more dynamic and active position. She is now firmly gripping the sides of the ball with both hands — palms pressing against the left and right sides of the ball, fingers spread and engaged. \n\nHer arms are bent, shoulders slightly forward, upper body leaning a bit more dynamically over the ball. The pose looks energetic, controlled and stable. \n\nKeep her exact facial expression, head position, hair, clothing, leg position, lighting, shadows and background completely unchanged. Only modify the position of her arms and hands and make a slight adjustment to the torso lean for a more dynamic feel. \n\nRealistic hand grip and pressure on the ball, natural muscle tension, perfect anatomy, photorealistic, seamless edit, high detail."
+  negative: hands on knees, hands in lap, resting hands, static pose, arms straight, hands not touching ball, weak grip, floating hands, deformed hands, extra fingers, bad hand anatomy, stiff arms, hunched back, overly leaned forward, bad balance, unnatural posture, deformed ball, ball deformation, changed leg position, changed facial expression, different clothing, different hair, altered lighting, shadows changed, low quality, artifacts, blurry hands, rubbery arms, unrealistic grip, minimal movement, no dynamic pose
+  params:
+    steps: 30
+    cfg: 8
+    denoise: 1
+- id: p0000033
+  category: ''
+  name: Zmiana pozy na pilce
+  note: ''
+  positive: "Change the woman's pose on the large exercise ball to a more dynamic and active position. She is now firmly gripping the sides of the ball with both hands — palms pressing against the left and right sides of the ball, fingers spread and engaged. \n\nHer arms are bent, shoulders slightly forward, upper body leaning a bit more dynamically over the ball. The pose looks energetic, controlled and stable. \n\nKeep her exact facial expression, head position, hair, clothing, leg position, lighting, shadows and background completely unchanged. Only modify the position of her arms and hands and make a slight adjustment to the torso lean for a more dynamic feel. \n\nRealistic hand grip and pressure on the ball, natural muscle tension, perfect anatomy, photorealistic, seamless edit, high detail."
+  negative: hands on knees, hands in lap, resting hands, static pose, arms straight, hands not touching ball, weak grip, floating hands, deformed hands, extra fingers, bad hand anatomy, stiff arms, hunched back, overly leaned forward, bad balance, unnatural posture, deformed ball, ball deformation, changed leg position, changed facial expression, different clothing, different hair, altered lighting, shadows changed, low quality, artifacts, blurry hands, rubbery arms, unrealistic grip, minimal movement, no dynamic pose
+  params:
+    steps: 30
+    cfg: 8
+    denoise: 1
+- id: p0000034
+  category: ''
+  name: Zmiana pozy na pilce
+  note: ''
+  positive: "Change the woman's pose on the large exercise ball to a more dynamic and active position. She is now firmly gripping the sides of the ball with both hands — palms pressing against the left and right sides of the ball, fingers spread and engaged. \n\nHer arms are bent, shoulders slightly forward, upper body leaning a bit more dynamically over the ball. The pose looks energetic, controlled and stable. \n\nKeep her exact facial expression, head position, hair, clothing, leg position, lighting, shadows and background completely unchanged. Only modify the position of her arms and hands and make a slight adjustment to the torso lean for a more dynamic feel. \n\nRealistic hand grip and pressure on the ball, natural muscle tension, perfect anatomy, photorealistic, seamless edit, high detail."
+  negative: hands on knees, hands in lap, resting hands, static pose, arms straight, hands not touching ball, weak grip, floating hands, deformed hands, extra fingers, bad hand anatomy, stiff arms, hunched back, overly leaned forward, bad balance, unnatural posture, deformed ball, ball deformation, changed leg position, changed facial expression, different clothing, different hair, altered lighting, shadows changed, low quality, artifacts, blurry hands, rubbery arms, unrealistic grip, minimal movement, no dynamic pose
+  params:
+    steps: 30
+    cfg: 8
+    denoise: 1
+- id: p0000035
+  category: ''
+  name: Zmiana pozy na pilce
+  note: ''
+  positive: "Change the woman's pose on the large exercise ball to a more dynamic and active position. She is now firmly gripping the sides of the ball with both hands — palms pressing against the left and right sides of the ball, fingers spread and engaged. \n\nHer arms are bent, shoulders slightly forward, upper body leaning a bit more dynamically over the ball. The pose looks energetic, controlled and stable. \n\nKeep her exact facial expression, head position, hair, clothing, leg position, lighting, shadows and background completely unchanged. Only modify the position of her arms and hands and make a slight adjustment to the torso lean for a more dynamic feel. \n\nRealistic hand grip and pressure on the ball, natural muscle tension, perfect anatomy, photorealistic, seamless edit, high detail."
+  negative: hands on knees, hands in lap, resting hands, static pose, arms straight, hands not touching ball, weak grip, floating hands, deformed hands, extra fingers, bad hand anatomy, stiff arms, hunched back, overly leaned forward, bad balance, unnatural posture, deformed ball, ball deformation, changed leg position, changed facial expression, different clothing, different hair, altered lighting, shadows changed, low quality, artifacts, blurry hands, rubbery arms, unrealistic grip, minimal movement, no dynamic pose
+  params:
+    steps: 30
+    cfg: 8
+    denoise: 1
+- id: p0000036
+  category: ''
+  name: Zmiana pozy na pilce
+  note: ''
+  positive: "Change the woman's pose on the large exercise ball to a more dynamic and active position. She is now firmly gripping the sides of the ball with both hands — palms pressing against the left and right sides of the ball, fingers spread and engaged. \n\nHer arms are bent, shoulders slightly forward, upper body leaning a bit more dynamically over the ball. The pose looks energetic, controlled and stable. \n\nKeep her exact facial expression, head position, hair, clothing, leg position, lighting, shadows and background completely unchanged. Only modify the position of her arms and hands and make a slight adjustment to the torso lean for a more dynamic feel. \n\nRealistic hand grip and pressure on the ball, natural muscle tension, perfect anatomy, photorealistic, seamless edit, high detail."
+  negative: hands on knees, hands in lap, resting hands, static pose, arms straight, hands not touching ball, weak grip, floating hands, deformed hands, extra fingers, bad hand anatomy, stiff arms, hunched back, overly leaned forward, bad balance, unnatural posture, deformed ball, ball deformation, changed leg position, changed facial expression, different clothing, different hair, altered lighting, shadows changed, low quality, artifacts, blurry hands, rubbery arms, unrealistic grip, minimal movement, no dynamic pose
+  params:
+    steps: 30
+    cfg: 8
+    denoise: 1
+- id: p0000037
+  category: usun_tlo
+  name: Zmiana pozy na pilce
+  note: ''
+  positive: "Change the woman's pose on the large exercise ball to a more dynamic and active position. She is now firmly gripping the sides of the ball with both hands — palms pressing against the left and right sides of the ball, fingers spread and engaged. \n\nHer arms are bent, shoulders slightly forward, upper body leaning a bit more dynamically over the ball. The pose looks energetic, controlled and stable. \n\nKeep her exact facial expression, head position, hair, clothing, leg position, lighting, shadows and background completely unchanged. Only modify the position of her arms and hands and make a slight adjustment to the torso lean for a more dynamic feel. \n\nRealistic hand grip and pressure on the ball, natural muscle tension, perfect anatomy, photorealistic, seamless edit, high detail."
+  negative: hands on knees, hands in lap, resting hands, static pose, arms straight, hands not touching ball, weak grip, floating hands, deformed hands, extra fingers, bad hand anatomy, stiff arms, hunched back, overly leaned forward, bad balance, unnatural posture, deformed ball, ball deformation, changed leg position, changed facial expression, different clothing, different hair, altered lighting, shadows changed, low quality, artifacts, blurry hands, rubbery arms, unrealistic grip, minimal movement, no dynamic pose
+  params:
+    steps: 30
+    cfg: 8
+    denoise: 1
+- id: p0000038
+  category: ''
+  name: Zmiana pozy na pilce
+  note: ''
+  positive: "Change the woman's pose on the large exercise ball to a more dynamic and active position. She is now firmly gripping the sides of the ball with both hands — palms pressing against the left and right sides of the ball, fingers spread and engaged. \n\nHer arms are bent, shoulders slightly forward, upper body leaning a bit more dynamically over the ball. The pose looks energetic, controlled and stable. \n\nKeep her exact facial expression, head position, hair, clothing, leg position, lighting, shadows and background completely unchanged. Only modify the position of her arms and hands and make a slight adjustment to the torso lean for a more dynamic feel. \n\nRealistic hand grip and pressure on the ball, natural muscle tension, perfect anatomy, photorealistic, seamless edit, high detail."
+  negative: hands on knees, hands in lap, resting hands, static pose, arms straight, hands not touching ball, weak grip, floating hands, deformed hands, extra fingers, bad hand anatomy, stiff arms, hunched back, overly leaned forward, bad balance, unnatural posture, deformed ball, ball deformation, changed leg position, changed facial expression, different clothing, different hair, altered lighting, shadows changed, low quality, artifacts, blurry hands, rubbery arms, unrealistic grip, minimal movement, no dynamic pose
+  params:
+    steps: 30
+    cfg: 8
+    denoise: 1
+- id: p0000039
+  category: ''
+  name: siedzi na pilce bardziej dynamiczna poza
+  note: ''
+  positive: c
+  negative: c
+  params:
+    steps: 30
+    cfg: 8
+    denoise: 1
+last_id: 39

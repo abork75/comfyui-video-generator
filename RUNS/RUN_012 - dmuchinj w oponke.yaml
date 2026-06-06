@@ -1,5 +1,5 @@
 # RUN_012 - dmuchinj w oponke.yaml
-# Edited: 2026-06-04 07:17:40
+# Edited: 2026-06-06 05:47:54
 # Edit this file freely — regenerate .py with generate_py_from_yaml()
 #
 defaults:
@@ -46,14 +46,18 @@ flow:
     pos: |-
       Woman is waving a hand
   width: 608
-  height: 832
+  height: 816
+  transition:
+    duration: 2
+    pos: |-
+      Woman is waving hand and smiles
 
 - chain:
     prefix: wychodzi na zewnątrz
     transitions:
     - duration: 3
       pos: |-
-        Woman is standing up, turning back to camera and leaves garrage
+        Woman is standing up, turning back to go straight to open garrage doors leaving garrage.
       neg: ""
     backend: linux
     fps: 16
@@ -83,9 +87,9 @@ flow:
   audio:
     file: 11.55. przykrecac kolka.mp3
     pos: |-
-      Woman is rising both hands and waving them
+      Woman standing in front is rising both hands and waving them. Woman on poster are not moving and talking at all.
   width: 608
-  height: 832
+  height: 816
 
 - break: true
 
@@ -116,7 +120,7 @@ flow:
     pos: |-
       Woman is chaotically looking for something on table
   width: 608
-  height: 832
+  height: 816
 
 - break: true
 
@@ -163,23 +167,17 @@ flow:
   backend: linux
   duration: 2
   pos: |-
-    NONE
+    Zoom on woman in black black lace bodysuit with blonde hair other woman is not visible
   neg: |-
     NONE
 
-- chain:
-    prefix: zoom on blonde
-    transitions:
-    - duration: 3
-      pos: |-
-        Zoom on woman in black black lace bodysuit with blonde hair other woman is not visible
-      neg: ""
-    backend: linux
-    fps: 16
-    steps: 6
-    cfg: 2
-    neg: |-
-      static, frozen, no movement
+- file: 13.79. taniec.png
+  backend: linux
+  duration: 2
+  pos: |-
+    NONE
+  neg: |-
+    NONE
 
 - type: talk
   audio:
@@ -187,7 +185,7 @@ flow:
     pos: |-
       Face is little frighetned and courious
   width: 608
-  height: 832
+  height: 816
 
 - break: true
 
@@ -205,7 +203,21 @@ flow:
     pos: |-
       Women is waving hand with greetings
   width: 608
-  height: 832
+  height: 816
+
+- chain:
+    prefix: zaproszenie
+    transitions:
+    - duration: 3
+      pos: |-
+        NONE
+      neg: ""
+    backend: linux
+    fps: 16
+    steps: 6
+    cfg: 2
+    neg: |-
+      Women is waving hands with greetings
 
 project_folder: C:\Users\abork\AppData\Local\CapCut\Videos\muszelka_pliki\obce\oponka\film
 
@@ -294,6 +306,10 @@ pic_flow:
   id: generator_modelu_bazowego_modelka1_kopia
   crop_to_subject: true
   pad_input_to_ratio: false
+  edge_blend_cfg: null
+  edge_blend_denoise: null
+  scene_blend_cfg: null
+  scene_blend_denoise: null
 
 - type: one_image_many_prompts
   name: modelka1_generator_póz
@@ -583,6 +599,10 @@ pic_flow:
   scene_blend_prompts: []
   crop_to_subject: false
   pad_input_to_ratio: true
+  edge_blend_cfg: null
+  edge_blend_denoise: null
+  scene_blend_cfg: null
+  scene_blend_denoise: null
 
 - type: character_insert
   name: wstawianie_na_scene_free
@@ -638,7 +658,7 @@ pic_flow:
         denoise: 1
   - scene_image: maszyny_sciana.jpeg
     character_images:
-    - mPjzORj5OgRk2MqtOd.png
+    - 2yhhXR6gEUeSRuBgyA.png
     prompts:
     - id: tmp_ci_1780455463715
       output_id: 2STeO43DZG3q9RVd7V
@@ -856,3 +876,40 @@ pic_flow:
   edge_blend_denoise: 1.0
   scene_blend_cfg: null
   scene_blend_denoise: null
+
+- type: one_image_many_prompts
+  name: Dorobki na finalnych filmach
+  source_dirs:
+  - C:\Users\abork\AppData\Local\CapCut\Videos\muszelka_pliki\obce\oponka\film
+  image_slots:
+  - image: 13.77. taniec.png
+    prompts:
+    - id: tmp_1780576488324
+      output_id: Kxs4AJjfFDQS9rAxDq
+      enabled: true
+      name: taniec_zoom_1
+      positive: Make zoom on blonde woman change her pose a fingers from right hand is pointing at camera
+      negative: ''
+      note: ''
+      params:
+        steps: 30
+        cfg: 8
+        denoise: 1
+  scene_dirs: []
+  characters_dirs: []
+  scene_slots: []
+  paste_slots: []
+  edge_blend_enabled: false
+  edge_blend_px: 15
+  edge_blend_cfg: null
+  edge_blend_denoise: null
+  edge_blend_prompts: []
+  scene_blend_enabled: false
+  scene_blend_cfg: null
+  scene_blend_denoise: null
+  scene_blend_prompts: []
+  output_dir: C:\Users\abork\AppData\Local\CapCut\Videos\muszelka_pliki\obce\oponka\postacie_na_scenie
+  global_suffix: ''
+  crop_to_subject: false
+  pad_input_to_ratio: false
+  id: dorobki_na_finalnych_filmmach
