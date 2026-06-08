@@ -4181,11 +4181,13 @@
                                                     title="Usuń wyniki i wygeneruj wszystkie etapy od nowa">
                                                 🔄 Generuj od zera
                                             </button>
-                                            <button @click="picFinalizeSlot(slot.id)"
-                                                    :disabled="!tileModal.status?.slots?.[si]?.done || tileModal.status?.slots?.[si]?.slot_final"
-                                                    class="text-xs text-gray-500 hover:text-green-400 transition disabled:opacity-30"
-                                                    :title="tileModal.status?.slots?.[si]?.slot_final ? 'Już sfinalizowany' : 'Przenieś do katalogu finalnego'">
-                                                📤 Finalizuj
+                                            <button @click="picFinalizeSlot(slot.id, tileModal.status?.slots?.[si]?.slot_final)"
+                                                    :disabled="!tileModal.status?.slots?.[si]?.done"
+                                                    :class="tileModal.status?.slots?.[si]?.slot_final
+                                                        ? 'text-xs text-yellow-600 hover:text-yellow-400 transition disabled:opacity-30'
+                                                        : 'text-xs text-gray-500 hover:text-green-400 transition disabled:opacity-30'"
+                                                    :title="tileModal.status?.slots?.[si]?.slot_final ? 'Nadpisz w katalogu finalnym' : 'Przenieś do katalogu finalnego'">
+                                                <span x-text="tileModal.status?.slots?.[si]?.slot_final ? '↺ Nadpisz' : '📤 Finalizuj'"></span>
                                             </button>
                                         </div>
                                     </div>
@@ -8257,23 +8259,30 @@ function app() {
          * Finalize a single paste_character slot (robocze/ → output_dir root).
          * Warns on conflict (file already exists).
          */
-        async picFinalizeSlot(slotId) {
+        async picFinalizeSlot(slotId, alreadyFinal = false) {
             const runId  = this.selectedRun?.filename;
             const tileId = this.tileModal.tileId;
             if (!runId || !tileId) return;
             const url = `/api/pic/session/${runId}/tiles/${tileId}/paste_slot/${slotId}/finalize`;
             try {
-                const res  = await fetch(url, { method: 'POST', headers: {'Content-Type':'application/json'}, body: '{}' });
-                const data = await res.json();
-                if (!res.ok) { alert('Błąd finalizacji: ' + (data.detail || res.status)); return; }
-                if (!data.ok && data.conflict) {
-                    if (!confirm(`Plik już istnieje w katalogu finalnym:\n${data.dest}\n\nNadpisać?`)) return;
-                    const res2 = await fetch(url, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({overwrite: true}) });
-                    const d2   = await res2.json();
-                    if (!res2.ok || !d2.ok) { alert('Błąd nadpisania: ' + (d2.detail || d2.reason || res2.status)); return; }
-                } else if (!data.ok) {
-                    alert('Brak gotowego pliku: ' + (data.reason || ''));
-                    return;
+                // If already finalized, go straight to overwrite (skip first fetch)
+                if (alreadyFinal) {
+                    const res = await fetch(url, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({overwrite: true}) });
+                    const data = await res.json();
+                    if (!res.ok || !data.ok) { alert('Błąd nadpisania: ' + (data.detail || data.reason || res.status)); return; }
+                } else {
+                    const res  = await fetch(url, { method: 'POST', headers: {'Content-Type':'application/json'}, body: '{}' });
+                    const data = await res.json();
+                    if (!res.ok) { alert('Błąd finalizacji: ' + (data.detail || res.status)); return; }
+                    if (!data.ok && data.conflict) {
+                        if (!confirm(`Plik już istnieje w katalogu finalnym:\n${data.dest}\n\nNadpisać?`)) return;
+                        const res2 = await fetch(url, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({overwrite: true}) });
+                        const d2   = await res2.json();
+                        if (!res2.ok || !d2.ok) { alert('Błąd nadpisania: ' + (d2.detail || d2.reason || res2.status)); return; }
+                    } else if (!data.ok) {
+                        alert('Brak gotowego pliku: ' + (data.reason || ''));
+                        return;
+                    }
                 }
                 await this.loadTileStatus();
             } catch(e) { alert('Błąd połączenia: ' + e.message); }
