@@ -2733,7 +2733,7 @@
      @keydown.escape.window="if(picMask.active){ picMask.active=false } else { picImgPreview.open=false }">
     <div class="relative max-w-screen-xl max-h-full flex flex-col items-center" @click.stop
          x-data="picMaskEditor()"
-         x-init="init()">
+         x-init="initRefs(picMask, picImgPreview)">
 
         <!-- Title bar -->
         <div class="flex items-center justify-between w-full mb-2 px-1">
@@ -8781,28 +8781,34 @@ function app() {
 }
 
 // ── Mask editor Alpine component ─────────────────────────────────────────────
+// x-init must call initRefs(picMask, picImgPreview) to pass parent-scope refs.
+// $root is NOT a magic property in Alpine v3 — we capture refs manually.
 function picMaskEditor() {
     return {
         _drawing: false,
         _ctx:     null,
         _imgW:    0,
         _imgH:    0,
+        _m:       null,   // ref to parent picMask state
+        _p:       null,   // ref to parent picImgPreview state
 
-        init() {
-            // Check if mask already exists for this image
-            const fp = this.$root.picImgPreview?.filepath || '';
+        initRefs(mask, preview) {
+            this._m = mask;
+            this._p = preview;
+            const fp = preview?.filepath || '';
             if (fp) {
                 fetch('/api/pic/mask?path=' + encodeURIComponent(fp))
-                    .then(r => { this.$root.picMask.exists = r.ok; })
-                    .catch(() => { this.$root.picMask.exists = false; });
+                    .then(r => { mask.exists = r.ok; })
+                    .catch(() => { mask.exists = false; });
             }
         },
 
         toggleMaskMode() {
-            const m = this.$root.picMask;
+            const m = this._m;
+            if (!m) return;
             if (m.active) {
                 m.active = false;
-                m.msg = '';
+                m.msg    = '';
             } else {
                 m.active = true;
                 this.$nextTick(() => this._initCanvas());
@@ -8820,9 +8826,8 @@ function picMaskEditor() {
             this._imgW = canvas.width;
             this._imgH = canvas.height;
             this._ctx  = canvas.getContext('2d');
-            // Load existing mask if present
-            const fp = this.$root.picImgPreview?.filepath || '';
-            if (fp && this.$root.picMask.exists) {
+            const fp = this._p?.filepath || '';
+            if (fp && this._m?.exists) {
                 const maskImg = new Image();
                 maskImg.onload = () => {
                     this._ctx.drawImage(maskImg, 0, 0, canvas.width, canvas.height);
@@ -8833,8 +8838,8 @@ function picMaskEditor() {
             }
         },
 
-        onImgLoad(imgEl) {
-            if (!this.$root.picMask.active) return;
+        onImgLoad() {
+            if (!this._m?.active) return;
             this.$nextTick(() => this._initCanvas());
         },
 
@@ -8852,17 +8857,17 @@ function picMaskEditor() {
         startDraw(e) {
             if (!this._ctx) return;
             this._drawing = true;
-            const m = this.$root.picMask;
+            const m = this._m;
             this._ctx.globalCompositeOperation =
-                m.tool === 'eraser' ? 'destination-out' : 'source-over';
+                m?.tool === 'eraser' ? 'destination-out' : 'source-over';
             this._ctx.fillStyle   = 'rgba(255,80,0,0.85)';
-            this._ctx.lineWidth   = m.size;
+            this._ctx.lineWidth   = m?.size || 30;
             this._ctx.lineCap     = 'round';
             this._ctx.lineJoin    = 'round';
-            this._ctx.strokeStyle = m.tool === 'eraser' ? 'rgba(0,0,0,1)' : 'rgba(255,80,0,0.85)';
+            this._ctx.strokeStyle = m?.tool === 'eraser' ? 'rgba(0,0,0,1)' : 'rgba(255,80,0,0.85)';
             const p = this._pos(e);
             this._ctx.beginPath();
-            this._ctx.arc(p.x, p.y, m.size / 2, 0, Math.PI * 2);
+            this._ctx.arc(p.x, p.y, (m?.size || 30) / 2, 0, Math.PI * 2);
             this._ctx.fill();
             this._ctx.beginPath();
             this._ctx.moveTo(p.x, p.y);
@@ -8897,39 +8902,35 @@ function picMaskEditor() {
             const data   = this._ctx.getImageData(0, 0, canvas.width, canvas.height);
             const d      = data.data;
             for (let i = 0; i < d.length; i += 4) {
-                const isTransparent = d[i + 3] < 10;
-                d[i]     = isTransparent ? 255 : 0;
-                d[i + 1] = isTransparent ? 80  : 0;
-                d[i + 2] = isTransparent ? 0   : 0;
-                d[i + 3] = isTransparent ? 217 : 0;
+                const transp = d[i + 3] < 10;
+                d[i]     = transp ? 255 : 0;
+                d[i + 1] = transp ? 80  : 0;
+                d[i + 2] = transp ? 0   : 0;
+                d[i + 3] = transp ? 217 : 0;
             }
             this._ctx.putImageData(data, 0, 0);
         },
 
         async saveMask() {
             const canvas = this.$refs.maskCanvas;
-            const fp     = this.$root.picImgPreview?.filepath || '';
-            if (!canvas || !fp) return;
-            const m = this.$root.picMask;
+            const fp     = this._p?.filepath || '';
+            const m      = this._m;
+            if (!canvas || !fp || !m) return;
             m.saving = true;
             m.msg    = '';
 
-            // Export canvas as binary mask (white = masked, black = not)
+            // Export as binary PNG: white = masked, black = keep
             const off    = document.createElement('canvas');
             off.width    = canvas.width;
             off.height   = canvas.height;
             const offCtx = off.getContext('2d');
             offCtx.fillStyle = '#000';
             offCtx.fillRect(0, 0, off.width, off.height);
-            // Paint white where user drew (alpha > 0)
             const src = this._ctx.getImageData(0, 0, canvas.width, canvas.height);
             const dst = offCtx.getImageData(0, 0, off.width, off.height);
             for (let i = 0; i < src.data.length; i += 4) {
                 if (src.data[i + 3] > 10) {
-                    dst.data[i]     = 255;
-                    dst.data[i + 1] = 255;
-                    dst.data[i + 2] = 255;
-                    dst.data[i + 3] = 255;
+                    dst.data[i] = dst.data[i+1] = dst.data[i+2] = dst.data[i+3] = 255;
                 }
             }
             offCtx.putImageData(dst, 0, 0);
@@ -8937,30 +8938,28 @@ function picMaskEditor() {
             try {
                 const blob = await new Promise(res => off.toBlob(res, 'image/png'));
                 const res  = await fetch('/api/pic/mask?path=' + encodeURIComponent(fp), {
-                    method: 'POST',
+                    method:  'POST',
                     headers: { 'Content-Type': 'application/octet-stream' },
-                    body: blob,
+                    body:    blob,
                 });
                 if (res.ok) {
                     m.exists = true;
                     m.msg    = '✅ Maska zapisana';
                     m.msgOk  = true;
                 } else {
-                    m.msg   = '❌ Błąd zapisu';
-                    m.msgOk = false;
+                    m.msg = '❌ Błąd zapisu'; m.msgOk = false;
                 }
             } catch(e) {
-                m.msg   = '❌ ' + e.message;
-                m.msgOk = false;
+                m.msg = '❌ ' + e.message; m.msgOk = false;
             } finally {
                 m.saving = false;
             }
         },
 
         async deleteMask() {
-            const fp = this.$root.picImgPreview?.filepath || '';
-            if (!fp) return;
-            const m = this.$root.picMask;
+            const fp = this._p?.filepath || '';
+            const m  = this._m;
+            if (!fp || !m) return;
             await fetch('/api/pic/mask?path=' + encodeURIComponent(fp), { method: 'DELETE' });
             m.exists = false;
             m.active = false;
