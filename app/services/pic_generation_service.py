@@ -1314,10 +1314,33 @@ async def _run_paste_character_async(
     else:
         slots_to_run = list(enumerate(paste_slots))
 
-    skipped = len(paste_slots) - len(slots_to_run)
+    # Pre-filter: remove slots that would be instantly skipped (all stages already done).
+    # This keeps the progress counter accurate (total = actual work, not all slots).
+    if not force_all and from_stage == 0:
+        def _slot_needs_work(si_slot: tuple) -> bool:
+            si, slot = si_slot
+            chars = slot.get("characters", [])
+            if not chars:
+                return True   # will error, but should be counted
+            oid = slot.get("output_id", slot.get("id", f"slot_{si}"))
+            n   = len(chars)
+            slot_sb      = bool(slot.get("scene_blend_enabled", True))
+            last_char_eb = bool(chars[-1].get("edge_blend_enabled", True))
+            if sb_positive and sb_wf and sb_enabled and slot_sb:
+                dp = _scene_path(working_dir, oid)
+            elif eb_positive and eb_wf and eb_enabled and last_char_eb:
+                dp = _char_edge_path(working_dir, oid, n - 1)
+            else:
+                dp = _char_pil_path(working_dir, oid, n - 1)
+            return not dp.exists()
+        slots_to_run = [s for s in slots_to_run if _slot_needs_work(s)]
+        skipped_count = len(paste_slots) - len(slots_to_run)
+    else:
+        skipped_count = len(paste_slots) - len(slots_to_run)
+
     _set_job(run_id, tile_id, {
         "status": "running", "tile_id": tile_id, "tile_name": tile_name,
-        "total": len(slots_to_run), "done": 0, "skipped": skipped,
+        "total": len(slots_to_run), "done": 0, "skipped": skipped_count,
         "current_prompt": None, "errors": [], "started_at": time.time(),
     })
 
