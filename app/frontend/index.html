@@ -462,6 +462,8 @@
                                                     <div class="flex items-center gap-1 flex-shrink-0">
                                                         <button @click="editOpenItem(entry.idx)"
                                                                 class="text-violet-400 hover:text-violet-200 text-xs px-1.5 py-0.5 rounded hover:bg-violet-900/40 transition" title="Edytuj nagłówek">✎</button>
+                                                        <button @click="editDuplicateItem(entry.idx)"
+                                                                class="text-gray-500 hover:text-blue-300 text-xs px-1 py-0.5 rounded hover:bg-gray-700 transition" title="Kopiuj ujęcie">⧉</button>
                                                         <button @click="editMoveItem(entry.idx, -1)" :disabled="entry.idx === 0"
                                                                 :class="entry.idx === 0 ? 'opacity-30 cursor-not-allowed' : 'hover:text-white'"
                                                                 class="text-gray-600 text-xs px-1 py-0.5 rounded hover:bg-gray-700">↑</button>
@@ -509,6 +511,8 @@
                                                             <div class="flex items-center gap-1 border-l border-gray-700 pl-2 ml-1">
                                                                 <button @click="editOpenItem(entry.idx)"
                                                                         class="text-yellow-500 hover:text-yellow-300 text-xs px-1.5 py-0.5 rounded hover:bg-yellow-900/30 transition" title="Edytuj chain">✎</button>
+                                                                <button @click="editDuplicateItem(entry.idx)"
+                                                                        class="text-gray-500 hover:text-blue-300 text-xs px-1 py-0.5 rounded hover:bg-gray-700 transition" title="Kopiuj ujęcie">⧉</button>
                                                                 <button @click="editMoveItem(entry.idx, -1)" :disabled="entry.idx === 0"
                                                                         :class="entry.idx === 0 ? 'opacity-30 cursor-not-allowed' : 'hover:text-white'"
                                                                         class="text-gray-600 text-xs px-1 py-0.5 rounded hover:bg-gray-700">↑</button>
@@ -674,6 +678,8 @@
                                                             <div class="flex items-center gap-0.5 border-r border-yellow-900/60 pr-1.5 mr-0.5">
                                                                 <button @click="editOpenItem(entry.idx)"
                                                                         class="text-yellow-500 hover:text-yellow-300 text-sm px-1 py-0.5 rounded hover:bg-yellow-900/30 transition" title="Edytuj">✎</button>
+                                                                <button @click="editDuplicateItem(entry.idx)"
+                                                                        class="text-gray-500 hover:text-blue-300 text-xs px-1 rounded hover:bg-gray-700 transition" title="Kopiuj ujęcie">⧉</button>
                                                                 <button @click="editMoveItem(entry.idx, -1)" :disabled="entry.idx === 0"
                                                                         :class="entry.idx === 0 ? 'opacity-30 cursor-not-allowed' : 'hover:text-white'"
                                                                         class="text-gray-500 text-xs px-1 rounded hover:bg-gray-700 transition">↑</button>
@@ -807,6 +813,9 @@
                                                                 <button @click.stop="editOpenItem(entry.idx)"
                                                                         class="text-teal-500 hover:text-teal-300 text-xs px-1.5 py-0.5 rounded hover:bg-teal-900/30 transition"
                                                                         title="Edytuj talk">✎</button>
+                                                                <button @click.stop="editDuplicateItem(entry.idx)"
+                                                                        class="text-gray-500 hover:text-blue-300 text-xs px-1 py-0.5 rounded hover:bg-gray-700 transition"
+                                                                        title="Kopiuj ujęcie">⧉</button>
                                                                 <button @click.stop="editMoveItem(entry.idx, -1)"
                                                                         :disabled="entry.idx === 0"
                                                                         :class="entry.idx === 0 ? 'opacity-30 cursor-not-allowed' : 'hover:text-white'"
@@ -6738,6 +6747,24 @@ function app() {
                 this.flowData.item_count = newFlow.length;
                 this.statusData = null; await this.refreshStatus();
                 this.logLine('sys', `🗑 Usunięto element #${idx + 1}: ${label}`);
+            }
+        },
+
+        async editDuplicateItem(idx) {
+            const flow = this.flowData?.flow;
+            if (!flow || idx < 0 || idx >= flow.length) return;
+            const copy = JSON.parse(JSON.stringify(flow[idx]));
+            // Clear output_id so the copy doesn't collide with the original
+            if (copy.output_id !== undefined) copy.output_id = '';
+            const newFlow = JSON.parse(JSON.stringify(flow));
+            newFlow.splice(idx + 1, 0, copy);
+            const ok = await this._saveFlow(newFlow);
+            if (ok) {
+                this.flowData.flow = newFlow;
+                this.flowData.item_count = newFlow.length;
+                this.statusData = null; await this.refreshStatus();
+                this.logLine('sys', `⧉ Skopiowano element #${idx + 1}`);
+                this.$nextTick(() => this.editOpenItem(idx + 1));
             }
         },
 
