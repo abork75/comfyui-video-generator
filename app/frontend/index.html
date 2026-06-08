@@ -1005,7 +1005,7 @@
                                             <template x-if="picTileImageUrl(tile)">
                                                 <img :src="picTileImageUrl(tile)"
                                                      class="w-full h-full object-cover cursor-zoom-in"
-                                                     @click.stop="picImgPreview = { open: true, url: picTileImageUrl(tile), title: tile.scene_image || tile.image_slots?.[0]?.image || '' }"
+                                                     @click.stop="picOpenPreview(picTileImageUrl(tile), tile.scene_image || tile.image_slots?.[0]?.image || '', picOiSlotFilepath(tile.image_slots?.[0]?.image || ''))"
                                                      @error="$el.style.display='none'; $el.nextElementSibling.style.display='flex'">
                                             </template>
                                             <span class="text-gray-500 text-2xl" :style="picTileImageUrl(tile) ? 'display:none' : ''">🖼</span>
@@ -3399,7 +3399,7 @@
                                  class="flex items-center gap-2 px-3 py-2 bg-gray-800/80 cursor-pointer hover:bg-gray-800 transition select-none">
                                 <img :src="picOiSlotImageUrl(slot.image)"
                                      class="w-10 h-10 rounded object-cover flex-shrink-0 cursor-zoom-in"
-                                     @click.stop="picImgPreview = { open: true, url: picOiSlotImageUrl(slot.image), title: slot.image }"
+                                     @click.stop="picOpenPreview(picOiSlotImageUrl(slot.image), slot.image, picOiSlotFilepath(slot.image))"
                                      @load="$el.style.display=''"
                                      @error="$el.style.display='none'">
                                 <div class="flex-1 min-w-0">
@@ -4266,7 +4266,7 @@
                             <div class="flex items-center gap-3 px-3 py-2.5 bg-gray-800/80 border-b border-gray-700">
                                 <img :src="picOiSlotImageUrl(slot.image)"
                                      class="w-9 h-9 rounded object-cover flex-shrink-0 cursor-zoom-in"
-                                     @click="picImgPreview = { open: true, url: picOiSlotImageUrl(slot.image), title: slot.image }"
+                                     @click="picOpenPreview(picOiSlotImageUrl(slot.image), slot.image, picOiSlotFilepath(slot.image))"
                                      @load="$el.style.display=''"
                                      @error="$el.style.display='none'">
                                 <div class="flex-1 min-w-0">
@@ -7407,6 +7407,18 @@ function app() {
             const srcDir = ((this.tileModal.data.source_dirs || [])[0] || '').trim();
             if (!srcDir) return '';
             return `/api/fs/image?path=${encodeURIComponent(srcDir.replace(/[/\\]+$/, '') + '\\' + imageName)}`;
+        },
+
+        /** Return absolute filepath for an OI slot image (for mask support). */
+        picOiSlotFilepath(imageName) {
+            if (!imageName) return '';
+            const found = (this.tileModal.srcImages || []).find(img => img.name === imageName);
+            if (found?.path) return found.path;
+            const outDir = (this.tileModal.data.output_dir || '').trim();
+            if (outDir) return outDir.replace(/[/\\]+$/, '') + '\\' + imageName;
+            const srcDir = ((this.tileModal.data.source_dirs || [])[0] || '').trim();
+            if (!srcDir) return '';
+            return srcDir.replace(/[/\\]+$/, '') + '\\' + imageName;
         },
 
         picOpenTypeModal() {
