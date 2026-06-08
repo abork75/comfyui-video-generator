@@ -8829,8 +8829,33 @@ function picMaskEditor() {
             const fp = this._p?.filepath || '';
             if (fp && this._m?.exists) {
                 const maskImg = new Image();
+                maskImg.crossOrigin = 'anonymous';
                 maskImg.onload = () => {
-                    this._ctx.drawImage(maskImg, 0, 0, canvas.width, canvas.height);
+                    // Convert black/white mask PNG → orange/transparent overlay
+                    // Saved format: white=painted(protected), black=unpainted
+                    // Canvas format: rgba(255,80,0,0.85)=painted, transparent=unpainted
+                    const off = document.createElement('canvas');
+                    off.width  = canvas.width;
+                    off.height = canvas.height;
+                    const offCtx = off.getContext('2d');
+                    offCtx.drawImage(maskImg, 0, 0, canvas.width, canvas.height);
+                    const imgData = offCtx.getImageData(0, 0, canvas.width, canvas.height);
+                    const d = imgData.data;
+                    for (let i = 0; i < d.length; i += 4) {
+                        if (d[i] > 128) {          // bright pixel = painted area
+                            d[i]     = 255;
+                            d[i + 1] = 80;
+                            d[i + 2] = 0;
+                            d[i + 3] = 217;        // ~0.85 opacity
+                        } else {                   // dark pixel = unpainted = transparent
+                            d[i]     = 0;
+                            d[i + 1] = 0;
+                            d[i + 2] = 0;
+                            d[i + 3] = 0;
+                        }
+                    }
+                    this._ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    this._ctx.putImageData(imgData, 0, 0);
                 };
                 maskImg.src = '/api/pic/mask?path=' + encodeURIComponent(fp) + '&cb=' + Date.now();
             } else {
