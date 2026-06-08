@@ -503,4 +503,14 @@ prompts:
     steps: 30
     cfg: 8.0
     denoise: 1.0
-last_id: 43
+- id: p0000044
+  category: zmiana_ubrania
+  name: Czarne majtki i stanik
+  note: ''
+  positive: "Change the woman's clothing to only a black lace bra and black string thong panties. \n\nShe wears a sexy, delicate black lace bra with transparent lace cups and thin straps. On the bottom she has extremely skimpy black string thong panties with very thin straps that barely cover anything. Nothing else — she is otherwise completely naked.\n\nHighly detailed realistic lace texture on the bra, thin glossy strings on the thong, perfect tight fit on her body, sensual appearance. \n\nKeep her exact body pose, proportions, skin tone, hair, facial expression, lighting, shadows and background completely unchanged. Only replace the clothing. Photorealistic, ultra detailed, seamless edit, high quality."
+  negative: fully nude, no bra, no panties, different color underwear, white lingerie, red lingerie, full coverage panties, modest clothing, t-shirt, pants, jeans, additional clothing, deformed clothing, bad lace texture, blurry fabric, extra straps, censorship, low detail, bad anatomy, plastic skin, changed pose
+  params:
+    steps: 30
+    cfg: 8.0
+    denoise: 1.0
+last_id: 44
