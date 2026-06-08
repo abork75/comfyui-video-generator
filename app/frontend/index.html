@@ -434,6 +434,14 @@
                                                 :class="segIdx === flowSegments().length - 1 ? 'text-gray-700 cursor-not-allowed' : 'text-gray-500 hover:text-gray-300'"
                                                 class="text-xs px-1 py-0.5 rounded hover:bg-gray-700/50 transition"
                                                 title="Przesuń ujęcie w dół">↓</button>
+                                        <!-- Kopiuj ujęcie -->
+                                        <template x-if="editMode">
+                                            <button @click="duplicateSegment(segIdx)"
+                                                    class="text-xs text-gray-500 hover:text-blue-300 border border-gray-600 hover:border-blue-700 rounded px-2 py-0.5 transition"
+                                                    title="Kopiuj całe ujęcie (wstaw kopię za bieżącym)">
+                                                ⧉ Kopiuj ujęcie
+                                            </button>
+                                        </template>
                                         <!-- Regeneruj -->
                                         <button @click="regenSegment(seg, segIdx)"
                                                 :disabled="isRunning || !segmentHasMissing(seg)"
@@ -463,7 +471,7 @@
                                                         <button @click="editOpenItem(entry.idx)"
                                                                 class="text-violet-400 hover:text-violet-200 text-xs px-1.5 py-0.5 rounded hover:bg-violet-900/40 transition" title="Edytuj nagłówek">✎</button>
                                                         <button @click="editDuplicateItem(entry.idx)"
-                                                                class="text-gray-500 hover:text-blue-300 text-xs px-1 py-0.5 rounded hover:bg-gray-700 transition" title="Kopiuj ujęcie">⧉</button>
+                                                                class="text-gray-500 hover:text-blue-300 text-xs px-1 py-0.5 rounded hover:bg-gray-700 transition" title="Kopiuj element">⧉</button>
                                                         <button @click="editMoveItem(entry.idx, -1)" :disabled="entry.idx === 0"
                                                                 :class="entry.idx === 0 ? 'opacity-30 cursor-not-allowed' : 'hover:text-white'"
                                                                 class="text-gray-600 text-xs px-1 py-0.5 rounded hover:bg-gray-700">↑</button>
@@ -512,7 +520,7 @@
                                                                 <button @click="editOpenItem(entry.idx)"
                                                                         class="text-yellow-500 hover:text-yellow-300 text-xs px-1.5 py-0.5 rounded hover:bg-yellow-900/30 transition" title="Edytuj chain">✎</button>
                                                                 <button @click="editDuplicateItem(entry.idx)"
-                                                                        class="text-gray-500 hover:text-blue-300 text-xs px-1 py-0.5 rounded hover:bg-gray-700 transition" title="Kopiuj ujęcie">⧉</button>
+                                                                        class="text-gray-500 hover:text-blue-300 text-xs px-1 py-0.5 rounded hover:bg-gray-700 transition" title="Kopiuj element">⧉</button>
                                                                 <button @click="editMoveItem(entry.idx, -1)" :disabled="entry.idx === 0"
                                                                         :class="entry.idx === 0 ? 'opacity-30 cursor-not-allowed' : 'hover:text-white'"
                                                                         class="text-gray-600 text-xs px-1 py-0.5 rounded hover:bg-gray-700">↑</button>
@@ -679,7 +687,7 @@
                                                                 <button @click="editOpenItem(entry.idx)"
                                                                         class="text-yellow-500 hover:text-yellow-300 text-sm px-1 py-0.5 rounded hover:bg-yellow-900/30 transition" title="Edytuj">✎</button>
                                                                 <button @click="editDuplicateItem(entry.idx)"
-                                                                        class="text-gray-500 hover:text-blue-300 text-xs px-1 rounded hover:bg-gray-700 transition" title="Kopiuj ujęcie">⧉</button>
+                                                                        class="text-gray-500 hover:text-blue-300 text-xs px-1 rounded hover:bg-gray-700 transition" title="Kopiuj element">⧉</button>
                                                                 <button @click="editMoveItem(entry.idx, -1)" :disabled="entry.idx === 0"
                                                                         :class="entry.idx === 0 ? 'opacity-30 cursor-not-allowed' : 'hover:text-white'"
                                                                         class="text-gray-500 text-xs px-1 rounded hover:bg-gray-700 transition">↑</button>
@@ -815,7 +823,7 @@
                                                                         title="Edytuj talk">✎</button>
                                                                 <button @click.stop="editDuplicateItem(entry.idx)"
                                                                         class="text-gray-500 hover:text-blue-300 text-xs px-1 py-0.5 rounded hover:bg-gray-700 transition"
-                                                                        title="Kopiuj ujęcie">⧉</button>
+                                                                        title="Kopiuj element">⧉</button>
                                                                 <button @click.stop="editMoveItem(entry.idx, -1)"
                                                                         :disabled="entry.idx === 0"
                                                                         :class="entry.idx === 0 ? 'opacity-30 cursor-not-allowed' : 'hover:text-white'"
@@ -6767,6 +6775,50 @@ function app() {
                 this.statusData = null; await this.refreshStatus();
                 this.logLine('sys', `⧉ Skopiowano element #${idx + 1}`);
                 this.$nextTick(() => this.editOpenItem(idx + 1));
+            }
+        },
+
+        async duplicateSegment(segIdx) {
+            const segs = this.flowSegments();
+            const seg  = segs[segIdx];
+            if (!seg) return;
+
+            const flow    = JSON.parse(JSON.stringify(this.flowData.flow));
+            const copies  = [];
+
+            // Copy all content items, clearing output_ids and deduplicating chain prefixes
+            const existingPrefixes = new Set(flow.filter(i => i.chain !== undefined).map(i => i.chain_prefix || ''));
+            for (const { item } of seg.items) {
+                const c = JSON.parse(JSON.stringify(item));
+                if (c.output_id !== undefined) c.output_id = '';
+                if (c.chain !== undefined) {
+                    // Generate unique chain_prefix for the copy
+                    let base = (c.chain_prefix || 'chain') + '_kopia';
+                    let candidate = base, n = 1;
+                    while (existingPrefixes.has(candidate)) candidate = base + '_' + (++n);
+                    c.chain_prefix = candidate;
+                    existingPrefixes.add(candidate);
+                }
+                copies.push(c);
+            }
+
+            // Copy the break item (carries the segment label)
+            if (seg.breakIdx !== null) {
+                const brk = JSON.parse(JSON.stringify(flow[seg.breakIdx]));
+                if (brk.label) brk.label = brk.label + ' (kopia)';
+                copies.push(brk);
+            }
+
+            // Insert right after the current segment's break (or at end if no break)
+            const insertAt = seg.breakIdx !== null ? seg.breakIdx + 1 : flow.length;
+            flow.splice(insertAt, 0, ...copies);
+
+            const ok = await this._saveFlow(flow);
+            if (ok) {
+                this.flowData.flow = flow;
+                this.flowData.item_count = flow.length;
+                this.statusData = null; await this.refreshStatus();
+                this.logLine('sys', `⧉ Skopiowano ujęcie ${segIdx + 1} (${copies.length} elementów)`);
             }
         },
 
