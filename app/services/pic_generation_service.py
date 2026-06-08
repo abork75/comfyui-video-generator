@@ -810,6 +810,37 @@ def finalize_all_paste_slots(
     return results
 
 
+def _apply_user_mask(source_path: "Path", tmp_dir: "Path") -> "Path":
+    """
+    If a user-drawn mask exists at masks/{source_path.name} next to the source,
+    embed it as the alpha channel of the source image (RGBA PNG) and return the
+    temp path — exactly the same mechanism used by edge-blend for ComfyUI inpainting.
+
+    Returns source_path unchanged if no mask exists.
+    """
+    mask_path = source_path.parent / "masks" / source_path.name
+    if not mask_path.exists():
+        return source_path
+
+    from PIL import Image, ImageOps  # type: ignore
+    from datetime import datetime as _dt
+
+    src  = Image.open(source_path).convert("RGBA")
+    mask = Image.open(mask_path).convert("L")         # white = masked area
+    if mask.size != src.size:
+        mask = mask.resize(src.size, Image.LANCZOS)
+
+    # ComfyUI convention: alpha=0 (transparent) = inpaint here,
+    # alpha=255 (opaque) = keep.  User draws WHITE = inpaint → invert.
+    src.putalpha(ImageOps.invert(mask))
+
+    ts       = _dt.now().strftime("%Y%m%d%H%M%S%f")
+    out_path = tmp_dir / f"_masked_{ts}_{source_path.name}"
+    tmp_dir.mkdir(parents=True, exist_ok=True)
+    src.save(out_path, "PNG")
+    return out_path
+
+
 def _pad_to_ratio(src: "Path", target_w: int, target_h: int) -> "Path | None":
     """
     Pad src image with white margins so its aspect ratio matches target_w:target_h.
@@ -2005,6 +2036,9 @@ async def _run_tile_async(
                 if pad_input_to_ratio:
                     padded_path = _pad_to_ratio(source_path, target_w, target_h)
                 effective_source = padded_path if padded_path else source_path
+
+                # Embed user-drawn mask as alpha channel if one exists
+                effective_source = _apply_user_mask(effective_source, input_dir)
 
                 try:
                     await _generate_one(

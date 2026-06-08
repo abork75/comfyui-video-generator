@@ -2724,17 +2724,31 @@
 </div>
 </template>
 
-<!-- ══════ PIC IMAGE PREVIEW ══════════════════════════════════════ -->
+<!-- ══════ PIC IMAGE PREVIEW + MASK EDITOR ═══════════════════════ -->
 <template x-if="picImgPreview.open">
-<div class="fixed inset-0 bg-black/90 flex items-center justify-center p-4 cursor-zoom-out"
+<div class="fixed inset-0 bg-black/90 flex items-center justify-center p-4"
      style="z-index:80"
-     @click="picImgPreview.open = false"
-     @keydown.escape.window="picImgPreview.open = false">
-    <div class="relative max-w-screen-xl max-h-full flex flex-col items-center" @click.stop>
+     :class="picMask.active ? '' : 'cursor-zoom-out'"
+     @click="if(!picMask.active) picImgPreview.open = false"
+     @keydown.escape.window="if(picMask.active){ picMask.active=false } else { picImgPreview.open=false }">
+    <div class="relative max-w-screen-xl max-h-full flex flex-col items-center" @click.stop
+         x-data="picMaskEditor()"
+         x-init="init()">
+
         <!-- Title bar -->
         <div class="flex items-center justify-between w-full mb-2 px-1">
             <span class="text-xs text-gray-400 font-mono truncate max-w-lg" x-text="picImgPreview.title"></span>
             <div class="flex items-center gap-2 flex-shrink-0 ml-4">
+                <!-- Mask toggle -->
+                <template x-if="picImgPreview.filepath">
+                    <button @click="toggleMaskMode()"
+                            class="text-xs px-2 py-1 rounded transition"
+                            :class="picMask.active
+                                ? 'bg-orange-600 hover:bg-orange-500 text-white'
+                                : (picMask.exists ? 'bg-purple-700 hover:bg-purple-600 text-white' : 'bg-gray-700 hover:bg-gray-600 text-gray-200')">
+                        🎭 <span x-text="picMask.active ? 'Zamknij maskę' : (picMask.exists ? 'Edytuj maskę' : 'Dodaj maskę')"></span>
+                    </button>
+                </template>
                 <a :href="picImgPreview.url" target="_blank"
                    class="text-xs text-blue-400 hover:text-blue-300 transition px-2 py-1 rounded bg-gray-800 hover:bg-gray-700">
                     ↗ Pełny rozmiar
@@ -2743,10 +2757,99 @@
                         class="text-gray-400 hover:text-white text-xl leading-none px-2">×</button>
             </div>
         </div>
-        <!-- Image -->
-        <img :src="picImgPreview.url"
-             class="max-h-[85vh] max-w-full rounded object-contain shadow-2xl"
-             @error="$el.alt='Błąd ładowania obrazka'">
+
+        <!-- ── Normal view ── -->
+        <template x-if="!picMask.active">
+            <img :src="picImgPreview.url"
+                 class="max-h-[85vh] max-w-full rounded object-contain shadow-2xl"
+                 @error="$el.alt='Błąd ładowania obrazka'">
+        </template>
+
+        <!-- ── Mask editor ── -->
+        <template x-if="picMask.active">
+            <div class="flex gap-3 items-start">
+                <!-- Canvas wrapper -->
+                <div class="relative flex-shrink-0" style="line-height:0">
+                    <img :src="picImgPreview.url"
+                         x-ref="previewImg"
+                         class="block max-h-[80vh] max-w-[75vw] rounded object-contain select-none"
+                         style="display:block"
+                         @load="onImgLoad($el)">
+                    <canvas x-ref="maskCanvas"
+                            class="absolute inset-0 rounded"
+                            style="cursor:crosshair; opacity:0.55"
+                            @mousedown="startDraw($event)"
+                            @mousemove="draw($event)"
+                            @mouseup="stopDraw()"
+                            @mouseleave="stopDraw()"
+                            @touchstart.prevent="startDraw($event.touches[0])"
+                            @touchmove.prevent="draw($event.touches[0])"
+                            @touchend="stopDraw()">
+                    </canvas>
+                </div>
+
+                <!-- Tools panel -->
+                <div class="flex flex-col gap-2 bg-gray-900 rounded-lg border border-gray-700 p-3 min-w-[130px]">
+                    <p class="text-xs text-gray-400 font-semibold mb-1">Narzędzia</p>
+
+                    <!-- Brush / Eraser -->
+                    <div class="flex gap-1">
+                        <button @click="picMask.tool='brush'"
+                                class="flex-1 py-1.5 rounded text-xs transition"
+                                :class="picMask.tool==='brush' ? 'bg-orange-600 text-white' : 'bg-gray-700 hover:bg-gray-600 text-gray-300'">
+                            🖌 Maluj
+                        </button>
+                        <button @click="picMask.tool='eraser'"
+                                class="flex-1 py-1.5 rounded text-xs transition"
+                                :class="picMask.tool==='eraser' ? 'bg-blue-600 text-white' : 'bg-gray-700 hover:bg-gray-600 text-gray-300'">
+                            ✏ Gumka
+                        </button>
+                    </div>
+
+                    <!-- Brush size -->
+                    <div>
+                        <p class="text-xs text-gray-500 mb-1">Rozmiar: <span x-text="picMask.size"></span>px</p>
+                        <input type="range" min="5" max="120" step="5"
+                               x-model.number="picMask.size"
+                               class="w-full accent-orange-500">
+                    </div>
+
+                    <hr class="border-gray-700">
+
+                    <!-- Fill / Clear / Invert -->
+                    <button @click="fillMask()"
+                            class="py-1.5 rounded text-xs bg-gray-700 hover:bg-orange-700 text-gray-300 hover:text-white transition">
+                        ⬛ Zamaluj wszystko
+                    </button>
+                    <button @click="clearMask()"
+                            class="py-1.5 rounded text-xs bg-gray-700 hover:bg-gray-600 text-gray-300 hover:text-white transition">
+                        ⬜ Wyczyść wszystko
+                    </button>
+                    <button @click="invertMask()"
+                            class="py-1.5 rounded text-xs bg-gray-700 hover:bg-gray-600 text-gray-300 hover:text-white transition">
+                        🔄 Odwróć
+                    </button>
+
+                    <hr class="border-gray-700">
+
+                    <!-- Save / Delete -->
+                    <button @click="saveMask()"
+                            :disabled="picMask.saving"
+                            class="py-1.5 rounded text-xs bg-green-700 hover:bg-green-600 text-white transition disabled:opacity-50">
+                        <span x-show="picMask.saving">⟳ </span>💾 Zapisz maskę
+                    </button>
+                    <button x-show="picMask.exists" @click="deleteMask()"
+                            class="py-1.5 rounded text-xs bg-red-900 hover:bg-red-700 text-gray-300 hover:text-white transition">
+                        🗑 Usuń maskę
+                    </button>
+
+                    <p x-show="picMask.msg" class="text-xs mt-1"
+                       :class="picMask.msgOk ? 'text-green-400' : 'text-red-400'"
+                       x-text="picMask.msg"></p>
+                </div>
+            </div>
+        </template>
+
     </div>
 </div>
 </template>
@@ -2921,7 +3024,7 @@
                                         <template x-if="tileModal.ciPickScene === img.name">
                                             <div class="absolute top-1 right-1 bg-blue-600 rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold">✓</div>
                                         </template>
-                                        <button @click.stop="picImgPreview = { open: true, url: `/api/fs/image?path=${encodeURIComponent(img.path)}`, title: img.name }"
+                                        <button @click.stop="picOpenPreview(`/api/fs/image?path=${encodeURIComponent(img.path)}`, img.name, img.path)"
                                                 class="absolute bottom-7 right-1 bg-black/60 hover:bg-black/80 text-white rounded px-1 py-0.5 text-xs opacity-0 group-hover:opacity-100 transition leading-none">🔍</button>
                                     </div>
                                 </template>
@@ -2951,7 +3054,7 @@
                                             <div class="absolute top-1 right-1 bg-green-600 rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold"
                                                  x-text="tileModal.ciPickChars.indexOf(img.name) + 1"></div>
                                         </template>
-                                        <button @click.stop="picImgPreview = { open: true, url: `/api/fs/image?path=${encodeURIComponent(img.path)}`, title: img.name }"
+                                        <button @click.stop="picOpenPreview(`/api/fs/image?path=${encodeURIComponent(img.path)}`, img.name, img.path)"
                                                 class="absolute bottom-7 right-1 bg-black/60 hover:bg-black/80 text-white rounded px-1 py-0.5 text-xs opacity-0 group-hover:opacity-100 transition leading-none">🔍</button>
                                     </div>
                                 </template>
@@ -3215,7 +3318,7 @@
                                 </div>
                             </template>
                             <!-- zoom button -->
-                            <button @click.stop="picImgPreview = { open: true, url: `/api/fs/image?path=${encodeURIComponent(img.path)}`, title: img.name }"
+                            <button @click.stop="picOpenPreview(`/api/fs/image?path=${encodeURIComponent(img.path)}`, img.name, img.path)"
                                     class="absolute bottom-7 right-1 bg-black/60 hover:bg-black/80 text-white rounded px-1 py-0.5 text-xs opacity-0 group-hover:opacity-100 transition leading-none"
                                     title="Powiększ">🔍</button>
                         </div>
@@ -3455,7 +3558,7 @@
                                 <template x-if="slot.scene_image">
                                     <img :src="'/api/fs/image?path=' + encodeURIComponent(slot.scene_image)"
                                          class="mt-1 h-16 rounded object-cover cursor-zoom-in"
-                                         @click="picImgPreview = { open: true, url: '/api/fs/image?path=' + encodeURIComponent(slot.scene_image), title: slot.scene_image }"
+                                         @click="picOpenPreview('/api/fs/image?path=' + encodeURIComponent(slot.scene_image), slot.scene_image, slot.scene_image)"
                                          @error="$el.style.display='none'">
                                 </template>
                             </div>
@@ -3493,7 +3596,7 @@
                                         <template x-if="char.model_image">
                                             <img :src="'/api/fs/image?path=' + encodeURIComponent(char.model_image)"
                                                  class="h-14 rounded object-cover cursor-zoom-in"
-                                                 @click="picImgPreview = { open: true, url: '/api/fs/image?path=' + encodeURIComponent(char.model_image), title: char.model_image.split('\\\\').pop() }"
+                                                 @click="picOpenPreview('/api/fs/image?path=' + encodeURIComponent(char.model_image), char.model_image.split('\\\\').pop(), char.model_image)"
                                                  @error="$el.style.display='none'">
                                         </template>
 
@@ -3899,7 +4002,7 @@
                                         <template x-if="slot.scene_image">
                                             <img :src="'/api/fs/image?path=' + encodeURIComponent(slot.scene_image)"
                                                  class="w-10 h-8 object-cover rounded flex-shrink-0 cursor-zoom-in hover:ring-2 hover:ring-blue-400 transition"
-                                                 @click="picImgPreview = { open: true, url: '/api/fs/image?path=' + encodeURIComponent(slot.scene_image), title: 'Scena — ' + slot.scene_image.split('\\\\').pop() }"
+                                                 @click="picOpenPreview('/api/fs/image?path=' + encodeURIComponent(slot.scene_image), 'Scena — ' + slot.scene_image.split('\\\\').pop(), slot.scene_image)"
                                                  @error="$el.style.display='none'">
                                         </template>
                                         <span class="text-xs text-gray-400 truncate flex-1 min-w-0" x-text="slot.scene_image?.split('\\\\').pop() || '(brak sceny)'"></span>
@@ -3910,7 +4013,7 @@
                                                     <template x-if="ch.model_image">
                                                         <img :src="'/api/fs/image?path=' + encodeURIComponent(ch.model_image)"
                                                              class="w-8 h-8 object-cover rounded cursor-zoom-in hover:ring-2 hover:ring-purple-400 transition"
-                                                             @click="picImgPreview = { open: true, url: '/api/fs/image?path=' + encodeURIComponent(ch.model_image), title: 'Postać ' + (chi+1) }"
+                                                             @click="picOpenPreview('/api/fs/image?path=' + encodeURIComponent(ch.model_image), 'Postać ' + (chi+1), ch.model_image)"
                                                              @error="$el.style.display='none'">
                                                     </template>
                                                 </template>
@@ -5748,7 +5851,18 @@ function app() {
         },
 
         // Image zoom preview (Pic Studio)
-        picImgPreview: { open: false, url: '', title: '' },
+        picImgPreview: { open: false, url: '', title: '', filepath: '' },
+
+        // Mask editor state (shared with picMaskEditor component via $root)
+        picMask: {
+            active: false,
+            exists: false,
+            tool:   'brush',
+            size:   30,
+            saving: false,
+            msg:    '',
+            msgOk:  true,
+        },
 
         // Global generation state — persists independently of tileModal
         picGen: {
@@ -7162,6 +7276,14 @@ function app() {
                 data: cat ? { name: cat.name, icon: cat.icon } : { name: '', icon: '🗂' },
                 editId: cat?.id || null,
             };
+        },
+
+        /** Open image preview and reset mask editor state. filepath = absolute path for mask support. */
+        picOpenPreview(url, title, filepath = '') {
+            this.picMask.active = false;
+            this.picMask.msg    = '';
+            this.picMask.exists = false;
+            this.picImgPreview  = { open: true, url, title, filepath };
         },
 
         async picSaveCategory() {
@@ -8642,6 +8764,196 @@ function app() {
             if (['jpg','jpeg','png','webp','gif','bmp'].includes(ext)) return '📷';
             if (['mp4','avi','mov','mkv','webm'].includes(ext)) return '🎬';
             return '📄';
+        },
+    };
+}
+
+// ── Mask editor Alpine component ─────────────────────────────────────────────
+function picMaskEditor() {
+    return {
+        _drawing: false,
+        _ctx:     null,
+        _imgW:    0,
+        _imgH:    0,
+
+        init() {
+            // Check if mask already exists for this image
+            const fp = this.$root.picImgPreview?.filepath || '';
+            if (fp) {
+                fetch('/api/pic/mask?path=' + encodeURIComponent(fp))
+                    .then(r => { this.$root.picMask.exists = r.ok; })
+                    .catch(() => { this.$root.picMask.exists = false; });
+            }
+        },
+
+        toggleMaskMode() {
+            const m = this.$root.picMask;
+            if (m.active) {
+                m.active = false;
+                m.msg = '';
+            } else {
+                m.active = true;
+                this.$nextTick(() => this._initCanvas());
+            }
+        },
+
+        _initCanvas() {
+            const img    = this.$refs.previewImg;
+            const canvas = this.$refs.maskCanvas;
+            if (!img || !canvas) return;
+            canvas.width  = img.naturalWidth  || img.offsetWidth;
+            canvas.height = img.naturalHeight || img.offsetHeight;
+            canvas.style.width  = img.offsetWidth  + 'px';
+            canvas.style.height = img.offsetHeight + 'px';
+            this._imgW = canvas.width;
+            this._imgH = canvas.height;
+            this._ctx  = canvas.getContext('2d');
+            // Load existing mask if present
+            const fp = this.$root.picImgPreview?.filepath || '';
+            if (fp && this.$root.picMask.exists) {
+                const maskImg = new Image();
+                maskImg.onload = () => {
+                    this._ctx.drawImage(maskImg, 0, 0, canvas.width, canvas.height);
+                };
+                maskImg.src = '/api/pic/mask?path=' + encodeURIComponent(fp) + '&cb=' + Date.now();
+            } else {
+                this._ctx.clearRect(0, 0, canvas.width, canvas.height);
+            }
+        },
+
+        onImgLoad(imgEl) {
+            if (!this.$root.picMask.active) return;
+            this.$nextTick(() => this._initCanvas());
+        },
+
+        _pos(e) {
+            const canvas = this.$refs.maskCanvas;
+            const rect   = canvas.getBoundingClientRect();
+            const scaleX = canvas.width  / rect.width;
+            const scaleY = canvas.height / rect.height;
+            return {
+                x: (e.clientX - rect.left) * scaleX,
+                y: (e.clientY - rect.top)  * scaleY,
+            };
+        },
+
+        startDraw(e) {
+            if (!this._ctx) return;
+            this._drawing = true;
+            const m = this.$root.picMask;
+            this._ctx.globalCompositeOperation =
+                m.tool === 'eraser' ? 'destination-out' : 'source-over';
+            this._ctx.fillStyle   = 'rgba(255,80,0,0.85)';
+            this._ctx.lineWidth   = m.size;
+            this._ctx.lineCap     = 'round';
+            this._ctx.lineJoin    = 'round';
+            this._ctx.strokeStyle = m.tool === 'eraser' ? 'rgba(0,0,0,1)' : 'rgba(255,80,0,0.85)';
+            const p = this._pos(e);
+            this._ctx.beginPath();
+            this._ctx.arc(p.x, p.y, m.size / 2, 0, Math.PI * 2);
+            this._ctx.fill();
+            this._ctx.beginPath();
+            this._ctx.moveTo(p.x, p.y);
+        },
+
+        draw(e) {
+            if (!this._drawing || !this._ctx) return;
+            const p = this._pos(e);
+            this._ctx.lineTo(p.x, p.y);
+            this._ctx.stroke();
+            this._ctx.beginPath();
+            this._ctx.moveTo(p.x, p.y);
+        },
+
+        stopDraw() { this._drawing = false; },
+
+        fillMask() {
+            if (!this._ctx) return;
+            this._ctx.globalCompositeOperation = 'source-over';
+            this._ctx.fillStyle = 'rgba(255,80,0,0.85)';
+            this._ctx.fillRect(0, 0, this._imgW, this._imgH);
+        },
+
+        clearMask() {
+            if (!this._ctx) return;
+            this._ctx.clearRect(0, 0, this._imgW, this._imgH);
+        },
+
+        invertMask() {
+            if (!this._ctx) return;
+            const canvas = this.$refs.maskCanvas;
+            const data   = this._ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const d      = data.data;
+            for (let i = 0; i < d.length; i += 4) {
+                const isTransparent = d[i + 3] < 10;
+                d[i]     = isTransparent ? 255 : 0;
+                d[i + 1] = isTransparent ? 80  : 0;
+                d[i + 2] = isTransparent ? 0   : 0;
+                d[i + 3] = isTransparent ? 217 : 0;
+            }
+            this._ctx.putImageData(data, 0, 0);
+        },
+
+        async saveMask() {
+            const canvas = this.$refs.maskCanvas;
+            const fp     = this.$root.picImgPreview?.filepath || '';
+            if (!canvas || !fp) return;
+            const m = this.$root.picMask;
+            m.saving = true;
+            m.msg    = '';
+
+            // Export canvas as binary mask (white = masked, black = not)
+            const off    = document.createElement('canvas');
+            off.width    = canvas.width;
+            off.height   = canvas.height;
+            const offCtx = off.getContext('2d');
+            offCtx.fillStyle = '#000';
+            offCtx.fillRect(0, 0, off.width, off.height);
+            // Paint white where user drew (alpha > 0)
+            const src = this._ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const dst = offCtx.getImageData(0, 0, off.width, off.height);
+            for (let i = 0; i < src.data.length; i += 4) {
+                if (src.data[i + 3] > 10) {
+                    dst.data[i]     = 255;
+                    dst.data[i + 1] = 255;
+                    dst.data[i + 2] = 255;
+                    dst.data[i + 3] = 255;
+                }
+            }
+            offCtx.putImageData(dst, 0, 0);
+
+            try {
+                const blob = await new Promise(res => off.toBlob(res, 'image/png'));
+                const res  = await fetch('/api/pic/mask?path=' + encodeURIComponent(fp), {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/octet-stream' },
+                    body: blob,
+                });
+                if (res.ok) {
+                    m.exists = true;
+                    m.msg    = '✅ Maska zapisana';
+                    m.msgOk  = true;
+                } else {
+                    m.msg   = '❌ Błąd zapisu';
+                    m.msgOk = false;
+                }
+            } catch(e) {
+                m.msg   = '❌ ' + e.message;
+                m.msgOk = false;
+            } finally {
+                m.saving = false;
+            }
+        },
+
+        async deleteMask() {
+            const fp = this.$root.picImgPreview?.filepath || '';
+            if (!fp) return;
+            const m = this.$root.picMask;
+            await fetch('/api/pic/mask?path=' + encodeURIComponent(fp), { method: 'DELETE' });
+            m.exists = false;
+            m.active = false;
+            m.msg    = '';
+            if (this._ctx) this._ctx.clearRect(0, 0, this._imgW, this._imgH);
         },
     };
 }

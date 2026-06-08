@@ -16,11 +16,17 @@ POST   /api/pic/session/{run_id}/tiles/{tile_id}/run                 → start g
 GET    /api/pic/session/{run_id}/tiles/{tile_id}/job                 → poll job state
 POST   /api/pic/session/{run_id}/tiles/{tile_id}/archive/{prompt_id} → archive result
        ?slot_index=0
+
+GET    /api/pic/mask                                                → check/get mask (query: path=)
+POST   /api/pic/mask                                                → save mask PNG  (query: path=)
+DELETE /api/pic/mask                                                → delete mask    (query: path=)
 """
 
+from pathlib import Path
 from typing import Optional
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, Body, HTTPException, Query
+from fastapi.responses import FileResponse, Response
 from pydantic import BaseModel, Field
 
 from app.services import pic_session_service, pic_generation_service, i2i_prompts_service
@@ -377,6 +383,45 @@ async def finalize_paste_slot(
         raise HTTPException(status_code=404, detail=str(exc))
     except Exception as exc:
         raise HTTPException(status_code=500, detail=str(exc))
+
+
+# ── Mask endpoints ───────────────────────────────────────────────────────────
+
+def _mask_path(image_path: str) -> Path:
+    """Return masks/{filename}.png next to the source image."""
+    p = Path(image_path)
+    return p.parent / "masks" / p.name
+
+
+@router.get("/mask")
+async def get_mask(path: str = Query(..., description="Absolute path to the source image")):
+    """Return the mask PNG for a given source image, or 404 if none exists."""
+    mp = _mask_path(path)
+    if not mp.exists():
+        raise HTTPException(status_code=404, detail="Maska nie istnieje")
+    return FileResponse(str(mp), media_type="image/png")
+
+
+@router.post("/mask")
+async def save_mask(
+    path: str = Query(..., description="Absolute path to the source image"),
+    data: bytes = Body(..., media_type="application/octet-stream"),
+):
+    """Save a binary PNG mask for a given source image."""
+    mp = _mask_path(path)
+    mp.parent.mkdir(parents=True, exist_ok=True)
+    mp.write_bytes(data)
+    return {"ok": True, "mask": str(mp)}
+
+
+@router.delete("/mask")
+async def delete_mask(path: str = Query(..., description="Absolute path to the source image")):
+    """Delete the mask for a given source image."""
+    mp = _mask_path(path)
+    if mp.exists():
+        mp.unlink()
+        return {"ok": True, "deleted": str(mp)}
+    return {"ok": True, "deleted": None}
 
 
 @router.post("/session/{run_id}/tiles/{tile_id}/finalize_all")
