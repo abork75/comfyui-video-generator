@@ -810,29 +810,46 @@ def finalize_all_paste_slots(
     return results
 
 
-def _apply_user_mask(source_path: "Path", tmp_dir: "Path") -> "Path":
+def _apply_user_mask(source_path: "Path", tmp_dir: "Path",
+                     original_path: "Path | None" = None) -> "Path":
     """
-    If a user-drawn mask exists at masks/{source_path.name} next to the source,
-    embed it as the alpha channel of the source image (RGBA PNG) and return the
-    temp path — exactly the same mechanism used by edge-blend for ComfyUI inpainting.
+    If a user-drawn mask exists at masks/{original_path.name} next to the original
+    source, embed it as the alpha channel of source_path (RGBA PNG) and return
+    the temp path — exactly the same mechanism used by edge-blend for ComfyUI.
+
+    original_path must be the PRE-PADDING source so the mask filename matches.
+    If source_path was padded, the mask is placed at the same centered offset
+    that _pad_to_ratio uses, then padded to match the new canvas size.
 
     Returns source_path unchanged if no mask exists.
     """
-    mask_path = source_path.parent / "masks" / source_path.name
+    orig      = original_path or source_path
+    mask_path = orig.parent / "masks" / orig.name
     if not mask_path.exists():
         return source_path
 
     from PIL import Image, ImageOps  # type: ignore
     from datetime import datetime as _dt
 
-    src  = Image.open(source_path).convert("RGBA")
-    mask = Image.open(mask_path).convert("L")         # white = masked area
-    if mask.size != src.size:
-        mask = mask.resize(src.size, Image.LANCZOS)
+    src      = Image.open(source_path).convert("RGBA")
+    mask_raw = Image.open(mask_path).convert("L")   # white = protect area
+
+    if mask_raw.size != src.size:
+        # source_path was padded: create a black (unprotected) canvas the same
+        # size as the padded image, paste the original mask at the same offset
+        # that _pad_to_ratio uses (centred).
+        ow, oh = mask_raw.size
+        nw, nh = src.size
+        paste_x = (nw - ow) // 2
+        paste_y = (nh - oh) // 2
+        padded_mask = Image.new("L", (nw, nh), 0)   # 0 = black = not protected
+        padded_mask.paste(mask_raw, (paste_x, paste_y))
+        mask_raw = padded_mask
 
     # ComfyUI convention: alpha=0 (transparent) = inpaint here,
-    # alpha=255 (opaque) = keep.  User draws WHITE = inpaint → invert.
-    src.putalpha(ImageOps.invert(mask))
+    # alpha=255 (opaque) = keep.  User paints WHITE = protect → invert so
+    # protected area becomes opaque (keep), rest transparent (inpaint).
+    src.putalpha(ImageOps.invert(mask_raw))
 
     ts       = _dt.now().strftime("%Y%m%d%H%M%S%f")
     out_path = tmp_dir / f"_masked_{ts}_{source_path.name}"
@@ -2037,8 +2054,12 @@ async def _run_tile_async(
                     padded_path = _pad_to_ratio(source_path, target_w, target_h)
                 effective_source = padded_path if padded_path else source_path
 
-                # Embed user-drawn mask as alpha channel if one exists
-                effective_source = _apply_user_mask(effective_source, input_dir)
+                # Embed user-drawn mask as alpha channel if one exists.
+                # Pass source_path as original_path so the mask is looked up
+                # under the original filename (not the _padded_* temp name).
+                effective_source = _apply_user_mask(
+                    effective_source, input_dir, original_path=source_path
+                )
 
                 try:
                     await _generate_one(
