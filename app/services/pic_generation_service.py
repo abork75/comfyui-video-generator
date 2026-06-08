@@ -718,27 +718,23 @@ def _finalize_slot_file(
     output_dir = Path(tile.get("output_dir", ""))
     work_dir   = _working_dir(output_dir)
 
-    global_eb   = bool(tile.get("edge_blend_enabled", False))
-    global_sb   = bool(tile.get("scene_blend_enabled", False))
-    slot_sb     = bool(slot.get("scene_blend_enabled", True))
-    chars       = slot.get("characters", [])
-    n_chars     = len(chars)
-    last_char_eb = bool(chars[-1].get("edge_blend_enabled", True)) if chars else True
+    chars   = slot.get("characters", [])
+    n_chars = len(chars)
 
-    # Determine "last enabled stage" file
+    # Determine "most advanced existing" file: scene > edge > pil.
+    # We intentionally ignore the current toggle state (global_eb, global_sb, etc.)
+    # so that a file generated when a pass was enabled can still be finalized
+    # even if that pass is now disabled.
     src: "Path | None" = None
-    if global_sb and slot_sb:
-        p = _scene_path(work_dir, output_id)
-        if p.exists():
-            src = p
-    if src is None and global_eb and last_char_eb and n_chars:
-        p = _char_edge_path(work_dir, output_id, n_chars - 1)
-        if p.exists():
-            src = p
-    if src is None and n_chars:
-        p = _char_pil_path(work_dir, output_id, n_chars - 1)
-        if p.exists():
-            src = p
+    if n_chars:
+        for candidate in (
+            _scene_path(work_dir, output_id),
+            _char_edge_path(work_dir, output_id, n_chars - 1),
+            _char_pil_path(work_dir, output_id, n_chars - 1),
+        ):
+            if candidate.exists():
+                src = candidate
+                break
 
     if src is None:
         return None, None, False
