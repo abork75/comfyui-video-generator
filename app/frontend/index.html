@@ -2402,17 +2402,57 @@
             <button @click="pic.categoryModal.open = false" class="text-gray-500 hover:text-white text-xl leading-none">×</button>
         </div>
         <!-- Body -->
-        <div class="px-5 py-4 space-y-3">
+        <div class="px-5 py-4 space-y-3" x-data="{ iconPickerOpen: false }">
             <div class="grid grid-cols-3 gap-3">
+                <!-- Icon picker button -->
                 <div>
                     <label class="block text-xs text-gray-400 mb-1">Ikona</label>
-                    <input type="text" x-model="pic.categoryModal.data.icon" maxlength="2"
-                           class="w-full bg-gray-800 border border-gray-600 rounded px-3 py-1.5 text-sm text-center focus:outline-none focus:border-pink-500">
+                    <button type="button"
+                            @click="iconPickerOpen = !iconPickerOpen"
+                            class="w-full bg-gray-800 border rounded py-1.5 text-xl text-center transition"
+                            :class="iconPickerOpen ? 'border-pink-500 ring-1 ring-pink-500' : 'border-gray-600 hover:border-gray-400'">
+                        <span x-text="pic.categoryModal.data.icon || '📁'"></span>
+                    </button>
                 </div>
+                <!-- Name input -->
                 <div class="col-span-2">
                     <label class="block text-xs text-gray-400 mb-1">Nazwa</label>
                     <input type="text" x-model="pic.categoryModal.data.name" placeholder="np. Repose"
                            class="w-full bg-gray-800 border border-gray-600 rounded px-3 py-1.5 text-sm text-white focus:outline-none focus:border-pink-500">
+                </div>
+            </div>
+
+            <!-- Emoji palette -->
+            <div x-show="iconPickerOpen" x-transition class="rounded-lg border border-gray-700 overflow-hidden" style="background:#161b27">
+                <template x-for="group in [
+                    { label: 'Foldery', icons: ['📁','📂','🗂','📋','📌','📍','🗃','🗄','📊','📈','📉','📎'] },
+                    { label: 'Kreatywne', icons: ['🎨','🖌','✏️','📝','🎭','🎬','📷','🎥','🎞','🎵','🎶','🎤'] },
+                    { label: 'AI / Tech', icons: ['🤖','💡','⚡','🔧','⚙️','🔬','🧪','💻','🖥','📱','🛸','🔮'] },
+                    { label: 'Symbole', icons: ['⭐','🌟','💫','✨','🔥','💎','🏆','🎯','🚀','💪','🎁','🔑'] },
+                    { label: 'Natura', icons: ['🌿','🌸','🌺','🍀','🌙','☀️','🌊','🏔','🦋','🐦','🌈','❄️'] },
+                    { label: 'Miejsca', icons: ['🏠','🏰','🌆','🌉','🏖','🏕','🎪','🏛','🌍','🗺','🏙','🌃'] }
+                ]" :key="group.label">
+                    <div class="px-3 pt-2 pb-1">
+                        <p class="text-xs text-gray-500 mb-1" x-text="group.label"></p>
+                        <div class="flex flex-wrap gap-0.5">
+                            <template x-for="emoji in group.icons" :key="emoji">
+                                <button type="button"
+                                        @click="pic.categoryModal.data.icon = emoji; iconPickerOpen = false"
+                                        class="w-8 h-8 rounded text-lg flex items-center justify-center transition hover:bg-gray-700"
+                                        :class="pic.categoryModal.data.icon === emoji ? 'bg-pink-700' : ''"
+                                        x-text="emoji">
+                                </button>
+                            </template>
+                        </div>
+                    </div>
+                </template>
+                <!-- Custom input row -->
+                <div class="px-3 py-2 border-t border-gray-700 flex items-center gap-2">
+                    <span class="text-xs text-gray-500 shrink-0">Własna:</span>
+                    <input type="text" x-model="pic.categoryModal.data.icon" maxlength="2"
+                           placeholder="✍️"
+                           @click.stop
+                           class="w-14 bg-gray-800 border border-gray-600 rounded px-2 py-1 text-sm text-center focus:outline-none focus:border-pink-500">
                 </div>
             </div>
         </div>

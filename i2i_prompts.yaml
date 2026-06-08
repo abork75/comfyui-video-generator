@@ -22,6 +22,10 @@ categories:
   name: System
   icon: ⚙️
   order: 99
+- id: zmiana_ubrania
+  name: zmiana ubrania
+  icon: 🤖
+  order: 100
 defaults:
   steps: 30
   cfg: 8
@@ -453,4 +457,50 @@ prompts:
     steps: 30
     cfg: 8
     denoise: 1
-last_id: 39
+- id: p0000040
+  category: repose
+  name: Idzie przed siebie krok modelki
+  note: ''
+  positive: 'Change the woman''s pose to a confident, dynamic runway model walk, captured from the front. She is walking straight toward the camera mid-stride — one leg extended forward with pointed toe, the other leg behind, strong and elegant step. Pronounced hip sway, shoulders slightly back, chest forward, arms swinging naturally by her sides in a stylish model fashion.
+
+
+    She looks directly at the camera with a confident, alluring and powerful expression. Elegant catwalk gait, fashionable and sensual movement.
+
+
+    Keep her exact facial features, hair, clothing, lighting, shadows and background completely unchanged. Only modify the body posture, leg position and arm swing to create a dynamic walking pose. Realistic anatomy, natural motion, photorealistic, seamless edit, high detail.'
+  negative: different face, wrong identity, changed facial features, clothing change, background change, blurry face, distorted anatomy, extra limbs, artifacts, low quality, bad anatomy
+  params:
+    steps: 30
+    cfg: 8.0
+    denoise: 1.0
+- id: p0000041
+  category: zmiana_ubrania
+  name: Seksi biała bielizna
+  note: ''
+  positive: "Change the woman's outfit to sexy white lingerie. Elegant and seductive white bra with delicate lace details, matching white panties, garter belt with straps and sheer white stockings. Highly detailed lace texture, soft luxurious fabric, perfect fit on body. \n\nKeep her exact body pose, proportions, skin tone, hair, facial expression, lighting and background unchanged. Only replace the clothing. Photorealistic, ultra detailed, sensual, seamless edit."
+  negative: naked, fully nude, transparent clothing, bad anatomy, deformed body, extra limbs, mutated hands, blurry, low quality, artifacts, plastic skin, cartoonish, different pose, changed body proportions, wrong clothing style, modest clothing, casual clothes, t-shirt, jeans, sportswear, deformed lingerie, bad fabric texture, matte leather, dull colors, extra straps, poor blending, clothing fusion with skin, censorship, underwear malfunction
+  params:
+    steps: 30
+    cfg: 8.0
+    denoise: 1.0
+- id: p0000042
+  category: zmiana_ubrania
+  name: Seksi czerwona bielizna
+  note: ''
+  positive: "Change the woman's outfit to sexy red lingerie. Seductive bright red bra with intricate lace, matching red thong panties, red garter belt with straps and sheer black or red stockings. Glossy and luxurious red fabric, bold and provocative style. \n\nKeep her exact body pose, proportions, skin tone, hair, facial expression, lighting and background unchanged. Only replace the clothing. Photorealistic, ultra detailed, sensual, seamless edit."
+  negative: naked, fully nude, transparent clothing, bad anatomy, deformed body, extra limbs, mutated hands, blurry, low quality, artifacts, plastic skin, cartoonish, different pose, changed body proportions, wrong clothing style, modest clothing, casual clothes, t-shirt, jeans, sportswear, deformed lingerie, bad fabric texture, matte leather, dull colors, extra straps, poor blending, clothing fusion with skin, censorship, underwear malfunction
+  params:
+    steps: 30
+    cfg: 8.0
+    denoise: 1.0
+- id: p0000043
+  category: zmiana_ubrania
+  name: Czarny skąpy strój BDSM
+  note: ''
+  positive: "Change the woman's outfit to a revealing black leather BDSM-style outfit. Tight black leather harness, strappy bra that barely covers, very skimpy leather panties or thong with metal rings, leather straps across body, choker with metal studs or O-ring, armbands. Glossy black leather texture, dominant and provocative fetish style. \n\nKeep her exact body pose, proportions, skin tone, hair, facial expression, lighting and background unchanged. Only replace the clothing. Photorealistic, ultra detailed, seamless edit."
+  negative: naked, fully nude, transparent clothing, bad anatomy, deformed body, extra limbs, mutated hands, blurry, low quality, artifacts, plastic skin, cartoonish, different pose, changed body proportions, wrong clothing style, modest clothing, casual clothes, t-shirt, jeans, sportswear, deformed lingerie, bad fabric texture, matte leather, dull colors, extra straps, poor blending, clothing fusion with skin, censorship, underwear malfunction
+  params:
+    steps: 30
+    cfg: 8.0
+    denoise: 1.0
+last_id: 43

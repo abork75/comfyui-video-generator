@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 # AUTO-GENERATED — do NOT edit manually.
-# Edit RUN_014_skakanie_na _pilce.yaml and regenerate with:
+# Edit RUN_014_1_skakanie_na _pilce.yaml and regenerate with:
 #     from app.services.yaml_service import generate_py_from_yaml
-#     generate_py_from_yaml(Path("RUNS/RUN_014_skakanie_na _pilce.yaml"))
-# Generated: 2026-06-06 22:11:18
+#     generate_py_from_yaml(Path("RUNS/RUN_014_1_skakanie_na _pilce.yaml"))
+# Generated: 2026-06-08 16:39:48
 # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 import sys

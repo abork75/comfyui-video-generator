@@ -1,0 +1,283 @@
+project_folder: C:\Users\abork\AppData\Local\CapCut\Videos\muszelka_pliki\EM\skakanie_na_pilce\film
+use_test_flow: false
+flow:
+- file: 13.51. Catwalk_1.png
+  backend: linux
+  duration: 2
+  pos: "Cinematic 2-second I2V2I video: A beautiful model walks confidently and seductively straight toward the camera in a sensual catwalk style. \n\nShe moves with strong, exaggerated hip sway, one leg crossing slightly in front of the other, elegant and powerful strides. Her body is dynamic and erotic — pronounced hip movement, arched back, chest forward, shoulders back, head held high. Arms swing naturally but stylishly by her sides. \n\nThe walk is very feminine, teasing and provocative. She maintains intense, seductive eye contact with the camera the entire time. Smooth, fluid and confident motion from start to end frame. \n\nPhotorealistic, highly detailed, cinematic lighting, sensual atmosphere, elegant catwalk gait, 4K."
+  neg: static pose, standing still, no hip sway, stiff walk, straight legs, legs too close together, minimal movement, awkward gait, hunched shoulders, looking away from camera, shy expression, bad walking animation, jerky motion, rubbery movement, unnatural stride, flat feet, pigeon toes, deformed legs, extra limbs, bad anatomy, low energy, boring walk, modest pose, no sensuality, stiff arms, arms glued to body, changed clothing, different hair, altered lighting, blurry motion, low quality, artifacts, cartoonish, plastic skin, side view, turning away, slow motion, floating feet
+- file: 13.53. Catwalk_1.png
+  backend: linux
+  duration: 2
+  pos: "Cinematic 2-second I2V2I video: A beautiful model walks confidently and seductively straight toward the camera in a sensual catwalk style. \n\nShe moves with strong, exaggerated hip sway, one leg crossing slightly in front of the other, elegant and powerful strides. Her body is dynamic and erotic — pronounced hip movement, arched back, chest forward, shoulders back, head held high. Arms swing naturally but stylishly by her sides. \n\nThe walk is very feminine, teasing and provocative. She maintains intense, seductive eye contact with the camera the entire time. Smooth, fluid and confident motion from start to end frame. \n\nPhotorealistic, highly detailed, cinematic lighting, sensual atmosphere, elegant catwalk gait, 4K."
+  neg: static pose, standing still, no hip sway, stiff walk, straight legs, legs too close together, minimal movement, awkward gait, hunched shoulders, looking away from camera, shy expression, bad walking animation, jerky motion, rubbery movement, unnatural stride, flat feet, pigeon toes, deformed legs, extra limbs, bad anatomy, low energy, boring walk, modest pose, no sensuality, stiff arms, arms glued to body, changed clothing, different hair, altered lighting, blurry motion, low quality, artifacts, cartoonish, plastic skin, side view, turning away, slow motion, floating feet
+- file: 13.55. Catwalk_1.png
+  backend: linux
+  duration: 2
+  pos: NONE
+  neg: NONE
+defaults:
+  backend: linux
+  resolution:
+  - 880
+  - 1184
+pic_flow:
+- type: one_image_many_prompts
+  name: Nowe pozy do catwalk
+  source_dirs:
+  - C:\Users\abork\AppData\Local\CapCut\Videos\muszelka_pliki\EM\skakanie_na_pilce\modelEM_modele
+  image_slots:
+  - image: HtMXvcacWwrxs7RS3y.png
+    prompts:
+    - id: p0000040
+      output_id: srcljTnsxbqeNRC5j1
+      enabled: true
+      name: Idzie przed siebie krok modelki
+      positive: 'Change the woman''s pose to a confident, dynamic runway model walk, captured from the front. She is walking straight toward the camera mid-stride — one leg extended forward with pointed toe, the other leg behind, strong and elegant step. Pronounced hip sway, shoulders slightly back, chest forward, arms swinging naturally by her sides in a stylish model fashion.
+
+
+        She looks directly at the camera with a confident, alluring and powerful expression. Elegant catwalk gait, fashionable and sensual movement.
+
+
+        Keep her exact facial features, hair, clothing, lighting, shadows and background completely unchanged. Only modify the body posture, leg position and arm swing to create a dynamic walking pose. Realistic anatomy, natural motion, photorealistic, seamless edit, high detail.'
+      negative: different face, wrong identity, changed facial features, clothing change, background change, blurry face, distorted anatomy, extra limbs, artifacts, low quality, bad anatomy
+      note: ''
+      params:
+        steps: 30
+        cfg: 8
+        denoise: 1
+  - image: Jwz52HiBlRCVSyhmqv.png
+    prompts:
+    - id: p0000040
+      output_id: edl20Hl174iiL3ip3v
+      enabled: true
+      name: Idzie przed siebie krok modelki
+      positive: 'Change the woman''s pose to a confident, dynamic runway model walk, captured from the front. She is walking straight toward the camera mid-stride — one leg extended forward with pointed toe, the other leg behind, strong and elegant step. Pronounced hip sway, shoulders slightly back, chest forward, arms swinging naturally by her sides in a stylish model fashion.
+
+
+        She looks directly at the camera with a confident, alluring and powerful expression. Elegant catwalk gait, fashionable and sensual movement.
+
+
+        Keep her exact facial features, hair, clothing, lighting, shadows and background completely unchanged. Only modify the body posture, leg position and arm swing to create a dynamic walking pose. Realistic anatomy, natural motion, photorealistic, seamless edit, high detail.'
+      negative: different face, wrong identity, changed facial features, clothing change, background change, blurry face, distorted anatomy, extra limbs, artifacts, low quality, bad anatomy
+      note: ''
+      params:
+        steps: 30
+        cfg: 8
+        denoise: 1
+  - image: P1xI1V82isvNgEwy4N.png
+    prompts:
+    - id: p0000040
+      output_id: SMNx9s42m28OPGcom0
+      enabled: true
+      name: Idzie przed siebie krok modelki
+      positive: 'Change the woman''s pose to a confident, dynamic runway model walk, captured from the front. She is walking straight toward the camera mid-stride — one leg extended forward with pointed toe, the other leg behind, strong and elegant step. Pronounced hip sway, shoulders slightly back, chest forward, arms swinging naturally by her sides in a stylish model fashion.
+
+
+        She looks directly at the camera with a confident, alluring and powerful expression. Elegant catwalk gait, fashionable and sensual movement.
+
+
+        Keep her exact facial features, hair, clothing, lighting, shadows and background completely unchanged. Only modify the body posture, leg position and arm swing to create a dynamic walking pose. Realistic anatomy, natural motion, photorealistic, seamless edit, high detail.'
+      negative: different face, wrong identity, changed facial features, clothing change, background change, blurry face, distorted anatomy, extra limbs, artifacts, low quality, bad anatomy
+      note: ''
+      params:
+        steps: 30
+        cfg: 8
+        denoise: 1
+  scene_dirs: []
+  characters_dirs: []
+  scene_slots: []
+  paste_slots: []
+  edge_blend_enabled: false
+  edge_blend_px: 15
+  edge_blend_cfg: null
+  edge_blend_denoise: null
+  edge_blend_prompts: []
+  scene_blend_enabled: false
+  scene_blend_cfg: null
+  scene_blend_denoise: null
+  scene_blend_prompts: []
+  output_dir: C:\Users\abork\AppData\Local\CapCut\Videos\muszelka_pliki\EM\skakanie_na_pilce\modelEM_modele
+  global_suffix: ''
+  crop_to_subject: true
+  pad_input_to_ratio: true
+  id: nowe_pozy_do_catwalk
+- type: character_insert
+  name: Nowe pozy do catwalk i kontrola twarzy
+  source_dirs: []
+  image_slots: []
+  scene_dirs:
+  - C:\Users\abork\AppData\Local\CapCut\Videos\muszelka_pliki\EM\skakanie_na_pilce\modelEM_modele
+  characters_dirs:
+  - C:\Users\abork\AppData\Local\CapCut\Videos\muszelka_pliki\EM\skakanie_na_pilce\modelEM_twarz
+  scene_slots:
+  - scene_image: ComfyUI_00445_.png
+    character_images:
+    - sq1yOuycTz2zIvNLr8.png
+    prompts:
+    - id: p0000040
+      output_id: nB2usxdjvwVoubuxhh
+      enabled: true
+      name: Idzie przed siebie krok modelki
+      positive: 'Change the woman''s pose to a confident, dynamic runway model walk, captured from the front. She is walking straight toward the camera mid-stride — one leg extended forward with pointed toe, the other leg behind, strong and elegant step. Pronounced hip sway, shoulders slightly back, chest forward, arms swinging naturally by her sides in a stylish model fashion.
+
+
+        She looks directly at the camera with a confident, alluring and powerful expression. Elegant catwalk gait, fashionable and sensual movement.
+
+
+        Keep her exact facial features, hair, clothing, lighting, shadows and background completely unchanged. Only modify the body posture, leg position and arm swing to create a dynamic walking pose. Realistic anatomy, natural motion, photorealistic, seamless edit, high detail.'
+      negative: different face, wrong identity, changed facial features, clothing change, background change, blurry face, distorted anatomy, extra limbs, artifacts, low quality, bad anatomy
+      note: ''
+      params:
+        steps: 30
+        cfg: 8
+        denoise: 1
+  - scene_image: ComfyUI_00446_.png
+    character_images:
+    - sq1yOuycTz2zIvNLr8.png
+    prompts:
+    - id: p0000040
+      output_id: 9wxyBDe7Ii17mAGiAK
+      enabled: true
+      name: Idzie przed siebie krok modelki
+      positive: 'Change the woman''s pose to a confident, dynamic runway model walk, captured from the front. She is walking straight toward the camera mid-stride — one leg extended forward with pointed toe, the other leg behind, strong and elegant step. Pronounced hip sway, shoulders slightly back, chest forward, arms swinging naturally by her sides in a stylish model fashion.
+
+
+        She looks directly at the camera with a confident, alluring and powerful expression. Elegant catwalk gait, fashionable and sensual movement.
+
+
+        Keep her exact facial features, hair, clothing, lighting, shadows and background completely unchanged. Only modify the body posture, leg position and arm swing to create a dynamic walking pose. Realistic anatomy, natural motion, photorealistic, seamless edit, high detail.'
+      negative: different face, wrong identity, changed facial features, clothing change, background change, blurry face, distorted anatomy, extra limbs, artifacts, low quality, bad anatomy
+      note: ''
+      params:
+        steps: 30
+        cfg: 8
+        denoise: 1
+  - scene_image: ComfyUI_00447_.png
+    character_images:
+    - sq1yOuycTz2zIvNLr8.png
+    prompts:
+    - id: p0000040
+      output_id: Fo1TTxuj3ppUCQQZmC
+      enabled: true
+      name: Idzie przed siebie krok modelki
+      positive: 'Change the woman''s pose to a confident, dynamic runway model walk, captured from the front. She is walking straight toward the camera mid-stride — one leg extended forward with pointed toe, the other leg behind, strong and elegant step. Pronounced hip sway, shoulders slightly back, chest forward, arms swinging naturally by her sides in a stylish model fashion.
+
+
+        She looks directly at the camera with a confident, alluring and powerful expression. Elegant catwalk gait, fashionable and sensual movement.
+
+
+        Keep her exact facial features, hair, clothing, lighting, shadows and background completely unchanged. Only modify the body posture, leg position and arm swing to create a dynamic walking pose. Realistic anatomy, natural motion, photorealistic, seamless edit, high detail.'
+      negative: different face, wrong identity, changed facial features, clothing change, background change, blurry face, distorted anatomy, extra limbs, artifacts, low quality, bad anatomy
+      note: ''
+      params:
+        steps: 30
+        cfg: 8
+        denoise: 1
+  paste_slots: []
+  edge_blend_enabled: false
+  edge_blend_px: 15
+  edge_blend_cfg: null
+  edge_blend_denoise: null
+  edge_blend_prompts: []
+  scene_blend_enabled: false
+  scene_blend_cfg: null
+  scene_blend_denoise: null
+  scene_blend_prompts: []
+  output_dir: C:\Users\abork\AppData\Local\CapCut\Videos\muszelka_pliki\EM\skakanie_na_pilce\modelEM_modele
+  global_suffix: Start with Picture 1 as the base image, keeping its lighting, environment, and background. remove the head from Picture 1 completely and replace it with the head from Picture 2, strictly preserving the hair, eye color, and nose structure of Picture 2. adapt the head position and rotation from Picture 2 to match the angle and perspective of Picture 1, blend naturally with the neck and shoulders of Picture 1. high quality, sharp details, 4k  head swap from Image 2 to Image 1, keep all facial details and hair from Image 2, blend naturally with Image 1's body, remove all hair of Image 1 and replace by hair from Image 2, keep the same expression and head proportion as in Image 1
+  crop_to_subject: false
+  pad_input_to_ratio: false
+  id: nowe_pozy_do_catwalk_i_kontrola_twarzy
+- type: paste_character
+  name: Umieszczanie na scenie - cat walk (1)
+  source_dirs: []
+  image_slots: []
+  scene_dirs: []
+  characters_dirs: []
+  scene_slots: []
+  paste_slots:
+  - id: c0e87d70-4c6a-462d-860e-78c8f3c4a560
+    output_id: feb1dcb4-d7d1-40fe-a6d6-bbe96001bf64
+    scene_image: C:\Users\abork\AppData\Local\CapCut\Videos\muszelka_pliki\EM\skakanie_na_pilce\scena\korytarz_na_wprost_6.jpg
+    characters:
+    - model_image: C:\Users\abork\AppData\Local\CapCut\Videos\muszelka_pliki\EM\skakanie_na_pilce\modelEM_modele\ComfyUI_00126_.png
+      top_pct: 41.0
+      bottom_pct: 59.0
+      x_center_pct: 50.0
+      erode_px: 3
+      blur_px: 2
+      edge_blend_enabled: false
+    scene_blend_enabled: false
+  - id: 2edfe6f0-6f94-48f2-9c6e-549a6248c64d
+    output_id: eaf04b82-7442-47c8-9104-aa24adc2a21e
+    scene_image: C:\Users\abork\AppData\Local\CapCut\Videos\muszelka_pliki\EM\skakanie_na_pilce\scena\korytarz_na_wprost_6.jpg
+    characters:
+    - model_image: C:\Users\abork\AppData\Local\CapCut\Videos\muszelka_pliki\EM\skakanie_na_pilce\modelEM_modele\IbAFd6dhjcgupSqvmh.png
+      top_pct: 37.0
+      bottom_pct: 76.0
+      x_center_pct: 50.0
+      erode_px: 3
+      blur_px: 2
+      edge_blend_enabled: false
+    scene_blend_enabled: false
+  - id: 2a380dcd-501f-4a92-852f-f065cee0adc9
+    output_id: b987dde9-c45a-41d2-bad9-5b60c59a2574
+    scene_image: C:\Users\abork\AppData\Local\CapCut\Videos\muszelka_pliki\EM\skakanie_na_pilce\scena\korytarz_na_wprost_6.jpg
+    characters:
+    - model_image: C:\Users\abork\AppData\Local\CapCut\Videos\muszelka_pliki\EM\skakanie_na_pilce\modelEM_modele\ComfyUI_00126_.png
+      top_pct: 32.0
+      bottom_pct: 98.0
+      x_center_pct: 50.0
+      erode_px: 3
+      blur_px: 2
+      edge_blend_enabled: false
+    scene_blend_enabled: false
+  edge_blend_enabled: false
+  edge_blend_px: 15
+  edge_blend_cfg: null
+  edge_blend_denoise: null
+  edge_blend_prompts:
+  - id: p0000021
+    category: system
+    name: Edge Blend — krawędzie postaci
+    note: Pass 1 — inpainting w strefie maski (15px wokół sylwetki). Używany z ci_1ref (scena+maska + ref postaci).
+    positive: 'You have two inputs: image 1 is the composited scene, image 2 is the original reference character. Using image 2 as reference, repair and improve the character in image 1. Fix all of the following:
+
+
+      1. EDGES: Remove all hard cutout edges, halos and white fringing around the character''s silhouette. Blend her edges naturally into the background — match local lighting, color temperature and depth of field.
+
+
+      2. BODY RECONSTRUCTION: Where parts of the character''s body are blurry, incomplete, distorted or missing (e.g. blurry fingers, cut-off limbs, broken anatomy) — reconstruct them correctly using image 2 as the reference. Restore sharp, realistic anatomy.
+
+
+      3. SKIN AND DETAIL: Match the character''s skin tone, sharpness and detail level to image 2. Remove any softness or blur on the character''s body.
+
+
+      Do not move the character. Do not change her pose or position. Do not modify the background outside the character area. Preserve the character''s face, clothing and identity.'
+    negative: changed pose, moved character, different face, different clothing, background change, artifacts, distorted anatomy, color shift on character body, overexposed, underexposed, blurry fingers, missing limbs, broken anatomy
+    params:
+      steps: 30
+      cfg: 8
+      denoise: 1
+    enabled: true
+  scene_blend_enabled: false
+  scene_blend_cfg: null
+  scene_blend_denoise: null
+  scene_blend_prompts:
+  - id: p0000022
+    category: system
+    name: Scene Blend — cienie i spójność sceny
+    note: Pass 2 — pełny obrazek, niski denoise. Dodaje cienie i wyrównuje całą scenę.
+    positive: 'Enhance the realism of the full composited scene. Add a natural cast shadow beneath the composited character''s feet and body — match the exact direction, length, softness and intensity of the shadows already cast by the other people in the scene. Use the existing shadows as a reference: if other figures cast long soft shadows to one side, the composited character must cast an identical shadow in the same direction with the same quality. Add subtle ambient occlusion where the character meets the floor or nearby surfaces. Match the character''s overall color grading, brightness and contrast to the other figures in the scene. Make the result look like a single unified photograph taken with one camera. Do not move or change the character''s position, pose, face or clothing. Do not alter the background structure or change the other people already in the scene.'
+    negative: changed pose, moved character, different face, different clothing, background restructured, artifacts, removed character, new people added, overexposed, underexposed, blurry, inconsistent shadow direction, shadow pointing wrong way, mismatched shadow length, no shadow under feet, floating character
+    params:
+      steps: 30
+      cfg: 8
+      denoise: 0.4
+    enabled: true
+  output_dir: C:\Users\abork\AppData\Local\CapCut\Videos\muszelka_pliki\EM\skakanie_na_pilce\postacie_na_scenie
+  global_suffix: ''
+  crop_to_subject: false
+  pad_input_to_ratio: false
+  id: umieszczanie_na_scenie_-_deterministyczne_kopia
