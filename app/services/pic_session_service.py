@@ -538,6 +538,21 @@ def copy_tile(run_id: str, tile_id: str) -> dict:
     existing_ids = [t["id"] for t in tiles]
     new_tile["id"]   = _unique_id(new_tile.get("name", "tile") + "_kopia", existing_ids)
     new_tile["name"] = new_tile.get("name", "") + " (kopia)"
+
+    # Reset all output_ids so the copy doesn't share file names with the original.
+    # paste_character: each paste_slot has its own output_id (used for file naming)
+    for slot in new_tile.get("paste_slots", []):
+        slot["output_id"] = _make_output_id()
+        # also regenerate the slot id to avoid API collisions
+        slot["id"] = str(__import__("uuid").uuid4())
+    # one_image_many_prompts / character_insert: prompts carry output_id
+    for slot in new_tile.get("image_slots", []):
+        for p in slot.get("prompts", []):
+            p["output_id"] = _make_output_id()
+    for slot in new_tile.get("scene_slots", []):
+        for p in slot.get("prompts", []):
+            p["output_id"] = _make_output_id()
+
     tiles.append(new_tile)
     data["pic_flow"] = tiles
     _save(run_id, data)
