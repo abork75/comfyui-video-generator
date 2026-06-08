@@ -12,7 +12,7 @@ from pathlib import Path
 from typing import List
 
 from fastapi import APIRouter, HTTPException, Query
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, Response
 
 router = APIRouter(prefix="/api/fs", tags=["fs"])
 
@@ -78,7 +78,7 @@ async def serve_image(path: str = Query(..., description="Absolute local path to
         raise HTTPException(status_code=404, detail="Plik nie istnieje")
     if p.suffix.lower() not in _IMAGE_EXTS:
         raise HTTPException(status_code=400, detail="Nieobsługiwany format pliku")
-    return FileResponse(str(p))
+    return FileResponse(str(p), headers={"Cache-Control": "no-cache, no-store, must-revalidate"})
 
 
 @router.get("/image_in_dirs")
@@ -92,5 +92,5 @@ async def serve_image_in_dirs(
             continue
         p = Path(d) / name
         if p.exists() and p.is_file() and p.suffix.lower() in _IMAGE_EXTS:
-            return FileResponse(str(p))
+            return FileResponse(str(p), headers={"Cache-Control": "no-cache, no-store, must-revalidate"})
     raise HTTPException(status_code=404, detail=f"Plik '{name}' nie znaleziony w podanych katalogach")
