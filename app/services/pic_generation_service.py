@@ -1410,9 +1410,15 @@ async def _run_paste_character_async(
                         continue
 
                     _raw       = Image.open(model_path)
-                    _has_alpha = _raw.mode in ("RGBA", "LA", "PA")
                     model      = _raw.convert("RGBA")
                     _orig_size = model.size
+                    # _has_alpha: True only if the alpha channel has *real* transparency
+                    # (min alpha < 255). A flat-255 alpha channel means the image was
+                    # saved as RGBA but has an opaque white background → treat as RGB.
+                    _has_alpha = (
+                        _raw.mode in ("RGBA", "LA", "PA")
+                        and model.split()[3].getextrema()[0] < 255
+                    )
                     if not _has_alpha:
                         model = _white_to_alpha(model)
                     bbox = _density_bbox(model.split()[3])
@@ -1482,8 +1488,11 @@ async def _run_paste_character_async(
                         x_center_pct = float(char.get("x_center_pct", 50)) / 100.0
                         if bottom_pct > top_pct:
                             _raw       = Image.open(model_path)
-                            _has_alpha = _raw.mode in ("RGBA", "LA", "PA")
                             model      = _raw.convert("RGBA")
+                            _has_alpha = (
+                                _raw.mode in ("RGBA", "LA", "PA")
+                                and model.split()[3].getextrema()[0] < 255
+                            )
                             if not _has_alpha:
                                 model = _white_to_alpha(model)
                             bbox = _density_bbox(model.split()[3])
