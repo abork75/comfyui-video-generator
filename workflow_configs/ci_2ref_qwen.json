@@ -1,0 +1,387 @@
+{
+  "1": {
+    "inputs": {
+      "image": "model_15.png"
+    },
+    "class_type": "LoadImage",
+    "_meta": {
+      "title": "Image 2"
+    }
+  },
+  "2": {
+    "inputs": {
+      "image": "twarz.png"
+    },
+    "class_type": "LoadImage",
+    "_meta": {
+      "title": "Image 3"
+    }
+  },
+  "3": {
+    "inputs": {
+      "image": "pasted/image (206).png"
+    },
+    "class_type": "LoadImage",
+    "_meta": {
+      "title": "Load Image"
+    }
+  },
+  "7": {
+    "inputs": {
+      "strength": 1,
+      "model": [
+        "14",
+        0
+      ]
+    },
+    "class_type": "CFGNorm",
+    "_meta": {
+      "title": "CFGNorm"
+    }
+  },
+  "8": {
+    "inputs": {
+      "vae_name": "qwen_image_vae.safetensors"
+    },
+    "class_type": "VAELoader",
+    "_meta": {
+      "title": "Load VAE"
+    }
+  },
+  "9": {
+    "inputs": {
+      "clip_name": "qwen_2.5_vl_7b_fp8_scaled.safetensors",
+      "type": "qwen_image",
+      "device": "default"
+    },
+    "class_type": "CLIPLoader",
+    "_meta": {
+      "title": "Load CLIP"
+    }
+  },
+  "10": {
+    "inputs": {
+      "unet_name": "qwen_image_edit_2511_fp8mixed.safetensors",
+      "weight_dtype": "default"
+    },
+    "class_type": "UNETLoader",
+    "_meta": {
+      "title": "Load Diffusion Model"
+    }
+  },
+  "11": {
+    "inputs": {
+      "prompt": "no skin tone mismatch, no different face, no blurry face, no distorted features, no change outside the mask\n\ndifferent face, wrong identity, changed facial features, altered eye color, different nose shape, different lip shape, different skin tone, face outside red area, changes outside masked region, body changes, hair changes, background changes, clothing changes, blurry face, distorted face, deformed face, asymmetrical face, multiple faces, extra faces, artifacts, low quality, overexposed skin, color mismatch, skin tone mismatch, unnatural blending, visible mask edges, sharp transition, seam visible",
+      "clip": [
+        "9",
+        0
+      ],
+      "vae": [
+        "8",
+        0
+      ],
+      "image1": [
+        "19",
+        0
+      ],
+      "image2": [
+        "1",
+        0
+      ],
+      "image3": [
+        "2",
+        0
+      ]
+    },
+    "class_type": "TextEncodeQwenImageEditPlus",
+    "_meta": {
+      "title": "TextEncodeQwenImageEditPlus"
+    }
+  },
+  "14": {
+    "inputs": {
+      "shift": 3,
+      "model": [
+        "23",
+        0
+      ]
+    },
+    "class_type": "ModelSamplingAuraFlow",
+    "_meta": {
+      "title": "ModelSamplingAuraFlow"
+    }
+  },
+  "15": {
+    "inputs": {
+      "prompt": "Repose the woman into a natural, relaxed and confident standing position facing directly toward the camera. She stands in a casual, free stance — weight comfortably shifted onto one leg, the other leg slightly bent and relaxed, hips naturally tilted to the side. Shoulders relaxed, back straight but not stiff. Arms hanging loosely and naturally by her sides, hands relaxed.\n\nKeep her exact facial expression, head position, hair, clothing, body proportions, lighting, and background completely unchanged. Only modify the overall body posture to a comfortable, everyday standing pose. \n\nRealistic anatomy, natural weight distribution, soft body language, photorealistic, seamless edit, high detail.",
+      "clip": [
+        "9",
+        0
+      ],
+      "vae": [
+        "8",
+        0
+      ],
+      "image1": [
+        "19",
+        0
+      ],
+      "image2": [
+        "1",
+        0
+      ],
+      "image3": [
+        "2",
+        0
+      ]
+    },
+    "class_type": "TextEncodeQwenImageEditPlus",
+    "_meta": {
+      "title": "TextEncodeQwenImageEditPlus"
+    }
+  },
+  "19": {
+    "inputs": {
+      "upscale_method": "lanczos",
+      "megapixels": 1,
+      "resolution_steps": 8,
+      "image": [
+        "3",
+        0
+      ]
+    },
+    "class_type": "ImageScaleToTotalPixels",
+    "_meta": {
+      "title": "Scale Image to Total Pixels"
+    }
+  },
+  "20": {
+    "inputs": {
+      "seed": 570669128203683,
+      "steps": 30,
+      "cfg": 8,
+      "sampler_name": "euler",
+      "scheduler": "simple",
+      "denoise": 1,
+      "model": [
+        "7",
+        0
+      ],
+      "positive": [
+        "259",
+        0
+      ],
+      "negative": [
+        "259",
+        1
+      ],
+      "latent_image": [
+        "262",
+        0
+      ]
+    },
+    "class_type": "KSampler",
+    "_meta": {
+      "title": "KSampler"
+    }
+  },
+  "21": {
+    "inputs": {
+      "samples": [
+        "20",
+        0
+      ],
+      "vae": [
+        "8",
+        0
+      ]
+    },
+    "class_type": "VAEDecode",
+    "_meta": {
+      "title": "VAE Decode"
+    }
+  },
+  "23": {
+    "inputs": {
+      "lora_name": "bfs_head_v5_2511_merged_version_rank_32_fp32.safetensors",
+      "strength_model": 1,
+      "model": [
+        "10",
+        0
+      ]
+    },
+    "class_type": "LoraLoaderModelOnly",
+    "_meta": {
+      "title": "Load LoRA"
+    }
+  },
+  "27": {
+    "inputs": {
+      "mask": [
+        "290",
+        0
+      ]
+    },
+    "class_type": "MaskToImage",
+    "_meta": {
+      "title": "Convert Mask to Image"
+    }
+  },
+  "28": {
+    "inputs": {
+      "upscale_method": "lanczos",
+      "megapixels": 1,
+      "resolution_steps": 8,
+      "image": [
+        "27",
+        0
+      ]
+    },
+    "class_type": "ImageScaleToTotalPixels",
+    "_meta": {
+      "title": "Scale Image to Total Pixels"
+    }
+  },
+  "29": {
+    "inputs": {
+      "channel": "red",
+      "image": [
+        "28",
+        0
+      ]
+    },
+    "class_type": "ImageToMask",
+    "_meta": {
+      "title": "Convert Image to Mask"
+    }
+  },
+  "33": {
+    "inputs": {
+      "filename_prefix": "ComfyUI",
+      "images": [
+        "21",
+        0
+      ]
+    },
+    "class_type": "SaveImage",
+    "_meta": {
+      "title": "Save Image"
+    }
+  },
+  "47": {
+    "inputs": {
+      "mask": [
+        "29",
+        0
+      ]
+    },
+    "class_type": "MaskPreview",
+    "_meta": {
+      "title": "Preview Mask"
+    }
+  },
+  "259": {
+    "inputs": {
+      "strength": 0.4,
+      "start_percent": 0,
+      "end_percent": 1,
+      "positive": [
+        "15",
+        0
+      ],
+      "negative": [
+        "11",
+        0
+      ],
+      "control_net": [
+        "261",
+        0
+      ],
+      "vae": [
+        "8",
+        0
+      ],
+      "image": [
+        "19",
+        0
+      ],
+      "mask": [
+        "29",
+        0
+      ]
+    },
+    "class_type": "ControlNetInpaintingAliMamaApply",
+    "_meta": {
+      "title": "ControlNetInpaintingAliMamaApply"
+    }
+  },
+  "260": {
+    "inputs": {
+      "pixels": [
+        "19",
+        0
+      ],
+      "vae": [
+        "8",
+        0
+      ]
+    },
+    "class_type": "VAEEncode",
+    "_meta": {
+      "title": "VAE Encode"
+    }
+  },
+  "261": {
+    "inputs": {
+      "control_net_name": "Qwen-Image-InstantX-ControlNet-Inpainting.safetensors"
+    },
+    "class_type": "ControlNetLoader",
+    "_meta": {
+      "title": "Load ControlNet Model"
+    }
+  },
+  "262": {
+    "inputs": {
+      "samples": [
+        "260",
+        0
+      ],
+      "mask": [
+        "29",
+        0
+      ]
+    },
+    "class_type": "SetLatentNoiseMask",
+    "_meta": {
+      "title": "Set Latent Noise Mask"
+    }
+  },
+  "290": {
+    "inputs": {
+      "mask": [
+        "3",
+        1
+      ],
+      "is_empty": [
+        "291",
+        0
+      ]
+    },
+    "class_type": "ConditionalMaskInvert",
+    "_meta": {
+      "title": "Conditional Mask Invert"
+    }
+  },
+  "291": {
+    "inputs": {
+      "mask": [
+        "3",
+        1
+      ]
+    },
+    "class_type": "IsMaskEmpty",
+    "_meta": {
+      "title": "Is Mask Empty"
+    }
+  }
+}

@@ -1,4 +1,4 @@
-# app_config.yaml — Globalne ustawienia aplikacji
+﻿# app_config.yaml — Globalne ustawienia aplikacji
 # Edytuj ten plik aby zmienić modele i domyślne parametry.
 # Ustawienia per-projekt (defaults w RUN_*.yaml) nadpisują wartości z sekcji defaults.
 #
@@ -19,8 +19,8 @@ backends:
       # multitalk:
       #   workflow_json: D:\streamlit_project\comfyui_integration\multitalk_workflow_api.json
 
-  windows:                          # Windows ComfyUI (port 8100)
-    api_url: http://127.0.0.1:8100
+  windows:                          # Windows ComfyUI standalone (port 8000)
+    api_url: http://127.0.0.1:8000
     input_dir: D:\ComfyUI\input
     output_dir: D:\ComfyUI\output
     models:
@@ -29,11 +29,11 @@ backends:
       upscale_image:                # RealESRGAN image — do przyszłego wykorzystania (np. upscale outputów Pic Studio)
         workflow_json: 'D:\streamlit_project\comfyui_integration\workflow_configs\upscaler_image.json'
       i2i:                          # Pic Studio — Qwen Image Edit / Inpaint (one_image_many_prompts)
-        workflow_json: 'D:\ComfyUI\output\__IMAGE2IMAGE qwen_inpaint_head_kontext_image.json'
+        workflow_json: 'D:\streamlit_project\comfyui_integration\workflow_configs\i2i_qwen_inpaint.json'
       ci_1ref:                      # Pic Studio — Character Insert z 1 obrazkiem referencyjnym
-        workflow_json: 'D:\ComfyUI\output\__CHARACTER_INSERT_1REF qwen_kontext_image.json'
+        workflow_json: 'D:\streamlit_project\comfyui_integration\workflow_configs\ci_1ref_qwen.json'
       ci_2ref:                      # Pic Studio — Character Insert z 2 obrazkami referencyjnymi
-        workflow_json: 'D:\ComfyUI\output\__CHARACTER_INSERT qwen_kontext_image.json'
+        workflow_json: 'D:\streamlit_project\comfyui_integration\workflow_configs\ci_2ref_qwen.json'
 
   # external:                       # Przyszłość — np. RunPod, Replicate
   #   provider: runpod
@@ -54,3 +54,4 @@ defaults:
   duration: 2
   blocks_to_swap: 35
   frame_interpolation: true   # RIFE VFI 2x — false = wyłącz interpolację
+
