@@ -15,7 +15,7 @@ class Settings(BaseSettings):
 
     # Server
     host: str = "0.0.0.0"
-    port: int = 8000
+    port: int = 8001
 
     # ComfyUI (Linux – transitions, port 8189)
     comfyui_url: str = "http://127.0.0.1:8189"
