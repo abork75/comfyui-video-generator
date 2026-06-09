@@ -6728,6 +6728,12 @@ function app() {
                 this.frameVersion = Date.now();   // bust thumbnail cache → re-fetch after file rename
                 this.editModal.open = false;
                 this.logLine('sys', `✅ Zapisano zmiany w elemencie #${this.editModal.idx + 1}`);
+                // Reset hidden thumbnails — @error may have set display:none on a
+                // placeholder filename; after src changes the @load fires correctly
+                // only if the inline style is cleared first.
+                this.$nextTick(() => {
+                    document.querySelectorAll('img.thumb').forEach(img => img.removeAttribute('style'));
+                });
                 this.statusData = null; await this.refreshStatus();
             }
             this.editModal.saving = false;
