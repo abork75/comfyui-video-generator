@@ -42,7 +42,7 @@ class Settings(BaseSettings):
     comfyui_linux_output_dir: str = r"D:\ComfyUI\output"
     # API-format workflow JSON exported from ComfyUI (Dev mode → Save API Format)
     talk_workflow_json: str = (
-        r"D:\streamlit_project\comfyui_integration\talk_workflow_api.json"
+        r"D:\streamlit_project\comfyui_integration\workflow_configs\talk_workflow_api.json"
     )
 
     # CapCut export — desktop projects folder

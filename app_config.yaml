@@ -15,7 +15,7 @@ backends:
       video_gen:                    # I2V i I2V2I — end_frame kontrolowany per-klip
         config_path: D:\streamlit_project\comfyui_integration\workflow_configs\wan_i2v.yaml
       talk:                         # InfiniteTalk
-        workflow_json: D:\streamlit_project\comfyui_integration\talk_workflow_api.json
+        workflow_json: D:\streamlit_project\comfyui_integration\workflow_configs\talk_workflow_api.json
       # multitalk:
       #   workflow_json: D:\streamlit_project\comfyui_integration\multitalk_workflow_api.json
 
@@ -54,4 +54,5 @@ defaults:
   duration: 2
   blocks_to_swap: 35
   frame_interpolation: true   # RIFE VFI 2x — false = wyłącz interpolację
+
 
