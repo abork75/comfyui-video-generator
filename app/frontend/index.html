@@ -2905,7 +2905,7 @@
                 </div>
             </button>
             <button @click="picTypeSelectedDo('paste_character')"
-                    class="col-span-2 flex flex-col items-center gap-3 bg-gray-800 hover:bg-green-950/60 border border-gray-600 hover:border-green-500 rounded-xl p-4 transition text-left">
+                    class="flex flex-col items-center gap-3 bg-gray-800 hover:bg-green-950/60 border border-gray-600 hover:border-green-500 rounded-xl p-4 transition text-left">
                 <span class="text-3xl">📌</span>
                 <div>
                     <p class="text-xs font-semibold text-white text-center">Wstaw deterministycznie</p>
@@ -2913,7 +2913,7 @@
                 </div>
             </button>
             <button @click="picTypeSelectedDo('fine_tune')"
-                    class="col-span-2 flex flex-col items-center gap-3 bg-gray-800 hover:bg-orange-950/60 border border-gray-600 hover:border-orange-500 rounded-xl p-4 transition text-left">
+                    class="flex flex-col items-center gap-3 bg-gray-800 hover:bg-orange-950/60 border border-gray-600 hover:border-orange-500 rounded-xl p-4 transition text-left">
                 <span class="text-3xl">🎨</span>
                 <div>
                     <p class="text-xs font-semibold text-white text-center">Retusz / Fine-tuning</p>
@@ -3832,6 +3832,9 @@
                                             <input type="checkbox" x-model="cp.enabled" class="rounded">
                                             aktywny
                                         </label>
+                                        <button @click="picOpenPromptImport('ft-' + cpi)"
+                                                class="text-xs text-blue-400 hover:text-blue-200 px-1.5 py-0.5 rounded hover:bg-gray-700 transition flex-shrink-0"
+                                                title="Wczytaj prompt z biblioteki">📚</button>
                                         <button @click="picMoveItem(tileModal.data.custom_passes, cpi, -1)" :disabled="cpi===0"
                                                 class="text-xs text-gray-600 hover:text-white px-1 rounded hover:bg-gray-700 disabled:opacity-20">↑</button>
                                         <button @click="picMoveItem(tileModal.data.custom_passes, cpi, 1)" :disabled="cpi===(tileModal.data.custom_passes||[]).length-1"
@@ -3911,10 +3914,17 @@
                             </template>
                         </div>
 
-                        <button @click="tileModal.data.custom_passes.push({ name: '', enabled: true, mode: 'i2i', ref_image: '', positive: '', negative: '', params: { steps: 30, cfg: 8, denoise: 0.65, controlnet_strength: 0.8 } })"
-                                class="mt-2 w-full text-xs text-gray-400 border border-dashed border-gray-600 hover:border-orange-500 hover:text-orange-400 rounded-lg py-2 transition">
-                            + Dodaj pass
-                        </button>
+                        <div class="mt-2 flex gap-2">
+                            <button @click="tileModal.data.custom_passes.push({ name: '', enabled: true, mode: 'i2i', ref_image: '', positive: '', negative: '', params: { steps: 30, cfg: 8, denoise: 0.65, controlnet_strength: 0.8 } })"
+                                    class="flex-1 text-xs text-gray-400 border border-dashed border-gray-600 hover:border-orange-500 hover:text-orange-400 rounded-lg py-2 transition">
+                                + Dodaj pass
+                            </button>
+                            <button @click="picOpenPromptImport('ft-new')"
+                                    class="flex-shrink-0 text-xs text-blue-400 border border-dashed border-blue-900 hover:border-blue-500 hover:text-blue-200 rounded-lg px-3 py-2 transition"
+                                    title="Dodaj pasy z biblioteki promptów">
+                                📚 Z biblioteki
+                            </button>
+                        </div>
                     </div>
 
                 </div>
@@ -9194,7 +9204,44 @@ function app() {
             const slotIndex = this.promptImport.slotIndex;
             let added = 0;
 
-            if (slotIndex === 'eb' || slotIndex === 'sb') {
+            if (slotIndex === 'ft-new') {
+                // fine_tune: each selected prompt → new custom pass
+                const passes = this.tileModal.data.custom_passes = this.tileModal.data.custom_passes || [];
+                for (const p of toAdd) {
+                    passes.push({
+                        name:     p.name || '',
+                        enabled:  true,
+                        mode:     'i2i',
+                        ref_image: '',
+                        positive: p.positive || '',
+                        negative: p.negative || '',
+                        params: {
+                            steps:               p.params?.steps   ?? 30,
+                            cfg:                 p.params?.cfg     ?? 8,
+                            denoise:             p.params?.denoise ?? 0.65,
+                            controlnet_strength: 0.8,
+                        },
+                    });
+                    added++;
+                }
+            } else if (typeof slotIndex === 'string' && slotIndex.startsWith('ft-')) {
+                // fine_tune: load prompt into specific pass (replace positive/negative/params)
+                const cpi = parseInt(slotIndex.slice(3), 10);
+                const cp  = (this.tileModal.data.custom_passes || [])[cpi];
+                if (cp && toAdd.length > 0) {
+                    const p = toAdd[0];
+                    cp.positive = p.positive || '';
+                    cp.negative = p.negative || '';
+                    if (p.name && !cp.name) cp.name = p.name;
+                    cp.params = {
+                        steps:               p.params?.steps   ?? cp.params?.steps   ?? 30,
+                        cfg:                 p.params?.cfg     ?? cp.params?.cfg     ?? 8,
+                        denoise:             p.params?.denoise ?? cp.params?.denoise ?? 0.65,
+                        controlnet_strength: cp.params?.controlnet_strength ?? 0.8,
+                    };
+                    added++;
+                }
+            } else if (slotIndex === 'eb' || slotIndex === 'sb') {
                 // blend prompts array
                 const arrayKey = slotIndex === 'eb' ? 'edge_blend_prompts' : 'scene_blend_prompts';
                 const arr = this.tileModal.data[arrayKey] = this.tileModal.data[arrayKey] || [];
