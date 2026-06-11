@@ -3914,15 +3914,14 @@
                             </template>
                         </div>
 
-                        <div class="mt-2 flex gap-2">
-                            <button @click="tileModal.data.custom_passes.push({ name: '', enabled: true, mode: 'i2i', ref_image: '', positive: '', negative: '', params: { steps: 30, cfg: 8, denoise: 0.65, controlnet_strength: 0.8 } })"
-                                    class="flex-1 text-xs text-gray-400 border border-dashed border-gray-600 hover:border-orange-500 hover:text-orange-400 rounded-lg py-2 transition">
-                                + Dodaj pass
-                            </button>
+                        <div class="mt-2 flex gap-1.5">
                             <button @click="picOpenPromptImport('ft-new')"
-                                    class="flex-shrink-0 text-xs text-blue-400 border border-dashed border-blue-900 hover:border-blue-500 hover:text-blue-200 rounded-lg px-3 py-2 transition"
-                                    title="Dodaj pasy z biblioteki promptów">
-                                📚 Z biblioteki
+                                    class="text-xs text-blue-400 border border-blue-800 hover:border-blue-500 rounded px-2 py-1 transition">
+                                + Import
+                            </button>
+                            <button @click="tileModal.data.custom_passes.push({ name: '', enabled: true, mode: 'i2i', ref_image: '', positive: '', negative: '', params: { steps: 30, cfg: 8, denoise: 0.65, controlnet_strength: 0.8 } })"
+                                    class="text-xs text-gray-300 bg-gray-700 hover:bg-gray-600 border border-gray-600 rounded px-2 py-1 transition">
+                                + Nowy
                             </button>
                         </div>
                     </div>
