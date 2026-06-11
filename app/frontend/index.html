@@ -4138,7 +4138,7 @@
                                                             <span x-show="tileModal.status?.slots?.[si]?.chars?.[ci]?.pil && !tileModal.status?.slots?.[si]?.chars?.[ci]?.pil_final"
                                                                   class="absolute top-0.5 right-0.5 w-2.5 h-2.5 rounded-full bg-yellow-400 border border-gray-900 z-10" title="W robocze"></span>
                                                             <span x-show="picSbMasks[tileModal.status?.slots?.[si]?.chars?.[ci]?.pil]"
-                                                                  class="absolute bottom-0.5 right-0.5 text-purple-400 text-xs leading-none pointer-events-none" title="Maska Scene Blend">🎭</span>
+                                                                  class="absolute top-0.5 right-4 text-purple-400 text-xs leading-none pointer-events-none z-10 bg-gray-900 rounded-sm px-0.5 border border-gray-700" title="Maska Scene Blend">🎭</span>
                                                         </div>
                                                         <div class="flex items-center gap-1">
                                                             <button @click="picSwapPasteStage(slot.id, ci*2)"
@@ -4181,7 +4181,7 @@
                                                             <span x-show="tileModal.status?.slots?.[si]?.chars?.[ci]?.edge && !tileModal.status?.slots?.[si]?.chars?.[ci]?.edge_final"
                                                                   class="absolute top-0.5 right-0.5 w-2.5 h-2.5 rounded-full bg-yellow-400 border border-gray-900 z-10" title="W robocze"></span>
                                                             <span x-show="picSbMasks[tileModal.status?.slots?.[si]?.chars?.[ci]?.edge]"
-                                                                  class="absolute bottom-0.5 right-0.5 text-purple-400 text-xs leading-none pointer-events-none" title="Maska Scene Blend">🎭</span>
+                                                                  class="absolute top-0.5 right-4 text-purple-400 text-xs leading-none pointer-events-none z-10 bg-gray-900 rounded-sm px-0.5 border border-gray-700" title="Maska Scene Blend">🎭</span>
                                                         </div>
                                                         <div class="flex items-center gap-1">
                                                             <button @click="picSwapPasteStage(slot.id, ci*2+1)"
@@ -4226,7 +4226,7 @@
                                                     <span x-show="tileModal.status?.slots?.[si]?.scene && !tileModal.status?.slots?.[si]?.scene_final"
                                                           class="absolute top-0.5 right-0.5 w-2.5 h-2.5 rounded-full bg-yellow-400 border border-gray-900 z-10" title="W robocze"></span>
                                                     <span x-show="picSbMasks[tileModal.status?.slots?.[si]?.scene]"
-                                                          class="absolute bottom-0.5 right-0.5 text-purple-400 text-xs leading-none pointer-events-none" title="Maska">🎭</span>
+                                                          class="absolute top-0.5 right-4 text-purple-400 text-xs leading-none pointer-events-none z-10 bg-gray-900 rounded-sm px-0.5 border border-gray-700" title="Maska">🎭</span>
                                                 </div>
                                                 <div class="flex items-center gap-1">
                                                     <button @click="picSwapPasteStage(slot.id, (tileModal.status?.slots?.[si]?.chars?.length||slot.characters.length)*2)"
@@ -4311,7 +4311,7 @@
                                                                 <span x-show="tileModal.status?.slots?.[si]?.custom_passes?.[cpi]?.path && !tileModal.status?.slots?.[si]?.custom_passes?.[cpi]?.final"
                                                                       class="absolute top-0.5 right-0.5 w-2.5 h-2.5 rounded-full bg-yellow-400 border border-gray-900 z-10" title="W robocze"></span>
                                                                 <span x-show="picSbMasks[tileModal.status?.slots?.[si]?.custom_passes?.[cpi]?.path]"
-                                                                      class="absolute bottom-0.5 right-0.5 text-purple-400 text-xs leading-none pointer-events-none" title="Maska">🎭</span>
+                                                                      class="absolute top-0.5 right-4 text-purple-400 text-xs leading-none pointer-events-none z-10 bg-gray-900 rounded-sm px-0.5 border border-gray-700" title="Maska">🎭</span>
                                                                 <span x-show="!cp.enabled"
                                                                       class="absolute inset-0 rounded bg-gray-900/60 flex items-center justify-center text-xs text-gray-500 pointer-events-none">off</span>
                                                             </div>

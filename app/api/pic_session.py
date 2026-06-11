@@ -397,6 +397,15 @@ def _mask_path(image_path: str) -> Path:
     return p.parent / "masks" / p.name
 
 
+@router.head("/mask")
+async def head_mask(path: str = Query(..., description="Absolute path to the source image")):
+    """Check if a mask exists for a given source image (200 = exists, 404 = not found)."""
+    mp = _mask_path(path)
+    if not mp.exists():
+        raise HTTPException(status_code=404)
+    return Response()
+
+
 @router.get("/mask")
 async def get_mask(path: str = Query(..., description="Absolute path to the source image")):
     """Return the mask PNG for a given source image, or 404 if none exists."""
