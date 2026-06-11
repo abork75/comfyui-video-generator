@@ -1430,6 +1430,15 @@ async def _run_paste_character_async(
                 # -- PIL pass -------------------------------------------------
                 do_pil = from_stage <= pil_stage_idx
                 if do_pil:
+                    c_pil_early = _char_pil_path(working_dir, output_id, ci)
+                    if not force_all and c_pil_early.exists():
+                        # PIL already exists and we're not forcing — reuse it
+                        current_path = c_pil_early
+                        if W == 0:
+                            with Image.open(c_pil_early) as _img:
+                                W, H = _img.size
+                        do_pil = False
+                if do_pil:
                     if not model_path.exists():
                         _log(f"  ⚠ [{idx}] {char_label}: model nie istnieje — pomijam")
                         continue
@@ -1602,12 +1611,19 @@ async def _run_paste_character_async(
                                 eb_tmp.unlink(missing_ok=True)
 
             # -- Scene blend --------------------------------------------------
+            _force_scene = from_stage == scene_stage_idx  # explicit "run scene" stage
+            _scene_exists = _scene_path(working_dir, output_id).exists()
             run_scene = (
                 bool(sb_positive) and sb_wf is not None
-                and ((sb_enabled and slot_sb) or from_stage >= scene_stage_idx)
+                and from_stage <= scene_stage_idx     # don't run if starting after scene (cp-only)
+                and ((sb_enabled and slot_sb) or _force_scene)
                 and (end_stage is None or scene_stage_idx <= end_stage)
+                and (force_all or _force_scene or not _scene_exists)  # skip if exists unless forcing
                 and current_path is not None and current_path.exists()
             )  # slot_sb = per-slot scene toggle
+            # Promote current_path to existing scene when not re-running it
+            if not run_scene and _scene_exists and (sb_enabled and slot_sb):
+                current_path = _scene_path(working_dir, output_id)
             if run_scene:
                 _has_ov = bool(slot.get("sb_override"))
                 _log(f"  \U0001f3a8 [{idx}/{len(slots_to_run)}] {label} — scene blend "
@@ -1654,6 +1670,11 @@ async def _run_paste_character_async(
                     continue
                 cp_pos = (cp.get("positive") or "").strip()
                 if not cp_pos:
+                    continue
+                cp_out_check = _custom_pass_path(working_dir, output_id, ci)
+                if not force_all and cp_out_check.exists():
+                    # Already exists — reuse and advance current_path
+                    current_path = cp_out_check
                     continue
                 if cp_wf is None or current_path is None or not current_path.exists():
                     _log(f"  ⚠ [{idx}] custom pass {ci+1}: brak workflow lub poprzedniego etapu — pomijam")

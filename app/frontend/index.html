@@ -4277,7 +4277,13 @@
                                         <!-- Custom passes results -->
                                         <template x-if="(slot.custom_passes||[]).length > 0">
                                             <div class="border-t border-orange-900/40 pt-2 mt-1 space-y-1">
-                                                <span class="text-xs text-orange-400 font-medium">🔧 Custom Passes</span>
+                                                <div class="flex items-center gap-2">
+                                                    <span class="text-xs text-orange-400 font-medium">🔧 Custom Passes</span>
+                                                    <button @click="picRunFromStage(slot.id, si, slot.characters.length * 2 + 1, null)"
+                                                            :disabled="picGen.running && picGen.tileId===tileModal.tileId"
+                                                            class="text-xs text-gray-500 hover:text-orange-400 px-1.5 py-0.5 rounded hover:bg-gray-700 transition disabled:opacity-30"
+                                                            title="Generuj custom passes (reużywa istniejącej sceny)">▶ Generuj CP</button>
+                                                </div>
                                                 <div class="flex items-start gap-2 flex-wrap pt-1">
                                                     <template x-for="(cp, cpi) in (slot.custom_passes||[])" :key="cpi">
                                                         <div class="flex flex-col items-center gap-1 flex-shrink-0">
