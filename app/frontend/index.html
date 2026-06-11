@@ -8486,11 +8486,25 @@ function app() {
                 fromStage = n * 2;
             }
 
+            // Check custom passes (after PIL/Edge/Scene are all present)
+            if (fromStage === null) {
+                const cpStatuses = statusSlot?.custom_passes || [];
+                for (let cpi = 0; cpi < (configSlot.custom_passes || []).length; cpi++) {
+                    const cp = configSlot.custom_passes[cpi];
+                    if (!cp.enabled) continue;
+                    if (!(cp.positive || '').trim()) continue;
+                    if (!cpStatuses[cpi]?.path) {
+                        fromStage = n * 2 + 1 + cpi;
+                        break;
+                    }
+                }
+            }
+
             if (fromStage === null) return;  // all done
             if (fromStage === 0) {
                 await this.picRunPasteSlot(slotId, slotIdx, false);
             } else {
-                await this.picRunFromStage(slotId, slotIdx, fromStage);
+                await this.picRunFromStage(slotId, slotIdx, fromStage, null, false);
             }
         },
 
