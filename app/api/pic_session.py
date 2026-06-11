@@ -100,6 +100,10 @@ class TilePayload(BaseModel):
     scene_blend_cfg:      Optional[float] = None
     scene_blend_denoise:  Optional[float] = None
     scene_blend_prompts:  list[dict]      = Field(default_factory=list)
+    # fine_tune
+    input_image:    str       = ""
+    custom_passes:  list[dict] = Field(default_factory=list)
+    output_id:      str       = ""
     # common
     output_dir:         str              = ""
     global_suffix:      str              = ""
