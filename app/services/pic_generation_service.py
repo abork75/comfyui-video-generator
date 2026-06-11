@@ -724,6 +724,129 @@ def archive_paste_slot(
     return archived
 
 
+def archive_ft_pass(
+    run_id: str, tile_id: str, pass_index: int
+) -> list[str]:
+    """
+    Archive the generated file for a fine_tune pass.
+    Moves {output_id}_ft{pass_index}.* from robocze/ to robocze/archive/.
+    Returns list of archived paths.
+    """
+    from app.services.pic_session_service import (
+        _load as _load_sess,
+        _migrate_tile,
+    )
+
+    data = _load_sess(run_id)
+    tile = next((t for t in data.get("pic_flow", []) if t["id"] == tile_id), None)
+    if not tile:
+        raise KeyError(f"Tile not found: {tile_id}")
+    _migrate_tile(tile)
+
+    oid = tile.get("output_id", "")
+    if not oid:
+        raise KeyError(f"fine_tune tile has no output_id: {tile_id}")
+
+    output_dir  = Path(tile.get("output_dir", ""))
+    work_dir    = output_dir / "robocze"
+    archive_dir = work_dir / "archive"
+    archive_dir.mkdir(parents=True, exist_ok=True)
+
+    stem = f"{oid}_ft{pass_index}"
+    archived: list[str] = []
+    for ext in (".png", ".jpg", ".jpeg", ".webp"):
+        src = work_dir / f"{stem}{ext}"
+        if src.exists():
+            _archive_path_to(src, archive_dir)
+            archived.append(str(src))
+
+    return archived
+
+
+def swap_ft_pass(
+    run_id: str, tile_id: str, pass_index: int, source_path: str
+) -> str:
+    """
+    Replace the generated file for a fine_tune pass with an external file.
+    Copies source_path to {work_dir}/{output_id}_ft{pass_index}.png.
+    Returns destination path as string.
+    """
+    import shutil
+    from app.services.pic_session_service import (
+        _load as _load_sess,
+        _migrate_tile,
+    )
+
+    data = _load_sess(run_id)
+    tile = next((t for t in data.get("pic_flow", []) if t["id"] == tile_id), None)
+    if not tile:
+        raise KeyError(f"Tile not found: {tile_id}")
+    _migrate_tile(tile)
+
+    oid = tile.get("output_id", "")
+    if not oid:
+        raise KeyError(f"fine_tune tile has no output_id: {tile_id}")
+
+    src = Path(source_path)
+    if not src.exists():
+        raise FileNotFoundError(f"Source file not found: {source_path}")
+
+    output_dir = Path(tile.get("output_dir", ""))
+    work_dir   = output_dir / "robocze"
+    work_dir.mkdir(parents=True, exist_ok=True)
+
+    dest = work_dir / f"{oid}_ft{pass_index}.png"
+    shutil.copy2(src, dest)
+    return str(dest)
+
+
+def finalize_ft_pass(
+    run_id: str, tile_id: str, pass_index: int, overwrite: bool = False
+) -> dict:
+    """
+    Move {work_dir}/{oid}_ft{pass_index}.* to {output_dir}/{oid}_ft{pass_index}.png.
+    Returns {"ok": True, "dest": str, "was_conflict": bool}.
+    """
+    import shutil
+    from app.services.pic_session_service import (
+        _load as _load_sess,
+        _migrate_tile,
+    )
+
+    data = _load_sess(run_id)
+    tile = next((t for t in data.get("pic_flow", []) if t["id"] == tile_id), None)
+    if not tile:
+        raise KeyError(f"Tile not found: {tile_id}")
+    _migrate_tile(tile)
+
+    oid = tile.get("output_id", "")
+    if not oid:
+        raise KeyError(f"fine_tune tile has no output_id: {tile_id}")
+
+    output_dir = Path(tile.get("output_dir", ""))
+    work_dir   = output_dir / "robocze"
+    stem       = f"{oid}_ft{pass_index}"
+
+    src: Path | None = None
+    for ext in (".png", ".jpg", ".jpeg", ".webp"):
+        candidate = work_dir / f"{stem}{ext}"
+        if candidate.exists():
+            src = candidate
+            break
+
+    if src is None:
+        raise FileNotFoundError(f"No generated file for pass {pass_index} (stem: {stem})")
+
+    dest = output_dir / f"{stem}.png"
+    conflict = dest.exists()
+    if conflict and not overwrite:
+        return {"ok": False, "conflict": True, "dest": str(dest)}
+
+    output_dir.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(src, dest)
+    return {"ok": True, "conflict": conflict, "dest": str(dest)}
+
+
 def _finalize_slot_file(
     slot: dict, tile: dict
 ) -> tuple["Path | None", "Path | None", bool]:
@@ -1236,6 +1359,7 @@ async def _run_fine_tune_async(
         _save_sess(run_id, data)
         tile["output_id"] = oid
 
+    carry_mask    = tile.get("carry_mask", False)
     custom_passes = tile.get("custom_passes", [])
     input_image   = tile.get("input_image", "")
     if not input_image:
@@ -1315,6 +1439,10 @@ async def _run_fine_tune_async(
             _log(f"[fine_tune] pass {cpi} mode={mode} src={src_path.name}")
             _update_job(run_id, tile_id, current_prompt=label)
 
+            # Apply user-drawn mask (if any) as alpha channel before sending to ComfyUI.
+            # Mask is stored at {src_dir}/masks/{src_filename}.
+            masked_src = _apply_user_mask(src_path, work_dir)
+
             try:
                 if mode == "i2i_ref":
                     ref_image = cp.get("ref_image", "")
@@ -1329,7 +1457,7 @@ async def _run_fine_tune_async(
                     await _generate_ci_one(
                         loop, comfyui_url, input_dir, comfy_out,
                         wf_template,
-                        scene_path=src_path,
+                        scene_path=masked_src,
                         char_path=ref_path,
                         positive=positive,
                         negative=negative,
@@ -1344,7 +1472,7 @@ async def _run_fine_tune_async(
                     await _generate_one(
                         loop, comfyui_url, input_dir, comfy_out,
                         wf_template,
-                        src_path,
+                        masked_src,
                         positive=positive,
                         negative=negative,
                         steps=steps_val, cfg=cfg_val, denoise=denoise,
@@ -1353,6 +1481,17 @@ async def _run_fine_tune_async(
                 done += 1
                 _update_job(run_id, tile_id, done=done)
                 _log(f"[fine_tune] pass {cpi} done → {dest_out}")
+
+                # carry_mask: copy the source mask (if any) to dest so next pass inherits it
+                if carry_mask and dest_out.exists():
+                    src_mask = src_path.parent / "masks" / src_path.name
+                    if src_mask.exists():
+                        dest_mask_dir = work_dir / "masks"
+                        dest_mask_dir.mkdir(exist_ok=True)
+                        import shutil as _shutil
+                        _shutil.copy2(src_mask, dest_mask_dir / dest_out.name)
+                        _log(f"[fine_tune] carry_mask: copied mask → {dest_mask_dir / dest_out.name}")
+
             except Exception as exc:
                 errors.append(f"Pass {cpi}: {exc}")
                 _log(f"[fine_tune] pass {cpi} ERROR: {exc}")

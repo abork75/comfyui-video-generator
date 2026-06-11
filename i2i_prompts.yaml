@@ -26,6 +26,10 @@ categories:
   name: zmiana ubrania
   icon: 🤖
   order: 100
+- id: body_shape
+  name: body shape
+  icon: 🐦
+  order: 101
 defaults:
   steps: 30
   cfg: 8
@@ -463,12 +467,13 @@ prompts:
   note: ''
   positive: 'Change the woman''s pose to a confident, dynamic runway model walk, captured from the front. She is walking straight toward the camera mid-stride — one leg extended forward with pointed toe, the other leg behind, strong and elegant step. Pronounced hip sway, shoulders slightly back, chest forward, arms swinging naturally by her sides in a stylish model fashion.
 
+    Facing directly toward camera, front view, 0-degree angle, camera-facing walk, full frontal view
 
     She looks directly at the camera with a confident, alluring and powerful expression. Elegant catwalk gait, fashionable and sensual movement.
 
 
     Keep her exact facial features, hair, clothing, lighting, shadows and background completely unchanged. Only modify the body posture, leg position and arm swing to create a dynamic walking pose. Realistic anatomy, natural motion, photorealistic, seamless edit, high detail.'
-  negative: different face, wrong identity, changed facial features, clothing change, background change, blurry face, distorted anatomy, extra limbs, artifacts, low quality, bad anatomy
+  negative: different face, wrong identity, changed facial features, clothing change, background change, blurry face, distorted anatomy, extra limbs, artifacts, low quality, bad anatomy, shadows, cast, shadows, side view, angled view, three-quarter view, turned body
   params:
     steps: 30
     cfg: 8.0
@@ -513,4 +518,134 @@ prompts:
     steps: 30
     cfg: 8.0
     denoise: 1.0
-last_id: 44
+- id: p0000045
+  category: zmiana_ubrania
+  name: Casual
+  note: ''
+  positive: "Change the woman's outfit to a casual everyday look: high-waisted light blue jeans and a cropped white tank top. The outfit is stylish, comfortable and slightly sexy. Perfect fit, natural fabric texture. \n\nKeep her exact body pose, proportions, hair, facial expression, lighting and background unchanged. Only replace the clothing. Photorealistic, ultra detailed, seamless edit."
+  negative: Naked, fully nude, transparent clothing, bad anatomy, deformed body, extra limbs, mutated hands, blurry, low quality, artifacts, plastic skin, cartoonish, different pose, changed body proportions, wrong clothing style, modest clothing, casual clothes, t-shirt, jeans, sportswear, deformed lingerie, bad fabric texture, matte leather, dull colors, extra straps, poor blending, clothing fusion with skin, censorship, underwear malfunction
+  params:
+    steps: 30
+    cfg: 8.0
+    denoise: 1.0
+- id: p0000046
+  category: zmiana_ubrania
+  name: Smart Casual
+  note: ''
+  positive: "Change the woman's outfit to smart casual style: elegant black tailored trousers, silky cream blouse with subtle cleavage, and a fitted black blazer. Sophisticated and feminine urban look. \n\nKeep her exact body pose, proportions, hair, facial expression, lighting and background unchanged. Only replace the clothing. Photorealistic, ultra detailed, seamless edit."
+  negative: Naked, fully nude, transparent clothing, bad anatomy, deformed body, extra limbs, mutated hands, blurry, low quality, artifacts, plastic skin, cartoonish, different pose, changed body proportions, wrong clothing style, modest clothing, casual clothes, t-shirt, jeans, sportswear, deformed lingerie, bad fabric texture, matte leather, dull colors, extra straps, poor blending, clothing fusion with skin, censorship, underwear malfunction
+  params:
+    steps: 30
+    cfg: 8.0
+    denoise: 1.0
+- id: p0000047
+  category: zmiana_ubrania
+  name: Little Black Dress (Cocktail)
+  note: ''
+  positive: "Change the woman's outfit to a sexy little black dress. Short, tight black cocktail dress with deep V-neckline, thin straps and slight shimmer. Very elegant and seductive. \n\nKeep her exact body pose, proportions, hair, facial expression, lighting and background unchanged. Only replace the clothing. Photorealistic, ultra detailed, seamless edit."
+  negative: Naked, fully nude, transparent clothing, bad anatomy, deformed body, extra limbs, mutated hands, blurry, low quality, artifacts, plastic skin, cartoonish, different pose, changed body proportions, wrong clothing style, modest clothing, casual clothes, t-shirt, jeans, sportswear, deformed lingerie, bad fabric texture, matte leather, dull colors, extra straps, poor blending, clothing fusion with skin, censorship, underwear malfunction
+  params:
+    steps: 30
+    cfg: 8.0
+    denoise: 1.0
+- id: p0000048
+  category: zmiana_ubrania
+  name: Elegant Evening Gown
+  note: ''
+  positive: "Change the woman's outfit to an elegant long evening gown. Deep emerald green floor-length dress with a sophisticated slit on the leg, subtle sparkle, elegant neckline and flowing fabric. Luxurious and graceful look. \n\nKeep her exact body pose, proportions, hair, facial expression, lighting and background unchanged. Only replace the clothing. Photorealistic, ultra detailed, seamless edit."
+  negative: Naked, fully nude, transparent clothing, bad anatomy, deformed body, extra limbs, mutated hands, blurry, low quality, artifacts, plastic skin, cartoonish, different pose, changed body proportions, wrong clothing style, modest clothing, casual clothes, t-shirt, jeans, sportswear, deformed lingerie, bad fabric texture, matte leather, dull colors, extra straps, poor blending, clothing fusion with skin, censorship, underwear malfunction
+  params:
+    steps: 30
+    cfg: 8.0
+    denoise: 1.0
+- id: p0000049
+  category: zmiana_ubrania
+  name: Glamorous Red Carpet
+  note: ''
+  positive: "Change the woman's outfit to a glamorous red carpet evening gown. Striking deep red, very elegant and seductive long dress with a deep plunging neckline, high leg slit and sparkling details. Luxurious, dramatic and breathtaking look. \n\nKeep her exact body pose, proportions, hair, facial expression, lighting and background unchanged. Only replace the clothing. Photorealistic, ultra detailed, seamless edit."
+  negative: Naked, fully nude, transparent clothing, bad anatomy, deformed body, extra limbs, mutated hands, blurry, low quality, artifacts, plastic skin, cartoonish, different pose, changed body proportions, wrong clothing style, modest clothing, casual clothes, t-shirt, jeans, sportswear, deformed lingerie, bad fabric texture, matte leather, dull colors, extra straps, poor blending, clothing fusion with skin, censorship, underwear malfunction
+  params:
+    steps: 30
+    cfg: 8.0
+    denoise: 1.0
+- id: p0000050
+  category: zmiana_ubrania
+  name: Dodaj buty Little Black Dress (Cocktail)
+  note: ''
+  positive: "Add elegant black high heels to complete the little black dress look. Put on the woman sexy black stiletto pumps with thin high heels and pointed toes. Classic, sophisticated evening shoes that perfectly match the cocktail dress. \n\nGlossy black leather texture, beautiful heel shape, realistic fit on feet. Only modify the feet and shoes area. Keep exact leg pose, dress, body proportions, lighting and background unchanged. Photorealistic, seamless edit, high detail."
+  negative: ''
+  params:
+    steps: 30
+    cfg: 8
+    denoise: 1
+- id: p0000051
+  category: zmiana_ubrania
+  name: Dodaj buty do stroju casual
+  note: ''
+  positive: "Add stylish casual shoes to match the outfit. Put on the woman white clean sneakers with thick soles or light beige casual loafers. Modern, fashionable casual footwear that fits perfectly with jeans and crop top. \n\nNatural leather/suede texture, correct size and perspective, realistic shadows and lighting. Only modify the feet and shoes area. Keep exact leg pose, clothing, body proportions and everything else unchanged. Photorealistic, seamless integration, high detail."
+  negative: ''
+  params:
+    steps: 30
+    cfg: 8.0
+    denoise: 1.0
+- id: p0000052
+  category: ''
+  name: human look
+  note: ''
+  positive: Change into more human look, Remember it is logo
+  negative: ''
+  params:
+    steps: 30
+    cfg: 8
+    denoise: 1
+- id: p0000053
+  category: ''
+  name: korekta nosa
+  note: ''
+  positive: Correct nose for more realistic human nose vector
+  negative: photorealism
+  params:
+    steps: 30
+    cfg: 8
+    denoise: 1
+- id: p0000054
+  category: body_shape
+  name: transer body shape
+  note: ''
+  positive: "Transfer the exact body shape and proportions from the reference image to the woman in the main image. \n\nKeep the woman's head, face, hair, facial expression, skin tone on the face, and clothing from the main image. Change only her body: transfer the exact body type, breast size, waist, hips, legs length and thickness, overall silhouette and curves from the reference image. \n\nPerfectly match the body proportions, posture and physique while preserving the original head and outfit. Natural blending between head and new body, realistic skin texture matching, correct anatomy, photorealistic, seamless edit, high detail."
+  negative: wrong body proportions, deformed body, extra limbs, bad anatomy, head too big, head too small, distorted figure, changed face, different clothing, different hair, mismatched skin tone on body, visible seam, artifacts, low quality, cartoonish, plastic skin
+  params:
+    steps: 30
+    cfg: 8.0
+    denoise: 1.0
+- id: p0000055
+  category: zmiana_ubrania
+  name: strój plażowy kobiecy
+  note: ''
+  positive: "Change the woman's outfit to a sexy beach bikini. Replace all her current clothing with a revealing two-piece bikini consisting of a triangle bikini top with thin straps and matching skimpy bikini bottoms with side ties. \n\nThe bikini should be flattering, accentuating her curves, with good cleavage and minimal coverage. Choose an attractive color such as bright red, turquoise, black or white. Detailed fabric texture, realistic ties and strings, natural fit on the body.\n\nKeep her exact body pose, proportions, head, face, hair, facial expression, skin tone, lighting, shadows and background completely unchanged. Only replace the clothing with the beach bikini. Photorealistic, ultra detailed, seamless edit, high quality."
+  negative: one-piece swimsuit, full coverage bikini, sport bikini, tankini, shorts, t-shirt, dress, lingerie, clothed, modest clothing, bad fabric texture, deformed bikini, extra straps, censorship, blurry, low quality, artifacts, plastic skin, wrong proportions
+  params:
+    steps: 30
+    cfg: 8.0
+    denoise: 1.0
+- id: p0000056
+  category: body_shape
+  name: 40 letnia kobieta
+  note: ''
+  positive: "Change the woman's body to that of a fit, attractive 40-year-old woman. Make her body more mature and feminine: slightly softer curves, elegant waist, fuller hips and thighs, natural mature breast shape, toned but not overly athletic arms and legs, subtle natural signs of a well-maintained 40-year-old body (light skin texture, healthy glow).\n\nKeep her exact face, head, hair, facial features, expression, and current clothing unchanged. Only transform the body from the neck down. \n\nMaintain realistic proportions, elegant and sensual silhouette, natural skin texture for her age, photorealistic, seamless edit, high detail."
+  negative: young body, teenage body, 20 year old body, athletic six pack, too skinny, too muscular, deformed body, bad proportions, wrinkled skin, sagging skin excessively, changed face, different hair, plastic skin, cartoonish, low quality, artifacts
+  params:
+    steps: 30
+    cfg: 8.0
+    denoise: 1.0
+- id: p0000057
+  category: ''
+  name: obroża
+  note: ''
+  positive: Add silver collar on the neck
+  negative: ''
+  params:
+    steps: 30
+    cfg: 8
+    denoise: 1
+last_id: 57

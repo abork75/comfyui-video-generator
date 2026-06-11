@@ -348,6 +348,7 @@ def _migrate_tile(tile: dict) -> dict:
         tile.setdefault("input_image",   "")
         tile.setdefault("custom_passes", [])
         tile.setdefault("output_id",     "")
+        tile.setdefault("carry_mask",    False)
         return tile
 
     # ── OI migration: source_image + top-level prompts → image_slots ─────────

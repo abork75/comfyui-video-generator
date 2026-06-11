@@ -1,0 +1,426 @@
+project_folder: C:\Users\abork\AppData\Local\CapCut\Videos\muszelka_pliki\EM\Poses and hair
+use_test_flow: false
+flow: []
+defaults:
+  resolution:
+  - 880
+  - 1184
+pic_flow:
+- type: one_image_many_prompts
+  name: AB - stworz model
+  source_dirs:
+  - C:\Users\abork\AppData\Local\CapCut\Videos\muszelka_pliki\EM\Poses and hair\modelAB_źródła
+  image_slots:
+  - image: WhatsApp Image 2026-02-13 at 22.47.21 (12).jpeg
+    prompts:
+    - id: p0000016
+      output_id: N1q3gVl78JD1fCD7Xj
+      enabled: true
+      name: usun_tlo_1
+      positive: Remove the entire background and replace it with a perfectly solid pure white (#FFFFFF) background. Remove all shadows, cast shadows, drop shadows and reflections from the floor. Keep the subject completely intact with clean, sharp edges. The result must be a clean studio cutout on flat white — no gradients, no vignette, no ground plane, no texture.
+      negative: shadow, cast shadow, drop shadow, ground shadow, floor shadow, body shadow, reflection, gradient, gray background, off-white, texture, noise, vignette, background objects, floor, surface, dark corners
+      note: ''
+      params:
+        steps: 30
+        cfg: 8
+        denoise: 1
+  - image: WhatsApp Image 2026-02-13 at 22.47.21 (7).jpeg
+    prompts:
+    - id: p0000016
+      output_id: dlUDhyCN9ZmvZ6K7jh
+      enabled: true
+      name: usun_tlo_1
+      positive: Remove the entire background and replace it with a perfectly solid pure white (#FFFFFF) background. Remove all shadows, cast shadows, drop shadows and reflections from the floor. Keep the subject completely intact with clean, sharp edges. The result must be a clean studio cutout on flat white — no gradients, no vignette, no ground plane, no texture.
+      negative: shadow, cast shadow, drop shadow, ground shadow, floor shadow, body shadow, reflection, gradient, gray background, off-white, texture, noise, vignette, background objects, floor, surface, dark corners
+      note: ''
+      params:
+        steps: 30
+        cfg: 8
+        denoise: 1
+  - image: WhatsApp Image 2026-02-13 at 22.47.21 (9).jpeg
+    prompts:
+    - id: p0000016
+      output_id: 7BsGruMlHJPcKQuJb9
+      enabled: true
+      name: usun_tlo_1
+      positive: Remove the entire background and replace it with a perfectly solid pure white (#FFFFFF) background. Remove all shadows, cast shadows, drop shadows and reflections from the floor. Keep the subject completely intact with clean, sharp edges. The result must be a clean studio cutout on flat white — no gradients, no vignette, no ground plane, no texture.
+      negative: shadow, cast shadow, drop shadow, ground shadow, floor shadow, body shadow, reflection, gradient, gray background, off-white, texture, noise, vignette, background objects, floor, surface, dark corners
+      note: ''
+      params:
+        steps: 30
+        cfg: 8
+        denoise: 1
+  - image: WhatsApp Image 2026-02-13 at 22.47.11.jpeg
+    prompts:
+    - id: p0000016
+      output_id: YLkgyE0h3LkR06HA25
+      enabled: true
+      name: usun_tlo_1
+      positive: Remove the entire background and replace it with a perfectly solid pure white (#FFFFFF) background. Remove all shadows, cast shadows, drop shadows and reflections from the floor. Keep the subject completely intact with clean, sharp edges. The result must be a clean studio cutout on flat white — no gradients, no vignette, no ground plane, no texture.
+      negative: shadow, cast shadow, drop shadow, ground shadow, floor shadow, body shadow, reflection, gradient, gray background, off-white, texture, noise, vignette, background objects, floor, surface, dark corners
+      note: ''
+      params:
+        steps: 30
+        cfg: 8
+        denoise: 1
+  scene_dirs: []
+  characters_dirs: []
+  scene_slots: []
+  paste_slots: []
+  edge_blend_enabled: false
+  edge_blend_px: 15
+  edge_blend_cfg: null
+  edge_blend_denoise: null
+  edge_blend_prompts: []
+  scene_blend_enabled: false
+  scene_blend_cfg: null
+  scene_blend_denoise: null
+  scene_blend_prompts: []
+  output_dir: C:\Users\abork\AppData\Local\CapCut\Videos\muszelka_pliki\EM\Poses and hair\modelAB_modele
+  global_suffix: ''
+  crop_to_subject: true
+  pad_input_to_ratio: true
+  id: ab_-_stworz_model
+- type: character_insert
+  name: body shape
+  source_dirs: []
+  image_slots: []
+  scene_dirs:
+  - C:\Users\abork\AppData\Local\CapCut\Videos\muszelka_pliki\EM\Poses and hair\postacie_na_scenie
+  characters_dirs:
+  - C:\Users\abork\AppData\Local\CapCut\Videos\muszelka_pliki\EM\Poses and hair\modelEM_modele
+  scene_slots:
+  - scene_image: grok_image_1781148326649.jpg
+    character_images:
+    - ComfyUI_00014_.png
+    prompts:
+    - id: p0000054
+      output_id: GAA0NdECIRZI0RLm66
+      enabled: true
+      name: transer body shape
+      positive: "Transfer the exact body shape and proportions from the reference image to the woman in the main image. \n\nKeep the woman's head, face, hair, facial expression, skin tone on the face, and clothing from the main image. Change only her body: transfer the exact body type, breast size, waist, hips, legs length and thickness, overall silhouette and curves from the reference image. \n\nPerfectly match the body proportions, posture and physique while preserving the original head and outfit. Natural blending between head and new body, realistic skin texture matching, correct anatomy, photorealistic, seamless edit, high detail."
+      negative: wrong body proportions, deformed body, extra limbs, bad anatomy, head too big, head too small, distorted figure, changed face, different clothing, different hair, mismatched skin tone on body, visible seam, artifacts, low quality, cartoonish, plastic skin
+      note: ''
+      params:
+        steps: 30
+        cfg: 8
+        denoise: 1
+  - scene_image: grok_image_1781148311000.jpg
+    character_images:
+    - ComfyUI_00014_.png
+    prompts:
+    - id: p0000054
+      output_id: HFR6XUci6ccElDPXns
+      enabled: true
+      name: transer body shape
+      positive: "Transfer the exact body shape and proportions from the reference image to the woman in the main image. \n\nKeep the woman's head, face, hair, facial expression, skin tone on the face, and clothing from the main image. Change only her body: transfer the exact body type, breast size, waist, hips, legs length and thickness, overall silhouette and curves from the reference image. \n\nPerfectly match the body proportions, posture and physique while preserving the original head and outfit. Natural blending between head and new body, realistic skin texture matching, correct anatomy, photorealistic, seamless edit, high detail."
+      negative: wrong body proportions, deformed body, extra limbs, bad anatomy, head too big, head too small, distorted figure, changed face, different clothing, different hair, mismatched skin tone on body, visible seam, artifacts, low quality, cartoonish, plastic skin
+      note: ''
+      params:
+        steps: 30
+        cfg: 8
+        denoise: 1
+  - scene_image: FDrooXfkW6N4cfZu2w.png
+    character_images:
+    - ComfyUI_00015_.png
+    prompts:
+    - id: p0000054
+      output_id: QqTP7x5OsxOtXGXYAu
+      enabled: true
+      name: transer body shape
+      positive: "Transfer the exact body shape and proportions from the reference image to the woman in the main image. \n\nKeep the woman's head, face, hair, facial expression, skin tone on the face, and clothing from the main image. Change only her body: transfer the exact body type, breast size, waist, hips, legs length and thickness, overall silhouette and curves from the reference image. \n\nPerfectly match the body proportions, posture and physique while preserving the original head and outfit. Natural blending between head and new body, realistic skin texture matching, correct anatomy, photorealistic, seamless edit, high detail."
+      negative: wrong body proportions, deformed body, extra limbs, bad anatomy, head too big, head too small, distorted figure, changed face, different clothing, different hair, mismatched skin tone on body, visible seam, artifacts, low quality, cartoonish, plastic skin
+      note: ''
+      params:
+        steps: 30
+        cfg: 8
+        denoise: 1
+  paste_slots: []
+  edge_blend_enabled: false
+  edge_blend_px: 15
+  edge_blend_cfg: null
+  edge_blend_denoise: null
+  edge_blend_prompts: []
+  scene_blend_enabled: false
+  scene_blend_cfg: null
+  scene_blend_denoise: null
+  scene_blend_prompts: []
+  output_dir: C:\Users\abork\AppData\Local\CapCut\Videos\muszelka_pliki\EM\Poses and hair\postacie_na_scenie
+  global_suffix: ''
+  crop_to_subject: false
+  pad_input_to_ratio: false
+  id: body_shape
+- type: one_image_many_prompts
+  name: zmiana ubrania
+  source_dirs:
+  - C:\Users\abork\AppData\Local\CapCut\Videos\muszelka_pliki\EM\Poses and hair\postacie_na_scenie
+  image_slots:
+  - image: grok_image_1781148311000.jpg
+    prompts:
+    - id: p0000055
+      output_id: FDrooXfkW6N4cfZu2w
+      enabled: true
+      name: strój plażowy kobiecy
+      positive: "Change the woman's outfit to a sexy beach bikini. Replace all her current clothing with a revealing two-piece bikini consisting of a triangle bikini top with thin straps and matching skimpy bikini bottoms with side ties. \n\nThe bikini should be flattering, accentuating her curves, with good cleavage and minimal coverage. Choose an attractive color such as bright red, turquoise, black or white. Detailed fabric texture, realistic ties and strings, natural fit on the body.\n\nKeep her exact body pose, proportions, head, face, hair, facial expression, skin tone, lighting, shadows and background completely unchanged. Only replace the clothing with the beach bikini. Photorealistic, ultra detailed, seamless edit, high quality."
+      negative: one-piece swimsuit, full coverage bikini, sport bikini, tankini, shorts, t-shirt, dress, lingerie, clothed, modest clothing, bad fabric texture, deformed bikini, extra straps, censorship, blurry, low quality, artifacts, plastic skin, wrong proportions
+      note: ''
+      params:
+        steps: 30
+        cfg: 8
+        denoise: 1
+  - image: grok_image_1781148291955.jpg
+    prompts:
+    - id: p0000057
+      output_id: 25gPAeS3NK8S3nVq7p
+      enabled: true
+      name: obroża
+      positive: Add silver collar on the neck
+      negative: ''
+      note: ''
+      params:
+        steps: 30
+        cfg: 8
+        denoise: 1
+  scene_dirs: []
+  characters_dirs: []
+  scene_slots: []
+  paste_slots: []
+  edge_blend_enabled: false
+  edge_blend_px: 15
+  edge_blend_cfg: null
+  edge_blend_denoise: null
+  edge_blend_prompts: []
+  scene_blend_enabled: false
+  scene_blend_cfg: null
+  scene_blend_denoise: null
+  scene_blend_prompts: []
+  output_dir: C:\Users\abork\AppData\Local\CapCut\Videos\muszelka_pliki\EM\Poses and hair\postacie_na_scenie
+  global_suffix: ''
+  crop_to_subject: false
+  pad_input_to_ratio: false
+  id: zmiana_ubrania
+- type: one_image_many_prompts
+  name: zmiana ciała
+  source_dirs:
+  - C:\Users\abork\AppData\Local\CapCut\Videos\muszelka_pliki\EM\Poses and hair\postacie_na_scenie
+  image_slots:
+  - image: HFR6XUci6ccElDPXns.png
+    prompts:
+    - id: p0000056
+      output_id: XDh6iIvYlLTjcDuTZH
+      enabled: true
+      name: 40 letnia kobieta
+      positive: "Change the woman's body to that of a fit, attractive 40-year-old woman. Make her body more mature and feminine: slightly softer curves, elegant waist, fuller hips and thighs, natural mature breast shape, toned but not overly athletic arms and legs, subtle natural signs of a well-maintained 40-year-old body (light skin texture, healthy glow).\n\nKeep her exact face, head, hair, facial features, expression, and current clothing unchanged. Only transform the body from the neck down. \n\nMaintain realistic proportions, elegant and sensual silhouette, natural skin texture for her age, photorealistic, seamless edit, high detail."
+      negative: young body, teenage body, 20 year old body, athletic six pack, too skinny, too muscular, deformed body, bad proportions, wrinkled skin, sagging skin excessively, changed face, different hair, plastic skin, cartoonish, low quality, artifacts
+      note: ''
+      params:
+        steps: 30
+        cfg: 8
+        denoise: 1
+  - image: QqTP7x5OsxOtXGXYAu.png
+    prompts:
+    - id: p0000056
+      output_id: Lrg0CuQAr0pj6B5C9U
+      enabled: true
+      name: 40 letnia kobieta
+      positive: "Change the woman's body to that of a fit, attractive 40-year-old woman. Make her body more mature and feminine: slightly softer curves, elegant waist, fuller hips and thighs, natural mature breast shape, toned but not overly athletic arms and legs, subtle natural signs of a well-maintained 40-year-old body (light skin texture, healthy glow).\n\nKeep her exact face, head, hair, facial features, expression, and current clothing unchanged. Only transform the body from the neck down. \n\nMaintain realistic proportions, elegant and sensual silhouette, natural skin texture for her age, photorealistic, seamless edit, high detail."
+      negative: young body, teenage body, 20 year old body, athletic six pack, too skinny, too muscular, deformed body, bad proportions, wrinkled skin, sagging skin excessively, changed face, different hair, plastic skin, cartoonish, low quality, artifacts
+      note: ''
+      params:
+        steps: 30
+        cfg: 8
+        denoise: 1
+  scene_dirs: []
+  characters_dirs: []
+  scene_slots: []
+  paste_slots: []
+  edge_blend_enabled: false
+  edge_blend_px: 15
+  edge_blend_cfg: null
+  edge_blend_denoise: null
+  edge_blend_prompts: []
+  scene_blend_enabled: false
+  scene_blend_cfg: null
+  scene_blend_denoise: null
+  scene_blend_prompts: []
+  output_dir: C:\Users\abork\AppData\Local\CapCut\Videos\muszelka_pliki\EM\Poses and hair\postacie_na_scenie
+  global_suffix: ''
+  crop_to_subject: false
+  pad_input_to_ratio: false
+  id: zmiana_cia_a
+- type: paste_character
+  name: Plaza - wstawianie postaci
+  source_dirs: []
+  image_slots: []
+  scene_dirs: []
+  characters_dirs: []
+  scene_slots: []
+  paste_slots:
+  - id: 33b9956e-b2a0-4eab-bc37-34aa0ec74a9a
+    output_id: 458b4c2a-18ff-4ae1-aaa9-9da133ccd17f
+    scene_image: C:\Users\abork\AppData\Local\CapCut\Videos\muszelka_pliki\EM\Poses and hair\postacie_na_scenie\Lrg0CuQAr0pj6B5C9U.png
+    characters:
+    - model_image: C:\Users\abork\AppData\Local\CapCut\Videos\muszelka_pliki\EM\Poses and hair\modelAB_modele\dlUDhyCN9ZmvZ6K7jh.png
+      top_pct: 1.0
+      bottom_pct: 56.0
+      x_center_pct: 80.0
+      erode_px: 3
+      blur_px: 2
+      edge_blend_enabled: true
+    scene_blend_enabled: true
+    sb_override:
+      positive: Paint a strong natural cast shadow in the masked area. The shadow direction, length and softness must exactly match the shadows cast by the other people visible in the scene — use them as the reference. The shadow should be dark, soft-edged, and firmly anchor the character to the ground surface. Do not change the character's pose, face or clothing. Do not alter anything outside the masked area.
+      negative: no shadow, missing shadow, faint shadow, floating character, wrong shadow direction, shadow pointing wrong way, shadow too short, changed pose, moved character, different face, artifacts, background changes outside mask
+      denoise: 0.65
+    custom_passes:
+    - enabled: true
+      name: ''
+      positive: Add on huge rubber duck  between man and woman
+      negative: ''
+      denoise: 0.6
+      steps: 30
+      cfg: 8
+    - enabled: true
+      name: ''
+      positive: Adjust the color grading of the person to match the warm golden beach lighting in the scene. Add warm sunlight tones to skin — golden hour warmth, sun-kissed skin, warm amber highlights. Match the overall color temperature, contrast and saturation to the other people already in the scene. The person should look like they are lit by the same sun as everyone else.
+      negative: cold light, blue tones, indoor lighting, overexposed, underexposed, changed pose, moved character, different face, artifacts, background changes
+      denoise: 0.8
+      steps: 30
+      cfg: 8
+    - enabled: true
+      name: ''
+      positive: Add rubber smiling shark in mask area
+      negative: ''
+      denoise: 0.6
+      steps: 30
+      cfg: 8
+    - enabled: true
+      name: ''
+      positive: "Add a colorful inflatable swim ring (pool float) in the masked area. Place a large, bright inflatable ring around the woman or next to her — typical colorful pool float with stripes or fun patterns (pink, yellow, blue, or multicolored). \n\nMake it look realistic, glossy plastic texture, properly inflated, with natural highlights and shadows matching the scene lighting. Position it naturally as if she's holding it, sitting on it, or it's floating beside her. \n\nOnly modify the masked area. Keep the woman's pose, body, clothing, skin, hair, lighting and background completely unchanged. Photorealistic, seamless integration, high detail, natural physics."
+      negative: ''
+      denoise: 1
+      steps: 30
+      cfg: 8
+  edge_blend_enabled: true
+  edge_blend_px: 15
+  edge_blend_cfg: null
+  edge_blend_denoise: null
+  edge_blend_prompts:
+  - id: p0000021
+    category: system
+    name: Edge Blend — krawędzie postaci
+    note: Pass 1 — inpainting w strefie maski (15px wokół sylwetki). Używany z ci_1ref (scena+maska + ref postaci).
+    positive: 'You have two inputs: image 1 is the composited scene, image 2 is the original reference character. Using image 2 as reference, repair and improve the character in image 1. Fix all of the following:
+
+
+      1. EDGES: Remove all hard cutout edges, halos and white fringing around the character''s silhouette. Blend her edges naturally into the background — match local lighting, color temperature and depth of field.
+
+
+      2. BODY RECONSTRUCTION: Where parts of the character''s body are blurry, incomplete, distorted or missing (e.g. blurry fingers, cut-off limbs, broken anatomy) — reconstruct them correctly using image 2 as the reference. Restore sharp, realistic anatomy.
+
+
+      3. SKIN AND DETAIL: Match the character''s skin tone, sharpness and detail level to image 2. Remove any softness or blur on the character''s body.
+
+
+      Do not move the character. Do not change her pose or position. Do not modify the background outside the character area. Preserve the character''s face, clothing and identity.'
+    negative: changed pose, moved character, different face, different clothing, background change, artifacts, distorted anatomy, color shift on character body, overexposed, underexposed, blurry fingers, missing limbs, broken anatomy
+    params:
+      steps: 30
+      cfg: 8
+      denoise: 1
+    enabled: true
+  scene_blend_enabled: true
+  scene_blend_cfg: null
+  scene_blend_denoise: null
+  scene_blend_prompts:
+  - id: p0000022
+    category: system
+    name: Scene Blend — cienie i spójność sceny
+    note: Pass 2 — pełny obrazek, niski denoise. Dodaje cienie i wyrównuje całą scenę.
+    positive: 'Enhance the realism of the full composited scene. Add a natural cast shadow beneath the composited character''s feet and body — match the exact direction, length, softness and intensity of the shadows already cast by the other people in the scene. Use the existing shadows as a reference: if other figures cast long soft shadows to one side, the composited character must cast an identical shadow in the same direction with the same quality. Add subtle ambient occlusion where the character meets the floor or nearby surfaces. Match the character''s overall color grading, brightness and contrast to the other figures in the scene. Make the result look like a single unified photograph taken with one camera. Do not move or change the character''s position, pose, face or clothing. Do not alter the background structure or change the other people already in the scene.'
+    negative: changed pose, moved character, different face, different clothing, background restructured, artifacts, removed character, new people added, overexposed, underexposed, blurry, inconsistent shadow direction, shadow pointing wrong way, mismatched shadow length, no shadow under feet, floating character
+    params:
+      steps: 30
+      cfg: 8
+      denoise: 0.7
+    enabled: true
+    _editing: true
+  output_dir: C:\Users\abork\AppData\Local\CapCut\Videos\muszelka_pliki\EM\Poses and hair\postacie_na_scenie
+  global_suffix: ''
+  crop_to_subject: false
+  pad_input_to_ratio: false
+  id: plaza_-_wstawianie_postaci
+  input_image: ''
+  custom_passes: []
+  output_id: ''
+  carry_mask: false
+- type: fine_tune
+  name: test fine tuning
+  source_dirs: []
+  image_slots: []
+  scene_dirs: []
+  characters_dirs: []
+  scene_slots: []
+  paste_slots: []
+  edge_blend_enabled: false
+  edge_blend_px: 15
+  edge_blend_cfg: null
+  edge_blend_denoise: null
+  edge_blend_prompts: []
+  scene_blend_enabled: false
+  scene_blend_cfg: null
+  scene_blend_denoise: null
+  scene_blend_prompts: []
+  output_dir: C:\Users\abork\AppData\Local\CapCut\Videos\muszelka_pliki\EM\Poses and hair\postacie_na_scenie
+  global_suffix: ''
+  crop_to_subject: false
+  pad_input_to_ratio: false
+  input_image: C:\Users\abork\AppData\Local\CapCut\Videos\muszelka_pliki\EM\Poses and hair\postacie_na_scenie\grok_image_1781148311000.jpg
+  custom_passes:
+  - name: strój plażowy kobiecy
+    enabled: true
+    mode: i2i
+    ref_image: ''
+    positive: "Change the woman's outfit to a sexy beach bikini. Replace all her current clothing with a revealing two-piece bikini consisting of a triangle bikini top with thin straps and matching skimpy bikini bottoms with side ties. \n\nThe bikini should be flattering, accentuating her curves, with good cleavage and minimal coverage. Choose an attractive color such as bright red, turquoise, black or white. Detailed fabric texture, realistic ties and strings, natural fit on the body.\n\nKeep her exact body pose, proportions, head, face, hair, facial expression, skin tone, lighting, shadows and background completely unchanged. Only replace the clothing with the beach bikini. Photorealistic, ultra detailed, seamless edit, high quality."
+    negative: one-piece swimsuit, full coverage bikini, sport bikini, tankini, shorts, t-shirt, dress, lingerie, clothed, modest clothing, bad fabric texture, deformed bikini, extra straps, censorship, blurry, low quality, artifacts, plastic skin, wrong proportions
+    params:
+      steps: 30
+      cfg: 8
+      denoise: 1
+      controlnet_strength: 0.8
+  - name: transer body shape
+    enabled: true
+    mode: i2i_ref
+    ref_image: C:\Users\abork\AppData\Local\CapCut\Videos\muszelka_pliki\EM\Poses and hair\modelEM_modele\ComfyUI_00015_.png
+    positive: "Transfer the exact body shape and proportions from the reference image to the woman in the main image. \n\nKeep the woman's head, face, hair, facial expression, skin tone on the face, and clothing from the main image. Change only her body: transfer the exact body type, breast size, waist, hips, legs length and thickness, overall silhouette and curves from the reference image. \n\nPerfectly match the body proportions, posture and physique while preserving the original head and outfit. Natural blending between head and new body, realistic skin texture matching, correct anatomy, photorealistic, seamless edit, high detail."
+    negative: wrong body proportions, deformed body, extra limbs, bad anatomy, head too big, head too small, distorted figure, changed face, different clothing, different hair, mismatched skin tone on body, visible seam, artifacts, low quality, cartoonish, plastic skin
+    params:
+      steps: 30
+      cfg: 8
+      denoise: 1
+      controlnet_strength: 0.8
+  - name: 40 letnia kobieta
+    enabled: true
+    mode: i2i
+    ref_image: ''
+    positive: "Change the woman's body to that of a fit, attractive 40-year-old woman. Make her body more mature and feminine: slightly softer curves, elegant waist, fuller hips and thighs, natural mature breast shape, toned but not overly athletic arms and legs, subtle natural signs of a well-maintained 40-year-old body (light skin texture, healthy glow).\n\nKeep her exact face, head, hair, facial features, expression, and current clothing unchanged. Only transform the body from the neck down. \n\nMaintain realistic proportions, elegant and sensual silhouette, natural skin texture for her age, photorealistic, seamless edit, high detail."
+    negative: young body, teenage body, 20 year old body, athletic six pack, too skinny, too muscular, deformed body, bad proportions, wrinkled skin, sagging skin excessively, changed face, different hair, plastic skin, cartoonish, low quality, artifacts
+    params:
+      steps: 30
+      cfg: 8
+      denoise: 0.6
+      controlnet_strength: 0.8
+  - name: Pełny fotorealizm
+    enabled: true
+    mode: i2i
+    ref_image: ''
+    positive: 'Enhance the overall photorealism of the entire image to the highest possible level while keeping the scene 100% unchanged. Dramatically improve skin texture, skin pores, micro skin details, realistic subsurface scattering, natural skin imperfections, realistic eye details, hair strands, fabric texture and material details. Add natural cinematic lighting, realistic shadows, subtle ambient occlusion and depth. Increase overall sharpness, clarity and photographic quality to look like a real high-end photo taken with a professional camera. Strictly preserve everything else: Do not change the scene, background, lighting direction or atmosphere. Do not change camera position, angle or perspective. Do not change any person''s pose, position or expression. Do not change any clothing, outfit, accessories or fabric. Do not add or remove any objects. Only enhance photorealism, texture quality and natural details. Make it look like an ultra-realistic photograph, 8k, extremely detailed, photorealistic, masterpiece, best quality'
+    negative: cartoon, illustration, painting, drawing, 3d render, cgi, plastic skin, waxy skin, doll face, anime, stylized, deformed, mutated, extra limbs, changed pose, moved camera, different angle, clothing change, outfit change, new objects, added elements, removed elements, different lighting, color grading change, overexposed, underexposed, artifacts, blur, low quality, bad anatomy
+    params:
+      steps: 30
+      cfg: 8
+      denoise: 0.6
+      controlnet_strength: 0.8
+  output_id: sGV3EB0R03uhzGJVWT
+  id: test_fine_tuning
+  carry_mask: true

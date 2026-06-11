@@ -3813,6 +3813,15 @@
                         </template>
                     </div>
 
+                    <!-- Carry mask option -->
+                    <div class="flex items-center gap-3 py-1.5 px-3 bg-gray-800/60 border border-gray-700 rounded-lg">
+                        <label class="flex items-center gap-2 cursor-pointer flex-1">
+                            <input type="checkbox" x-model="tileModal.data.carry_mask" class="rounded accent-purple-400">
+                            <span class="text-xs text-gray-300">🎭 Przenoś maskę wejściową przez cały łańcuch</span>
+                        </label>
+                        <span class="text-xs text-gray-600 hidden sm:block">maska z każdego pasa kopiuje się na wynik następnego</span>
+                    </div>
+
                     <!-- Custom Passes -->
                     <div>
                         <div class="flex items-center gap-2 mb-2">
@@ -4726,6 +4735,7 @@
 
                                     <!-- Input thumbnail -->
                                     <div class="flex flex-col items-center gap-1 flex-shrink-0">
+                                        <div class="h-5"></div><!-- spacer for radio alignment -->
                                         <span class="text-xs text-gray-500">Wejście</span>
                                         <div class="w-24 h-20 relative">
                                             <template x-if="tileModal.data.input_image">
@@ -4737,19 +4747,32 @@
                                             <template x-if="!tileModal.data.input_image">
                                                 <div class="w-24 h-20 rounded bg-gray-800/60 border border-gray-700 flex items-center justify-center text-gray-600 text-xs text-center px-1">brak obrazka</div>
                                             </template>
+                                            <!-- Mask indicator on input image -->
+                                            <span x-show="picSbMasks[tileModal.data.input_image]"
+                                                  class="absolute top-0.5 right-0.5 text-purple-400 text-xs leading-none pointer-events-none z-10 bg-gray-900 rounded-sm px-0.5 border border-gray-700">🎭</span>
                                         </div>
                                     </div>
 
                                     <!-- Arrow + CP passes -->
                                     <template x-for="(cp, cpi) in (tileModal.data.custom_passes||[])" :key="cpi">
                                         <div class="flex items-start gap-2">
-                                            <span class="text-gray-700 text-lg mt-8">→</span>
+                                            <span class="text-gray-700 text-lg mt-10">→</span>
                                             <div class="flex flex-col items-center gap-1 flex-shrink-0">
+                                                <!-- Radio button for finalize selection -->
+                                                <label class="flex items-center gap-1 cursor-pointer"
+                                                       :title="'Zaznacz pass '+(cpi+1)+' do finalizacji'">
+                                                    <input type="radio"
+                                                           :name="'ft-sel-'+tileModal.tileId"
+                                                           :value="cpi"
+                                                           x-model.number="tileModal.ftSelectedPass"
+                                                           :disabled="!tileModal.status?.ft_passes?.[cpi]?.path"
+                                                           class="accent-orange-400 disabled:opacity-30">
+                                                </label>
                                                 <span class="text-xs text-gray-500 truncate max-w-[6rem]" x-text="cp.name || ('Pass '+(cpi+1))"></span>
                                                 <div class="w-24 h-20 relative">
                                                     <template x-if="tileModal.status?.ft_passes?.[cpi]?.path">
                                                         <img :src="'/api/fs/image?path='+encodeURIComponent(tileModal.status.ft_passes[cpi].path)+'&cb='+tileModal.imgCacheBust"
-                                                             class="w-24 h-20 rounded object-cover cursor-zoom-in ring-1 ring-orange-800 hover:ring-orange-400 transition"
+                                                             :class="'w-24 h-20 rounded object-cover cursor-zoom-in transition ring-1 '+(tileModal.ftSelectedPass===cpi ? 'ring-orange-400' : 'ring-orange-800 hover:ring-orange-400')"
                                                              @click="picOpenPreview('/api/fs/image?path='+encodeURIComponent(tileModal.status.ft_passes[cpi].path)+'&cb='+tileModal.imgCacheBust, (cp.name||'Pass '+(cpi+1)), tileModal.status.ft_passes[cpi].path)"
                                                              @error="$el.style.display='none'">
                                                     </template>
@@ -4758,11 +4781,11 @@
                                                             <span class="text-gray-700 text-lg">○</span>
                                                         </div>
                                                     </template>
-                                                    <!-- Status dot -->
+                                                    <!-- Status dot: green=finalized, yellow=w robocze -->
                                                     <span x-show="tileModal.status?.ft_passes?.[cpi]?.final"
-                                                          class="absolute top-0.5 right-0.5 w-2.5 h-2.5 rounded-full bg-green-400 border border-gray-900 z-10"></span>
+                                                          class="absolute top-0.5 right-0.5 w-2.5 h-2.5 rounded-full bg-green-400 border border-gray-900 z-10" title="Sfinalizowany"></span>
                                                     <span x-show="tileModal.status?.ft_passes?.[cpi]?.path && !tileModal.status?.ft_passes?.[cpi]?.final"
-                                                          class="absolute top-0.5 right-0.5 w-2.5 h-2.5 rounded-full bg-yellow-400 border border-gray-900 z-10"></span>
+                                                          class="absolute top-0.5 right-0.5 w-2.5 h-2.5 rounded-full bg-yellow-400 border border-gray-900 z-10" title="W robocze/"></span>
                                                     <!-- Mask indicator -->
                                                     <span x-show="picSbMasks[tileModal.status?.ft_passes?.[cpi]?.path]"
                                                           class="absolute top-0.5 right-4 text-purple-400 text-xs leading-none pointer-events-none z-10 bg-gray-900 rounded-sm px-0.5 border border-gray-700">🎭</span>
@@ -4775,9 +4798,10 @@
                                                 </div>
                                                 <!-- Per-pass action buttons -->
                                                 <div class="flex items-center gap-1">
-                                                    <button @click="picSwapPasteStage(tileModal.tileId, cpi)"
-                                                            class="text-xs text-gray-600 hover:text-blue-400 px-1 py-0.5 rounded hover:bg-gray-700 transition" title="Zamień plik">↺</button>
-                                                    <button @click="picArchivePasteSlot(tileModal.tileId, cpi)"
+                                                    <button @click="picSwapFtPass(cpi)"
+                                                            :disabled="!tileModal.status?.ft_passes?.[cpi]?.path"
+                                                            class="text-xs text-gray-600 hover:text-blue-400 px-1 py-0.5 rounded hover:bg-gray-700 transition disabled:opacity-30" title="Zamień plik">↺</button>
+                                                    <button @click="picArchiveFtPass(cpi)"
                                                             :disabled="!tileModal.status?.ft_passes?.[cpi]?.path"
                                                             class="text-xs text-gray-600 hover:text-red-400 px-1 py-0.5 rounded hover:bg-gray-700 transition disabled:opacity-30" title="Archiwizuj">🗑</button>
                                                     <button @click="picRunFtPass(cpi)"
@@ -4792,6 +4816,21 @@
                                         <p class="text-xs text-gray-600 self-center ml-2">Brak passów — dodaj w Konfiguracji</p>
                                     </template>
                                 </div>
+                            </div>
+
+                            <!-- Finalize bar -->
+                            <div class="flex items-center gap-3 border-t border-gray-700 pt-3">
+                                <span class="text-xs text-gray-500 flex-1">
+                                    <span x-show="tileModal.ftSelectedPass !== null"
+                                          x-text="'Zaznaczony: ' + (tileModal.data.custom_passes?.[tileModal.ftSelectedPass]?.name || ('Pass '+(tileModal.ftSelectedPass+1)))"></span>
+                                    <span x-show="tileModal.ftSelectedPass === null"
+                                          class="text-gray-600">Zaznacz pass radio-buttonem</span>
+                                </span>
+                                <button @click="picFinalizeFtPass()"
+                                        :disabled="tileModal.ftSelectedPass === null"
+                                        class="text-xs bg-green-900 hover:bg-green-800 border border-green-700 text-white rounded px-3 py-1.5 transition disabled:opacity-40 disabled:cursor-not-allowed">
+                                    ✔ Finalizuj
+                                </button>
                             </div>
                         </div>
                     </template><!-- /fine_tune generate -->
@@ -8064,6 +8103,7 @@ function app() {
                     input_image:    '',
                     custom_passes:  [],
                     output_id:      '',
+                    carry_mask:     false,
                     // common
                     output_dir:       folder,
                     global_suffix:    '',
@@ -8088,6 +8128,7 @@ function app() {
                 status:          null,
                 job:         null,
                 imgCacheBust:    Date.now(),
+                ftSelectedPass:  null,
                 _edgeBlendOpen:  false,
                 _sceneBlendOpen: false,
                 // snapshot of source images at open time — used to detect swaps before save
@@ -8392,7 +8433,10 @@ function app() {
                     if (cp.path) paths.push(cp.path);
                 }
             }
-            // fine_tune ft_passes
+            // fine_tune: input image + ft_passes
+            if (this.tileModal.data?.type === 'fine_tune' && this.tileModal.data.input_image) {
+                paths.push(this.tileModal.data.input_image);
+            }
             for (const fp of (this.tileModal.status?.ft_passes || [])) {
                 if (fp.path) paths.push(fp.path);
             }
@@ -8925,6 +8969,93 @@ function app() {
                 this._picPollJob(runId, tileId);
             } catch(e) {
                 this.picGen.running = false;
+                alert('Błąd połączenia: ' + e.message);
+            }
+        },
+
+        async picArchiveFtPass(cpi) {
+            const runId  = this.selectedRun?.filename;
+            const tileId = this.tileModal.tileId;
+            if (!runId || !tileId) return;
+            try {
+                const res = await fetch(`/api/pic/session/${runId}/tiles/${tileId}/ft_pass/${cpi}/archive`, {
+                    method: 'POST',
+                });
+                if (!res.ok) {
+                    const err = await res.json().catch(() => ({}));
+                    alert('Błąd archiwizacji: ' + (err.detail || res.status));
+                    return;
+                }
+                await this.loadTileStatus();
+            } catch(e) {
+                alert('Błąd połączenia: ' + e.message);
+            }
+        },
+
+        async picSwapFtPass(cpi) {
+            const runId  = this.selectedRun?.filename;
+            const tileId = this.tileModal.tileId;
+            if (!runId || !tileId) return;
+            const outputDir = this.tileModal.data.output_dir || '';
+            this.openFsBrowser('image', outputDir, `Wybierz nowy obraz dla pass ${cpi}`, async (fullPath) => {
+                try {
+                    const res = await fetch(`/api/pic/session/${runId}/tiles/${tileId}/ft_pass/${cpi}/swap`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ source_path: fullPath }),
+                    });
+                    if (!res.ok) {
+                        const err = await res.json().catch(() => ({}));
+                        alert('Błąd zamiany pliku: ' + (err.detail || res.status));
+                        return;
+                    }
+                    await this.loadTileStatus();
+                } catch(e) {
+                    alert('Błąd połączenia: ' + e.message);
+                }
+            });
+        },
+
+        async picFinalizeFtPass() {
+            const cpi    = this.tileModal.ftSelectedPass;
+            if (cpi === null || cpi === undefined) return;
+            const runId  = this.selectedRun?.filename;
+            const tileId = this.tileModal.tileId;
+            if (!runId || !tileId) return;
+
+            const isFinal = this.tileModal.status?.ft_passes?.[cpi]?.final;
+            const passName = this.tileModal.data.custom_passes?.[cpi]?.name || `Pass ${cpi+1}`;
+
+            if (isFinal) {
+                if (!confirm(`Pass "${passName}" jest już sfinalizowany. Nadpisać plik w katalogu wyjściowym?`)) return;
+            }
+
+            try {
+                const res = await fetch(`/api/pic/session/${runId}/tiles/${tileId}/ft_pass/${cpi}/finalize`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ overwrite: !!isFinal }),
+                });
+                const data = await res.json().catch(() => ({}));
+                if (!res.ok) {
+                    alert('Błąd finalizacji: ' + (data.detail || res.status));
+                    return;
+                }
+                if (data.conflict && !data.ok) {
+                    if (!confirm(`Plik już istnieje w katalogu wyjściowym. Nadpisać?`)) return;
+                    const res2 = await fetch(`/api/pic/session/${runId}/tiles/${tileId}/ft_pass/${cpi}/finalize`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ overwrite: true }),
+                    });
+                    if (!res2.ok) {
+                        const err2 = await res2.json().catch(() => ({}));
+                        alert('Błąd finalizacji: ' + (err2.detail || res2.status));
+                        return;
+                    }
+                }
+                await this.loadTileStatus();
+            } catch(e) {
                 alert('Błąd połączenia: ' + e.message);
             }
         },

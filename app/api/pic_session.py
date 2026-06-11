@@ -104,6 +104,7 @@ class TilePayload(BaseModel):
     input_image:    str       = ""
     custom_passes:  list[dict] = Field(default_factory=list)
     output_id:      str       = ""
+    carry_mask:     bool      = False
     # common
     output_dir:         str              = ""
     global_suffix:      str              = ""
@@ -365,6 +366,66 @@ async def archive_tile_result(
         )
         return {"ok": True, "archived_to": str(dest)}
     except (FileNotFoundError, KeyError, IndexError) as exc:
+        raise HTTPException(status_code=404, detail=str(exc))
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc))
+
+
+# ── Fine-tune pass archive / swap ────────────────────────────────────────────
+
+@router.post("/session/{run_id}/tiles/{tile_id}/ft_pass/{pass_index}/archive")
+async def archive_ft_pass(
+    run_id:     str,
+    tile_id:    str,
+    pass_index: int,
+):
+    """Archive the generated file for a fine_tune pass (move to robocze/archive/)."""
+    try:
+        archived = pic_generation_service.archive_ft_pass(run_id, tile_id, pass_index)
+        return {"ok": True, "archived": archived}
+    except (KeyError, FileNotFoundError) as exc:
+        raise HTTPException(status_code=404, detail=str(exc))
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc))
+
+
+class FtPassSwapRequest(BaseModel):
+    source_path: str
+
+
+@router.post("/session/{run_id}/tiles/{tile_id}/ft_pass/{pass_index}/swap")
+async def swap_ft_pass(
+    run_id:     str,
+    tile_id:    str,
+    pass_index: int,
+    body:       FtPassSwapRequest,
+):
+    """Replace the generated file for a fine_tune pass with an external file."""
+    try:
+        dest = pic_generation_service.swap_ft_pass(run_id, tile_id, pass_index, body.source_path)
+        return {"ok": True, "dest": dest}
+    except (KeyError, FileNotFoundError) as exc:
+        raise HTTPException(status_code=404, detail=str(exc))
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc))
+
+
+class FtPassFinalizeRequest(BaseModel):
+    overwrite: bool = False
+
+
+@router.post("/session/{run_id}/tiles/{tile_id}/ft_pass/{pass_index}/finalize")
+async def finalize_ft_pass(
+    run_id:     str,
+    tile_id:    str,
+    pass_index: int,
+    body:       FtPassFinalizeRequest = FtPassFinalizeRequest(),
+):
+    """Move a fine_tune pass file from robocze/ to output_dir root."""
+    try:
+        result = pic_generation_service.finalize_ft_pass(run_id, tile_id, pass_index, body.overwrite)
+        return result
+    except (KeyError, FileNotFoundError) as exc:
         raise HTTPException(status_code=404, detail=str(exc))
     except Exception as exc:
         raise HTTPException(status_code=500, detail=str(exc))
