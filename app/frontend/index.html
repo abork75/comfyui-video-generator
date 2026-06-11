@@ -1068,7 +1068,7 @@
                                                     : tile.type === 'paste_character'
                                                     ? ((tile.paste_slots?.length || 0) + ' slotów')
                                                     : tile.type === 'fine_tune'
-                                                    ? ((tile.ft_slots?.length || 0) + ' slotów × ' + (tile.custom_passes?.length || 0) + ' passów')
+                                                    ? ((tile.ft_slots?.length || 0) + ' slotów × ' + (tile.ft_slots?.[0]?.custom_passes?.length || 0) + ' passów')
                                                     : ((tile.image_slots?.length || 0) + ' ' + ((tile.image_slots?.length || 0) === 1 ? 'obraz' : 'obrazów'))"></span>
                                                 <span class="text-gray-700">·</span>
                                                 <span x-text="tile.type === 'paste_character'
@@ -3830,10 +3830,123 @@
                                               x-text="slot.input_image.split(/[\\/]/).pop()"></span>
                                     </div>
                                 </template>
+
+                                <!-- Custom Passes for this slot -->
+                                <div class="border-t border-gray-700/60 pt-2 mt-1 space-y-2">
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-xs font-semibold text-orange-400">🎨 Custom Passes</span>
+                                        <span class="text-xs text-gray-600" x-text="'(' + (slot.custom_passes||[]).length + ')'"></span>
+                                    </div>
+
+                                    <div class="space-y-2">
+                                        <template x-for="(cp, cpi) in (slot.custom_passes || [])" :key="cpi">
+                                            <div class="border border-gray-700 rounded-lg p-3 space-y-2 bg-gray-900/60">
+                                                <!-- Pass header -->
+                                                <div class="flex items-center gap-2">
+                                                    <input type="text" x-model="cp.name"
+                                                           :placeholder="'Pass ' + (cpi+1)"
+                                                           class="flex-1 bg-gray-700 border border-gray-600 rounded px-2 py-1 text-xs text-gray-200 focus:outline-none focus:border-orange-500">
+                                                    <label class="flex items-center gap-1.5 text-xs text-gray-400 flex-shrink-0">
+                                                        <input type="checkbox" x-model="cp.enabled" class="rounded">
+                                                        aktywny
+                                                    </label>
+                                                    <button @click="picOpenPromptImport('ft-' + si + '-' + cpi)"
+                                                            class="text-xs text-blue-400 hover:text-blue-200 px-1.5 py-0.5 rounded hover:bg-gray-700 transition flex-shrink-0"
+                                                            title="Wczytaj prompt z biblioteki">📚</button>
+                                                    <button @click="picMoveItem(slot.custom_passes, cpi, -1)" :disabled="cpi===0"
+                                                            class="text-xs text-gray-600 hover:text-white px-1 rounded hover:bg-gray-700 disabled:opacity-20">↑</button>
+                                                    <button @click="picMoveItem(slot.custom_passes, cpi, 1)" :disabled="cpi===(slot.custom_passes||[]).length-1"
+                                                            class="text-xs text-gray-600 hover:text-white px-1 rounded hover:bg-gray-700 disabled:opacity-20">↓</button>
+                                                    <button @click="slot.custom_passes.splice(cpi,1)"
+                                                            class="text-xs text-red-500 hover:text-red-300 px-1 rounded hover:bg-gray-700">✕</button>
+                                                </div>
+
+                                                <!-- Mode toggle -->
+                                                <div class="flex items-center gap-2">
+                                                    <span class="text-xs text-gray-500">Tryb:</span>
+                                                    <button @click="cp.mode = 'i2i'"
+                                                            :class="cp.mode !== 'i2i_ref' ? 'bg-blue-700 text-white' : 'bg-gray-700 text-gray-400 hover:bg-gray-600'"
+                                                            class="text-xs px-2 py-0.5 rounded transition">I2I</button>
+                                                    <button @click="cp.mode = 'i2i_ref'"
+                                                            :class="cp.mode === 'i2i_ref' ? 'bg-purple-700 text-white' : 'bg-gray-700 text-gray-400 hover:bg-gray-600'"
+                                                            class="text-xs px-2 py-0.5 rounded transition">I2I + Referencja</button>
+                                                </div>
+
+                                                <!-- Ref image (only for i2i_ref) -->
+                                                <template x-if="cp.mode === 'i2i_ref'">
+                                                    <div class="space-y-1">
+                                                        <label class="block text-xs text-gray-400">Obrazek referencyjny</label>
+                                                        <div class="flex gap-2">
+                                                            <input type="text" x-model="cp.ref_image"
+                                                                   placeholder="C:\...\reference.png"
+                                                                   class="flex-1 bg-gray-800 border border-gray-600 rounded px-2 py-1 text-xs text-gray-300 font-mono focus:outline-none focus:border-purple-500">
+                                                            <button @click="openFsBrowser('image', (cp.ref_image ? cp.ref_image.replace(/[^\\/]+$/, '').replace(/[\\/]+$/, '') : null) || tileModal.data.output_dir, 'Wybierz obraz referencyjny', (p) => { cp.ref_image = p; })"
+                                                                    class="flex-shrink-0 text-xs text-gray-400 border border-gray-600 hover:border-gray-400 rounded px-2 py-1 transition">📂</button>
+                                                        </div>
+                                                        <template x-if="cp.ref_image">
+                                                            <div class="inline-flex flex-col gap-0.5">
+                                                                <img :src="'/api/fs/image?path=' + encodeURIComponent(cp.ref_image)"
+                                                                     class="h-12 rounded object-cover cursor-zoom-in"
+                                                                     @click="picOpenPreview('/api/fs/image?path=' + encodeURIComponent(cp.ref_image), cp.ref_image.split(/[\\/]/).pop(), cp.ref_image)"
+                                                                     @error="$el.style.display='none'">
+                                                                <span class="text-xs text-gray-500 font-mono truncate max-w-xs" x-text="cp.ref_image.split(/[\\/]/).pop()"></span>
+                                                            </div>
+                                                        </template>
+                                                    </div>
+                                                </template>
+
+                                                <!-- Prompts -->
+                                                <div>
+                                                    <label class="block text-xs text-gray-400 mb-1">Positive</label>
+                                                    <textarea x-model="cp.positive" rows="2"
+                                                              class="w-full bg-gray-800 border border-gray-600 rounded px-2 py-1.5 text-xs text-gray-300 resize-y focus:outline-none focus:border-orange-500"></textarea>
+                                                </div>
+                                                <div>
+                                                    <label class="block text-xs text-gray-400 mb-1">Negative</label>
+                                                    <textarea x-model="cp.negative" rows="1"
+                                                              class="w-full bg-gray-800 border border-gray-600 rounded px-2 py-1.5 text-xs text-gray-300 resize-y focus:outline-none focus:border-red-700"></textarea>
+                                                </div>
+
+                                                <!-- Params -->
+                                                <div class="flex flex-wrap gap-3 text-xs items-center">
+                                                    <label class="text-gray-500">Steps
+                                                        <input type="number" x-model.number="cp.params.steps" min="1" max="100"
+                                                               class="ml-1 w-14 bg-gray-700 border border-gray-600 rounded px-1 py-0.5 text-white text-center focus:outline-none">
+                                                    </label>
+                                                    <label class="text-gray-500">CFG
+                                                        <input type="number" x-model.number="cp.params.cfg" min="1" max="30" step="0.5"
+                                                               class="ml-1 w-14 bg-gray-700 border border-gray-600 rounded px-1 py-0.5 text-white text-center focus:outline-none">
+                                                    </label>
+                                                    <label class="text-gray-500">Denoise
+                                                        <input type="number" x-model.number="cp.params.denoise" min="0" max="1" step="0.05"
+                                                               class="ml-1 w-16 bg-gray-700 border border-gray-600 rounded px-1 py-0.5 text-white text-center focus:outline-none">
+                                                    </label>
+                                                    <template x-if="cp.mode === 'i2i_ref'">
+                                                        <label class="text-gray-500">CN Strength
+                                                            <input type="number" x-model.number="cp.params.controlnet_strength" min="0" max="2" step="0.05"
+                                                                   class="ml-1 w-16 bg-gray-700 border border-purple-800 rounded px-1 py-0.5 text-white text-center focus:outline-none">
+                                                        </label>
+                                                    </template>
+                                                </div>
+                                            </div>
+                                        </template>
+                                    </div>
+
+                                    <div class="mt-2 flex gap-1.5">
+                                        <button @click="picOpenPromptImport('ft-new-' + si)"
+                                                class="text-xs text-blue-400 border border-blue-800 hover:border-blue-500 rounded px-2 py-1 transition">
+                                            + Import
+                                        </button>
+                                        <button @click="(slot.custom_passes = slot.custom_passes || []).push({ name: '', enabled: true, mode: 'i2i', ref_image: '', positive: '', negative: '', params: { steps: 30, cfg: 8, denoise: 0.65, controlnet_strength: 0.8 } })"
+                                                class="text-xs text-gray-300 bg-gray-700 hover:bg-gray-600 border border-gray-600 rounded px-2 py-1 transition">
+                                            + Nowy
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
                         </template>
 
-                        <button @click="tileModal.data.ft_slots.push({ id: crypto.randomUUID(), input_image: '', output_id: '' })"
+                        <button @click="tileModal.data.ft_slots.push({ id: crypto.randomUUID(), input_image: '', output_id: '', custom_passes: JSON.parse(JSON.stringify(tileModal.data.ft_slots[0]?.custom_passes || [])) })"
                                 class="w-full border border-dashed border-gray-600 hover:border-orange-500 rounded-xl py-2 text-xs text-gray-500 hover:text-orange-400 transition">
                             + Dodaj slot
                         </button>
@@ -3846,119 +3959,6 @@
                             <span class="text-xs text-gray-300">🎭 Przenoś maskę wejściową przez cały łańcuch</span>
                         </label>
                         <span class="text-xs text-gray-600 hidden sm:block">maska z każdego pasa kopiuje się na wynik następnego</span>
-                    </div>
-
-                    <!-- Custom Passes -->
-                    <div>
-                        <div class="flex items-center gap-2 mb-2">
-                            <span class="text-xs font-semibold text-orange-400">🎨 Custom Passes</span>
-                            <span class="text-xs text-gray-600" x-text="'(' + (tileModal.data.custom_passes||[]).length + ')'"></span>
-                        </div>
-
-                        <div class="space-y-2">
-                            <template x-for="(cp, cpi) in (tileModal.data.custom_passes || [])" :key="cpi">
-                                <div class="border border-gray-700 rounded-lg p-3 space-y-2 bg-gray-800/60">
-                                    <!-- Pass header -->
-                                    <div class="flex items-center gap-2">
-                                        <input type="text" x-model="cp.name"
-                                               :placeholder="'Pass ' + (cpi+1)"
-                                               class="flex-1 bg-gray-700 border border-gray-600 rounded px-2 py-1 text-xs text-gray-200 focus:outline-none focus:border-orange-500">
-                                        <label class="flex items-center gap-1.5 text-xs text-gray-400 flex-shrink-0">
-                                            <input type="checkbox" x-model="cp.enabled" class="rounded">
-                                            aktywny
-                                        </label>
-                                        <button @click="picOpenPromptImport('ft-' + cpi)"
-                                                class="text-xs text-blue-400 hover:text-blue-200 px-1.5 py-0.5 rounded hover:bg-gray-700 transition flex-shrink-0"
-                                                title="Wczytaj prompt z biblioteki">📚</button>
-                                        <button @click="picMoveItem(tileModal.data.custom_passes, cpi, -1)" :disabled="cpi===0"
-                                                class="text-xs text-gray-600 hover:text-white px-1 rounded hover:bg-gray-700 disabled:opacity-20">↑</button>
-                                        <button @click="picMoveItem(tileModal.data.custom_passes, cpi, 1)" :disabled="cpi===(tileModal.data.custom_passes||[]).length-1"
-                                                class="text-xs text-gray-600 hover:text-white px-1 rounded hover:bg-gray-700 disabled:opacity-20">↓</button>
-                                        <button @click="tileModal.data.custom_passes.splice(cpi,1)"
-                                                class="text-xs text-red-500 hover:text-red-300 px-1 rounded hover:bg-gray-700">✕</button>
-                                    </div>
-
-                                    <!-- Mode toggle -->
-                                    <div class="flex items-center gap-2">
-                                        <span class="text-xs text-gray-500">Tryb:</span>
-                                        <button @click="cp.mode = 'i2i'"
-                                                :class="cp.mode !== 'i2i_ref' ? 'bg-blue-700 text-white' : 'bg-gray-700 text-gray-400 hover:bg-gray-600'"
-                                                class="text-xs px-2 py-0.5 rounded transition">I2I</button>
-                                        <button @click="cp.mode = 'i2i_ref'"
-                                                :class="cp.mode === 'i2i_ref' ? 'bg-purple-700 text-white' : 'bg-gray-700 text-gray-400 hover:bg-gray-600'"
-                                                class="text-xs px-2 py-0.5 rounded transition">I2I + Referencja</button>
-                                    </div>
-
-                                    <!-- Ref image (only for i2i_ref) -->
-                                    <template x-if="cp.mode === 'i2i_ref'">
-                                        <div class="space-y-1">
-                                            <label class="block text-xs text-gray-400">Obrazek referencyjny</label>
-                                            <div class="flex gap-2">
-                                                <input type="text" x-model="cp.ref_image"
-                                                       placeholder="C:\...\reference.png"
-                                                       class="flex-1 bg-gray-800 border border-gray-600 rounded px-2 py-1 text-xs text-gray-300 font-mono focus:outline-none focus:border-purple-500">
-                                                <button @click="openFsBrowser('image', (cp.ref_image ? cp.ref_image.replace(/[^\\/]+$/, '').replace(/[\\/]+$/, '') : null) || tileModal.data.output_dir, 'Wybierz obraz referencyjny', (p) => { cp.ref_image = p; })"
-                                                        class="flex-shrink-0 text-xs text-gray-400 border border-gray-600 hover:border-gray-400 rounded px-2 py-1 transition">📂</button>
-                                            </div>
-                                            <template x-if="cp.ref_image">
-                                                <div class="inline-flex flex-col gap-0.5">
-                                                    <img :src="'/api/fs/image?path=' + encodeURIComponent(cp.ref_image)"
-                                                         class="h-12 rounded object-cover cursor-zoom-in"
-                                                         @click="picOpenPreview('/api/fs/image?path=' + encodeURIComponent(cp.ref_image), cp.ref_image.split(/[\\/]/).pop(), cp.ref_image)"
-                                                         @error="$el.style.display='none'">
-                                                    <span class="text-xs text-gray-500 font-mono truncate max-w-xs" x-text="cp.ref_image.split(/[\\/]/).pop()"></span>
-                                                </div>
-                                            </template>
-                                        </div>
-                                    </template>
-
-                                    <!-- Prompts -->
-                                    <div>
-                                        <label class="block text-xs text-gray-400 mb-1">Positive</label>
-                                        <textarea x-model="cp.positive" rows="2"
-                                                  class="w-full bg-gray-800 border border-gray-600 rounded px-2 py-1.5 text-xs text-gray-300 resize-y focus:outline-none focus:border-orange-500"></textarea>
-                                    </div>
-                                    <div>
-                                        <label class="block text-xs text-gray-400 mb-1">Negative</label>
-                                        <textarea x-model="cp.negative" rows="1"
-                                                  class="w-full bg-gray-800 border border-gray-600 rounded px-2 py-1.5 text-xs text-gray-300 resize-y focus:outline-none focus:border-red-700"></textarea>
-                                    </div>
-
-                                    <!-- Params -->
-                                    <div class="flex flex-wrap gap-3 text-xs items-center">
-                                        <label class="text-gray-500">Steps
-                                            <input type="number" x-model.number="cp.params.steps" min="1" max="100"
-                                                   class="ml-1 w-14 bg-gray-700 border border-gray-600 rounded px-1 py-0.5 text-white text-center focus:outline-none">
-                                        </label>
-                                        <label class="text-gray-500">CFG
-                                            <input type="number" x-model.number="cp.params.cfg" min="1" max="30" step="0.5"
-                                                   class="ml-1 w-14 bg-gray-700 border border-gray-600 rounded px-1 py-0.5 text-white text-center focus:outline-none">
-                                        </label>
-                                        <label class="text-gray-500">Denoise
-                                            <input type="number" x-model.number="cp.params.denoise" min="0" max="1" step="0.05"
-                                                   class="ml-1 w-16 bg-gray-700 border border-gray-600 rounded px-1 py-0.5 text-white text-center focus:outline-none">
-                                        </label>
-                                        <template x-if="cp.mode === 'i2i_ref'">
-                                            <label class="text-gray-500">CN Strength
-                                                <input type="number" x-model.number="cp.params.controlnet_strength" min="0" max="2" step="0.05"
-                                                       class="ml-1 w-16 bg-gray-700 border border-purple-800 rounded px-1 py-0.5 text-white text-center focus:outline-none">
-                                            </label>
-                                        </template>
-                                    </div>
-                                </div>
-                            </template>
-                        </div>
-
-                        <div class="mt-2 flex gap-1.5">
-                            <button @click="picOpenPromptImport('ft-new')"
-                                    class="text-xs text-blue-400 border border-blue-800 hover:border-blue-500 rounded px-2 py-1 transition">
-                                + Import
-                            </button>
-                            <button @click="tileModal.data.custom_passes.push({ name: '', enabled: true, mode: 'i2i', ref_image: '', positive: '', negative: '', params: { steps: 30, cfg: 8, denoise: 0.65, controlnet_strength: 0.8 } })"
-                                    class="text-xs text-gray-300 bg-gray-700 hover:bg-gray-600 border border-gray-600 rounded px-2 py-1 transition">
-                                + Nowy
-                            </button>
-                        </div>
                     </div>
 
                 </div>
@@ -4739,7 +4739,7 @@
                             <!-- Header actions -->
                             <div class="flex items-center gap-2 flex-wrap">
                                 <span class="text-xs text-gray-500 flex-1"
-                                      x-text="(tileModal.data.ft_slots||[]).length + ' slot(ów) • ' + (tileModal.data.custom_passes||[]).length + ' passów'"></span>
+                                      x-text="(tileModal.data.ft_slots||[]).length + ' slot(ów) • ' + (tileModal.data.ft_slots?.[0]?.custom_passes||[]).length + ' passów'"></span>
                                 <button @click="picRunTile(false)"
                                         :disabled="picGen.running && picGen.tileId===tileModal.tileId"
                                         class="text-xs bg-green-900 hover:bg-green-800 border border-green-700 text-white rounded px-3 py-1.5 transition disabled:opacity-40">
@@ -4790,7 +4790,7 @@
                                         </div>
 
                                         <!-- Passes -->
-                                        <template x-for="(cp, cpi) in (tileModal.data.custom_passes||[])" :key="cpi">
+                                        <template x-for="(cp, cpi) in (slot.custom_passes||[])" :key="cpi">
                                             <div class="flex items-start gap-1">
                                                 <span class="text-gray-700 text-base mt-9">→</span>
                                                 <div class="flex flex-col items-center gap-0.5 flex-shrink-0">
@@ -4844,7 +4844,7 @@
                                             </div>
                                         </template>
 
-                                        <template x-if="!(tileModal.data.custom_passes||[]).length">
+                                        <template x-if="!(slot.custom_passes||[]).length">
                                             <p class="text-xs text-gray-600 self-center ml-2">Brak passów</p>
                                         </template>
                                     </div>
@@ -4853,7 +4853,7 @@
                                     <div class="flex items-center gap-2 pt-1 border-t border-gray-800">
                                         <span class="text-xs text-gray-600 flex-1">
                                             <span x-show="(tileModal.ftSelectedPasses||{})[si] !== undefined"
-                                                  x-text="'Zaznaczony: ' + (tileModal.data.custom_passes?.[(tileModal.ftSelectedPasses||{})[si]]?.name || ('Pass '+((tileModal.ftSelectedPasses||{})[si]+1)))"></span>
+                                                  x-text="'Zaznaczony: ' + (slot.custom_passes?.[(tileModal.ftSelectedPasses||{})[si]]?.name || ('Pass '+((tileModal.ftSelectedPasses||{})[si]+1)))"></span>
                                             <span x-show="(tileModal.ftSelectedPasses||{})[si] === undefined"
                                                   class="text-gray-700">zaznacz radio</span>
                                         </span>
@@ -8137,8 +8137,7 @@ function app() {
                     scene_blend_enabled:  false,
                     scene_blend_prompts:  [],
                     // fine_tune fields
-                    ft_slots:       [{ id: crypto.randomUUID(), input_image: '', output_id: '' }],
-                    custom_passes:  [],
+                    ft_slots:       [{ id: crypto.randomUUID(), input_image: '', output_id: '', custom_passes: [] }],
                     carry_mask:     false,
                     // common
                     output_dir:       folder,
@@ -9091,7 +9090,7 @@ function app() {
             if (!runId || !tileId) return;
 
             const isFinal  = this.tileModal.status?.ft_slots?.[si]?.ft_passes?.[cpi]?.final;
-            const passName = this.tileModal.data.custom_passes?.[cpi]?.name || `Pass ${cpi+1}`;
+            const passName = (this.tileModal.data.ft_slots?.[si]?.custom_passes)?.[cpi]?.name || `Pass ${cpi+1}`;
 
             if (isFinal) {
                 if (!confirm(`Pass "${passName}" [Slot ${si+1}] jest już sfinalizowany. Nadpisać?`)) return;
@@ -9401,30 +9400,37 @@ function app() {
             const slotIndex = this.promptImport.slotIndex;
             let added = 0;
 
-            if (slotIndex === 'ft-new') {
-                // fine_tune: each selected prompt → new custom pass
-                const passes = this.tileModal.data.custom_passes = this.tileModal.data.custom_passes || [];
-                for (const p of toAdd) {
-                    passes.push({
-                        name:     p.name || '',
-                        enabled:  true,
-                        mode:     'i2i',
-                        ref_image: '',
-                        positive: p.positive || '',
-                        negative: p.negative || '',
-                        params: {
-                            steps:               p.params?.steps   ?? 30,
-                            cfg:                 p.params?.cfg     ?? 8,
-                            denoise:             p.params?.denoise ?? 0.65,
-                            controlnet_strength: 0.8,
-                        },
-                    });
-                    added++;
+            if (typeof slotIndex === 'string' && slotIndex.startsWith('ft-new-')) {
+                // fine_tune: each selected prompt → new custom pass in slot si
+                const si   = parseInt(slotIndex.slice(7), 10);
+                const slot = (this.tileModal.data.ft_slots || [])[si];
+                if (slot) {
+                    slot.custom_passes = slot.custom_passes || [];
+                    for (const p of toAdd) {
+                        slot.custom_passes.push({
+                            name:     p.name || '',
+                            enabled:  true,
+                            mode:     'i2i',
+                            ref_image: '',
+                            positive: p.positive || '',
+                            negative: p.negative || '',
+                            params: {
+                                steps:               p.params?.steps   ?? 30,
+                                cfg:                 p.params?.cfg     ?? 8,
+                                denoise:             p.params?.denoise ?? 0.65,
+                                controlnet_strength: 0.8,
+                            },
+                        });
+                        added++;
+                    }
                 }
-            } else if (typeof slotIndex === 'string' && slotIndex.startsWith('ft-')) {
+            } else if (typeof slotIndex === 'string' && /^ft-\d+-\d+$/.test(slotIndex)) {
                 // fine_tune: load prompt into specific pass (replace positive/negative/params)
-                const cpi = parseInt(slotIndex.slice(3), 10);
-                const cp  = (this.tileModal.data.custom_passes || [])[cpi];
+                const parts = slotIndex.split('-');
+                const si  = parseInt(parts[1], 10);
+                const cpi = parseInt(parts[2], 10);
+                const slot = (this.tileModal.data.ft_slots || [])[si];
+                const cp   = slot?.custom_passes?.[cpi];
                 if (cp && toAdd.length > 0) {
                     const p = toAdd[0];
                     cp.positive = p.positive || '';
