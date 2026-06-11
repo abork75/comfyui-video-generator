@@ -1536,6 +1536,12 @@ async def _run_paste_character_async(
                     and (end_stage is None or edge_stage_idx <= end_stage)
                     and ((eb_enabled and char_eb) or force_edge_this)
                 )
+                if do_edge and not force_all:
+                    c_edge_early = _char_edge_path(working_dir, output_id, ci)
+                    if c_edge_early.exists():
+                        current_path = c_edge_early
+                        do_edge = False
+                        _log(f"  ⏭ [{idx}] {char_label}: edge istnieje — reużywam {c_edge_early.name}")
                 if not do_edge:
                     # Edge blend not running — promote current_path to existing edge
                     # file if one is available (e.g. generated in a previous run when
@@ -1543,7 +1549,6 @@ async def _run_paste_character_async(
                     c_edge_existing = _char_edge_path(working_dir, output_id, ci)
                     if c_edge_existing.exists():
                         current_path = c_edge_existing
-                        _log(f"  ⏭ [{idx}] {char_label}: edge blend pominięty — używam istniejącego {c_edge_existing.name}")
                 elif do_edge:
                     if not model_path.exists():
                         _log(f"  ⚠ [{idx}] {char_label}: model nie istnieje — pomijam edge blend")
