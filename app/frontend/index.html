@@ -8187,8 +8187,8 @@ function app() {
                             const ss = (data.tile.paste_slots || [])[si];
                             if (ss?.output_id) slot.output_id = ss.output_id;
                         }
-                        // fine_tune: output_id at tile level
-                        if (data.tile.output_id) m.data.output_id = data.tile.output_id;
+                        // fine_tune: always sync output_id — backend may have assigned it during generation
+                        if (data.tile.output_id !== undefined) m.data.output_id = data.tile.output_id;
                     }
                 } else {
                     m.open = false;

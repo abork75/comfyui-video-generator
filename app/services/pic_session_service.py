@@ -426,6 +426,9 @@ def update_tile(run_id: str, tile_id: str, updates: dict) -> dict:
             _migrate_tile(tile)
             for k, v in updates.items():
                 if k != "id":
+                    # Never wipe an output_id that was already assigned by the backend
+                    if k == "output_id" and not v and tile.get("output_id"):
+                        continue
                     tile[k] = v
             # Clean up legacy source_dir when new source_dirs key is present
             if "source_dirs" in updates:
