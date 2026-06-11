@@ -343,12 +343,26 @@ def _migrate_tile(tile: dict) -> dict:
 
         return tile
 
-    # fine_tune: no migration needed
+    # fine_tune: migrate single input_image/output_id → ft_slots list
     if tile_type == "fine_tune":
-        tile.setdefault("input_image",   "")
+        import uuid as _uuid
         tile.setdefault("custom_passes", [])
-        tile.setdefault("output_id",     "")
         tile.setdefault("carry_mask",    False)
+
+        if "ft_slots" not in tile:
+            # Legacy: move top-level input_image / output_id into first slot
+            old_input = tile.pop("input_image", "")
+            old_oid   = tile.pop("output_id",   "")
+            tile["ft_slots"] = [{
+                "id":          str(_uuid.uuid4()),
+                "input_image": old_input,
+                "output_id":   old_oid,
+            }]
+        else:
+            for s in tile["ft_slots"]:
+                s.setdefault("id",          str(_uuid.uuid4()))
+                s.setdefault("input_image", "")
+                s.setdefault("output_id",   "")
         return tile
 
     # ── OI migration: source_image + top-level prompts → image_slots ─────────
@@ -430,6 +444,13 @@ def update_tile(run_id: str, tile_id: str, updates: dict) -> dict:
                     # Never wipe an output_id that was already assigned by the backend
                     if k == "output_id" and not v and tile.get("output_id"):
                         continue
+                    # Protect per-slot output_ids in ft_slots
+                    if k == "ft_slots" and isinstance(v, list):
+                        old_by_id = {s.get("id"): s for s in tile.get("ft_slots", [])}
+                        for s in v:
+                            old = old_by_id.get(s.get("id"))
+                            if old and old.get("output_id") and not s.get("output_id"):
+                                s["output_id"] = old["output_id"]
                     tile[k] = v
             # Clean up legacy source_dir when new source_dirs key is present
             if "source_dirs" in updates:
@@ -738,14 +759,16 @@ def get_tile_status(run_id: str, tile_id: str) -> dict:
             "slots":   slot_statuses,
         }
 
-    # ── fine_tune: single input image + chain of custom passes ───────────────
+    # ── fine_tune: per-slot pass status ─────────────────────────────────────
     if tile.get("type") == "fine_tune":
-        oid = tile.get("output_id", "")
-        work_dir = output_dir / "robocze"
+        work_dir      = output_dir / "robocze"
+        custom_passes = tile.get("custom_passes", [])
+        ft_slot_data  = tile.get("ft_slots", [])
 
-        def _ft_find(stem: str) -> str | None:
+        def _ft_find_oid(oid: str, ci: int) -> str | None:
             if not oid or not output_dir.is_dir():
                 return None
+            stem = f"{oid}_ft{ci}"
             for search_dir in (work_dir, output_dir):
                 for ext in _IMAGE_EXTS:
                     p = search_dir / f"{stem}{ext}"
@@ -753,39 +776,53 @@ def get_tile_status(run_id: str, tile_id: str) -> dict:
                         return str(p)
             return None
 
-        def _ft_final(stem: str) -> bool:
+        def _ft_final_oid(oid: str, ci: int) -> bool:
+            stem = f"{oid}_ft{ci}"
             for ext in _IMAGE_EXTS:
                 if (output_dir / f"{stem}{ext}").exists():
                     return True
             return False
 
-        ft_passes: list[dict] = []
-        custom_passes = tile.get("custom_passes", [])
-        for ci, cp in enumerate(custom_passes):
-            path  = _ft_find(f"{oid}_ft{ci}")
-            final = _ft_final(f"{oid}_ft{ci}")
-            ft_passes.append({
-                "path":    path,
-                "final":   final,
-                "enabled": cp.get("enabled", True),
-                "name":    cp.get("name") or f"Pass {ci+1}",
-            })
+        slot_statuses: list[dict] = []
+        total_done  = 0
+        total_count = 0
 
-        active = [p for p in ft_passes if p["enabled"]]
-        done = sum(1 for p in active if p["path"])
-        total = len(active)
+        for slot in ft_slot_data:
+            oid      = slot.get("output_id", "")
+            passes: list[dict] = []
+            for ci, cp in enumerate(custom_passes):
+                path  = _ft_find_oid(oid, ci)
+                final = _ft_final_oid(oid, ci)
+                passes.append({
+                    "path":    path,
+                    "final":   final,
+                    "enabled": cp.get("enabled", True),
+                    "name":    cp.get("name") or f"Pass {ci+1}",
+                })
+            active = [p for p in passes if p["enabled"]]
+            done   = sum(1 for p in active if p["path"])
+            slot_statuses.append({
+                "slot_id":     slot.get("id", ""),
+                "input_image": slot.get("input_image", ""),
+                "ft_passes":   passes,
+                "done":        done,
+                "total":       len(active),
+            })
+            total_done  += done
+            total_count += len(active)
+
         overall = (
-            "empty"   if total == 0 else
-            "none"    if done  == 0 else
-            "all"     if done  >= total else
+            "empty"   if total_count == 0 else
+            "none"    if total_done  == 0 else
+            "all"     if total_done  >= total_count else
             "partial"
         )
         return {
-            "tile_id":   tile_id,
-            "overall":   overall,
-            "done":      done,
-            "total":     total,
-            "ft_passes": ft_passes,
+            "tile_id":  tile_id,
+            "overall":  overall,
+            "done":     total_done,
+            "total":    total_count,
+            "ft_slots": slot_statuses,
         }
 
     # ── character_insert: scene_slots ─────────────────────────────────────────

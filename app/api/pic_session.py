@@ -101,10 +101,9 @@ class TilePayload(BaseModel):
     scene_blend_denoise:  Optional[float] = None
     scene_blend_prompts:  list[dict]      = Field(default_factory=list)
     # fine_tune
-    input_image:    str       = ""
+    ft_slots:       list[dict] = Field(default_factory=list)
     custom_passes:  list[dict] = Field(default_factory=list)
-    output_id:      str       = ""
-    carry_mask:     bool      = False
+    carry_mask:     bool       = False
     # common
     output_dir:         str              = ""
     global_suffix:      str              = ""
@@ -378,10 +377,11 @@ async def archive_ft_pass(
     run_id:     str,
     tile_id:    str,
     pass_index: int,
+    slot_index: int = Query(default=0),
 ):
     """Archive the generated file for a fine_tune pass (move to robocze/archive/)."""
     try:
-        archived = pic_generation_service.archive_ft_pass(run_id, tile_id, pass_index)
+        archived = pic_generation_service.archive_ft_pass(run_id, tile_id, pass_index, slot_index)
         return {"ok": True, "archived": archived}
     except (KeyError, FileNotFoundError) as exc:
         raise HTTPException(status_code=404, detail=str(exc))
@@ -399,10 +399,11 @@ async def swap_ft_pass(
     tile_id:    str,
     pass_index: int,
     body:       FtPassSwapRequest,
+    slot_index: int = Query(default=0),
 ):
     """Replace the generated file for a fine_tune pass with an external file."""
     try:
-        dest = pic_generation_service.swap_ft_pass(run_id, tile_id, pass_index, body.source_path)
+        dest = pic_generation_service.swap_ft_pass(run_id, tile_id, pass_index, body.source_path, slot_index)
         return {"ok": True, "dest": dest}
     except (KeyError, FileNotFoundError) as exc:
         raise HTTPException(status_code=404, detail=str(exc))
@@ -420,10 +421,11 @@ async def finalize_ft_pass(
     tile_id:    str,
     pass_index: int,
     body:       FtPassFinalizeRequest = FtPassFinalizeRequest(),
+    slot_index: int = Query(default=0),
 ):
     """Move a fine_tune pass file from robocze/ to output_dir root."""
     try:
-        result = pic_generation_service.finalize_ft_pass(run_id, tile_id, pass_index, body.overwrite)
+        result = pic_generation_service.finalize_ft_pass(run_id, tile_id, pass_index, body.overwrite, slot_index)
         return result
     except (KeyError, FileNotFoundError) as exc:
         raise HTTPException(status_code=404, detail=str(exc))

@@ -724,18 +724,22 @@ def archive_paste_slot(
     return archived
 
 
+def _ft_slot_oid(tile: dict, slot_index: int) -> str:
+    """Return output_id for a given ft_slot index. Raises KeyError if missing."""
+    ft_slots = tile.get("ft_slots", [])
+    if slot_index >= len(ft_slots):
+        raise IndexError(f"ft_slot index {slot_index} out of range (len={len(ft_slots)})")
+    oid = ft_slots[slot_index].get("output_id", "")
+    if not oid:
+        raise KeyError(f"ft_slot {slot_index} has no output_id yet")
+    return oid
+
+
 def archive_ft_pass(
-    run_id: str, tile_id: str, pass_index: int
+    run_id: str, tile_id: str, pass_index: int, slot_index: int = 0
 ) -> list[str]:
-    """
-    Archive the generated file for a fine_tune pass.
-    Moves {output_id}_ft{pass_index}.* from robocze/ to robocze/archive/.
-    Returns list of archived paths.
-    """
-    from app.services.pic_session_service import (
-        _load as _load_sess,
-        _migrate_tile,
-    )
+    """Archive the generated file for a fine_tune pass (robocze/ → robocze/archive/)."""
+    from app.services.pic_session_service import _load as _load_sess, _migrate_tile
 
     data = _load_sess(run_id)
     tile = next((t for t in data.get("pic_flow", []) if t["id"] == tile_id), None)
@@ -743,39 +747,28 @@ def archive_ft_pass(
         raise KeyError(f"Tile not found: {tile_id}")
     _migrate_tile(tile)
 
-    oid = tile.get("output_id", "")
-    if not oid:
-        raise KeyError(f"fine_tune tile has no output_id: {tile_id}")
-
+    oid         = _ft_slot_oid(tile, slot_index)
     output_dir  = Path(tile.get("output_dir", ""))
     work_dir    = output_dir / "robocze"
     archive_dir = work_dir / "archive"
     archive_dir.mkdir(parents=True, exist_ok=True)
 
-    stem = f"{oid}_ft{pass_index}"
+    stem     = f"{oid}_ft{pass_index}"
     archived: list[str] = []
     for ext in (".png", ".jpg", ".jpeg", ".webp"):
         src = work_dir / f"{stem}{ext}"
         if src.exists():
             _archive_path_to(src, archive_dir)
             archived.append(str(src))
-
     return archived
 
 
 def swap_ft_pass(
-    run_id: str, tile_id: str, pass_index: int, source_path: str
+    run_id: str, tile_id: str, pass_index: int, source_path: str, slot_index: int = 0
 ) -> str:
-    """
-    Replace the generated file for a fine_tune pass with an external file.
-    Copies source_path to {work_dir}/{output_id}_ft{pass_index}.png.
-    Returns destination path as string.
-    """
+    """Replace a fine_tune pass file with an external file."""
     import shutil
-    from app.services.pic_session_service import (
-        _load as _load_sess,
-        _migrate_tile,
-    )
+    from app.services.pic_session_service import _load as _load_sess, _migrate_tile
 
     data = _load_sess(run_id)
     tile = next((t for t in data.get("pic_flow", []) if t["id"] == tile_id), None)
@@ -783,10 +776,7 @@ def swap_ft_pass(
         raise KeyError(f"Tile not found: {tile_id}")
     _migrate_tile(tile)
 
-    oid = tile.get("output_id", "")
-    if not oid:
-        raise KeyError(f"fine_tune tile has no output_id: {tile_id}")
-
+    oid = _ft_slot_oid(tile, slot_index)
     src = Path(source_path)
     if not src.exists():
         raise FileNotFoundError(f"Source file not found: {source_path}")
@@ -801,17 +791,11 @@ def swap_ft_pass(
 
 
 def finalize_ft_pass(
-    run_id: str, tile_id: str, pass_index: int, overwrite: bool = False
+    run_id: str, tile_id: str, pass_index: int, overwrite: bool = False, slot_index: int = 0
 ) -> dict:
-    """
-    Move {work_dir}/{oid}_ft{pass_index}.* to {output_dir}/{oid}_ft{pass_index}.png.
-    Returns {"ok": True, "dest": str, "was_conflict": bool}.
-    """
+    """Copy {work_dir}/{oid}_ft{N}.* → {output_dir}/{oid}_ft{N}.png."""
     import shutil
-    from app.services.pic_session_service import (
-        _load as _load_sess,
-        _migrate_tile,
-    )
+    from app.services.pic_session_service import _load as _load_sess, _migrate_tile
 
     data = _load_sess(run_id)
     tile = next((t for t in data.get("pic_flow", []) if t["id"] == tile_id), None)
@@ -819,10 +803,7 @@ def finalize_ft_pass(
         raise KeyError(f"Tile not found: {tile_id}")
     _migrate_tile(tile)
 
-    oid = tile.get("output_id", "")
-    if not oid:
-        raise KeyError(f"fine_tune tile has no output_id: {tile_id}")
-
+    oid        = _ft_slot_oid(tile, slot_index)
     output_dir = Path(tile.get("output_dir", ""))
     work_dir   = output_dir / "robocze"
     stem       = f"{oid}_ft{pass_index}"
@@ -833,11 +814,10 @@ def finalize_ft_pass(
         if candidate.exists():
             src = candidate
             break
-
     if src is None:
-        raise FileNotFoundError(f"No generated file for pass {pass_index} (stem: {stem})")
+        raise FileNotFoundError(f"No generated file for pass {pass_index} slot {slot_index} (stem: {stem})")
 
-    dest = output_dir / f"{stem}.png"
+    dest     = output_dir / f"{stem}.png"
     conflict = dest.exists()
     if conflict and not overwrite:
         return {"ok": False, "conflict": True, "dest": str(dest)}
@@ -1313,20 +1293,21 @@ async def _run_fine_tune_async(
     tile:       dict,
     output_dir: "Path",
     force_all:  bool,
+    slot_index: int | None = None,
     pass_index: int | None = None,
 ) -> None:
     """
-    Chain of I2I passes on a single input image.
-    Each pass is either:
-      mode='i2i'     → standard KSampler I2I (_generate_one)
-      mode='i2i_ref' → CI workflow with scene+ref (_generate_ci_one)
+    Chain of I2I passes for one or all ft_slots.
+    slot_index=None → run all slots sequentially.
+    pass_index=None → run all enabled passes within each slot.
 
     File naming:  {output_id}_ft{N}.png  in output_dir/robocze/
-    output_id is stored at tile level (tile['output_id']).
+    output_id is per ft_slot (tile['ft_slots'][i]['output_id']).
     """
-    from app.services.pic_session_service import _load as _load_sess, _save as _save_sess
+    import shutil as _shutil
+    from app.services.pic_session_service import _load as _load_sess, _save as _save_sess, _make_output_id
 
-    _log(f"[fine_tune] start tile={tile_id} pass_index={pass_index}")
+    _log(f"[fine_tune] start tile={tile_id} slot={slot_index} pass={pass_index}")
 
     win         = app_config_service.get_backend("windows")
     comfyui_url = win.get("api_url")    or settings.comfyui_upscale_url
@@ -1346,40 +1327,28 @@ async def _run_fine_tune_async(
     work_dir = output_dir / "robocze"
     work_dir.mkdir(parents=True, exist_ok=True)
 
-    # Ensure tile has an output_id
-    oid = tile.get("output_id", "")
-    if not oid:
-        from app.services.pic_session_service import _make_output_id
-        oid = _make_output_id()
-        data = _load_sess(run_id)
-        for t in data.get("pic_flow", []):
-            if t["id"] == tile_id:
-                t["output_id"] = oid
-                break
-        _save_sess(run_id, data)
-        tile["output_id"] = oid
-
     carry_mask    = tile.get("carry_mask", False)
     custom_passes = tile.get("custom_passes", [])
-    input_image   = tile.get("input_image", "")
-    if not input_image:
-        raise ValueError("fine_tune tile has no input_image configured")
+    ft_slots      = tile.get("ft_slots", [])
 
-    input_path = Path(input_image)
-    if not input_path.exists():
-        raise ValueError(f"Input image not found: {input_image}")
+    if not ft_slots:
+        raise ValueError("fine_tune tile has no ft_slots configured")
 
-    # Build list of passes to run
-    if pass_index is not None:
-        indices = [pass_index]
+    # Determine which slots and passes to run
+    if slot_index is not None:
+        slots_to_run = [(slot_index, ft_slots[slot_index])]
     else:
-        indices = [i for i, cp in enumerate(custom_passes) if cp.get("enabled", True)]
+        slots_to_run = list(enumerate(ft_slots))
 
-    loop = asyncio.get_event_loop()
+    if pass_index is not None:
+        pass_indices = [pass_index]
+    else:
+        pass_indices = [i for i, cp in enumerate(custom_passes) if cp.get("enabled", True)]
 
-    total = len(indices)
+    total = len(slots_to_run) * len(pass_indices)
     done  = 0
     errors: list[str] = []
+    loop  = asyncio.get_event_loop()
 
     _set_job(run_id, tile_id, {
         "status":         "running",
@@ -1391,112 +1360,128 @@ async def _run_fine_tune_async(
     })
 
     try:
-        for cpi in indices:
-            cp = custom_passes[cpi]
-            if not cp.get("enabled", True):
-                total -= 1
-                _update_job(run_id, tile_id, total=total)
-                continue
-
-            dest_stem = f"{oid}_ft{cpi}"
-            dest_exists: Path | None = None
-            for ext in (".png", ".jpg", ".jpeg", ".webp"):
-                candidate = work_dir / f"{dest_stem}{ext}"
-                if candidate.exists():
-                    dest_exists = candidate
-                    break
-
-            if dest_exists and not force_all:
-                _log(f"[fine_tune] skip pass {cpi} (exists)")
-                done += 1
-                _update_job(run_id, tile_id, done=done)
-                continue
-
-            # Input for this pass: previous pass output or original input
-            if cpi == 0:
-                src_path = input_path
-            else:
-                prev_stem = f"{oid}_ft{cpi - 1}"
-                src_path = None
-                for ext in (".png", ".jpg", ".jpeg", ".webp"):
-                    candidate = work_dir / f"{prev_stem}{ext}"
-                    if candidate.exists():
-                        src_path = candidate
+        for si, slot in slots_to_run:
+            # Ensure slot has an output_id
+            oid = slot.get("output_id", "")
+            if not oid:
+                oid = _make_output_id()
+                sess_data = _load_sess(run_id)
+                for t in sess_data.get("pic_flow", []):
+                    if t["id"] == tile_id:
+                        t["ft_slots"][si]["output_id"] = oid
                         break
-                if src_path is None:
-                    src_path = input_path
+                _save_sess(run_id, sess_data)
+                slot["output_id"] = oid
 
-            dest_out  = work_dir / f"{dest_stem}.png"
-            positive  = cp.get("positive", "")
-            negative  = cp.get("negative", "")
-            params    = cp.get("params", {})
-            steps_val = int(params.get("steps", 30))
-            cfg_val   = float(params.get("cfg", 8))
-            denoise   = float(params.get("denoise", 0.65))
-            mode      = cp.get("mode", "i2i")
-            label     = cp.get("name") or f"Pass {cpi+1}"
-
-            _log(f"[fine_tune] pass {cpi} mode={mode} src={src_path.name}")
-            _update_job(run_id, tile_id, current_prompt=label)
-
-            # Apply user-drawn mask (if any) as alpha channel before sending to ComfyUI.
-            # Mask is stored at {src_dir}/masks/{src_filename}.
-            masked_src = _apply_user_mask(src_path, work_dir)
-
-            try:
-                if mode == "i2i_ref":
-                    ref_image = cp.get("ref_image", "")
-                    if not ref_image:
-                        raise ValueError(f"Pass {cpi} is i2i_ref but has no ref_image")
-                    ref_path = Path(ref_image)
-                    if not ref_path.exists():
-                        raise ValueError(f"Ref image not found: {ref_image}")
-                    wf_template = _load_workflow("ci_1ref")
-                    if wf_template is None:
-                        raise ValueError("Brak workflow ci_1ref w konfiguracji backendu")
-                    await _generate_ci_one(
-                        loop, comfyui_url, input_dir, comfy_out,
-                        wf_template,
-                        scene_path=masked_src,
-                        char_path=ref_path,
-                        positive=positive,
-                        negative=negative,
-                        steps=steps_val, cfg=cfg_val, denoise=denoise,
-                        dest_path=dest_out,
-                        label=label,
-                    )
-                else:
-                    wf_template = _load_workflow("i2i")
-                    if wf_template is None:
-                        raise ValueError("Brak workflow i2i w konfiguracji backendu")
-                    await _generate_one(
-                        loop, comfyui_url, input_dir, comfy_out,
-                        wf_template,
-                        masked_src,
-                        positive=positive,
-                        negative=negative,
-                        steps=steps_val, cfg=cfg_val, denoise=denoise,
-                        dest_path=dest_out,
-                    )
-                done += 1
-                _update_job(run_id, tile_id, done=done)
-                _log(f"[fine_tune] pass {cpi} done → {dest_out}")
-
-                # carry_mask: copy the source mask (if any) to dest so next pass inherits it
-                if carry_mask and dest_out.exists():
-                    src_mask = src_path.parent / "masks" / src_path.name
-                    if src_mask.exists():
-                        dest_mask_dir = work_dir / "masks"
-                        dest_mask_dir.mkdir(exist_ok=True)
-                        import shutil as _shutil
-                        _shutil.copy2(src_mask, dest_mask_dir / dest_out.name)
-                        _log(f"[fine_tune] carry_mask: copied mask → {dest_mask_dir / dest_out.name}")
-
-            except Exception as exc:
-                errors.append(f"Pass {cpi}: {exc}")
-                _log(f"[fine_tune] pass {cpi} ERROR: {exc}")
+            input_image = slot.get("input_image", "")
+            if not input_image:
+                errors.append(f"Slot {si}: brak obrazka wejściowego")
                 _update_job(run_id, tile_id, errors=list(errors))
-                break  # abort chain on error
+                continue
+
+            input_path = Path(input_image)
+            if not input_path.exists():
+                errors.append(f"Slot {si}: plik nie istnieje: {input_image}")
+                _update_job(run_id, tile_id, errors=list(errors))
+                continue
+
+            for cpi in pass_indices:
+                cp = custom_passes[cpi]
+                if not cp.get("enabled", True):
+                    total -= 1
+                    _update_job(run_id, tile_id, total=total)
+                    continue
+
+                dest_stem = f"{oid}_ft{cpi}"
+                dest_exists: Path | None = None
+                for ext in (".png", ".jpg", ".jpeg", ".webp"):
+                    candidate = work_dir / f"{dest_stem}{ext}"
+                    if candidate.exists():
+                        dest_exists = candidate
+                        break
+
+                if dest_exists and not force_all:
+                    _log(f"[fine_tune] slot={si} skip pass {cpi} (exists)")
+                    done += 1
+                    _update_job(run_id, tile_id, done=done)
+                    continue
+
+                # Source: previous pass output or original input
+                if cpi == 0:
+                    src_path = input_path
+                else:
+                    prev_stem = f"{oid}_ft{cpi - 1}"
+                    src_path = None
+                    for ext in (".png", ".jpg", ".jpeg", ".webp"):
+                        candidate = work_dir / f"{prev_stem}{ext}"
+                        if candidate.exists():
+                            src_path = candidate
+                            break
+                    if src_path is None:
+                        src_path = input_path
+
+                dest_out  = work_dir / f"{dest_stem}.png"
+                positive  = cp.get("positive", "")
+                negative  = cp.get("negative", "")
+                params    = cp.get("params", {})
+                steps_val = int(params.get("steps", 30))
+                cfg_val   = float(params.get("cfg", 8))
+                denoise   = float(params.get("denoise", 0.65))
+                mode      = cp.get("mode", "i2i")
+                label     = (cp.get("name") or f"Pass {cpi+1}") + (f" [Slot {si+1}]" if len(slots_to_run) > 1 else "")
+
+                _log(f"[fine_tune] slot={si} pass={cpi} mode={mode} src={src_path.name}")
+                _update_job(run_id, tile_id, current_prompt=label)
+
+                masked_src = _apply_user_mask(src_path, work_dir)
+
+                try:
+                    if mode == "i2i_ref":
+                        ref_image = cp.get("ref_image", "")
+                        if not ref_image:
+                            raise ValueError(f"Pass {cpi} is i2i_ref but has no ref_image")
+                        ref_path = Path(ref_image)
+                        if not ref_path.exists():
+                            raise ValueError(f"Ref image not found: {ref_image}")
+                        wf_template = _load_workflow("ci_1ref")
+                        if wf_template is None:
+                            raise ValueError("Brak workflow ci_1ref w konfiguracji backendu")
+                        await _generate_ci_one(
+                            loop, comfyui_url, input_dir, comfy_out,
+                            wf_template,
+                            scene_path=masked_src, char_path=ref_path,
+                            positive=positive, negative=negative,
+                            steps=steps_val, cfg=cfg_val, denoise=denoise,
+                            dest_path=dest_out, label=label,
+                        )
+                    else:
+                        wf_template = _load_workflow("i2i")
+                        if wf_template is None:
+                            raise ValueError("Brak workflow i2i w konfiguracji backendu")
+                        await _generate_one(
+                            loop, comfyui_url, input_dir, comfy_out,
+                            wf_template, masked_src,
+                            positive=positive, negative=negative,
+                            steps=steps_val, cfg=cfg_val, denoise=denoise,
+                            dest_path=dest_out,
+                        )
+
+                    done += 1
+                    _update_job(run_id, tile_id, done=done)
+                    _log(f"[fine_tune] slot={si} pass={cpi} done → {dest_out}")
+
+                    if carry_mask and dest_out.exists():
+                        src_mask = src_path.parent / "masks" / src_path.name
+                        if src_mask.exists():
+                            dest_mask_dir = work_dir / "masks"
+                            dest_mask_dir.mkdir(exist_ok=True)
+                            _shutil.copy2(src_mask, dest_mask_dir / dest_out.name)
+
+                except Exception as exc:
+                    errors.append(f"Slot {si} Pass {cpi}: {exc}")
+                    _log(f"[fine_tune] slot={si} pass={cpi} ERROR: {exc}")
+                    _update_job(run_id, tile_id, errors=list(errors))
+                    break  # abort pass chain for this slot
 
         final = "done" if not errors else "error"
         _update_job(run_id, tile_id, status=final, done=done, current_prompt=None, errors=errors)
@@ -2392,7 +2377,7 @@ async def _run_tile_async(
         # ── Route to fine_tune pipeline ───────────────────────────────────────
         if tile_type == "fine_tune":
             await _run_fine_tune_async(
-                run_id, tile_id, tile, output_dir, force_all, pass_index,
+                run_id, tile_id, tile, output_dir, force_all, slot_index, pass_index,
             )
             return
 
