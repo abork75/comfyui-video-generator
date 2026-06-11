@@ -4213,7 +4213,7 @@
                                                     <template x-if="tileModal.status?.slots?.[si]?.scene">
                                                         <img :src="'/api/fs/image?path='+encodeURIComponent(tileModal.status.slots[si].scene)+'&cb='+tileModal.imgCacheBust"
                                                              class="w-24 h-20 rounded object-cover cursor-zoom-in ring-1 ring-gray-600 hover:ring-blue-400 transition"
-                                                             @click="picOpenPreview('/api/fs/image?path='+encodeURIComponent(tileModal.status.slots[si].scene)+'&cb='+tileModal.imgCacheBust,'Slot '+(si+1)+' Scene')"
+                                                             @click="picOpenPreview('/api/fs/image?path='+encodeURIComponent(tileModal.status.slots[si].scene)+'&cb='+tileModal.imgCacheBust,'Slot '+(si+1)+' Scene',tileModal.status.slots[si].scene)"
                                                              @error="$el.style.display='none'">
                                                     </template>
                                                     <template x-if="!tileModal.status?.slots?.[si]?.scene">

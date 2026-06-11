@@ -1339,23 +1339,29 @@ async def _run_paste_character_async(
 
     # Pre-filter: remove slots that would be instantly skipped (all stages already done).
     # This keeps the progress counter accurate (total = actual work, not all slots).
+    def _last_expected_path(slot_obj: dict, oid: str) -> Path:
+        """Return the path of the most advanced stage that should exist for this slot."""
+        chars = slot_obj.get("characters", [])
+        n = len(chars)
+        slot_sb_     = bool(slot_obj.get("scene_blend_enabled", True))
+        last_eb_     = bool(chars[-1].get("edge_blend_enabled", True)) if chars else True
+        active_cp    = [(i, p) for i, p in enumerate(slot_obj.get("custom_passes", []))
+                        if p.get("enabled", True) and (p.get("positive") or "").strip()]
+        if active_cp:
+            return _custom_pass_path(working_dir, oid, active_cp[-1][0])
+        if sb_positive and sb_wf and sb_enabled and slot_sb_:
+            return _scene_path(working_dir, oid)
+        if eb_positive and eb_wf and eb_enabled and last_eb_ and n:
+            return _char_edge_path(working_dir, oid, n - 1)
+        return _char_pil_path(working_dir, oid, max(n - 1, 0))
+
     if not force_all and from_stage == 0:
         def _slot_needs_work(si_slot: tuple) -> bool:
             si, slot = si_slot
-            chars = slot.get("characters", [])
-            if not chars:
-                return True   # will error, but should be counted
+            if not slot.get("characters"):
+                return True
             oid = slot.get("output_id", slot.get("id", f"slot_{si}"))
-            n   = len(chars)
-            slot_sb      = bool(slot.get("scene_blend_enabled", True))
-            last_char_eb = bool(chars[-1].get("edge_blend_enabled", True))
-            if sb_positive and sb_wf and sb_enabled and slot_sb:
-                dp = _scene_path(working_dir, oid)
-            elif eb_positive and eb_wf and eb_enabled and last_char_eb:
-                dp = _char_edge_path(working_dir, oid, n - 1)
-            else:
-                dp = _char_pil_path(working_dir, oid, n - 1)
-            return not dp.exists()
+            return not _last_expected_path(slot, oid).exists()
         slots_to_run = [s for s in slots_to_run if _slot_needs_work(s)]
         skipped_count = len(paste_slots) - len(slots_to_run)
     else:
@@ -1395,13 +1401,7 @@ async def _run_paste_character_async(
         _eff_sb_den  = float(_sb_ov["denoise"]) if _sb_ov.get("denoise") is not None else sb_denoise
 
         # Determine "done" file for skip check (most advanced configured stage)
-        force_scene = from_stage >= scene_stage_idx
-        if sb_positive and sb_wf and ((sb_enabled and slot_sb) or force_scene):
-            done_path = _scene_path(working_dir, output_id)
-        elif eb_positive and eb_wf and eb_enabled and last_char_eb:
-            done_path = _char_edge_path(working_dir, output_id, n_chars - 1)
-        else:
-            done_path = _char_pil_path(working_dir, output_id, n_chars - 1)
+        done_path = _last_expected_path(slot, output_id)
 
         if not force_all and from_stage == 0 and done_path.exists():
             _log(f"  ⏭ [{idx}/{len(slots_to_run)}] {label} — ostatni etap istnieje, pomijam")
@@ -1636,6 +1636,18 @@ async def _run_paste_character_async(
                 _log(f"  \U0001f3a8 [{idx}] {label}: scene -> {scene_out.name}")
 
             # -- Custom passes -------------------------------------------------
+            # If current_path not set (stages skipped or absent), fall back to
+            # the best existing stage file so custom passes always have an input.
+            if (current_path is None or not current_path.exists()):
+                for _fb in [
+                    _scene_path(working_dir, output_id),
+                    *[_char_edge_path(working_dir, output_id, ci) for ci in reversed(range(n_chars))],
+                    *[_char_pil_path(working_dir, output_id, ci) for ci in reversed(range(n_chars))],
+                ]:
+                    if _fb.exists():
+                        current_path = _fb
+                        break
+
             cp_passes = slot.get("custom_passes") or []
             for ci, cp in enumerate(cp_passes):
                 if not cp.get("enabled", True):
