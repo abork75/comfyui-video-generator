@@ -4279,10 +4279,14 @@
                                             <div class="border-t border-orange-900/40 pt-2 mt-1 space-y-1">
                                                 <div class="flex items-center gap-2">
                                                     <span class="text-xs text-orange-400 font-medium">🔧 Custom Passes</span>
-                                                    <button @click="picRunFromStage(slot.id, si, slot.characters.length * 2 + 1, null)"
+                                                    <button @click="picRunFromStage(slot.id, si, slot.characters.length * 2 + 1, null, false)"
                                                             :disabled="picGen.running && picGen.tileId===tileModal.tileId"
                                                             class="text-xs text-gray-500 hover:text-orange-400 px-1.5 py-0.5 rounded hover:bg-gray-700 transition disabled:opacity-30"
-                                                            title="Generuj custom passes (reużywa istniejącej sceny)">▶ Generuj CP</button>
+                                                            title="Generuj brakujące custom passes (reużywa istniejących)">▶ Generuj CP</button>
+                                                    <button @click="picRunFromStage(slot.id, si, slot.characters.length * 2 + 1, null, true)"
+                                                            :disabled="picGen.running && picGen.tileId===tileModal.tileId"
+                                                            class="text-xs text-gray-500 hover:text-red-400 px-1.5 py-0.5 rounded hover:bg-gray-700 transition disabled:opacity-30"
+                                                            title="Regeneruj wszystkie custom passes od nowa">↺ CP od nowa</button>
                                                 </div>
                                                 <div class="flex items-start gap-2 flex-wrap pt-1">
                                                     <template x-for="(cp, cpi) in (slot.custom_passes||[])" :key="cpi">
@@ -8409,7 +8413,7 @@ function app() {
          * Run paste_character pipeline from a specific stage for one slot.
          * from_stage=1 skips PIL composite; from_stage=2 skips PIL+edge blend.
          */
-        async picRunFromStage(slotId, slotIdx, stage, endStage = null) {
+        async picRunFromStage(slotId, slotIdx, stage, endStage = null, forceAll = true) {
             if (this.picGen.running) return;
             const runId  = this.selectedRun?.filename;
             const tileId = this.tileModal.tileId;
@@ -8419,7 +8423,7 @@ function app() {
             }
             this.picGen = { running: true, tileId, log: [], progress: 0, total: 0, eta: null };
             try {
-                const body = { force_all: true, slot_index: slotIdx, from_stage: stage };
+                const body = { force_all: forceAll, slot_index: slotIdx, from_stage: stage };
                 if (endStage !== null) body.end_stage = endStage;
                 const res = await fetch(`/api/pic/session/${runId}/tiles/${tileId}/run`, {
                     method: 'POST',
