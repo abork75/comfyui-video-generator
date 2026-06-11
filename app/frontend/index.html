@@ -4311,6 +4311,19 @@
                                                                 <span x-show="!cp.enabled"
                                                                       class="absolute inset-0 rounded bg-gray-900/60 flex items-center justify-center text-xs text-gray-500 pointer-events-none">off</span>
                                                             </div>
+                                                            <div class="flex items-center gap-1">
+                                                                <button @click="picSwapPasteStage(slot.id, slot.characters.length * 2 + 1 + cpi)"
+                                                                        class="text-xs text-gray-600 hover:text-blue-400 px-1 py-0.5 rounded hover:bg-gray-700 transition"
+                                                                        :title="'Zamień plik '+(cp.name||'Pass '+(cpi+1))+' (archiwizuje stary)'">↺</button>
+                                                                <button @click="picArchivePasteSlot(slot.id, slot.characters.length * 2 + 1 + cpi)"
+                                                                        :disabled="!tileModal.status?.slots?.[si]?.custom_passes?.[cpi]?.path"
+                                                                        class="text-xs text-gray-600 hover:text-red-400 px-1 py-0.5 rounded hover:bg-gray-700 transition disabled:opacity-30"
+                                                                        :title="'Archiwizuj '+(cp.name||'Pass '+(cpi+1))">🗑</button>
+                                                                <button @click="picRunFromStage(slot.id, si, slot.characters.length * 2 + 1 + cpi, slot.characters.length * 2 + 1 + cpi, true)"
+                                                                        :disabled="picGen.running && picGen.tileId===tileModal.tileId"
+                                                                        class="text-xs text-gray-600 hover:text-green-400 px-1 py-0.5 rounded hover:bg-gray-700 transition disabled:opacity-30"
+                                                                        :title="'Generuj tylko '+(cp.name||'Pass '+(cpi+1))">▶</button>
+                                                            </div>
                                                         </div>
                                                     </template>
                                                 </div>

@@ -593,12 +593,21 @@ def _custom_pass_path(output_dir: Path, output_id: str, idx: int) -> Path:
 
 
 def _stage_linear_to_path(output_dir: Path, output_id: str, stage: int, n_chars: int) -> Path:
-    """Map linear from_stage int to the corresponding file path."""
-    if stage < n_chars * 2:
+    """Map linear stage int to the corresponding file path.
+    stage < n*2       → PIL or Edge for char ci
+    stage == n*2      → scene blend output
+    stage > n*2       → custom pass (stage - n*2 - 1)
+    """
+    scene_stage = n_chars * 2
+    if stage < scene_stage:
         ci   = stage // 2
         step = stage % 2
         return _char_pil_path(output_dir, output_id, ci) if step == 0 else _char_edge_path(output_dir, output_id, ci)
-    return _scene_path(output_dir, output_id)
+    if stage == scene_stage:
+        return _scene_path(output_dir, output_id)
+    # CP pass: stage = scene_stage + 1 + cpi
+    cpi = stage - scene_stage - 1
+    return _custom_pass_path(output_dir, output_id, cpi)
 
 
 def swap_paste_stage(
@@ -1634,12 +1643,21 @@ async def _run_paste_character_async(
 
             cp_passes = slot.get("custom_passes") or []
             for ci, cp in enumerate(cp_passes):
+                cp_stage_idx = scene_stage_idx + 1 + ci
+                cp_out_check = _custom_pass_path(working_dir, output_id, ci)
+                # Before from_stage: skip generation, just advance current_path
+                if from_stage > cp_stage_idx:
+                    if cp_out_check.exists():
+                        current_path = cp_out_check
+                    continue
+                # Past end_stage: stop
+                if end_stage is not None and cp_stage_idx > end_stage:
+                    break
                 if not cp.get("enabled", True):
                     continue
                 cp_pos = (cp.get("positive") or "").strip()
                 if not cp_pos:
                     continue
-                cp_out_check = _custom_pass_path(working_dir, output_id, ci)
                 if not force_all and cp_out_check.exists():
                     # Already exists — reuse and advance current_path
                     current_path = cp_out_check
