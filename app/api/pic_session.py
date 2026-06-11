@@ -269,13 +269,15 @@ class RunRequest(BaseModel):
     prompt_id:  Optional[str] = None   # None = all prompts in slot; str = single prompt
     from_stage: int           = 0      # paste_character: 0=full, 1=skip PIL, 2=skip PIL+edge
     end_stage:  Optional[int] = None   # None = run to end; int = stop after this linear stage (inclusive)
+    pass_index: Optional[int] = None   # fine_tune: None = all passes; int = single pass
 
 
 @router.post("/session/{run_id}/tiles/{tile_id}/run")
 async def run_tile(run_id: str, tile_id: str, body: RunRequest):
     """Start generation for a tile (all slots, single slot, or single prompt)."""
     result = pic_generation_service.start_tile_run(
-        run_id, tile_id, body.force_all, body.slot_index, body.prompt_id, body.from_stage, body.end_stage
+        run_id, tile_id, body.force_all, body.slot_index, body.prompt_id, body.from_stage, body.end_stage,
+        pass_index=body.pass_index,
     )
     if result == "already_running":
         raise HTTPException(status_code=409, detail="Generowanie już trwa dla tego kafelka")

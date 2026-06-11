@@ -1060,14 +1060,21 @@
                                                 <template x-if="tile.type === 'paste_character'">
                                                     <span class="text-green-500">📌</span>
                                                 </template>
+                                                <template x-if="tile.type === 'fine_tune'">
+                                                    <span class="text-orange-400">🎨</span>
+                                                </template>
                                                 <span x-text="tile.type === 'character_insert'
                                                     ? ((tile.scene_slots?.length || 0) + ' slotów')
                                                     : tile.type === 'paste_character'
                                                     ? ((tile.paste_slots?.length || 0) + ' slotów')
+                                                    : tile.type === 'fine_tune'
+                                                    ? ((tile.custom_passes?.length || 0) + ' passów')
                                                     : ((tile.image_slots?.length || 0) + ' ' + ((tile.image_slots?.length || 0) === 1 ? 'obraz' : 'obrazów'))"></span>
                                                 <span class="text-gray-700">·</span>
                                                 <span x-text="tile.type === 'paste_character'
                                                     ? 'PIL composite'
+                                                    : tile.type === 'fine_tune'
+                                                    ? 'I2I chain'
                                                     : tile.type === 'character_insert'
                                                     ? ((tile.scene_slots?.reduce((s,sl) => s + (sl.prompts?.length||0), 0) || 0) + ' promptów')
                                                     : ((tile.image_slots?.reduce((s,sl) => s + (sl.prompts?.length||0), 0) || 0) + ' promptów')"></span>
@@ -2905,6 +2912,14 @@
                     <p class="text-xs text-gray-500 mt-1 text-center leading-relaxed">Wklej postać z białym tłem na scenę w określonej pozycji (PIL, bez AI)</p>
                 </div>
             </button>
+            <button @click="picTypeSelectedDo('fine_tune')"
+                    class="col-span-2 flex flex-col items-center gap-3 bg-gray-800 hover:bg-orange-950/60 border border-gray-600 hover:border-orange-500 rounded-xl p-4 transition text-left">
+                <span class="text-3xl">🎨</span>
+                <div>
+                    <p class="text-xs font-semibold text-white text-center">Retusz / Fine-tuning</p>
+                    <p class="text-xs text-gray-500 mt-1 text-center leading-relaxed">Łańcuch I2I na wybranym obrazku — każdy krok może używać referencji</p>
+                </div>
+            </button>
         </div>
     </div>
 </div>
@@ -2922,7 +2937,7 @@
                 <h2 class="text-sm font-semibold text-white"
                     x-text="tileModal.mode === 'create' ? '+ Nowy kafelek' : ('✎ ' + (tileModal.data.name || 'Kafelek'))"></h2>
                 <p class="text-xs text-gray-500 mt-0.5"
-                   x-text="tileModal.data.type === 'character_insert' ? 'Typ: Wstawianie z referencyjnego obrazka' : tileModal.data.type === 'paste_character' ? 'Typ: Wstaw deterministycznie (PIL)' : 'Typ: Obrazki z obrazków'"></p>
+                   x-text="tileModal.data.type === 'character_insert' ? 'Typ: Wstawianie z referencyjnego obrazka' : tileModal.data.type === 'paste_character' ? 'Typ: Wstaw deterministycznie (PIL)' : tileModal.data.type === 'fine_tune' ? 'Typ: Retusz / Fine-tuning' : 'Typ: Obrazki z obrazków'"></p>
             </div>
             <button @click="tileModal.open = false" class="text-gray-500 hover:text-white text-xl leading-none">×</button>
         </div>
@@ -3163,7 +3178,7 @@
                                                     <div class="flex items-center gap-1">
                                                         <img :src="picCIFindImagePath(cname, tileModal.data.characters_dirs)"
                                                              class="w-6 h-6 object-cover rounded cursor-zoom-in flex-shrink-0"
-                                                             @click.stop="picImgPreview = { open: true, url: picCIFindImagePath(cname, tileModal.data.characters_dirs), title: cname }"
+                                                             @click.stop="picOpenPreview(picCIFindImagePath(cname, tileModal.data.characters_dirs), cname, '')"
                                                              @error="$el.style.display='none'">
                                                         <span class="text-xs text-gray-600 truncate max-w-14" x-text="cname"></span>
                                                     </div>
@@ -3582,10 +3597,14 @@
                                             class="flex-shrink-0 text-xs text-gray-400 border border-gray-600 hover:border-gray-400 rounded px-2 py-1.5 transition">📂</button>
                                 </div>
                                 <template x-if="slot.scene_image">
-                                    <img :src="'/api/fs/image?path=' + encodeURIComponent(slot.scene_image)"
-                                         class="mt-1 h-16 rounded object-cover cursor-zoom-in"
-                                         @click="picOpenPreview('/api/fs/image?path=' + encodeURIComponent(slot.scene_image), slot.scene_image, slot.scene_image)"
-                                         @error="$el.style.display='none'">
+                                    <div class="mt-1 inline-flex flex-col gap-0.5">
+                                        <img :src="'/api/fs/image?path=' + encodeURIComponent(slot.scene_image)"
+                                             class="h-16 rounded object-cover cursor-zoom-in"
+                                             @click="picOpenPreview('/api/fs/image?path=' + encodeURIComponent(slot.scene_image), slot.scene_image, slot.scene_image)"
+                                             @error="$el.style.display='none'">
+                                        <span class="text-xs text-gray-500 font-mono truncate max-w-xs"
+                                              x-text="slot.scene_image.split(/[\\/]/).pop()" title="slot.scene_image"></span>
+                                    </div>
                                 </template>
                             </div>
 
@@ -3620,10 +3639,14 @@
                                                     class="flex-shrink-0 text-xs text-gray-400 border border-gray-600 hover:border-gray-400 rounded px-2 py-1.5 transition">📂</button>
                                         </div>
                                         <template x-if="char.model_image">
-                                            <img :src="'/api/fs/image?path=' + encodeURIComponent(char.model_image)"
-                                                 class="h-14 rounded object-cover cursor-zoom-in"
-                                                 @click="picOpenPreview('/api/fs/image?path=' + encodeURIComponent(char.model_image), char.model_image.split('\\\\').pop(), char.model_image)"
-                                                 @error="$el.style.display='none'">
+                                            <div class="inline-flex flex-col gap-0.5">
+                                                <img :src="'/api/fs/image?path=' + encodeURIComponent(char.model_image)"
+                                                     class="h-14 rounded object-cover cursor-zoom-in"
+                                                     @click="picOpenPreview('/api/fs/image?path=' + encodeURIComponent(char.model_image), char.model_image.split('\\\\').pop(), char.model_image)"
+                                                     @error="$el.style.display='none'">
+                                                <span class="text-xs text-gray-500 font-mono truncate max-w-xs"
+                                                      x-text="char.model_image.split(/[\\/]/).pop()" :title="char.model_image"></span>
+                                            </div>
                                         </template>
 
                                         <!-- Visual drag editor per character -->
@@ -3763,6 +3786,139 @@
 
                 </div>
             </template>
+
+            <!-- ── fine_tune config ──────────────────────────── -->
+            <template x-if="tileModal.data.type === 'fine_tune'">
+                <div class="space-y-4">
+
+                    <!-- Input image -->
+                    <div>
+                        <label class="block text-xs text-gray-400 mb-1">🖼 Obrazek wejściowy (pełna ścieżka)</label>
+                        <div class="flex gap-2">
+                            <input type="text" x-model="tileModal.data.input_image"
+                                   placeholder="C:\...\base_result.png"
+                                   class="flex-1 bg-gray-800 border border-gray-600 rounded px-3 py-1.5 text-xs text-gray-300 font-mono focus:outline-none focus:border-orange-500">
+                            <button @click="openFsBrowser('image', (tileModal.data.input_image ? tileModal.data.input_image.replace(/[^\\/]+$/, '').replace(/[\\/]+$/, '') : null) || tileModal.data.output_dir, 'Wybierz obrazek wejściowy', (p) => { tileModal.data.input_image = p; })"
+                                    class="flex-shrink-0 text-xs text-gray-400 border border-gray-600 hover:border-gray-400 rounded px-2 py-1.5 transition">📂</button>
+                        </div>
+                        <template x-if="tileModal.data.input_image">
+                            <div class="mt-1 inline-flex flex-col gap-0.5">
+                                <img :src="'/api/fs/image?path=' + encodeURIComponent(tileModal.data.input_image)"
+                                     class="h-20 rounded object-cover cursor-zoom-in"
+                                     @click="picOpenPreview('/api/fs/image?path=' + encodeURIComponent(tileModal.data.input_image), tileModal.data.input_image.split(/[\\/]/).pop(), tileModal.data.input_image)"
+                                     @error="$el.style.display='none'">
+                                <span class="text-xs text-gray-500 font-mono truncate max-w-xs"
+                                      x-text="tileModal.data.input_image.split(/[\\/]/).pop()"></span>
+                            </div>
+                        </template>
+                    </div>
+
+                    <!-- Custom Passes -->
+                    <div>
+                        <div class="flex items-center gap-2 mb-2">
+                            <span class="text-xs font-semibold text-orange-400">🎨 Custom Passes</span>
+                            <span class="text-xs text-gray-600" x-text="'(' + (tileModal.data.custom_passes||[]).length + ')'"></span>
+                        </div>
+
+                        <div class="space-y-2">
+                            <template x-for="(cp, cpi) in (tileModal.data.custom_passes || [])" :key="cpi">
+                                <div class="border border-gray-700 rounded-lg p-3 space-y-2 bg-gray-800/60">
+                                    <!-- Pass header -->
+                                    <div class="flex items-center gap-2">
+                                        <input type="text" x-model="cp.name"
+                                               :placeholder="'Pass ' + (cpi+1)"
+                                               class="flex-1 bg-gray-700 border border-gray-600 rounded px-2 py-1 text-xs text-gray-200 focus:outline-none focus:border-orange-500">
+                                        <label class="flex items-center gap-1.5 text-xs text-gray-400 flex-shrink-0">
+                                            <input type="checkbox" x-model="cp.enabled" class="rounded">
+                                            aktywny
+                                        </label>
+                                        <button @click="picMoveItem(tileModal.data.custom_passes, cpi, -1)" :disabled="cpi===0"
+                                                class="text-xs text-gray-600 hover:text-white px-1 rounded hover:bg-gray-700 disabled:opacity-20">↑</button>
+                                        <button @click="picMoveItem(tileModal.data.custom_passes, cpi, 1)" :disabled="cpi===(tileModal.data.custom_passes||[]).length-1"
+                                                class="text-xs text-gray-600 hover:text-white px-1 rounded hover:bg-gray-700 disabled:opacity-20">↓</button>
+                                        <button @click="tileModal.data.custom_passes.splice(cpi,1)"
+                                                class="text-xs text-red-500 hover:text-red-300 px-1 rounded hover:bg-gray-700">✕</button>
+                                    </div>
+
+                                    <!-- Mode toggle -->
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-xs text-gray-500">Tryb:</span>
+                                        <button @click="cp.mode = 'i2i'"
+                                                :class="cp.mode !== 'i2i_ref' ? 'bg-blue-700 text-white' : 'bg-gray-700 text-gray-400 hover:bg-gray-600'"
+                                                class="text-xs px-2 py-0.5 rounded transition">I2I</button>
+                                        <button @click="cp.mode = 'i2i_ref'"
+                                                :class="cp.mode === 'i2i_ref' ? 'bg-purple-700 text-white' : 'bg-gray-700 text-gray-400 hover:bg-gray-600'"
+                                                class="text-xs px-2 py-0.5 rounded transition">I2I + Referencja</button>
+                                    </div>
+
+                                    <!-- Ref image (only for i2i_ref) -->
+                                    <template x-if="cp.mode === 'i2i_ref'">
+                                        <div class="space-y-1">
+                                            <label class="block text-xs text-gray-400">Obrazek referencyjny</label>
+                                            <div class="flex gap-2">
+                                                <input type="text" x-model="cp.ref_image"
+                                                       placeholder="C:\...\reference.png"
+                                                       class="flex-1 bg-gray-800 border border-gray-600 rounded px-2 py-1 text-xs text-gray-300 font-mono focus:outline-none focus:border-purple-500">
+                                                <button @click="openFsBrowser('image', (cp.ref_image ? cp.ref_image.replace(/[^\\/]+$/, '').replace(/[\\/]+$/, '') : null) || tileModal.data.output_dir, 'Wybierz obraz referencyjny', (p) => { cp.ref_image = p; })"
+                                                        class="flex-shrink-0 text-xs text-gray-400 border border-gray-600 hover:border-gray-400 rounded px-2 py-1 transition">📂</button>
+                                            </div>
+                                            <template x-if="cp.ref_image">
+                                                <div class="inline-flex flex-col gap-0.5">
+                                                    <img :src="'/api/fs/image?path=' + encodeURIComponent(cp.ref_image)"
+                                                         class="h-12 rounded object-cover cursor-zoom-in"
+                                                         @click="picOpenPreview('/api/fs/image?path=' + encodeURIComponent(cp.ref_image), cp.ref_image.split(/[\\/]/).pop(), cp.ref_image)"
+                                                         @error="$el.style.display='none'">
+                                                    <span class="text-xs text-gray-500 font-mono truncate max-w-xs" x-text="cp.ref_image.split(/[\\/]/).pop()"></span>
+                                                </div>
+                                            </template>
+                                        </div>
+                                    </template>
+
+                                    <!-- Prompts -->
+                                    <div>
+                                        <label class="block text-xs text-gray-400 mb-1">Positive</label>
+                                        <textarea x-model="cp.positive" rows="2"
+                                                  class="w-full bg-gray-800 border border-gray-600 rounded px-2 py-1.5 text-xs text-gray-300 resize-y focus:outline-none focus:border-orange-500"></textarea>
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs text-gray-400 mb-1">Negative</label>
+                                        <textarea x-model="cp.negative" rows="1"
+                                                  class="w-full bg-gray-800 border border-gray-600 rounded px-2 py-1.5 text-xs text-gray-300 resize-y focus:outline-none focus:border-red-700"></textarea>
+                                    </div>
+
+                                    <!-- Params -->
+                                    <div class="flex flex-wrap gap-3 text-xs items-center">
+                                        <label class="text-gray-500">Steps
+                                            <input type="number" x-model.number="cp.params.steps" min="1" max="100"
+                                                   class="ml-1 w-14 bg-gray-700 border border-gray-600 rounded px-1 py-0.5 text-white text-center focus:outline-none">
+                                        </label>
+                                        <label class="text-gray-500">CFG
+                                            <input type="number" x-model.number="cp.params.cfg" min="1" max="30" step="0.5"
+                                                   class="ml-1 w-14 bg-gray-700 border border-gray-600 rounded px-1 py-0.5 text-white text-center focus:outline-none">
+                                        </label>
+                                        <label class="text-gray-500">Denoise
+                                            <input type="number" x-model.number="cp.params.denoise" min="0" max="1" step="0.05"
+                                                   class="ml-1 w-16 bg-gray-700 border border-gray-600 rounded px-1 py-0.5 text-white text-center focus:outline-none">
+                                        </label>
+                                        <template x-if="cp.mode === 'i2i_ref'">
+                                            <label class="text-gray-500">CN Strength
+                                                <input type="number" x-model.number="cp.params.controlnet_strength" min="0" max="2" step="0.05"
+                                                       class="ml-1 w-16 bg-gray-700 border border-purple-800 rounded px-1 py-0.5 text-white text-center focus:outline-none">
+                                            </label>
+                                        </template>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+
+                        <button @click="tileModal.data.custom_passes.push({ name: '', enabled: true, mode: 'i2i', ref_image: '', positive: '', negative: '', params: { steps: 30, cfg: 8, denoise: 0.65, controlnet_strength: 0.8 } })"
+                                class="mt-2 w-full text-xs text-gray-400 border border-dashed border-gray-600 hover:border-orange-500 hover:text-orange-400 rounded-lg py-2 transition">
+                            + Dodaj pass
+                        </button>
+                    </div>
+
+                </div>
+            </template><!-- /fine_tune config -->
 
         </div><!-- /config tab -->
 
@@ -4377,14 +4533,14 @@
                                         <span class="text-xs text-gray-600 flex-shrink-0" x-text="'#' + (slotIdx+1)"></span>
                                         <img :src="picCIFindImagePath(slot.scene_image, tileModal.data.scene_dirs)"
                                              class="w-10 h-10 object-cover rounded flex-shrink-0 cursor-zoom-in"
-                                             @click.stop="picImgPreview = { open: true, url: picCIFindImagePath(slot.scene_image, tileModal.data.scene_dirs), title: slot.scene_image }"
+                                             @click.stop="picOpenPreview(picCIFindImagePath(slot.scene_image, tileModal.data.scene_dirs), slot.scene_image, '')"
                                              @error="$el.style.display='none'">
                                         <span class="text-xs font-medium text-white truncate" x-text="slot.scene_image"></span>
                                         <template x-for="(cname, ci) in slot.character_images" :key="ci">
                                             <div class="flex items-center gap-1 flex-shrink-0">
                                                 <img :src="picCIFindImagePath(cname, tileModal.data.characters_dirs)"
                                                      class="w-8 h-8 object-cover rounded cursor-zoom-in"
-                                                     @click.stop="picImgPreview = { open: true, url: picCIFindImagePath(cname, tileModal.data.characters_dirs), title: cname }"
+                                                     @click.stop="picOpenPreview(picCIFindImagePath(cname, tileModal.data.characters_dirs), cname, '')"
                                                      @error="$el.style.display='none'">
                                                 <span class="text-xs text-gray-500" x-text="ci+1"></span>
                                             </div>
@@ -4402,7 +4558,7 @@
                                                     <template x-if="tileModal.status?.slots?.[slotIdx]?.prompts?.[p.id]?.done">
                                                         <img :src="`/api/fs/image?path=${encodeURIComponent(tileModal.status.slots[slotIdx].prompts[p.id].output_path)}&cb=${tileModal.imgCacheBust}`"
                                                              class="w-full h-28 object-cover cursor-zoom-in"
-                                                             @click="picImgPreview = { open: true, url: `/api/fs/image?path=${encodeURIComponent(tileModal.status.slots[slotIdx].prompts[p.id].output_path)}&cb=${tileModal.imgCacheBust}`, title: slot.scene_image + ' × ' + p.name }">
+                                                             @click="picOpenPreview(`/api/fs/image?path=${encodeURIComponent(tileModal.status.slots[slotIdx].prompts[p.id].output_path)}&cb=${tileModal.imgCacheBust}`, slot.scene_image + ' × ' + p.name, tileModal.status.slots[slotIdx].prompts[p.id].output_path)">
                                                     </template>
                                                     <template x-if="!tileModal.status?.slots?.[slotIdx]?.prompts?.[p.id]?.done">
                                                         <div class="w-full h-28 bg-gray-700 flex items-center justify-center text-gray-600 text-3xl">🖼</div>
@@ -4486,7 +4642,7 @@
                                             <template x-if="tileModal.status?.slots?.[slotIdx]?.prompts?.[p.id]?.done && tileModal.status?.slots?.[slotIdx]?.prompts?.[p.id]?.output_path">
                                                 <img :src="`/api/fs/image?path=${encodeURIComponent(tileModal.status.slots[slotIdx].prompts[p.id].output_path)}&cb=${tileModal.imgCacheBust}`"
                                                      class="w-full h-28 object-cover cursor-zoom-in"
-                                                     @click="picImgPreview = { open: true, url: `/api/fs/image?path=${encodeURIComponent(tileModal.status.slots[slotIdx].prompts[p.id].output_path)}&cb=${tileModal.imgCacheBust}`, title: slot.image + ' × ' + p.name }">
+                                                     @click="picOpenPreview(`/api/fs/image?path=${encodeURIComponent(tileModal.status.slots[slotIdx].prompts[p.id].output_path)}&cb=${tileModal.imgCacheBust}`, slot.image + ' × ' + p.name, tileModal.status.slots[slotIdx].prompts[p.id].output_path)">
                                             </template>
                                             <template x-if="!tileModal.status?.slots?.[slotIdx]?.prompts?.[p.id]?.done">
                                                 <div class="w-full h-28 bg-gray-700 flex items-center justify-center text-gray-600 text-3xl">🖼</div>
@@ -4532,6 +4688,104 @@
                     </div>
                         </div>
                     </template><!-- /OI per-slot -->
+
+                    <!-- ── fine_tune: results ── -->
+                    <template x-if="tileModal.data.type === 'fine_tune'">
+                        <div class="space-y-3">
+                            <!-- Header actions -->
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <span class="text-xs text-gray-400 flex-1">
+                                    <span x-show="tileModal.data.input_image"
+                                          class="font-mono text-gray-500"
+                                          x-text="tileModal.data.input_image?.split(/[\\/]/).pop()"></span>
+                                </span>
+                                <button @click="picRunTile(false)"
+                                        :disabled="picGen.running && picGen.tileId===tileModal.tileId"
+                                        class="text-xs bg-green-900 hover:bg-green-800 border border-green-700 text-white rounded px-3 py-1.5 transition disabled:opacity-40">
+                                    ▶ Generuj brakujące
+                                </button>
+                                <button @click="picRunTile(true)"
+                                        :disabled="picGen.running && picGen.tileId===tileModal.tileId"
+                                        class="text-xs bg-gray-700 hover:bg-gray-600 border border-gray-600 text-gray-300 rounded px-3 py-1.5 transition disabled:opacity-40">
+                                    🔄 Od nowa
+                                </button>
+                            </div>
+
+                            <!-- Input → CP chain -->
+                            <div class="border border-gray-700 rounded-xl p-3">
+                                <div class="flex items-start gap-3 flex-wrap">
+
+                                    <!-- Input thumbnail -->
+                                    <div class="flex flex-col items-center gap-1 flex-shrink-0">
+                                        <span class="text-xs text-gray-500">Wejście</span>
+                                        <div class="w-24 h-20 relative">
+                                            <template x-if="tileModal.data.input_image">
+                                                <img :src="'/api/fs/image?path='+encodeURIComponent(tileModal.data.input_image)"
+                                                     class="w-24 h-20 rounded object-cover cursor-zoom-in ring-1 ring-gray-600"
+                                                     @click="picOpenPreview('/api/fs/image?path='+encodeURIComponent(tileModal.data.input_image), tileModal.data.input_image.split(/[\\/]/).pop(), tileModal.data.input_image)"
+                                                     @error="$el.style.display='none'">
+                                            </template>
+                                            <template x-if="!tileModal.data.input_image">
+                                                <div class="w-24 h-20 rounded bg-gray-800/60 border border-gray-700 flex items-center justify-center text-gray-600 text-xs text-center px-1">brak obrazka</div>
+                                            </template>
+                                        </div>
+                                    </div>
+
+                                    <!-- Arrow + CP passes -->
+                                    <template x-for="(cp, cpi) in (tileModal.data.custom_passes||[])" :key="cpi">
+                                        <div class="flex items-start gap-2">
+                                            <span class="text-gray-700 text-lg mt-8">→</span>
+                                            <div class="flex flex-col items-center gap-1 flex-shrink-0">
+                                                <span class="text-xs text-gray-500 truncate max-w-[6rem]" x-text="cp.name || ('Pass '+(cpi+1))"></span>
+                                                <div class="w-24 h-20 relative">
+                                                    <template x-if="tileModal.status?.ft_passes?.[cpi]?.path">
+                                                        <img :src="'/api/fs/image?path='+encodeURIComponent(tileModal.status.ft_passes[cpi].path)+'&cb='+tileModal.imgCacheBust"
+                                                             class="w-24 h-20 rounded object-cover cursor-zoom-in ring-1 ring-orange-800 hover:ring-orange-400 transition"
+                                                             @click="picOpenPreview('/api/fs/image?path='+encodeURIComponent(tileModal.status.ft_passes[cpi].path)+'&cb='+tileModal.imgCacheBust, (cp.name||'Pass '+(cpi+1)), tileModal.status.ft_passes[cpi].path)"
+                                                             @error="$el.style.display='none'">
+                                                    </template>
+                                                    <template x-if="!tileModal.status?.ft_passes?.[cpi]?.path">
+                                                        <div class="w-24 h-20 rounded bg-gray-800/60 border border-orange-900/40 flex items-center justify-center">
+                                                            <span class="text-gray-700 text-lg">○</span>
+                                                        </div>
+                                                    </template>
+                                                    <!-- Status dot -->
+                                                    <span x-show="tileModal.status?.ft_passes?.[cpi]?.final"
+                                                          class="absolute top-0.5 right-0.5 w-2.5 h-2.5 rounded-full bg-green-400 border border-gray-900 z-10"></span>
+                                                    <span x-show="tileModal.status?.ft_passes?.[cpi]?.path && !tileModal.status?.ft_passes?.[cpi]?.final"
+                                                          class="absolute top-0.5 right-0.5 w-2.5 h-2.5 rounded-full bg-yellow-400 border border-gray-900 z-10"></span>
+                                                    <!-- Mask indicator -->
+                                                    <span x-show="picSbMasks[tileModal.status?.ft_passes?.[cpi]?.path]"
+                                                          class="absolute top-0.5 right-4 text-purple-400 text-xs leading-none pointer-events-none z-10 bg-gray-900 rounded-sm px-0.5 border border-gray-700">🎭</span>
+                                                    <!-- Disabled overlay -->
+                                                    <span x-show="!cp.enabled"
+                                                          class="absolute inset-0 rounded bg-gray-900/60 flex items-center justify-center text-xs text-gray-500 pointer-events-none">off</span>
+                                                    <!-- Mode badge -->
+                                                    <span x-show="cp.mode === 'i2i_ref'"
+                                                          class="absolute bottom-0.5 left-0.5 text-purple-300 text-xs leading-none pointer-events-none z-10 bg-gray-900 rounded-sm px-0.5 border border-gray-700">ref</span>
+                                                </div>
+                                                <!-- Per-pass action buttons -->
+                                                <div class="flex items-center gap-1">
+                                                    <button @click="picSwapPasteStage(tileModal.tileId, cpi)"
+                                                            class="text-xs text-gray-600 hover:text-blue-400 px-1 py-0.5 rounded hover:bg-gray-700 transition" title="Zamień plik">↺</button>
+                                                    <button @click="picArchivePasteSlot(tileModal.tileId, cpi)"
+                                                            :disabled="!tileModal.status?.ft_passes?.[cpi]?.path"
+                                                            class="text-xs text-gray-600 hover:text-red-400 px-1 py-0.5 rounded hover:bg-gray-700 transition disabled:opacity-30" title="Archiwizuj">🗑</button>
+                                                    <button @click="picRunFtPass(cpi)"
+                                                            :disabled="picGen.running && picGen.tileId===tileModal.tileId"
+                                                            class="text-xs text-gray-600 hover:text-green-400 px-1 py-0.5 rounded hover:bg-gray-700 transition disabled:opacity-30" title="Generuj tylko ten pass">▶</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </template>
+
+                                    <template x-if="!(tileModal.data.custom_passes||[]).length">
+                                        <p class="text-xs text-gray-600 self-center ml-2">Brak passów — dodaj w Konfiguracji</p>
+                                    </template>
+                                </div>
+                            </div>
+                        </div>
+                    </template><!-- /fine_tune generate -->
 
                 </div>
             </template><!-- /edit mode -->
@@ -5109,7 +5363,7 @@ function app() {
             await this.loadRuns();
             window.addEventListener('pic-mask-changed', () => {
                 if (this.tileModal.data?.type === 'character_insert') this.checkCISceneMasks();
-                if (this.tileModal.data?.type === 'paste_character')  this.checkSbMasks();
+                if (this.tileModal.data?.type === 'paste_character' || this.tileModal.data?.type === 'fine_tune')  this.checkSbMasks();
             });
         },
 
@@ -7777,13 +8031,14 @@ function app() {
                 }
             } else {
                 const folder = projFolder ? projFolder.replace(/[/\\]+$/, '') : '';
-                const isCINew   = (type === 'character_insert');
+                const isCINew    = (type === 'character_insert');
                 const isPasteNew = (type === 'paste_character');
+                const isFtNew    = (type === 'fine_tune');
                 tileData = {
                     type:             type || 'one_image_many_prompts',
                     name:             '',
                     // OI fields
-                    source_dirs:      (!isCINew && !isPasteNew && folder) ? [folder] : [],
+                    source_dirs:      (!isCINew && !isPasteNew && !isFtNew && folder) ? [folder] : [],
                     image_slots:      [],
                     // CI fields
                     scene_dirs:       isCINew && folder ? [folder] : [],
@@ -7796,6 +8051,10 @@ function app() {
                     edge_blend_prompts:   [],
                     scene_blend_enabled:  false,
                     scene_blend_prompts:  [],
+                    // fine_tune fields
+                    input_image:    '',
+                    custom_passes:  [],
+                    output_id:      '',
                     // common
                     output_dir:       folder,
                     global_suffix:    '',
@@ -7919,6 +8178,8 @@ function app() {
                             const ss = (data.tile.paste_slots || [])[si];
                             if (ss?.output_id) slot.output_id = ss.output_id;
                         }
+                        // fine_tune: output_id at tile level
+                        if (data.tile.output_id) m.data.output_id = data.tile.output_id;
                     }
                 } else {
                     m.open = false;
@@ -8121,6 +8382,10 @@ function app() {
                 for (const cp of (slot.custom_passes || [])) {
                     if (cp.path) paths.push(cp.path);
                 }
+            }
+            // fine_tune ft_passes
+            for (const fp of (this.tileModal.status?.ft_passes || [])) {
+                if (fp.path) paths.push(fp.path);
             }
             await Promise.all(paths.map(async p => {
                 try {
@@ -8627,6 +8892,34 @@ function app() {
             }
         },
 
+        async picRunFtPass(cpi) {
+            if (this.picGen.running) return;
+            const runId  = this.selectedRun?.filename;
+            const tileId = this.tileModal.tileId;
+            if (!runId || !tileId) return;
+            if (this.tileModal.mode === 'edit' && this.tileModal.data.name?.trim()) {
+                await this.picSaveTile(true);
+            }
+            this.picGen = { running: true, tileId, log: [], progress: 0, total: 0, eta: null };
+            try {
+                const res = await fetch(`/api/pic/session/${runId}/tiles/${tileId}/run`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ force_all: true, pass_index: cpi }),
+                });
+                if (!res.ok) {
+                    const err = await res.json().catch(() => ({}));
+                    this.picGen.running = false;
+                    alert('Błąd uruchomienia: ' + (err.detail || res.status));
+                    return;
+                }
+                this._picPollJob(runId, tileId);
+            } catch(e) {
+                this.picGen.running = false;
+                alert('Błąd połączenia: ' + e.message);
+            }
+        },
+
         // ── Tile generate tab ─────────────────────────────────
 
         async loadTileStatus() {
@@ -8635,7 +8928,7 @@ function app() {
                 const res = await fetch(`/api/pic/session/${this.selectedRun.filename}/tiles/${this.tileModal.tileId}/status`);
                 if (!res.ok) return;
                 this.tileModal.status = await res.json();
-                if (this.tileModal.data?.type === 'paste_character') this.checkSbMasks();
+                if (this.tileModal.data?.type === 'paste_character' || this.tileModal.data?.type === 'fine_tune') this.checkSbMasks();
             } catch(e) { /* silent */ }
         },
 

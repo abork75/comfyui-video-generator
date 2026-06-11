@@ -476,15 +476,16 @@ def _split_ci_load_image_nodes(
 
 
 def _patch_ci_workflow(
-    workflow:         dict,
-    scene_filename:   str,
-    char_filenames:   list[str],
-    positive:         str,
-    negative:         str,
-    steps:            int,
-    cfg:              float,
-    denoise:          float,
-    filename_prefix:  str,
+    workflow:            dict,
+    scene_filename:      str,
+    char_filenames:      list[str],
+    positive:            str,
+    negative:            str,
+    steps:               int,
+    cfg:                 float,
+    denoise:             float,
+    filename_prefix:     str,
+    controlnet_strength: float | None = None,
 ) -> dict:
     """
     Patch a character_insert workflow:
@@ -521,6 +522,11 @@ def _patch_ci_workflow(
     nid, node = _find_node(wf, "SaveImage")
     if nid:
         node["inputs"]["filename_prefix"] = filename_prefix
+
+    # ControlNet strength (optional)
+    _, cn_node = _find_node(wf, "ControlNetInpaintingAliMamaApply")
+    if cn_node and controlnet_strength is not None:
+        cn_node["inputs"]["strength"] = controlnet_strength
 
     # Positive / Negative via ControlNet references
     _, cn_node = _find_node(wf, "ControlNetInpaintingAliMamaApply")
@@ -1174,6 +1180,192 @@ async def _generate_ci_one(
                     tmp.unlink()
             except Exception:
                 pass
+
+
+# ── Fine Tune — chained I2I / I2I+ref passes ─────────────────────────────────
+
+async def _run_fine_tune_async(
+    run_id:     str,
+    tile_id:    str,
+    tile:       dict,
+    output_dir: "Path",
+    force_all:  bool,
+    pass_index: int | None = None,
+) -> None:
+    """
+    Chain of I2I passes on a single input image.
+    Each pass is either:
+      mode='i2i'     → standard KSampler I2I (_generate_one)
+      mode='i2i_ref' → CI workflow with scene+ref (_generate_ci_one)
+
+    File naming:  {output_id}_ft{N}.png  in output_dir/robocze/
+    output_id is stored at tile level (tile['output_id']).
+    """
+    from app.services.pic_session_service import _load as _load_sess, _save as _save_sess
+
+    _log(f"[fine_tune] start tile={tile_id} pass_index={pass_index}")
+
+    win         = app_config_service.get_backend("windows")
+    comfyui_url = win.get("api_url")    or settings.comfyui_upscale_url
+    input_dir   = Path(win.get("input_dir")  or settings.comfyui_upscale_input_dir)
+    comfy_out   = Path(win.get("output_dir") or settings.comfyui_upscale_output_dir)
+
+    def _load_workflow(model_key: str) -> dict | None:
+        wf_str = win.get("models", {}).get(model_key, {}).get("workflow_json", "")
+        if not wf_str:
+            return None
+        p = Path(wf_str)
+        if not p.exists():
+            return None
+        return json.loads(p.read_text(encoding="utf-8"))
+
+    output_dir.mkdir(parents=True, exist_ok=True)
+    work_dir = output_dir / "robocze"
+    work_dir.mkdir(parents=True, exist_ok=True)
+
+    # Ensure tile has an output_id
+    oid = tile.get("output_id", "")
+    if not oid:
+        from app.services.pic_session_service import _make_output_id
+        oid = _make_output_id()
+        data = _load_sess(run_id)
+        for t in data.get("pic_flow", []):
+            if t["id"] == tile_id:
+                t["output_id"] = oid
+                break
+        _save_sess(run_id, data)
+        tile["output_id"] = oid
+
+    custom_passes = tile.get("custom_passes", [])
+    input_image   = tile.get("input_image", "")
+    if not input_image:
+        raise ValueError("fine_tune tile has no input_image configured")
+
+    input_path = Path(input_image)
+    if not input_path.exists():
+        raise ValueError(f"Input image not found: {input_image}")
+
+    # Build list of passes to run
+    if pass_index is not None:
+        indices = [pass_index]
+    else:
+        indices = [i for i, cp in enumerate(custom_passes) if cp.get("enabled", True)]
+
+    loop = asyncio.get_event_loop()
+
+    total = len(indices)
+    done  = 0
+    errors: list[str] = []
+
+    _set_job(run_id, tile_id, {
+        "status":         "running",
+        "tile_id":        tile_id,
+        "total":          total,
+        "done":           0,
+        "current_prompt": None,
+        "errors":         [],
+    })
+
+    try:
+        for cpi in indices:
+            cp = custom_passes[cpi]
+            if not cp.get("enabled", True):
+                total -= 1
+                _update_job(run_id, tile_id, total=total)
+                continue
+
+            dest_stem = f"{oid}_ft{cpi}"
+            dest_exists: Path | None = None
+            for ext in (".png", ".jpg", ".jpeg", ".webp"):
+                candidate = work_dir / f"{dest_stem}{ext}"
+                if candidate.exists():
+                    dest_exists = candidate
+                    break
+
+            if dest_exists and not force_all:
+                _log(f"[fine_tune] skip pass {cpi} (exists)")
+                done += 1
+                _update_job(run_id, tile_id, done=done)
+                continue
+
+            # Input for this pass: previous pass output or original input
+            if cpi == 0:
+                src_path = input_path
+            else:
+                prev_stem = f"{oid}_ft{cpi - 1}"
+                src_path = None
+                for ext in (".png", ".jpg", ".jpeg", ".webp"):
+                    candidate = work_dir / f"{prev_stem}{ext}"
+                    if candidate.exists():
+                        src_path = candidate
+                        break
+                if src_path is None:
+                    src_path = input_path
+
+            dest_out  = work_dir / f"{dest_stem}.png"
+            positive  = cp.get("positive", "")
+            negative  = cp.get("negative", "")
+            params    = cp.get("params", {})
+            steps_val = int(params.get("steps", 30))
+            cfg_val   = float(params.get("cfg", 8))
+            denoise   = float(params.get("denoise", 0.65))
+            mode      = cp.get("mode", "i2i")
+            label     = cp.get("name") or f"Pass {cpi+1}"
+
+            _log(f"[fine_tune] pass {cpi} mode={mode} src={src_path.name}")
+            _update_job(run_id, tile_id, current_prompt=label)
+
+            try:
+                if mode == "i2i_ref":
+                    ref_image = cp.get("ref_image", "")
+                    if not ref_image:
+                        raise ValueError(f"Pass {cpi} is i2i_ref but has no ref_image")
+                    ref_path = Path(ref_image)
+                    if not ref_path.exists():
+                        raise ValueError(f"Ref image not found: {ref_image}")
+                    wf_template = _load_workflow("ci_1ref")
+                    if wf_template is None:
+                        raise ValueError("Brak workflow ci_1ref w konfiguracji backendu")
+                    await _generate_ci_one(
+                        loop, comfyui_url, input_dir, comfy_out,
+                        wf_template,
+                        scene_path=src_path,
+                        char_path=ref_path,
+                        positive=positive,
+                        negative=negative,
+                        steps=steps_val, cfg=cfg_val, denoise=denoise,
+                        dest_path=dest_out,
+                        label=label,
+                    )
+                else:
+                    wf_template = _load_workflow("i2i")
+                    if wf_template is None:
+                        raise ValueError("Brak workflow i2i w konfiguracji backendu")
+                    await _generate_one(
+                        loop, comfyui_url, input_dir, comfy_out,
+                        wf_template,
+                        src_path,
+                        positive=positive,
+                        negative=negative,
+                        steps=steps_val, cfg=cfg_val, denoise=denoise,
+                        dest_path=dest_out,
+                    )
+                done += 1
+                _update_job(run_id, tile_id, done=done)
+                _log(f"[fine_tune] pass {cpi} done → {dest_out}")
+            except Exception as exc:
+                errors.append(f"Pass {cpi}: {exc}")
+                _log(f"[fine_tune] pass {cpi} ERROR: {exc}")
+                _update_job(run_id, tile_id, errors=list(errors))
+                break  # abort chain on error
+
+        final = "done" if not errors else "error"
+        _update_job(run_id, tile_id, status=final, done=done, current_prompt=None, errors=errors)
+        _log(f"[fine_tune] tile={tile_id} finished status={final}")
+
+    except Exception as exc:
+        _log(f"[fine_tune] FATAL tile={tile_id}: {exc}")
+        _update_job(run_id, tile_id, status="error", errors=errors + [str(exc)])
 
 
 # ── Paste Character — PIL composite + optional two-pass ComfyUI blend ─────────
@@ -2009,6 +2201,7 @@ async def _run_tile_async(
     prompt_id:  str | None = None,   # None = all prompts; str = single prompt
     from_stage: int = 0,             # paste_character only: 0=full, 1=skip PIL, 2=skip PIL+edge
     end_stage:  int | None = None,   # paste_character only: stop after this linear stage (inclusive)
+    pass_index: int | None = None,   # fine_tune only: None = all passes; int = single pass
 ) -> None:
     """
     Full generation pipeline for one tile.
@@ -2054,6 +2247,13 @@ async def _run_tile_async(
         if tile_type == "paste_character":
             await _run_paste_character_async(
                 run_id, tile_id, tile, output_dir, force_all, slot_index, from_stage, end_stage,
+            )
+            return
+
+        # ── Route to fine_tune pipeline ───────────────────────────────────────
+        if tile_type == "fine_tune":
+            await _run_fine_tune_async(
+                run_id, tile_id, tile, output_dir, force_all, pass_index,
             )
             return
 
@@ -2276,6 +2476,7 @@ def start_tile_run(
     prompt_id:  str | None = None,
     from_stage: int = 0,
     end_stage:  int | None = None,
+    pass_index: int | None = None,
 ) -> str:
     """
     Launch tile generation as a background asyncio task.
@@ -2295,5 +2496,5 @@ def start_tile_run(
         "errors":         [],
     })
 
-    asyncio.create_task(_run_tile_async(run_id, tile_id, force_all, slot_index, prompt_id, from_stage, end_stage))
+    asyncio.create_task(_run_tile_async(run_id, tile_id, force_all, slot_index, prompt_id, from_stage, end_stage, pass_index))
     return "ok"

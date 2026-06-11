@@ -343,6 +343,13 @@ def _migrate_tile(tile: dict) -> dict:
 
         return tile
 
+    # fine_tune: no migration needed
+    if tile_type == "fine_tune":
+        tile.setdefault("input_image",   "")
+        tile.setdefault("custom_passes", [])
+        tile.setdefault("output_id",     "")
+        return tile
+
     # ── OI migration: source_image + top-level prompts → image_slots ─────────
     if "image_slots" in tile:
         return tile
@@ -725,6 +732,56 @@ def get_tile_status(run_id: str, tile_id: str) -> dict:
             "done":    total_done,
             "total":   total_count,
             "slots":   slot_statuses,
+        }
+
+    # ── fine_tune: single input image + chain of custom passes ───────────────
+    if tile.get("type") == "fine_tune":
+        oid = tile.get("output_id", "")
+        work_dir = output_dir / "robocze"
+
+        def _ft_find(stem: str) -> str | None:
+            if not oid or not output_dir.is_dir():
+                return None
+            for search_dir in (work_dir, output_dir):
+                for ext in _IMAGE_EXTS:
+                    p = search_dir / f"{stem}{ext}"
+                    if p.exists():
+                        return str(p)
+            return None
+
+        def _ft_final(stem: str) -> bool:
+            for ext in _IMAGE_EXTS:
+                if (output_dir / f"{stem}{ext}").exists():
+                    return True
+            return False
+
+        ft_passes: list[dict] = []
+        custom_passes = tile.get("custom_passes", [])
+        for ci, cp in enumerate(custom_passes):
+            path  = _ft_find(f"{oid}_ft{ci}")
+            final = _ft_final(f"{oid}_ft{ci}")
+            ft_passes.append({
+                "path":    path,
+                "final":   final,
+                "enabled": cp.get("enabled", True),
+                "name":    cp.get("name") or f"Pass {ci+1}",
+            })
+
+        active = [p for p in ft_passes if p["enabled"]]
+        done = sum(1 for p in active if p["path"])
+        total = len(active)
+        overall = (
+            "empty"   if total == 0 else
+            "none"    if done  == 0 else
+            "all"     if done  >= total else
+            "partial"
+        )
+        return {
+            "tile_id":   tile_id,
+            "overall":   overall,
+            "done":      done,
+            "total":     total,
+            "ft_passes": ft_passes,
         }
 
     # ── character_insert: scene_slots ─────────────────────────────────────────
