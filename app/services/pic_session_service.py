@@ -632,6 +632,18 @@ def get_tile_status(run_id: str, tile_id: str) -> dict:
             scene_file  = _find_file(f"{oid}_scene")
             scene_final = _is_final(f"{oid}_scene")
 
+            # Custom passes
+            cp_statuses: list[dict] = []
+            for ci, cp in enumerate(slot.get("custom_passes", [])):
+                cp_file  = _find_file(f"{oid}_cp{ci}")
+                cp_final = _is_final(f"{oid}_cp{ci}")
+                cp_statuses.append({
+                    "path":    cp_file,
+                    "final":   cp_final,
+                    "enabled": cp.get("enabled", True),
+                    "name":    cp.get("name") or f"Pass {ci+1}",
+                })
+
             # Legacy fallback: old _s0/_s1/_s2 files → map to single char entry
             if not any(c["pil"] for c in chars_status):
                 s0 = _find_file(f"{oid}_s0")
@@ -659,7 +671,12 @@ def get_tile_status(run_id: str, tile_id: str) -> dict:
             sb_has_prompt = _has_prompt(tile.get("scene_blend_prompts", []))
             eb_has_prompt = _has_prompt(tile.get("edge_blend_prompts", []))
 
-            if global_sb and slot_sb and sb_has_prompt:
+            # Last enabled custom pass with a positive prompt is the true done_file
+            _active_cp = [cp for cp in cp_statuses if cp["enabled"]]
+            if _active_cp:
+                done_file  = _active_cp[-1]["path"]
+                final_file = _active_cp[-1]["final"]
+            elif global_sb and slot_sb and sb_has_prompt:
                 done_file  = scene_file
                 final_file = scene_final
             elif global_eb and last_char_eb and n_chars and eb_has_prompt:
@@ -677,21 +694,23 @@ def get_tile_status(run_id: str, tile_id: str) -> dict:
 
             # output_path = most advanced file (for thumbnail / compat)
             output_path = (
-                scene_file
+                next((cp["path"] for cp in reversed(_active_cp) if cp["path"]), None)
+                or scene_file
                 or next((c["edge"] for c in reversed(chars_status) if c["edge"]), None)
                 or next((c["pil"]  for c in reversed(chars_status) if c["pil"]),  None)
             )
 
             slot_statuses.append({
-                "scene_image": slot.get("scene_image", ""),
-                "done":        1 if found else 0,
-                "total":       1,
-                "output_path": output_path,
-                "output_id":   oid,
-                "chars":       chars_status,
-                "scene":       scene_file,
-                "scene_final": scene_final,
-                "slot_final":  slot_final,
+                "scene_image":    slot.get("scene_image", ""),
+                "done":           1 if found else 0,
+                "total":          1,
+                "output_path":    output_path,
+                "output_id":      oid,
+                "chars":          chars_status,
+                "scene":          scene_file,
+                "scene_final":    scene_final,
+                "slot_final":     slot_final,
+                "custom_passes":  cp_statuses,
             })
 
         overall = (

@@ -588,6 +588,10 @@ def _scene_path(output_dir: Path, output_id: str) -> Path:
     return output_dir / f"{output_id}_scene.png"
 
 
+def _custom_pass_path(output_dir: Path, output_id: str, idx: int) -> Path:
+    return output_dir / f"{output_id}_cp{idx}.png"
+
+
 def _stage_linear_to_path(output_dir: Path, output_id: str, stage: int, n_chars: int) -> Path:
     """Map linear from_stage int to the corresponding file path."""
     if stage < n_chars * 2:
@@ -1304,6 +1308,29 @@ async def _run_paste_character_async(
         else:
             _log("  ⚠ Scene Blend: brak ścieżki i2i — scene wyłączony")
 
+    # Custom passes workflow (same i2i backend; load if any slot has active passes)
+    cp_url = cp_in_dir = cp_out_dir = cp_wf = None
+    _any_cp = any(
+        any((p.get("positive") or "").strip() and p.get("enabled", True)
+            for p in s.get("custom_passes", []))
+        for s in paste_slots
+    )
+    if _any_cp:
+        win        = app_config_service.get_backend("windows")
+        cp_url     = win.get("api_url")    or settings.comfyui_upscale_url
+        cp_in_dir  = Path(win.get("input_dir")  or settings.comfyui_upscale_input_dir)
+        cp_out_dir = Path(win.get("output_dir") or settings.comfyui_upscale_output_dir)
+        wf_str = win.get("models", {}).get("i2i", {}).get("workflow_json", "")
+        if wf_str:
+            wf_p = Path(wf_str)
+            if wf_p.exists():
+                cp_wf = json.loads(wf_p.read_text(encoding="utf-8"))
+                _log(f"  \U0001f4cb Custom Passes workflow: {wf_p.name}")
+            else:
+                _log(f"  ⚠ Custom Passes workflow nie istnieje: {wf_p}")
+        else:
+            _log("  ⚠ Custom Passes: brak ścieżki i2i w konfiguracji")
+
     # Select slots
     if slot_index is not None:
         slots_to_run = [(slot_index, paste_slots[slot_index])] if 0 <= slot_index < len(paste_slots) else []
@@ -1607,6 +1634,46 @@ async def _run_paste_character_async(
                         _sb_input.unlink(missing_ok=True)
                 current_path = scene_out
                 _log(f"  \U0001f3a8 [{idx}] {label}: scene -> {scene_out.name}")
+
+            # -- Custom passes -------------------------------------------------
+            cp_passes = slot.get("custom_passes") or []
+            for ci, cp in enumerate(cp_passes):
+                if not cp.get("enabled", True):
+                    continue
+                cp_pos = (cp.get("positive") or "").strip()
+                if not cp_pos:
+                    continue
+                if cp_wf is None or current_path is None or not current_path.exists():
+                    _log(f"  ⚠ [{idx}] custom pass {ci+1}: brak workflow lub poprzedniego etapu — pomijam")
+                    continue
+                cp_neg   = cp.get("negative") or ""
+                cp_den   = float(cp.get("denoise", 0.6))
+                cp_steps = int(cp.get("steps", 30))
+                cp_cfg   = float(cp.get("cfg", 8.0))
+                cp_name  = (cp.get("name") or f"Pass {ci+1}").strip()
+                cp_out   = _custom_pass_path(working_dir, output_id, ci)
+                _archive_path_to(cp_out, archive_dir)
+                _cp_input  = _apply_user_mask(current_path, working_dir, current_path)
+                _cp_masked = _cp_input != current_path
+                if _cp_masked:
+                    _log(f"  🎭 [{idx}] {cp_name}: maska zastosowana")
+                _log(f"  🔧 [{idx}/{len(slots_to_run)}] {label} — {cp_name} "
+                     f"(denoise={cp_den}) ...")
+                try:
+                    await _generate_one(
+                        loop, cp_url, cp_in_dir, cp_out_dir,
+                        cp_wf, _cp_input,
+                        cp_pos, cp_neg,
+                        cp_steps, cp_cfg, cp_den,
+                        cp_out,
+                        label=f"{cp_name} {label}",
+                    )
+                finally:
+                    if _cp_masked:
+                        _cp_input.unlink(missing_ok=True)
+                if cp_out.exists():
+                    current_path = cp_out
+                    _log(f"  🔧 [{idx}] {label}: {cp_name} -> {cp_out.name}")
 
             _log(f"  ✅ [{idx}/{len(slots_to_run)}] {label} -> {current_path.name if current_path else '?'}")
             done += 1

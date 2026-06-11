@@ -76,6 +76,7 @@ class PasteSlot(BaseModel):
     characters:          list[CharacterEntry] = Field(default_factory=list)
     scene_blend_enabled: bool                 = True   # per-slot (scene is one pass)
     sb_override:         Optional[dict]       = None   # per-slot Scene Blend overrides
+    custom_passes:       list[dict]           = Field(default_factory=list)
 
 
 class TilePayload(BaseModel):
@@ -138,6 +139,7 @@ def _serialize_payload(body: TilePayload) -> dict:
             "characters":          [c.model_dump() for c in s.characters],  # includes edge_blend_enabled per char
             "scene_blend_enabled": s.scene_blend_enabled,
             "sb_override":         s.sb_override,
+            "custom_passes":       s.custom_passes,
         }
         for s in body.paste_slots
     ]
