@@ -4225,6 +4225,8 @@
                                                           class="absolute top-0.5 right-0.5 w-2.5 h-2.5 rounded-full bg-green-400 border border-gray-900 z-10" title="Sfinalizowany"></span>
                                                     <span x-show="tileModal.status?.slots?.[si]?.scene && !tileModal.status?.slots?.[si]?.scene_final"
                                                           class="absolute top-0.5 right-0.5 w-2.5 h-2.5 rounded-full bg-yellow-400 border border-gray-900 z-10" title="W robocze"></span>
+                                                    <span x-show="picSbMasks[tileModal.status?.slots?.[si]?.scene]"
+                                                          class="absolute bottom-0.5 right-0.5 text-purple-400 text-xs leading-none pointer-events-none" title="Maska">🎭</span>
                                                 </div>
                                                 <div class="flex items-center gap-1">
                                                     <button @click="picSwapPasteStage(slot.id, (tileModal.status?.slots?.[si]?.chars?.length||slot.characters.length)*2)"
@@ -4308,6 +4310,8 @@
                                                                       class="absolute top-0.5 right-0.5 w-2.5 h-2.5 rounded-full bg-green-400 border border-gray-900 z-10" title="Sfinalizowany"></span>
                                                                 <span x-show="tileModal.status?.slots?.[si]?.custom_passes?.[cpi]?.path && !tileModal.status?.slots?.[si]?.custom_passes?.[cpi]?.final"
                                                                       class="absolute top-0.5 right-0.5 w-2.5 h-2.5 rounded-full bg-yellow-400 border border-gray-900 z-10" title="W robocze"></span>
+                                                                <span x-show="picSbMasks[tileModal.status?.slots?.[si]?.custom_passes?.[cpi]?.path]"
+                                                                      class="absolute bottom-0.5 right-0.5 text-purple-400 text-xs leading-none pointer-events-none" title="Maska">🎭</span>
                                                                 <span x-show="!cp.enabled"
                                                                       class="absolute inset-0 rounded bg-gray-900/60 flex items-center justify-center text-xs text-gray-500 pointer-events-none">off</span>
                                                             </div>
@@ -8103,7 +8107,7 @@ function app() {
             finally { this.tileModal.charLoading = false; }
         },
 
-        /** Check which PIL/Edge outputs in paste_character slots have a scene-blend mask. */
+        /** Check which stage outputs in paste_character slots have a user mask. */
         async checkSbMasks() {
             const slots = this.tileModal.status?.slots || [];
             const masks = {};
@@ -8112,6 +8116,10 @@ function app() {
                 for (const ch of (slot.chars || [])) {
                     if (ch.pil)  paths.push(ch.pil);
                     if (ch.edge) paths.push(ch.edge);
+                }
+                if (slot.scene) paths.push(slot.scene);
+                for (const cp of (slot.custom_passes || [])) {
+                    if (cp.path) paths.push(cp.path);
                 }
             }
             await Promise.all(paths.map(async p => {
