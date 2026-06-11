@@ -1337,35 +1337,7 @@ async def _run_paste_character_async(
     else:
         slots_to_run = list(enumerate(paste_slots))
 
-    # Pre-filter: remove slots that would be instantly skipped (all stages already done).
-    # This keeps the progress counter accurate (total = actual work, not all slots).
-    def _last_expected_path(slot_obj: dict, oid: str) -> Path:
-        """Return the path of the most advanced stage that should exist for this slot."""
-        chars = slot_obj.get("characters", [])
-        n = len(chars)
-        slot_sb_     = bool(slot_obj.get("scene_blend_enabled", True))
-        last_eb_     = bool(chars[-1].get("edge_blend_enabled", True)) if chars else True
-        active_cp    = [(i, p) for i, p in enumerate(slot_obj.get("custom_passes", []))
-                        if p.get("enabled", True) and (p.get("positive") or "").strip()]
-        if active_cp:
-            return _custom_pass_path(working_dir, oid, active_cp[-1][0])
-        if sb_positive and sb_wf and sb_enabled and slot_sb_:
-            return _scene_path(working_dir, oid)
-        if eb_positive and eb_wf and eb_enabled and last_eb_ and n:
-            return _char_edge_path(working_dir, oid, n - 1)
-        return _char_pil_path(working_dir, oid, max(n - 1, 0))
-
-    if not force_all and from_stage == 0:
-        def _slot_needs_work(si_slot: tuple) -> bool:
-            si, slot = si_slot
-            if not slot.get("characters"):
-                return True
-            oid = slot.get("output_id", slot.get("id", f"slot_{si}"))
-            return not _last_expected_path(slot, oid).exists()
-        slots_to_run = [s for s in slots_to_run if _slot_needs_work(s)]
-        skipped_count = len(paste_slots) - len(slots_to_run)
-    else:
-        skipped_count = len(paste_slots) - len(slots_to_run)
+    skipped_count = len(paste_slots) - len(slots_to_run)
 
     _set_job(run_id, tile_id, {
         "status": "running", "tile_id": tile_id, "tile_name": tile_name,
@@ -1399,15 +1371,6 @@ async def _run_paste_character_async(
         _eff_sb_pos  = (_sb_ov.get("positive") or "").strip() or sb_positive
         _eff_sb_neg  = _sb_ov["negative"] if _sb_ov.get("negative") is not None else sb_negative
         _eff_sb_den  = float(_sb_ov["denoise"]) if _sb_ov.get("denoise") is not None else sb_denoise
-
-        # Determine "done" file for skip check (most advanced configured stage)
-        done_path = _last_expected_path(slot, output_id)
-
-        if not force_all and from_stage == 0 and done_path.exists():
-            _log(f"  ⏭ [{idx}/{len(slots_to_run)}] {label} — ostatni etap istnieje, pomijam")
-            done += 1
-            _update_job(run_id, tile_id, done=done)
-            continue
 
         try:
             scene_img_path = Path(slot.get("scene_image", ""))
