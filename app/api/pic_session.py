@@ -100,10 +100,8 @@ class TilePayload(BaseModel):
     scene_blend_cfg:      Optional[float] = None
     scene_blend_denoise:  Optional[float] = None
     scene_blend_prompts:  list[dict]      = Field(default_factory=list)
-    # fine_tune
-    ft_slots:       list[dict] = Field(default_factory=list)
-    custom_passes:  list[dict] = Field(default_factory=list)
-    carry_mask:     bool       = False
+    # fine_tune  (custom_passes and carry_mask live inside each ft_slot)
+    ft_slots: list[dict] = Field(default_factory=list)
     # common
     output_dir:         str              = ""
     global_suffix:      str              = ""

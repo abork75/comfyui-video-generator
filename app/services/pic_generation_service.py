@@ -1327,25 +1327,25 @@ async def _run_fine_tune_async(
     work_dir = output_dir / "robocze"
     work_dir.mkdir(parents=True, exist_ok=True)
 
-    carry_mask    = tile.get("carry_mask", False)
-    custom_passes = tile.get("custom_passes", [])
-    ft_slots      = tile.get("ft_slots", [])
+    ft_slots = tile.get("ft_slots", [])
 
     if not ft_slots:
         raise ValueError("fine_tune tile has no ft_slots configured")
 
-    # Determine which slots and passes to run
+    # Determine which slots to run
     if slot_index is not None:
         slots_to_run = [(slot_index, ft_slots[slot_index])]
     else:
         slots_to_run = list(enumerate(ft_slots))
 
-    if pass_index is not None:
-        pass_indices = [pass_index]
-    else:
-        pass_indices = [i for i, cp in enumerate(custom_passes) if cp.get("enabled", True)]
+    # Total = sum of enabled passes across all slots to run
+    def _count_passes(slot: dict) -> int:
+        cps = slot.get("custom_passes", [])
+        if pass_index is not None:
+            return 1
+        return len([cp for cp in cps if cp.get("enabled", True)])
 
-    total = len(slots_to_run) * len(pass_indices)
+    total = sum(_count_passes(s) for _, s in slots_to_run)
     done  = 0
     errors: list[str] = []
     loop  = asyncio.get_event_loop()
@@ -1373,7 +1373,10 @@ async def _run_fine_tune_async(
                 _save_sess(run_id, sess_data)
                 slot["output_id"] = oid
 
-            input_image = slot.get("input_image", "")
+            input_image   = slot.get("input_image", "")
+            custom_passes = slot.get("custom_passes", [])
+            carry_mask    = slot.get("carry_mask", False)
+
             if not input_image:
                 errors.append(f"Slot {si}: brak obrazka wejściowego")
                 _update_job(run_id, tile_id, errors=list(errors))
@@ -1384,6 +1387,11 @@ async def _run_fine_tune_async(
                 errors.append(f"Slot {si}: plik nie istnieje: {input_image}")
                 _update_job(run_id, tile_id, errors=list(errors))
                 continue
+
+            if pass_index is not None:
+                pass_indices = [pass_index]
+            else:
+                pass_indices = [i for i, cp in enumerate(custom_passes) if cp.get("enabled", True)]
 
             for cpi in pass_indices:
                 cp = custom_passes[cpi]

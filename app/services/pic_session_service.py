@@ -343,26 +343,34 @@ def _migrate_tile(tile: dict) -> dict:
 
         return tile
 
-    # fine_tune: migrate single input_image/output_id → ft_slots list
+    # fine_tune: migrate to ft_slots with per-slot custom_passes + carry_mask
     if tile_type == "fine_tune":
         import uuid as _uuid
-        tile.setdefault("custom_passes", [])
-        tile.setdefault("carry_mask",    False)
+        # Drain tile-level fields before distributing to slots
+        tile_carry_mask   = tile.pop("carry_mask", False)
+        tile_level_passes = tile.pop("custom_passes", [])
 
         if "ft_slots" not in tile:
-            # Legacy: move top-level input_image / output_id into first slot
+            # Legacy single-image: move input_image / output_id into first slot
             old_input = tile.pop("input_image", "")
             old_oid   = tile.pop("output_id",   "")
             tile["ft_slots"] = [{
-                "id":          str(_uuid.uuid4()),
-                "input_image": old_input,
-                "output_id":   old_oid,
+                "id":            str(_uuid.uuid4()),
+                "input_image":   old_input,
+                "output_id":     old_oid,
+                "custom_passes": tile_level_passes,
+                "carry_mask":    tile_carry_mask,
             }]
         else:
             for s in tile["ft_slots"]:
-                s.setdefault("id",          str(_uuid.uuid4()))
-                s.setdefault("input_image", "")
-                s.setdefault("output_id",   "")
+                s.setdefault("id",           str(_uuid.uuid4()))
+                s.setdefault("input_image",  "")
+                s.setdefault("output_id",    "")
+                s.setdefault("carry_mask",   tile_carry_mask)
+                # If slot has no custom_passes yet, inherit from tile level (one-time migration)
+                if "custom_passes" not in s:
+                    import copy as _copy
+                    s["custom_passes"] = _copy.deepcopy(tile_level_passes)
         return tile
 
     # ── OI migration: source_image + top-level prompts → image_slots ─────────
@@ -761,9 +769,8 @@ def get_tile_status(run_id: str, tile_id: str) -> dict:
 
     # ── fine_tune: per-slot pass status ─────────────────────────────────────
     if tile.get("type") == "fine_tune":
-        work_dir      = output_dir / "robocze"
-        custom_passes = tile.get("custom_passes", [])
-        ft_slot_data  = tile.get("ft_slots", [])
+        work_dir     = output_dir / "robocze"
+        ft_slot_data = tile.get("ft_slots", [])
 
         def _ft_find_oid(oid: str, ci: int) -> str | None:
             if not oid or not output_dir.is_dir():
@@ -788,7 +795,8 @@ def get_tile_status(run_id: str, tile_id: str) -> dict:
         total_count = 0
 
         for slot in ft_slot_data:
-            oid      = slot.get("output_id", "")
+            oid           = slot.get("output_id", "")
+            custom_passes = slot.get("custom_passes", [])
             passes: list[dict] = []
             for ci, cp in enumerate(custom_passes):
                 path  = _ft_find_oid(oid, ci)
