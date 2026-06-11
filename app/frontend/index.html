@@ -3147,10 +3147,15 @@
                                          class="flex items-center gap-2 px-3 py-2 bg-gray-800/80 cursor-pointer hover:bg-gray-800 transition select-none">
                                         <span class="text-xs text-gray-600 flex-shrink-0 w-5 text-center" x-text="slotIdx+1"></span>
                                         <!-- Scene thumb -->
-                                        <img :src="picCIFindImagePath(slot.scene_image, tileModal.data.scene_dirs)"
-                                             class="w-10 h-10 object-cover rounded flex-shrink-0 cursor-zoom-in"
-                                             @click.stop="picImgPreview = { open: true, url: picCIFindImagePath(slot.scene_image, tileModal.data.scene_dirs), title: slot.scene_image }"
-                                             @error="$el.style.display='none'">
+                                        <div class="relative flex-shrink-0 group/sthumb">
+                                            <img :src="picCIFindImagePath(slot.scene_image, tileModal.data.scene_dirs)"
+                                                 class="w-10 h-10 object-cover rounded cursor-zoom-in"
+                                                 @click.stop="picOpenPreview(picCIFindImagePath(slot.scene_image, tileModal.data.scene_dirs), slot.scene_image, (tileModal.sceneImages.find(i=>i.name===slot.scene_image)||{}).path||'')"
+                                                 @error="$el.style.display='none'">
+                                            <span x-show="tileModal.ciSceneMasks[slot.scene_image]"
+                                                  class="absolute -top-1 -right-1 text-purple-400 text-xs leading-none pointer-events-none"
+                                                  title="Maska ustawiona">🎭</span>
+                                        </div>
                                         <div class="flex-1 min-w-0">
                                             <p class="text-xs font-medium text-white truncate" x-text="slot.scene_image"></p>
                                             <div class="flex items-center gap-1.5 mt-0.5 flex-wrap">
@@ -3238,9 +3243,9 @@
                                                         <input type="text" x-model="p.name" placeholder="Nazwa prompta"
                                                                class="w-full bg-gray-700 border border-gray-600 rounded px-2 py-1.5 text-xs text-white focus:outline-none focus:border-blue-500">
                                                         <textarea x-model="p.positive" rows="3" placeholder="Positive prompt…"
-                                                                  class="w-full bg-gray-700 border border-green-900 rounded px-2 py-1.5 text-xs text-green-300 font-mono resize-none focus:outline-none focus:border-green-600"></textarea>
+                                                                  class="w-full bg-gray-700 border border-green-900 rounded px-2 py-1.5 text-xs text-green-300 font-mono resize-y focus:outline-none focus:border-green-600"></textarea>
                                                         <textarea x-model="p.negative" rows="2" placeholder="Negative prompt…"
-                                                                  class="w-full bg-gray-700 border border-red-900 rounded px-2 py-1.5 text-xs text-red-300 font-mono resize-none focus:outline-none focus:border-red-700"></textarea>
+                                                                  class="w-full bg-gray-700 border border-red-900 rounded px-2 py-1.5 text-xs text-red-300 font-mono resize-y focus:outline-none focus:border-red-700"></textarea>
                                                         <div class="flex gap-4 text-xs items-center">
                                                             <label class="text-gray-500">Steps
                                                                 <input type="number" x-model.number="p.params.steps" min="1" max="100"
@@ -3507,10 +3512,10 @@
                                                        class="w-full bg-gray-700 border border-gray-600 rounded px-2 py-1.5 text-xs text-white focus:outline-none focus:border-blue-500">
                                                 <textarea x-model="p.positive" rows="3" placeholder="Positive prompt…"
                                                           @input="_picComputePromptFlags()"
-                                                          class="w-full bg-gray-700 border border-green-900 rounded px-2 py-1.5 text-xs text-green-300 font-mono resize-none focus:outline-none focus:border-green-600"></textarea>
+                                                          class="w-full bg-gray-700 border border-green-900 rounded px-2 py-1.5 text-xs text-green-300 font-mono resize-y focus:outline-none focus:border-green-600"></textarea>
                                                 <textarea x-model="p.negative" rows="2" placeholder="Negative prompt…"
                                                           @input="_picComputePromptFlags()"
-                                                          class="w-full bg-gray-700 border border-red-900 rounded px-2 py-1.5 text-xs text-red-300 font-mono resize-none focus:outline-none focus:border-red-700"></textarea>
+                                                          class="w-full bg-gray-700 border border-red-900 rounded px-2 py-1.5 text-xs text-red-300 font-mono resize-y focus:outline-none focus:border-red-700"></textarea>
                                                 <div class="flex gap-4 text-xs items-center">
                                                     <label class="text-gray-500">Steps
                                                         <input type="number" x-model.number="p.params.steps" min="1" max="100"
@@ -3885,9 +3890,9 @@
                                                 <input type="text" x-model="p.name" placeholder="Nazwa prompta"
                                                        class="w-full bg-gray-700 border border-gray-600 rounded px-2 py-1.5 text-xs text-white focus:outline-none focus:border-blue-500">
                                                 <textarea x-model="p.positive" rows="3" placeholder="Positive…"
-                                                          class="w-full bg-gray-700 border border-green-900 rounded px-2 py-1.5 text-xs text-green-300 font-mono resize-none focus:outline-none focus:border-green-600"></textarea>
+                                                          class="w-full bg-gray-700 border border-green-900 rounded px-2 py-1.5 text-xs text-green-300 font-mono resize-y focus:outline-none focus:border-green-600"></textarea>
                                                 <textarea x-model="p.negative" rows="2" placeholder="Negative…"
-                                                          class="w-full bg-gray-700 border border-red-900 rounded px-2 py-1.5 text-xs text-red-300 font-mono resize-none focus:outline-none focus:border-red-700"></textarea>
+                                                          class="w-full bg-gray-700 border border-red-900 rounded px-2 py-1.5 text-xs text-red-300 font-mono resize-y focus:outline-none focus:border-red-700"></textarea>
                                                 <div class="flex gap-4 text-xs items-center">
                                                     <label class="text-gray-500">Steps <input type="number" x-model.number="p.params.steps" min="1" max="100"
                                                            class="ml-1 w-14 bg-gray-700 border border-gray-600 rounded px-1 py-0.5 text-white text-center focus:outline-none"></label>
@@ -3991,9 +3996,9 @@
                                                 <input type="text" x-model="p.name" placeholder="Nazwa prompta"
                                                        class="w-full bg-gray-700 border border-gray-600 rounded px-2 py-1.5 text-xs text-white focus:outline-none focus:border-purple-500">
                                                 <textarea x-model="p.positive" rows="3" placeholder="Positive…"
-                                                          class="w-full bg-gray-700 border border-green-900 rounded px-2 py-1.5 text-xs text-green-300 font-mono resize-none focus:outline-none focus:border-green-600"></textarea>
+                                                          class="w-full bg-gray-700 border border-green-900 rounded px-2 py-1.5 text-xs text-green-300 font-mono resize-y focus:outline-none focus:border-green-600"></textarea>
                                                 <textarea x-model="p.negative" rows="2" placeholder="Negative…"
-                                                          class="w-full bg-gray-700 border border-red-900 rounded px-2 py-1.5 text-xs text-red-300 font-mono resize-none focus:outline-none focus:border-red-700"></textarea>
+                                                          class="w-full bg-gray-700 border border-red-900 rounded px-2 py-1.5 text-xs text-red-300 font-mono resize-y focus:outline-none focus:border-red-700"></textarea>
                                                 <div class="flex gap-4 text-xs items-center">
                                                     <label class="text-gray-500">Steps <input type="number" x-model.number="p.params.steps" min="1" max="100"
                                                            class="ml-1 w-14 bg-gray-700 border border-gray-600 rounded px-1 py-0.5 text-white text-center focus:outline-none"></label>
@@ -4041,6 +4046,11 @@
                                                 <span class="text-xs text-gray-600" x-show="slot.characters.length > 1" x-text="'×' + slot.characters.length"></span>
                                             </div>
                                         </template>
+                                        <!-- Per-slot Scene Blend override toggle -->
+                                        <button @click="slot.sb_override = slot.sb_override ? null : { positive: (tileModal.data.scene_blend_prompts?.find(p=>p.enabled!==false)?.positive||''), negative: (tileModal.data.scene_blend_prompts?.find(p=>p.enabled!==false)?.negative||''), denoise: tileModal.data.scene_blend_denoise ?? 0.4 }"
+                                                :class="slot.sb_override ? 'text-purple-400 bg-purple-900/30' : 'text-gray-500 hover:text-purple-400'"
+                                                class="text-xs px-1.5 py-0.5 rounded transition flex-shrink-0"
+                                                title="Dostosuj Scene Blend dla tego slotu">⚙</button>
                                         <!-- Status circle: 🟢 finalized | 🟡 in robocze | ⚪ empty -->
                                         <span class="text-sm flex-shrink-0 leading-none"
                                               :title="tileModal.status?.slots?.[si]?.slot_final ? 'Sfinalizowany' : tileModal.status?.slots?.[si]?.done ? 'W robocze' : 'Nie wygenerowany'"
@@ -4064,7 +4074,7 @@
                                                             <template x-if="tileModal.status?.slots?.[si]?.chars?.[ci]?.pil">
                                                                 <img :src="'/api/fs/image?path='+encodeURIComponent(tileModal.status.slots[si].chars[ci].pil)+'&cb='+tileModal.imgCacheBust"
                                                                      class="w-24 h-20 rounded object-cover cursor-zoom-in ring-1 ring-gray-600 hover:ring-blue-400 transition"
-                                                                     @click="picImgPreview={open:true,url:'/api/fs/image?path='+encodeURIComponent(tileModal.status.slots[si].chars[ci].pil)+'&cb='+tileModal.imgCacheBust,title:'Slot '+(si+1)+' C'+(ci+1)+' PIL'}"
+                                                                     @click="picOpenPreview('/api/fs/image?path='+encodeURIComponent(tileModal.status.slots[si].chars[ci].pil)+'&cb='+tileModal.imgCacheBust,'Slot '+(si+1)+' C'+(ci+1)+' PIL',tileModal.status.slots[si].chars[ci].pil)"
                                                                      @error="$el.style.display='none'">
                                                             </template>
                                                             <template x-if="!tileModal.status?.slots?.[si]?.chars?.[ci]?.pil">
@@ -4076,6 +4086,8 @@
                                                                   class="absolute top-0.5 right-0.5 w-2.5 h-2.5 rounded-full bg-green-400 border border-gray-900 z-10" title="Sfinalizowany"></span>
                                                             <span x-show="tileModal.status?.slots?.[si]?.chars?.[ci]?.pil && !tileModal.status?.slots?.[si]?.chars?.[ci]?.pil_final"
                                                                   class="absolute top-0.5 right-0.5 w-2.5 h-2.5 rounded-full bg-yellow-400 border border-gray-900 z-10" title="W robocze"></span>
+                                                            <span x-show="picSbMasks[tileModal.status?.slots?.[si]?.chars?.[ci]?.pil]"
+                                                                  class="absolute bottom-0.5 right-0.5 text-purple-400 text-xs leading-none pointer-events-none" title="Maska Scene Blend">🎭</span>
                                                         </div>
                                                         <div class="flex items-center gap-1">
                                                             <button @click="picSwapPasteStage(slot.id, ci*2)"
@@ -4105,7 +4117,7 @@
                                                             <template x-if="tileModal.status?.slots?.[si]?.chars?.[ci]?.edge">
                                                                 <img :src="'/api/fs/image?path='+encodeURIComponent(tileModal.status.slots[si].chars[ci].edge)+'&cb='+tileModal.imgCacheBust"
                                                                      class="w-24 h-20 rounded object-cover cursor-zoom-in ring-1 ring-gray-600 hover:ring-blue-400 transition"
-                                                                     @click="picImgPreview={open:true,url:'/api/fs/image?path='+encodeURIComponent(tileModal.status.slots[si].chars[ci].edge)+'&cb='+tileModal.imgCacheBust,title:'Slot '+(si+1)+' C'+(ci+1)+' Edge'}"
+                                                                     @click="picOpenPreview('/api/fs/image?path='+encodeURIComponent(tileModal.status.slots[si].chars[ci].edge)+'&cb='+tileModal.imgCacheBust,'Slot '+(si+1)+' C'+(ci+1)+' Edge',tileModal.status.slots[si].chars[ci].edge)"
                                                                      @error="$el.style.display='none'">
                                                             </template>
                                                             <template x-if="!tileModal.status?.slots?.[si]?.chars?.[ci]?.edge">
@@ -4117,6 +4129,8 @@
                                                                   class="absolute top-0.5 right-0.5 w-2.5 h-2.5 rounded-full bg-green-400 border border-gray-900 z-10" title="Sfinalizowany"></span>
                                                             <span x-show="tileModal.status?.slots?.[si]?.chars?.[ci]?.edge && !tileModal.status?.slots?.[si]?.chars?.[ci]?.edge_final"
                                                                   class="absolute top-0.5 right-0.5 w-2.5 h-2.5 rounded-full bg-yellow-400 border border-gray-900 z-10" title="W robocze"></span>
+                                                            <span x-show="picSbMasks[tileModal.status?.slots?.[si]?.chars?.[ci]?.edge]"
+                                                                  class="absolute bottom-0.5 right-0.5 text-purple-400 text-xs leading-none pointer-events-none" title="Maska Scene Blend">🎭</span>
                                                         </div>
                                                         <div class="flex items-center gap-1">
                                                             <button @click="picSwapPasteStage(slot.id, ci*2+1)"
@@ -4148,7 +4162,7 @@
                                                     <template x-if="tileModal.status?.slots?.[si]?.scene">
                                                         <img :src="'/api/fs/image?path='+encodeURIComponent(tileModal.status.slots[si].scene)+'&cb='+tileModal.imgCacheBust"
                                                              class="w-24 h-20 rounded object-cover cursor-zoom-in ring-1 ring-gray-600 hover:ring-blue-400 transition"
-                                                             @click="picImgPreview={open:true,url:'/api/fs/image?path='+encodeURIComponent(tileModal.status.slots[si].scene)+'&cb='+tileModal.imgCacheBust,title:'Slot '+(si+1)+' Scene'}"
+                                                             @click="picOpenPreview('/api/fs/image?path='+encodeURIComponent(tileModal.status.slots[si].scene)+'&cb='+tileModal.imgCacheBust,'Slot '+(si+1)+' Scene')"
                                                              @error="$el.style.display='none'">
                                                     </template>
                                                     <template x-if="!tileModal.status?.slots?.[si]?.scene">
@@ -4177,6 +4191,37 @@
                                             </div>
 
                                         </div>
+
+                                        <!-- Per-slot Scene Blend override panel -->
+                                        <template x-if="slot.sb_override">
+                                            <div class="border-t border-purple-800/50 pt-2 mt-1 space-y-2">
+                                                <div class="flex items-center gap-2">
+                                                    <span class="text-xs text-purple-400 font-medium">⚙ Scene Blend — własne ustawienia slotu</span>
+                                                    <button @click="confirm('Usunąć własne ustawienia Scene Blend dla tego slotu?') && (slot.sb_override = null)"
+                                                            class="text-xs text-gray-600 hover:text-red-400 ml-auto transition"
+                                                            title="Usuń override, wróć do domyślnych">✕ Reset</button>
+                                                </div>
+                                                <div>
+                                                    <label class="text-xs text-gray-500 mb-0.5 block">Positive</label>
+                                                    <textarea x-model="slot.sb_override.positive"
+                                                              class="w-full bg-gray-900 border border-gray-700 rounded text-xs text-gray-200 p-1.5 resize-y"
+                                                              rows="3" placeholder="(dziedziczy z kafelka gdy puste)"></textarea>
+                                                </div>
+                                                <div>
+                                                    <label class="text-xs text-gray-500 mb-0.5 block">Negative</label>
+                                                    <textarea x-model="slot.sb_override.negative"
+                                                              class="w-full bg-gray-900 border border-gray-700 rounded text-xs text-gray-200 p-1.5 resize-y"
+                                                              rows="2" placeholder="(dziedziczy z kafelka gdy puste)"></textarea>
+                                                </div>
+                                                <div class="flex items-center gap-2">
+                                                    <label class="text-xs text-gray-500">Denoise</label>
+                                                    <input type="number" x-model.number="slot.sb_override.denoise"
+                                                           min="0.1" max="1.0" step="0.05"
+                                                           class="w-20 bg-gray-900 border border-gray-700 rounded text-xs text-gray-200 p-1 text-center">
+                                                    <span class="text-xs text-gray-600">(0.1–1.0)</span>
+                                                </div>
+                                            </div>
+                                        </template>
 
                                         <!-- Slot actions row -->
                                         <div class="flex items-center gap-3 pt-1 flex-wrap">
@@ -4951,6 +4996,10 @@ function app() {
             this.connectWS();
             this._pollEnvStatus();   // start env health polling
             await this.loadRuns();
+            window.addEventListener('pic-mask-changed', () => {
+                if (this.tileModal.data?.type === 'character_insert') this.checkCISceneMasks();
+                if (this.tileModal.data?.type === 'paste_character')  this.checkSbMasks();
+            });
         },
 
         // ─ WebSocket ──────────────────────────────────────
@@ -5856,10 +5905,11 @@ function app() {
             },
             srcImages:   [],   // one_image_many_prompts image list
             srcLoading:  false,
-            sceneImages: [],   // character_insert scene list
-            sceneLoading: false,
-            charImages:  [],   // character_insert characters list
-            charLoading: false,
+            sceneImages:   [],   // character_insert scene list
+            sceneLoading:  false,
+            charImages:    [],   // character_insert characters list
+            charLoading:   false,
+            ciSceneMasks:  {},   // { [scene_image_name]: true } — has user mask
             status:     null,
             job:        null,
         },
@@ -5878,14 +5928,18 @@ function app() {
 
         // Mask editor state (shared with picMaskEditor component via $root)
         picMask: {
-            active: false,
-            exists: false,
-            tool:   'brush',
-            size:   30,
-            saving: false,
-            msg:    '',
-            msgOk:  true,
+            active:   false,
+            exists:   false,
+            tool:     'brush',
+            size:     30,
+            saving:   false,
+            msg:      '',
+            msgOk:    true,
+            filepath: '',   // absolute path — stable across picImgPreview replacements
         },
+
+        // Scene Blend mask indicator: { [absolute_path]: true }
+        picSbMasks: {},
 
         // Global generation state — persists independently of tileModal
         picGen: {
@@ -7371,10 +7425,11 @@ function app() {
 
         /** Open image preview and reset mask editor state. filepath = absolute path for mask support. */
         picOpenPreview(url, title, filepath = '') {
-            this.picMask.active = false;
-            this.picMask.msg    = '';
-            this.picMask.exists = false;
-            this.picImgPreview  = { open: true, url, title, filepath };
+            this.picMask.active   = false;
+            this.picMask.msg      = '';
+            this.picMask.exists   = false;
+            this.picMask.filepath = filepath;   // stable: picMask is mutated, never replaced
+            this.picImgPreview    = { open: true, url, title, filepath };
         },
 
         async picSaveCategory() {
@@ -7644,9 +7699,10 @@ function app() {
                 tileId:      tile?.id || null,
                 data:        tileData,
                 openSlots:   {},
-                srcImages:   [], srcLoading:   false,
-                sceneImages: [], sceneLoading: false,
-                charImages:  [], charLoading:  false,
+                srcImages:     [], srcLoading:   false,
+                sceneImages:   [], sceneLoading: false,
+                charImages:    [], charLoading:  false,
+                ciSceneMasks:  {},
                 ciPickScene:     '',
                 ciPickChars:     [],
                 editingSlotIdx:  null,
@@ -7666,7 +7722,7 @@ function app() {
                 } : null,
             };
             if (tileData.type === 'character_insert') {
-                if (tileData.scene_dirs?.some(d=>d))      this.loadCISceneImages();
+                if (tileData.scene_dirs?.some(d=>d))      this.loadCISceneImages().then(() => this.checkCISceneMasks());
                 if (tileData.characters_dirs?.some(d=>d)) this.loadCICharImages();
             } else if (this.tileModal.data.source_dirs?.length) {
                 this.loadTileSrcImages();
@@ -7938,6 +7994,43 @@ function app() {
                 this.tileModal.charImages = merged;
             } catch(e) {}
             finally { this.tileModal.charLoading = false; }
+        },
+
+        /** Check which PIL/Edge outputs in paste_character slots have a scene-blend mask. */
+        async checkSbMasks() {
+            const slots = this.tileModal.status?.slots || [];
+            const masks = {};
+            const paths = [];
+            for (const slot of slots) {
+                for (const ch of (slot.chars || [])) {
+                    if (ch.pil)  paths.push(ch.pil);
+                    if (ch.edge) paths.push(ch.edge);
+                }
+            }
+            await Promise.all(paths.map(async p => {
+                try {
+                    const r = await fetch('/api/pic/mask?path=' + encodeURIComponent(p), { method: 'HEAD' });
+                    if (r.ok) masks[p] = true;
+                } catch(e) {}
+            }));
+            this.picSbMasks = masks;
+        },
+
+        /** Check which scene images in current slots have a user mask; updates ciSceneMasks. */
+        async checkCISceneMasks() {
+            const slots = this.tileModal.data.scene_slots || [];
+            const masks = {};
+            await Promise.all(slots.map(async slot => {
+                const name = slot.scene_image;
+                if (!name) return;
+                const img = this.tileModal.sceneImages.find(i => i.name === name);
+                if (!img?.path) return;
+                try {
+                    const r = await fetch('/api/pic/mask?path=' + encodeURIComponent(img.path), { method: 'HEAD' });
+                    if (r.ok) masks[name] = true;
+                } catch(e) {}
+            }));
+            this.tileModal.ciSceneMasks = masks;
         },
 
         picToggleCIPickChar(name) {
@@ -8413,6 +8506,7 @@ function app() {
                 const res = await fetch(`/api/pic/session/${this.selectedRun.filename}/tiles/${this.tileModal.tileId}/status`);
                 if (!res.ok) return;
                 this.tileModal.status = await res.json();
+                if (this.tileModal.data?.type === 'paste_character') this.checkSbMasks();
             } catch(e) { /* silent */ }
         },
 
@@ -8893,7 +8987,7 @@ function picMaskEditor() {
         initRefs(mask, preview) {
             this._m = mask;
             this._p = preview;
-            const fp = preview?.filepath || '';
+            const fp = mask?.filepath || '';
             if (fp) {
                 fetch('/api/pic/mask?path=' + encodeURIComponent(fp))
                     .then(r => { mask.exists = r.ok; })
@@ -8924,7 +9018,7 @@ function picMaskEditor() {
             this._imgW = canvas.width;
             this._imgH = canvas.height;
             this._ctx  = canvas.getContext('2d');
-            const fp = this._p?.filepath || '';
+            const fp = this._m?.filepath || '';
             if (fp && this._m?.exists) {
                 const maskImg = new Image();
                 maskImg.crossOrigin = 'anonymous';
@@ -9036,8 +9130,8 @@ function picMaskEditor() {
 
         async saveMask() {
             const canvas = this.$refs.maskCanvas;
-            const fp     = this._p?.filepath || '';
             const m      = this._m;
+            const fp     = m?.filepath || '';
             if (!canvas || !fp || !m) return;
             m.saving = true;
             m.msg    = '';
@@ -9069,6 +9163,7 @@ function picMaskEditor() {
                     m.exists = true;
                     m.msg    = '✅ Maska zapisana';
                     m.msgOk  = true;
+                    window.dispatchEvent(new CustomEvent('pic-mask-changed'));
                 } else {
                     m.msg = '❌ Błąd zapisu'; m.msgOk = false;
                 }
@@ -9080,7 +9175,7 @@ function picMaskEditor() {
         },
 
         async deleteMask() {
-            const fp = this._p?.filepath || '';
+            const fp = this._m?.filepath || '';
             const m  = this._m;
             if (!fp || !m) return;
             await fetch('/api/pic/mask?path=' + encodeURIComponent(fp), { method: 'DELETE' });
@@ -9088,6 +9183,7 @@ function picMaskEditor() {
             m.active = false;
             m.msg    = '';
             if (this._ctx) this._ctx.clearRect(0, 0, this._imgW, this._imgH);
+            window.dispatchEvent(new CustomEvent('pic-mask-changed'));
         },
     };
 }

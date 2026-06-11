@@ -1361,6 +1361,12 @@ async def _run_paste_character_async(
         slot_sb      = bool(slot.get("scene_blend_enabled", True))
         last_char_eb = bool(characters[-1].get("edge_blend_enabled", True)) if characters else True
 
+        # Per-slot Scene Blend overrides (positive/negative/denoise)
+        _sb_ov       = slot.get("sb_override") or {}
+        _eff_sb_pos  = (_sb_ov.get("positive") or "").strip() or sb_positive
+        _eff_sb_neg  = _sb_ov["negative"] if _sb_ov.get("negative") is not None else sb_negative
+        _eff_sb_den  = float(_sb_ov["denoise"]) if _sb_ov.get("denoise") is not None else sb_denoise
+
         # Determine "done" file for skip check (most advanced configured stage)
         force_scene = from_stage >= scene_stage_idx
         if sb_positive and sb_wf and ((sb_enabled and slot_sb) or force_scene):
@@ -1576,18 +1582,29 @@ async def _run_paste_character_async(
                 and current_path is not None and current_path.exists()
             )  # slot_sb = per-slot scene toggle
             if run_scene:
+                _has_ov = bool(slot.get("sb_override"))
                 _log(f"  \U0001f3a8 [{idx}/{len(slots_to_run)}] {label} — scene blend "
-                     f"(steps={sb_steps}  cfg={sb_cfg}  denoise={sb_denoise}) ...")
+                     f"(steps={sb_steps}  cfg={sb_cfg}  denoise={_eff_sb_den}"
+                     + ("  ⚙custom" if _has_ov else "") + ") ...")
                 scene_out = _scene_path(working_dir, output_id)
                 _archive_path_to(scene_out, archive_dir)
-                await _generate_one(
-                    loop, sb_url, sb_in_dir, sb_out_dir,
-                    sb_wf, current_path,
-                    sb_positive, sb_negative,
-                    sb_steps, sb_cfg, sb_denoise,
-                    scene_out,
-                    label=f"scene_blend {label}",
-                )
+                # Apply user-drawn scene blend mask if painted on PIL or Edge output
+                _sb_input   = _apply_user_mask(current_path, working_dir, current_path)
+                _sb_masked  = _sb_input != current_path
+                if _sb_masked:
+                    _log(f"  🎭 [{idx}] scene blend: maska użytkownika zastosowana")
+                try:
+                    await _generate_one(
+                        loop, sb_url, sb_in_dir, sb_out_dir,
+                        sb_wf, _sb_input,
+                        _eff_sb_pos, _eff_sb_neg,
+                        sb_steps, sb_cfg, _eff_sb_den,
+                        scene_out,
+                        label=f"scene_blend {label}",
+                    )
+                finally:
+                    if _sb_masked:
+                        _sb_input.unlink(missing_ok=True)
                 current_path = scene_out
                 _log(f"  \U0001f3a8 [{idx}] {label}: scene -> {scene_out.name}")
 
@@ -1767,16 +1784,21 @@ async def _run_character_insert_async(
         _log(f"  📝 [{idx}] steps={steps}  cfg={cfg}  denoise={denoise}  "
              f"prompt: {pos[:100]}{'…' if len(pos) > 100 else ''}")
 
+        scene_eff_tmp: "Path | None" = None
         try:
             # Copy all images into ComfyUI input dir with unique temp names
             ts = datetime.now().strftime("%Y%m%d%H%M%S%f")
-            all_sources = [scene_path] + char_paths
+            input_dir.mkdir(parents=True, exist_ok=True)
+            # Apply user-drawn mask as alpha channel of the scene image
+            scene_eff = _apply_user_mask(scene_path, input_dir, scene_path)
+            if scene_eff != scene_path:
+                scene_eff_tmp = scene_eff  # track for cleanup
+            all_sources = [scene_eff] + char_paths
             tmp_names   = []
             tmp_ins     = []
             for i, src in enumerate(all_sources):
                 tname = f"pic_{ts}_{i}_{src.name}"
                 tin   = input_dir / tname
-                input_dir.mkdir(parents=True, exist_ok=True)
                 shutil.copy2(str(src), str(tin))
                 tmp_names.append(tname)
                 tmp_ins.append(tin)
@@ -1876,6 +1898,11 @@ async def _run_character_insert_async(
             for tin in tmp_ins:
                 try:
                     if tin.exists(): tin.unlink()
+                except Exception:
+                    pass
+            if scene_eff_tmp:
+                try:
+                    if scene_eff_tmp.exists(): scene_eff_tmp.unlink()
                 except Exception:
                     pass
 
