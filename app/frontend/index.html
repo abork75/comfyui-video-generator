@@ -6,6 +6,7 @@
     <title>ComfyUI Video Generator</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
     <style>
         [x-cloak] { display: none !important; }
         ::-webkit-scrollbar { width: 6px; height: 6px; }
@@ -153,19 +154,23 @@
         <!-- Flow / Post tabs — only when run is active -->
         <template x-if="selectedRun && (selectedRun.compatibility === 'current' || selectedRun.compatibility === 'yaml') && !selectedRun.syntax_error">
             <div class="flex items-center border-l border-gray-700 px-2 gap-0.5 flex-shrink-0">
-                <button @click="picMode=true; preMode=false; postMode=false; editMode=false; loadPicTiles()"
+                <button @click="picMode=true; preMode=false; postMode=false; editMode=false; sortMode=false; loadPicTiles()"
                         :class="picMode ? 'bg-pink-900 text-pink-200' : 'text-gray-500 hover:text-gray-300 hover:bg-gray-700/50'"
                         class="text-xs px-2.5 py-1 rounded-l transition"
                         title="Pic Studio — biblioteka promptów I2I">🖼 Pic</button>
-                <button @click="preMode=true; postMode=false; picMode=false; editMode=false; loadPreClips()"
+                <button @click="preMode=true; postMode=false; picMode=false; editMode=false; sortMode=false; loadPreClips()"
                         :class="preMode ? 'bg-purple-900 text-purple-200' : 'text-gray-500 hover:text-gray-300 hover:bg-gray-700/50'"
                         class="text-xs px-2.5 py-1 transition"
                         title="Pre-processing (hurtowy upscale)">🔧 Pre</button>
-                <button @click="preMode=false; postMode=false; picMode=false; editMode=true"
+                <button @click="preMode=false; postMode=false; picMode=false; editMode=true; sortMode=false"
                         :class="!preMode && !postMode && !picMode ? 'bg-gray-700 text-white' : 'text-gray-500 hover:text-gray-300 hover:bg-gray-700/50'"
                         class="text-xs px-2.5 py-1 transition"
                         title="Widok FLOW">📋 Flow</button>
-                <button @click="preMode=false; postMode=true; picMode=false; editMode=false; loadPostClips()"
+                <button @click="preMode=false; postMode=false; picMode=false; editMode=false; sortMode=true; loadSortFlow()"
+                        :class="sortMode ? 'bg-teal-900 text-teal-200' : 'text-gray-500 hover:text-gray-300 hover:bg-gray-700/50'"
+                        class="text-xs px-2.5 py-1 transition"
+                        title="Sort — układanie kolejności ujęć">🗂 Sort</button>
+                <button @click="preMode=false; postMode=true; picMode=false; editMode=false; sortMode=false; loadPostClips()"
                         :class="postMode ? 'bg-blue-900 text-blue-200' : 'text-gray-500 hover:text-gray-300 hover:bg-gray-700/50'"
                         class="text-xs px-2.5 py-1 rounded-r transition"
                         title="Post-processing">🎬 Post</button>
@@ -1258,6 +1263,44 @@
                         </div>
                     </template>
 
+                </div>
+            </template>
+
+            <!-- ═══ SORT VIEW ═══ -->
+            <template x-if="selectedRun && (selectedRun.compatibility === 'yaml') && !selectedRun.syntax_error && sortMode">
+                <div class="flex flex-col h-full overflow-hidden">
+
+                    <!-- Toolbar -->
+                    <div class="flex items-center gap-3 px-4 py-2.5 border-b border-gray-700 bg-gray-900 flex-shrink-0">
+                        <span class="text-xs text-teal-400 font-semibold">🗂 Sort</span>
+                        <span class="text-xs text-gray-600">·</span>
+                        <span class="text-xs text-gray-500" x-text="(sortFlow.filter(i=>i._type!=='scene_break'&&i._type!=='break').length) + ' ujęć'"></span>
+                        <span class="text-xs text-gray-600">·</span>
+                        <span class="text-xs text-gray-500" x-text="(sortFlow.filter(i=>i._type==='scene_break').length) + ' scen'"></span>
+                        <div class="flex-1"></div>
+                        <button @click="sortAddSceneBreak(0, true)"
+                                class="text-xs text-teal-500 border border-teal-800 hover:border-teal-500 rounded px-2 py-1 transition">
+                            + Scena na początku
+                        </button>
+                        <button @click="sortSave()"
+                                :disabled="!sortDirty"
+                                :class="sortDirty ? 'bg-teal-700 hover:bg-teal-600 text-white' : 'bg-gray-700 text-gray-500 cursor-not-allowed'"
+                                class="text-xs rounded px-3 py-1 transition font-semibold">
+                            💾 Zapisz kolejność
+                        </button>
+                        <span x-show="sortSaving" class="text-xs text-teal-400 animate-pulse">Zapisuję…</span>
+                        <span x-show="sortSaved && !sortSaving" class="text-xs text-green-400">✓ Zapisano</span>
+                    </div>
+
+                    <!-- Loading -->
+                    <div x-show="sortLoading" class="flex items-center justify-center flex-1 text-gray-500 text-sm gap-2">
+                        <span class="animate-spin">⟳</span> Ładowanie…
+                    </div>
+
+                    <!-- Grid container (SortableJS renders here) -->
+                    <div x-show="!sortLoading" class="flex-1 overflow-y-auto px-4 py-4">
+                        <div x-ref="sortGrid" class="space-y-3"></div>
+                    </div>
                 </div>
             </template>
 
@@ -5780,6 +5823,7 @@ function app() {
             this.editMode = true;   // keep edit mode on run switch
             this.postMode = false;  // reset to flow view on run switch
             this.picMode  = false;
+            this.sortMode = false;
             this.picTiles = []; this.picStatuses = {}; this.picTypeModal = { open: false };
             this.logLine('sys', `Wybrano: ${run.display_name} [${run.compatibility}]`);
             if (run.syntax_error) {
@@ -6342,7 +6386,16 @@ function app() {
         postMode:      false,
         preMode:       false,
         picMode:       false,
+        sortMode:      false,
         globalPicOpen: false,
+
+        // ─ Sort view ──────────────────────────────────────
+        sortFlow:      [],
+        sortLoading:   false,
+        sortDirty:     false,
+        sortSaving:    false,
+        sortSaved:     false,
+        _sortable:     null,
 
         // ─ Pic Studio per-project ─────────────────────────
         picTiles:        [],
@@ -9896,6 +9949,169 @@ function picMaskEditor() {
             m.msg    = '';
             if (this._ctx) this._ctx.clearRect(0, 0, this._imgW, this._imgH);
             window.dispatchEvent(new CustomEvent('pic-mask-changed'));
+        },
+
+        // ── Sort view ──────────────────────────────────────────────────────────
+
+        async loadSortFlow() {
+            if (!this.selectedRun) return;
+            this.sortLoading = true;
+            this.sortDirty   = false;
+            this.sortSaved   = false;
+            if (this._sortable) { this._sortable.destroy(); this._sortable = null; }
+            try {
+                const res  = await fetch(`/api/sort/${this.selectedRun.filename}`);
+                if (!res.ok) throw new Error(await res.text());
+                const data = await res.json();
+                this.sortFlow = data.flow;
+            } catch(e) {
+                this.logLine('sys', `❌ Sort: ${e.message}`);
+            } finally {
+                this.sortLoading = false;
+                await this.$nextTick();
+                this._initSortable();
+            }
+        },
+
+        _sortItemLabel(item) {
+            if (item.name)  return item.name;
+            if (item.file)  return item.file.replace(/^.*[\\/]/, '');
+            if (item.chain) return `Chain: ${item.chain_prefix || ''}`;
+            if (item.type === 'talk') return `Talk: ${Array.isArray(item.audio) ? item.audio[0] : item.audio || ''}`.slice(0, 40);
+            return '—';
+        },
+
+        _renderSortGrid() {
+            const grid = this.$refs.sortGrid;
+            if (!grid) return;
+            grid.innerHTML = '';
+
+            this.sortFlow.forEach((item, idx) => {
+                const el = document.createElement('div');
+                el.dataset.idx = idx;
+
+                if (item._type === 'scene_break') {
+                    el.className = 'sort-scene-break flex items-center gap-2 py-1';
+                    el.innerHTML = `
+                        <div class="h-px flex-1 bg-teal-800"></div>
+                        <div class="flex items-center gap-1.5 bg-teal-950 border border-teal-700 rounded-lg px-3 py-1.5 cursor-grab select-none">
+                            <span class="text-teal-400 text-xs">🎬</span>
+                            <input type="text" value="${(item.name||'').replace(/"/g,'&quot;')}"
+                                   placeholder="Nazwa sceny…"
+                                   class="bg-transparent text-teal-200 text-xs font-semibold focus:outline-none w-40 placeholder-teal-700"
+                                   data-scene-name="${idx}">
+                            <button class="text-teal-700 hover:text-red-400 text-xs ml-1 transition sort-remove" data-idx="${idx}">✕</button>
+                        </div>
+                        <div class="h-px flex-1 bg-teal-800"></div>
+                        <button class="text-xs text-teal-700 hover:text-teal-400 px-1 transition sort-add-scene" data-idx="${idx}" title="Dodaj scenę po tym">+</button>`;
+
+                } else if (item._type === 'break') {
+                    el.className = 'sort-break flex items-center gap-2 py-1 cursor-grab';
+                    el.innerHTML = `<div class="h-px flex-1 bg-gray-700"></div>
+                        <span class="text-gray-600 text-xs px-2 border border-gray-700 rounded">— break —</span>
+                        <div class="h-px flex-1 bg-gray-700"></div>`;
+
+                } else {
+                    // Shot card
+                    const label = this._sortItemLabel(item);
+                    const typeIcon = item._type === 'talk' ? '🗣' : item._type === 'chain' ? '⛓' : item._type === 'video' ? '🎞' : '🖼';
+                    const thumb = item._thumb_url
+                        ? `<img src="${item._thumb_url}" class="w-full h-full object-cover" onerror="this.style.display='none'">`
+                        : `<span class="text-2xl">${typeIcon}</span>`;
+
+                    el.className = 'sort-card cursor-grab active:cursor-grabbing bg-gray-800 border border-gray-700 hover:border-gray-500 rounded-lg overflow-hidden select-none transition';
+                    el.innerHTML = `
+                        <div class="aspect-video bg-gray-900 flex items-center justify-center relative overflow-hidden">
+                            ${thumb}
+                            <span class="absolute bottom-1 right-1 text-xs bg-gray-900/80 rounded px-1 text-gray-400">${typeIcon}</span>
+                        </div>
+                        <div class="px-2 py-1.5">
+                            <p class="text-xs text-gray-300 truncate" title="${label.replace(/"/g,'&quot;')}">${label}</p>
+                        </div>`;
+                }
+
+                grid.appendChild(el);
+            });
+
+            // Bind scene name inputs
+            grid.querySelectorAll('[data-scene-name]').forEach(input => {
+                const idx = parseInt(input.dataset.sceneName);
+                input.addEventListener('input', () => {
+                    this.sortFlow[idx].name = input.value;
+                    this.sortDirty = true;
+                });
+            });
+
+            // Bind remove buttons
+            grid.querySelectorAll('.sort-remove').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const idx = parseInt(btn.dataset.idx);
+                    this.sortFlow.splice(idx, 1);
+                    this.sortDirty = true;
+                    this._renderSortGrid();
+                    this._initSortable();
+                });
+            });
+
+            // Bind add-scene buttons
+            grid.querySelectorAll('.sort-add-scene').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const idx = parseInt(btn.dataset.idx);
+                    this.sortAddSceneBreak(idx + 1);
+                });
+            });
+        },
+
+        _initSortable() {
+            const grid = this.$refs.sortGrid;
+            if (!grid || typeof Sortable === 'undefined') return;
+            this._renderSortGrid();
+            if (this._sortable) this._sortable.destroy();
+            this._sortable = Sortable.create(grid, {
+                animation:     150,
+                ghostClass:    'opacity-30',
+                chosenClass:   'ring-2 ring-teal-500',
+                dragClass:     'shadow-2xl',
+                onEnd: (evt) => {
+                    const moved = this.sortFlow.splice(evt.oldIndex, 1)[0];
+                    this.sortFlow.splice(evt.newIndex, 0, moved);
+                    this.sortDirty = true;
+                    // Re-render so data-idx attributes stay in sync
+                    this._renderSortGrid();
+                    this._initSortable();
+                },
+            });
+        },
+
+        sortAddSceneBreak(afterIdx, atStart = false) {
+            const insertAt = atStart ? 0 : afterIdx;
+            this.sortFlow.splice(insertAt, 0, {
+                _type: 'scene_break', _sort_idx: -1, type: 'scene_break', name: ''
+            });
+            this.sortDirty = true;
+            this._renderSortGrid();
+            this._initSortable();
+        },
+
+        async sortSave() {
+            if (!this.selectedRun || !this.sortDirty) return;
+            this.sortSaving = true;
+            this.sortSaved  = false;
+            try {
+                const res = await fetch(`/api/sort/${this.selectedRun.filename}`, {
+                    method:  'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body:    JSON.stringify({ flow: this.sortFlow }),
+                });
+                if (!res.ok) throw new Error((await res.json()).detail || 'Błąd zapisu');
+                this.sortDirty = false;
+                this.sortSaved = true;
+                setTimeout(() => { this.sortSaved = false; }, 3000);
+            } catch(e) {
+                this.logLine('sys', `❌ Sort save: ${e.message}`);
+            } finally {
+                this.sortSaving = false;
+            }
         },
     };
 }

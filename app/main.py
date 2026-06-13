@@ -26,6 +26,7 @@ from app.api.app_config import router as app_config_router
 from app.api.i2i import router as i2i_router
 from app.api.fs import router as fs_router
 from app.api.pic_session import router as pic_session_router
+from app.api.sort import router as sort_router
 from app.services.process_service import process_service
 
 # ============================================================
@@ -53,6 +54,7 @@ app.include_router(app_config_router)
 app.include_router(i2i_router)
 app.include_router(fs_router)
 app.include_router(pic_session_router)
+app.include_router(sort_router)
 
 # Static files
 FRONTEND_DIR = Path(__file__).parent / "frontend"

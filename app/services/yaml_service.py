@@ -183,6 +183,8 @@ def _yaml_item_to_internal(item: dict) -> dict:
         if item.get("label"):
             result["label"] = item["label"]
         return result
+    if item.get("type") == "scene_break":
+        return {"type": "scene_break", "name": item.get("name", "")}
     if "header" in item:
         return {"header": item["header"]}
     if "chain" in item:
@@ -215,6 +217,8 @@ def _internal_item_to_yaml(item: dict) -> dict:
         if item.get("label"):
             result["label"] = item["label"]
         return result
+    if item.get("type") == "scene_break":
+        return {"type": "scene_break", "name": item.get("name", "")}
     if "header" in item:
         return {"header": item["header"]}
     if "chain" in item:

@@ -149,7 +149,7 @@ def get_transition_status(run_filename: str) -> dict | None:
     sections: list[list[dict]] = []
     current: list[dict] = []
     for item in flow:
-        if item.get("break"):
+        if (item.get("break") or item.get("type") == "scene_break"):
             if current:
                 sections.append(current)
             current = []
@@ -171,7 +171,7 @@ def get_transition_status(run_filename: str) -> dict | None:
     for i_flow, item in enumerate(flow):
 
         # BREAK
-        if item.get("break"):
+        if (item.get("break") or item.get("type") == "scene_break"):
             results.append({"index": i_flow, "type": "break",
                              "status": None, "name": None,
                              "size_mb": None, "path": None})
@@ -236,7 +236,7 @@ def get_transition_status(run_filename: str) -> dict | None:
                 # Find next non-break file in flow to compute bridge filename
                 next_file = None
                 for _nxt in flow[i_flow + 1:]:
-                    if isinstance(_nxt, dict) and _nxt.get("break"):
+                    if isinstance(_nxt, dict) and (_nxt.get("break") or _nxt.get("type") == "scene_break"):
                         break
                     if isinstance(_nxt, dict) and _nxt.get("file"):
                         next_file = _nxt["file"]
@@ -419,7 +419,7 @@ def get_post_clips(run_filename: str) -> list | None:
     sections: list[list[dict]] = []
     current: list[dict] = []
     for item in flow:
-        if item.get("break"):
+        if (item.get("break") or item.get("type") == "scene_break"):
             if current:
                 sections.append(current)
             current = []
@@ -438,7 +438,7 @@ def get_post_clips(run_filename: str) -> list | None:
     chains_dir = pf / "transitions" / "chains"
 
     for i_flow, item in enumerate(flow):
-        if item.get("break"):
+        if (item.get("break") or item.get("type") == "scene_break"):
             continue
 
         # ── TALK ───────────────────────────────────────────────────
@@ -465,7 +465,7 @@ def get_post_clips(run_filename: str) -> list | None:
             if item.get("transition"):
                 next_file = None
                 for _nxt in flow[i_flow + 1:]:
-                    if _nxt.get("break"):
+                    if _nxt.get("break") or _nxt.get("type") == "scene_break":
                         break
                     if _nxt.get("file"):
                         next_file = _nxt["file"]
