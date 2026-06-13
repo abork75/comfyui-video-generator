@@ -241,6 +241,12 @@ def _migrate_tile(tile: dict) -> dict:
     tile_type = tile.get("type", "one_image_many_prompts")
 
     if tile_type == "paste_character":
+        # Strip fine_tune / OI / CI fields that were accidentally serialized in older versions
+        for _k in ("ft_slots", "carry_mask", "custom_passes", "input_image",
+                   "source_dirs", "source_dir", "image_slots",
+                   "scene_dirs", "characters_dirs", "scene_slots"):
+            tile.pop(_k, None)
+
         tile.setdefault("paste_slots", [])
 
         # ── paste_slots: migrate old single model_image → characters list ─────
@@ -311,6 +317,13 @@ def _migrate_tile(tile: dict) -> dict:
         return tile
 
     if tile_type == "character_insert":
+        # Strip foreign fields
+        for _k in ("ft_slots", "carry_mask", "custom_passes", "input_image",
+                   "source_dirs", "image_slots",
+                   "paste_slots", "edge_blend_enabled", "edge_blend_px", "edge_blend_prompts",
+                   "scene_blend_enabled", "scene_blend_prompts"):
+            tile.pop(_k, None)
+
         # 1. Migrate single-dir → multi-dir
         if "scene_dir" in tile and "scene_dirs" not in tile:
             tile["scene_dirs"] = [tile.pop("scene_dir")] if tile["scene_dir"] else []
@@ -374,6 +387,13 @@ def _migrate_tile(tile: dict) -> dict:
         return tile
 
     # ── OI migration: source_image + top-level prompts → image_slots ─────────
+    # Strip foreign fields
+    for _k in ("ft_slots", "carry_mask", "custom_passes", "input_image",
+               "paste_slots", "edge_blend_enabled", "edge_blend_px", "edge_blend_prompts",
+               "scene_blend_enabled", "scene_blend_prompts",
+               "scene_dirs", "characters_dirs", "scene_slots"):
+        tile.pop(_k, None)
+
     if "image_slots" in tile:
         return tile
     old_image   = tile.pop("source_image", "")
@@ -414,11 +434,12 @@ def get_tiles(run_id: str) -> list[dict]:
     data  = _load(run_id)
     tiles = data.get("pic_flow", [])
     # Migrate old-format tiles transparently; persist only if something changed
+    import copy as _copy
     changed = False
     for tile in tiles:
-        before = "image_slots" in tile
+        snapshot = _copy.deepcopy(tile)
         _migrate_tile(tile)
-        if not before:
+        if tile != snapshot:
             changed = True
         if _ensure_output_ids(tile):
             changed = True

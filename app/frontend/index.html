@@ -69,6 +69,14 @@
                 <span>🪟</span>
                 <span x-text="envStatus.windows === 'ready' ? 'Windows ●' : 'Windows ○'"></span>
             </span>
+            <span :title="envStatus.atlascloud === 'ready' ? 'AtlasCloud API — klucz aktywny' : 'AtlasCloud API — brak klucza ATLAS_CLOUD_API_KEY'"
+                  :class="envStatus.atlascloud === 'ready'
+                          ? 'bg-purple-900 text-purple-300 border border-purple-700'
+                          : 'bg-gray-800 text-gray-500 border border-gray-700'"
+                  class="flex items-center gap-1 text-xs px-2 py-1 rounded-lg select-none">
+                <span>☁</span>
+                <span x-text="envStatus.atlascloud === 'ready' ? 'Atlas ●' : 'Atlas ○'"></span>
+            </span>
         </div>
 
         <span :title="wsConnected ? 'WebSocket OK' : 'WebSocket rozłączony'"
@@ -3871,15 +3879,42 @@
                                                 </div>
 
                                                 <!-- Mode toggle -->
-                                                <div class="flex items-center gap-2">
+                                                <div class="flex items-center gap-2 flex-wrap">
                                                     <span class="text-xs text-gray-500">Tryb:</span>
                                                     <button @click="cp.mode = 'i2i'"
-                                                            :class="cp.mode !== 'i2i_ref' ? 'bg-blue-700 text-white' : 'bg-gray-700 text-gray-400 hover:bg-gray-600'"
+                                                            :class="cp.mode === 'i2i' ? 'bg-blue-700 text-white' : 'bg-gray-700 text-gray-400 hover:bg-gray-600'"
                                                             class="text-xs px-2 py-0.5 rounded transition">I2I</button>
                                                     <button @click="cp.mode = 'i2i_ref'"
                                                             :class="cp.mode === 'i2i_ref' ? 'bg-purple-700 text-white' : 'bg-gray-700 text-gray-400 hover:bg-gray-600'"
                                                             class="text-xs px-2 py-0.5 rounded transition">I2I + Referencja</button>
+                                                    <button @click="cp.mode = 'atlascloud'; cp.params.atlascloud_model = cp.params.atlascloud_model || 'qwen/qwen-image-2.0-pro/edit'"
+                                                            :class="cp.mode === 'atlascloud' ? 'bg-violet-700 text-white' : 'bg-gray-700 text-gray-400 hover:bg-gray-600'"
+                                                            class="text-xs px-2 py-0.5 rounded transition">☁ AtlasCloud</button>
                                                 </div>
+
+                                                <!-- AtlasCloud: model selector + warning -->
+                                                <template x-if="cp.mode === 'atlascloud'">
+                                                    <div class="space-y-1.5">
+                                                        <div class="flex items-center gap-2">
+                                                            <label class="text-xs text-gray-400 shrink-0">Model</label>
+                                                            <input type="text" x-model="cp.params.atlascloud_model"
+                                                                   placeholder="qwen/qwen-image-2.0-pro/edit"
+                                                                   class="flex-1 bg-gray-800 border border-violet-800 rounded px-2 py-1 text-xs text-gray-300 font-mono focus:outline-none focus:border-violet-500">
+                                                        </div>
+                                                        <div class="flex items-center gap-1.5">
+                                                            <label class="text-xs text-gray-400 shrink-0">Seed</label>
+                                                            <input type="number" x-model.number="cp.params.seed" min="-1" max="2147483647"
+                                                                   class="w-28 bg-gray-800 border border-gray-600 rounded px-2 py-0.5 text-xs text-gray-300 text-center focus:outline-none focus:border-violet-500">
+                                                            <span class="text-xs text-gray-600">(-1 = losowy)</span>
+                                                        </div>
+                                                        <template x-if="slot.carry_mask">
+                                                            <p class="text-xs text-amber-500">⚠ AtlasCloud nie obsługuje masek — opcja „przenoś maskę" zostanie zignorowana</p>
+                                                        </template>
+                                                        <template x-if="envStatus.atlascloud !== 'ready'">
+                                                            <p class="text-xs text-red-400">⚠ Brak klucza ATLAS_CLOUD_API_KEY — generowanie nie zadziała</p>
+                                                        </template>
+                                                    </div>
+                                                </template>
 
                                                 <!-- Ref image (only for i2i_ref) -->
                                                 <template x-if="cp.mode === 'i2i_ref'">
@@ -3904,39 +3939,43 @@
                                                     </div>
                                                 </template>
 
-                                                <!-- Prompts -->
+                                                <!-- Prompts (shared — AtlasCloud uses positive only) -->
                                                 <div>
                                                     <label class="block text-xs text-gray-400 mb-1">Positive</label>
                                                     <textarea x-model="cp.positive" rows="2"
                                                               class="w-full bg-gray-800 border border-gray-600 rounded px-2 py-1.5 text-xs text-gray-300 resize-y focus:outline-none focus:border-orange-500"></textarea>
                                                 </div>
-                                                <div>
-                                                    <label class="block text-xs text-gray-400 mb-1">Negative</label>
-                                                    <textarea x-model="cp.negative" rows="1"
-                                                              class="w-full bg-gray-800 border border-gray-600 rounded px-2 py-1.5 text-xs text-gray-300 resize-y focus:outline-none focus:border-red-700"></textarea>
-                                                </div>
+                                                <template x-if="cp.mode !== 'atlascloud'">
+                                                    <div>
+                                                        <label class="block text-xs text-gray-400 mb-1">Negative</label>
+                                                        <textarea x-model="cp.negative" rows="1"
+                                                                  class="w-full bg-gray-800 border border-gray-600 rounded px-2 py-1.5 text-xs text-gray-300 resize-y focus:outline-none focus:border-red-700"></textarea>
+                                                    </div>
+                                                </template>
 
-                                                <!-- Params -->
-                                                <div class="flex flex-wrap gap-3 text-xs items-center">
-                                                    <label class="text-gray-500">Steps
-                                                        <input type="number" x-model.number="cp.params.steps" min="1" max="100"
-                                                               class="ml-1 w-14 bg-gray-700 border border-gray-600 rounded px-1 py-0.5 text-white text-center focus:outline-none">
-                                                    </label>
-                                                    <label class="text-gray-500">CFG
-                                                        <input type="number" x-model.number="cp.params.cfg" min="1" max="30" step="0.5"
-                                                               class="ml-1 w-14 bg-gray-700 border border-gray-600 rounded px-1 py-0.5 text-white text-center focus:outline-none">
-                                                    </label>
-                                                    <label class="text-gray-500">Denoise
-                                                        <input type="number" x-model.number="cp.params.denoise" min="0" max="1" step="0.05"
-                                                               class="ml-1 w-16 bg-gray-700 border border-gray-600 rounded px-1 py-0.5 text-white text-center focus:outline-none">
-                                                    </label>
-                                                    <template x-if="cp.mode === 'i2i_ref'">
-                                                        <label class="text-gray-500">CN Strength
-                                                            <input type="number" x-model.number="cp.params.controlnet_strength" min="0" max="2" step="0.05"
-                                                                   class="ml-1 w-16 bg-gray-700 border border-purple-800 rounded px-1 py-0.5 text-white text-center focus:outline-none">
+                                                <!-- Params (ComfyUI only) -->
+                                                <template x-if="cp.mode !== 'atlascloud'">
+                                                    <div class="flex flex-wrap gap-3 text-xs items-center">
+                                                        <label class="text-gray-500">Steps
+                                                            <input type="number" x-model.number="cp.params.steps" min="1" max="100"
+                                                                   class="ml-1 w-14 bg-gray-700 border border-gray-600 rounded px-1 py-0.5 text-white text-center focus:outline-none">
                                                         </label>
-                                                    </template>
-                                                </div>
+                                                        <label class="text-gray-500">CFG
+                                                            <input type="number" x-model.number="cp.params.cfg" min="1" max="30" step="0.5"
+                                                                   class="ml-1 w-14 bg-gray-700 border border-gray-600 rounded px-1 py-0.5 text-white text-center focus:outline-none">
+                                                        </label>
+                                                        <label class="text-gray-500">Denoise
+                                                            <input type="number" x-model.number="cp.params.denoise" min="0" max="1" step="0.05"
+                                                                   class="ml-1 w-16 bg-gray-700 border border-gray-600 rounded px-1 py-0.5 text-white text-center focus:outline-none">
+                                                        </label>
+                                                        <template x-if="cp.mode === 'i2i_ref'">
+                                                            <label class="text-gray-500">CN Strength
+                                                                <input type="number" x-model.number="cp.params.controlnet_strength" min="0" max="2" step="0.05"
+                                                                       class="ml-1 w-16 bg-gray-700 border border-purple-800 rounded px-1 py-0.5 text-white text-center focus:outline-none">
+                                                            </label>
+                                                        </template>
+                                                    </div>
+                                                </template>
                                             </div>
                                         </template>
                                     </div>
@@ -4827,6 +4866,8 @@
                                                               class="absolute inset-0 rounded bg-gray-900/60 flex items-center justify-center text-xs text-gray-500 pointer-events-none">off</span>
                                                         <span x-show="cp.mode === 'i2i_ref'"
                                                               class="absolute bottom-0.5 left-0.5 text-purple-300 text-xs leading-none pointer-events-none z-10 bg-gray-900 rounded-sm px-0.5 border border-gray-700">ref</span>
+                                                        <span x-show="cp.mode === 'atlascloud'"
+                                                              class="absolute bottom-0.5 left-0.5 text-violet-300 text-xs leading-none pointer-events-none z-10 bg-gray-900 rounded-sm px-0.5 border border-gray-700">☁</span>
                                                     </div>
                                                     <!-- Action buttons -->
                                                     <div class="flex items-center gap-0.5">
@@ -8136,8 +8177,8 @@ function app() {
                     edge_blend_prompts:   [],
                     scene_blend_enabled:  false,
                     scene_blend_prompts:  [],
-                    // fine_tune fields
-                    ft_slots:       [{ id: crypto.randomUUID(), input_image: '', output_id: '', custom_passes: [], carry_mask: false }],
+                    // fine_tune fields (only set for fine_tune type)
+                    ft_slots:       isFtNew ? [{ id: crypto.randomUUID(), input_image: '', output_id: '', custom_passes: [], carry_mask: false }] : [],
                     // common
                     output_dir:       folder,
                     global_suffix:    '',

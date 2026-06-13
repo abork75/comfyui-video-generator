@@ -7,6 +7,7 @@ Environments are started/stopped manually by the user.
 """
 
 import asyncio
+import os
 import urllib.request
 from app.core.config import settings
 from app.services import app_config_service
@@ -29,9 +30,11 @@ class EnvService:
             loop.run_in_executor(None, self._check_health_sync, linux_url),
             loop.run_in_executor(None, self._check_health_sync, windows_url),
         )
+        atlascloud_ok = bool(os.getenv("ATLAS_CLOUD_API_KEY"))
         return {
-            "linux":   "ready" if linux_ok   else "stopped",
-            "windows": "ready" if windows_ok else "stopped",
+            "linux":       "ready" if linux_ok       else "stopped",
+            "windows":     "ready" if windows_ok     else "stopped",
+            "atlascloud":  "ready" if atlascloud_ok  else "stopped",
         }
 
 

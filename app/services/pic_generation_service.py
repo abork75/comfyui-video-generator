@@ -1285,6 +1285,139 @@ async def _generate_ci_one(
                 pass
 
 
+# ── AtlasCloud I2I pass ───────────────────────────────────────────────────────
+
+async def _run_atlascloud_pass(
+    src_path:  "Path",
+    prompt:    str,
+    dest_path: "Path",
+    model:     str  = "qwen/qwen-image-2.0-pro/edit",
+    seed:      int  = -1,
+) -> None:
+    """
+    Send src_path to AtlasCloud image-edit API, poll until done, save to dest_path.
+    Raises on any error (HTTP, timeout, API failure).
+    """
+    import os
+    import base64
+    import asyncio
+    import requests as _req
+
+    api_key = os.getenv("ATLAS_CLOUD_API_KEY")
+    if not api_key:
+        raise RuntimeError("ATLAS_CLOUD_API_KEY not set — nie można użyć backendu AtlasCloud")
+
+    # ── encode source image ───────────────────────────────────────────────────
+    suffix = src_path.suffix.lower()
+    mime   = "image/png" if suffix == ".png" else "image/jpeg"
+    b64    = base64.b64encode(src_path.read_bytes()).decode()
+    image_b64 = f"data:{mime};base64,{b64}"
+
+    # ── derive size from actual image dimensions ──────────────────────────────
+    try:
+        from PIL import Image as _PILImage
+        with _PILImage.open(src_path) as _im:
+            w, h = _im.size
+        # clamp each side to [512, 2048], round to nearest 8
+        w = max(512, min(2048, (w // 8) * 8))
+        h = max(512, min(2048, (h // 8) * 8))
+        size_str = f"{w}*{h}"
+    except Exception:
+        size_str = None  # let the API decide
+
+    # ── submit (retry on rate limit) ──────────────────────────────────────────
+    headers = {
+        "Content-Type":  "application/json",
+        "Authorization": f"Bearer {api_key}",
+    }
+    payload: dict = {
+        "model":  model,
+        "images": [image_b64],
+        "prompt": prompt,
+        "seed":   seed,
+    }
+    if size_str:
+        payload["size"] = size_str
+
+    loop = asyncio.get_running_loop()
+    _retry_delays = [15, 30, 60]
+    resp = None
+    for _attempt, _delay in enumerate([0] + _retry_delays, start=1):
+        if _delay:
+            _log(f"[atlascloud] rate limit — czekam {_delay}s przed próbą {_attempt}/4…")
+            await asyncio.sleep(_delay)
+        resp = await loop.run_in_executor(
+            None,
+            lambda: _req.post(
+                "https://api.atlascloud.ai/api/v1/model/generateImage",
+                headers=headers, json=payload, timeout=30,
+            ),
+        )
+        if resp.status_code == 200:
+            break
+        if resp.status_code == 429:
+            if _attempt <= len(_retry_delays):
+                continue  # will retry
+            raise RuntimeError(f"AtlasCloud: rate limit po 4 próbach — spróbuj później")
+        raise RuntimeError(f"AtlasCloud submit HTTP {resp.status_code}: {resp.text[:200]}")
+
+    prediction_id = resp.json().get("data", {}).get("id")
+    if not prediction_id:
+        raise RuntimeError(f"AtlasCloud: brak prediction_id w odpowiedzi: {resp.text[:200]}")
+
+    # ── poll ──────────────────────────────────────────────────────────────────
+    poll_url     = f"https://api.atlascloud.ai/api/v1/model/prediction/{prediction_id}"
+    poll_headers = {"Authorization": f"Bearer {api_key}"}
+    timeout      = 300
+    import time as _time
+    t0 = _time.monotonic()
+
+    while _time.monotonic() - t0 < timeout:
+        await asyncio.sleep(3)
+        poll_resp = await loop.run_in_executor(
+            None,
+            lambda: _req.get(poll_url, headers=poll_headers, timeout=15),
+        )
+        data   = poll_resp.json().get("data", {})
+        status = data.get("status", "")
+        if status in ("completed", "succeeded"):
+            outputs = data.get("outputs", [])
+            if not outputs:
+                raise RuntimeError("AtlasCloud: completed ale brak outputs")
+            result_url = outputs[0]
+            break
+        if status == "failed":
+            raise RuntimeError(f"AtlasCloud: generowanie nie powiodło się — {data.get('error', '?')}")
+    else:
+        raise RuntimeError(f"AtlasCloud: timeout po {timeout}s (prediction_id={prediction_id})")
+
+    # ── download result ───────────────────────────────────────────────────────
+    img_resp = await loop.run_in_executor(
+        None,
+        lambda: _req.get(result_url, timeout=60),
+    )
+    img_resp.raise_for_status()
+    dest_path.parent.mkdir(parents=True, exist_ok=True)
+    dest_path.write_bytes(img_resp.content)
+
+    # ── log remaining balance ─────────────────────────────────────────────────
+    try:
+        bal_resp = await loop.run_in_executor(
+            None,
+            lambda: _req.get(
+                "https://api.atlascloud.ai/public/v1/balance",
+                headers={"Authorization": f"Bearer {api_key}"},
+                timeout=10,
+            ),
+        )
+        if bal_resp.status_code == 200:
+            bal = bal_resp.json()
+            avail = bal.get("available", {})
+            _log(f"[atlascloud] balans: {avail.get('value', '?')} {avail.get('currency', '')}")
+    except Exception:
+        pass  # balance check is best-effort, never block generation
+
+
 # ── Fine Tune — chained I2I / I2I+ref passes ─────────────────────────────────
 
 async def _run_fine_tune_async(
@@ -1444,7 +1577,20 @@ async def _run_fine_tune_async(
                 masked_src = _apply_user_mask(src_path, work_dir)
 
                 try:
-                    if mode == "i2i_ref":
+                    if mode == "atlascloud":
+                        ac_model = params.get("atlascloud_model") or "qwen/qwen-image-2.0-pro/edit"
+                        _raw_seed = params.get("seed")
+                        ac_seed  = int(_raw_seed) if _raw_seed is not None else -1
+                        if carry_mask:
+                            _log(f"[fine_tune] slot={si} pass={cpi} WARN: carry_mask ignorowana — AtlasCloud nie obsługuje masek")
+                        await _run_atlascloud_pass(
+                            src_path=src_path,
+                            prompt=positive,
+                            dest_path=dest_out,
+                            model=ac_model,
+                            seed=ac_seed,
+                        )
+                    elif mode == "i2i_ref":
                         ref_image = cp.get("ref_image", "")
                         if not ref_image:
                             raise ValueError(f"Pass {cpi} is i2i_ref but has no ref_image")

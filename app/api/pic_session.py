@@ -119,32 +119,55 @@ async def get_tiles(run_id: str):
         raise HTTPException(status_code=404, detail=str(exc))
 
 
+_COMMON_KEYS = {"type", "name", "output_dir", "global_suffix", "crop_to_subject", "pad_input_to_ratio"}
+
+_TYPE_KEYS: dict[str, set[str]] = {
+    "one_image_many_prompts": {"source_dirs", "image_slots"},
+    "character_insert":       {"scene_dirs", "characters_dirs", "scene_slots"},
+    "paste_character":        {
+        "paste_slots",
+        "edge_blend_enabled", "edge_blend_px", "edge_blend_cfg", "edge_blend_denoise", "edge_blend_prompts",
+        "scene_blend_enabled", "scene_blend_cfg", "scene_blend_denoise", "scene_blend_prompts",
+    },
+    "fine_tune": {"ft_slots"},
+}
+
+
 def _serialize_payload(body: TilePayload) -> dict:
-    d = body.model_dump()
-    d["image_slots"] = [
-        {"image": s.image, "prompts": [p.model_dump() for p in s.prompts]}
-        for s in body.image_slots
-    ]
-    d["scene_slots"] = [
-        {
-            "scene_image":      s.scene_image,
-            "character_images": s.character_images,
-            "prompts":          [p.model_dump() for p in s.prompts],
-        }
-        for s in body.scene_slots
-    ]
-    d["paste_slots"] = [
-        {
-            "id":                  s.id,
-            "output_id":           s.output_id,
-            "scene_image":         s.scene_image,
-            "characters":          [c.model_dump() for c in s.characters],  # includes edge_blend_enabled per char
-            "scene_blend_enabled": s.scene_blend_enabled,
-            "sb_override":         s.sb_override,
-            "custom_passes":       s.custom_passes,
-        }
-        for s in body.paste_slots
-    ]
+    tile_type = body.type
+    allowed = _COMMON_KEYS | _TYPE_KEYS.get(tile_type, set())
+
+    d = {k: v for k, v in body.model_dump().items() if k in allowed}
+
+    if tile_type == "one_image_many_prompts":
+        d["image_slots"] = [
+            {"image": s.image, "prompts": [p.model_dump() for p in s.prompts]}
+            for s in body.image_slots
+        ]
+    elif tile_type == "character_insert":
+        d["scene_slots"] = [
+            {
+                "scene_image":      s.scene_image,
+                "character_images": s.character_images,
+                "prompts":          [p.model_dump() for p in s.prompts],
+            }
+            for s in body.scene_slots
+        ]
+    elif tile_type == "paste_character":
+        d["paste_slots"] = [
+            {
+                "id":                  s.id,
+                "output_id":           s.output_id,
+                "scene_image":         s.scene_image,
+                "characters":          [c.model_dump() for c in s.characters],
+                "scene_blend_enabled": s.scene_blend_enabled,
+                "sb_override":         s.sb_override,
+                "custom_passes":       s.custom_passes,
+            }
+            for s in body.paste_slots
+        ]
+    # fine_tune: ft_slots already included via model_dump filter above
+
     return d
 
 
