@@ -1117,8 +1117,8 @@
                                                         <!-- Group header -->
                                                         <div class="flex items-center gap-2 px-3 py-1.5 bg-gray-800 border-b border-gray-700 cursor-pointer select-none"
                                                              @click.self="picToggleGroupCollapse(grp.id)">
-                                                            <span class="text-gray-500 text-xs flex-shrink-0 w-4 text-center pointer-events-none"
-                                                                  x-text="picCollapse[grp.id] ? '▶' : '▼'"></span>
+                                                            <span class="text-gray-500 text-sm flex-shrink-0 w-4 text-center pointer-events-none inline-block transition-transform duration-150"
+                                                                  :style="picCollapse[grp.id] ? 'transform:rotate(0deg)' : 'transform:rotate(90deg)'">›</span>
                                                             <input type="text"
                                                                    :value="grp.name"
                                                                    @input="picGroups[gIdx].name = $event.target.value"
@@ -1222,8 +1222,8 @@
                                                     <!-- Header -->
                                                     <div class="flex items-center gap-2 px-3 py-1.5 bg-gray-800 border-b border-gray-700 cursor-pointer select-none"
                                                          @click="picToggleGroupCollapse('__unassigned')">
-                                                        <span class="text-gray-500 text-xs flex-shrink-0 w-4 text-center"
-                                                              x-text="picCollapse['__unassigned'] ? '▶' : '▼'"></span>
+                                                        <span class="text-gray-500 text-sm flex-shrink-0 w-4 text-center inline-block transition-transform duration-150"
+                                                              :style="picCollapse['__unassigned'] ? 'transform:rotate(0deg)' : 'transform:rotate(90deg)'">›</span>
                                                         <span class="text-sm font-medium text-gray-400 flex-1">Nieprzypisane</span>
                                                         <span class="text-xs text-gray-600 flex-shrink-0"
                                                               x-text="picUnassignedTiles().length + ' kafelków'"></span>
