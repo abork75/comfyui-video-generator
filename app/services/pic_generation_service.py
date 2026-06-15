@@ -1603,6 +1603,7 @@ async def _run_fine_tune_async(
                         ac_seed  = int(_raw_seed) if _raw_seed is not None else -1
                         ac_thinking = bool(params.get("thinking_mode", False))
                         ac_wan_size = params.get("wan_size") or None
+                        _log(f"[atlascloud] model={ac_model} seed={ac_seed} thinking={ac_thinking} size={ac_wan_size or 'auto'}")
                         if carry_mask:
                             _log(f"[fine_tune] slot={si} pass={cpi} WARN: carry_mask ignorowana — AtlasCloud nie obsługuje masek")
                         await _run_atlascloud_pass(

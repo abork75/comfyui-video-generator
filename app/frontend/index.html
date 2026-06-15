@@ -4218,7 +4218,7 @@
                                                     <button @click="cp.mode = 'i2i_ref'"
                                                             :class="cp.mode === 'i2i_ref' ? 'bg-purple-700 text-white' : 'bg-gray-700 text-gray-400 hover:bg-gray-600'"
                                                             class="text-xs px-2 py-0.5 rounded transition">I2I + Referencja</button>
-                                                    <button @click="cp.mode = 'atlascloud'; cp.params.atlascloud_model = cp.params.atlascloud_model || 'qwen/qwen-image-2.0-pro/edit'"
+                                                    <button @click="cp.mode = 'atlascloud'; cp.params = cp.params || {}; cp.params.atlascloud_model = cp.params.atlascloud_model || 'qwen/qwen-image-2.0-pro/edit'; cp.params.wan_size = cp.params.wan_size || '2K'; if (cp.params.thinking_mode === undefined) cp.params.thinking_mode = false; if (cp.params.seed === undefined) cp.params.seed = -1;"
                                                             :class="cp.mode === 'atlascloud' ? 'bg-violet-700 text-white' : 'bg-gray-700 text-gray-400 hover:bg-gray-600'"
                                                             class="text-xs px-2 py-0.5 rounded transition">☁ AtlasCloud</button>
                                                 </div>
@@ -4231,7 +4231,6 @@
                                                             <select x-model="cp.params.atlascloud_model"
                                                                     class="flex-1 bg-gray-800 border border-violet-800 rounded px-2 py-1 text-xs text-gray-300 focus:outline-none focus:border-violet-500">
                                                                 <option value="qwen/qwen-image-2.0-pro/edit">Qwen 2.0 Pro</option>
-                                                                <option value="qwen/qwen-image-1.0-pro/edit">Qwen 1.0 Pro</option>
                                                                 <option value="alibaba/wan-2.7-pro/image-edit">WAN 2.7 Pro I2I</option>
                                                             </select>
                                                         </div>
