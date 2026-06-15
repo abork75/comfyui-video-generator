@@ -1496,7 +1496,7 @@ async def _run_fine_tune_async(
         cps = slot.get("custom_passes", [])
         if pass_index is not None:
             return 1
-        return len([cp for cp in cps if cp.get("enabled", True)])
+        return len([cp for cp in cps if cp.get("enabled", True) and cp.get("selected", True)])
 
     total = sum(_count_passes(s) for _, s in slots_to_run)
     done  = 0
@@ -1544,14 +1544,11 @@ async def _run_fine_tune_async(
             if pass_index is not None:
                 pass_indices = [pass_index]
             else:
-                pass_indices = [i for i, cp in enumerate(custom_passes) if cp.get("enabled", True)]
+                pass_indices = [i for i, cp in enumerate(custom_passes)
+                                if cp.get("enabled", True) and cp.get("selected", True)]
 
             for cpi in pass_indices:
                 cp = custom_passes[cpi]
-                if not cp.get("enabled", True):
-                    total -= 1
-                    _update_job(run_id, tile_id, total=total)
-                    continue
 
                 dest_stem = f"{oid}_ft{cpi}"
                 dest_exists: Path | None = None
@@ -1567,19 +1564,19 @@ async def _run_fine_tune_async(
                     _update_job(run_id, tile_id, done=done)
                     continue
 
-                # Source: previous pass output or original input
-                if cpi == 0:
-                    src_path = input_path
-                else:
-                    prev_stem = f"{oid}_ft{cpi - 1}"
-                    src_path = None
+                # Source: last existing output from any previous pass, or original input
+                src_path = None
+                for prev_cpi in range(cpi - 1, -1, -1):
+                    prev_stem = f"{oid}_ft{prev_cpi}"
                     for ext in (".png", ".jpg", ".jpeg", ".webp"):
                         candidate = work_dir / f"{prev_stem}{ext}"
                         if candidate.exists():
                             src_path = candidate
                             break
-                    if src_path is None:
-                        src_path = input_path
+                    if src_path:
+                        break
+                if src_path is None:
+                    src_path = input_path
 
                 dest_out  = work_dir / f"{dest_stem}.png"
                 positive  = cp.get("positive", "")

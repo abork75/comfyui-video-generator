@@ -4336,7 +4336,7 @@
                                                 class="text-xs text-blue-400 border border-blue-800 hover:border-blue-500 rounded px-2 py-1 transition">
                                             + Import
                                         </button>
-                                        <button @click="(slot.custom_passes = slot.custom_passes || []).push({ name: '', enabled: true, mode: 'i2i', ref_image: '', positive: '', negative: '', params: { steps: 30, cfg: 8, denoise: 0.65, controlnet_strength: 0.8, atlascloud_model: 'qwen/qwen-image-2.0-pro/edit', wan_size: '2K', thinking_mode: false, seed: -1 } })"
+                                        <button @click="(slot.custom_passes = slot.custom_passes || []).push({ name: '', enabled: true, selected: true, mode: 'i2i', ref_image: '', positive: '', negative: '', params: { steps: 30, cfg: 8, denoise: 0.65, controlnet_strength: 0.8, atlascloud_model: 'qwen/qwen-image-2.0-pro/edit', wan_size: '2K', thinking_mode: false, seed: -1 } })"
                                                 class="text-xs text-gray-300 bg-gray-700 hover:bg-gray-600 border border-gray-600 rounded px-2 py-1 transition">
                                             + Nowy
                                         </button>
@@ -5184,21 +5184,18 @@
                                             <div class="flex items-start gap-1">
                                                 <span class="text-gray-700 text-base mt-9">→</span>
                                                 <div class="flex flex-col items-center gap-0.5 flex-shrink-0">
-                                                    <!-- Radio for finalize -->
-                                                    <label class="flex items-center cursor-pointer" :title="'Zaznacz do finalizacji'">
-                                                        <input type="radio"
-                                                               :name="'ft-sel-'+tileModal.tileId+'-'+si"
-                                                               :value="cpi"
-                                                               :checked="(tileModal.ftSelectedPasses||{})[si] === cpi"
-                                                               @change="tileModal.ftSelectedPasses = {...(tileModal.ftSelectedPasses||{}), [si]: cpi}"
-                                                               :disabled="!tileModal.status?.ft_slots?.[si]?.ft_passes?.[cpi]?.path"
-                                                               class="accent-orange-400 disabled:opacity-30">
+                                                    <!-- Checkbox: include in batch run -->
+                                                    <label class="flex items-center cursor-pointer" :title="'Włącz do generowania'">
+                                                        <input type="checkbox"
+                                                               :checked="cp.selected !== false"
+                                                               @change="cp.selected = $event.target.checked; picSaveTile(true)"
+                                                               class="accent-orange-400 w-3 h-3">
                                                     </label>
                                                     <span class="text-xs text-gray-600 truncate max-w-[5rem]" x-text="cp.name || ('Pass '+(cpi+1))"></span>
                                                     <div class="w-20 h-16 relative">
                                                         <template x-if="tileModal.status?.ft_slots?.[si]?.ft_passes?.[cpi]?.path">
                                                             <img :src="'/api/fs/image?path='+encodeURIComponent(tileModal.status.ft_slots[si].ft_passes[cpi].path)+'&cb='+tileModal.imgCacheBust"
-                                                                 :class="'w-20 h-16 rounded object-cover cursor-zoom-in transition ring-1 '+((tileModal.ftSelectedPasses||{})[si]===cpi ? 'ring-orange-400' : 'ring-orange-900 hover:ring-orange-400')"
+                                                                 :class="'w-20 h-16 rounded object-cover cursor-zoom-in transition ring-1 '+(picFtLastSelectedPass(si)===cpi ? 'ring-orange-400' : 'ring-orange-900 hover:ring-orange-400')"
                                                                  @click="picOpenPreview('/api/fs/image?path='+encodeURIComponent(tileModal.status.ft_slots[si].ft_passes[cpi].path)+'&cb='+tileModal.imgCacheBust, (cp.name||'Pass '+(cpi+1))+' [S'+(si+1)+']', tileModal.status.ft_slots[si].ft_passes[cpi].path)"
                                                                  @error="$el.style.display='none'">
                                                         </template>
@@ -5244,13 +5241,13 @@
                                     <!-- Per-slot finalize bar -->
                                     <div class="flex items-center gap-2 pt-1 border-t border-gray-800">
                                         <span class="text-xs text-gray-600 flex-1">
-                                            <span x-show="(tileModal.ftSelectedPasses||{})[si] !== undefined"
-                                                  x-text="'Zaznaczony: ' + (slot.custom_passes?.[(tileModal.ftSelectedPasses||{})[si]]?.name || ('Pass '+((tileModal.ftSelectedPasses||{})[si]+1)))"></span>
-                                            <span x-show="(tileModal.ftSelectedPasses||{})[si] === undefined"
-                                                  class="text-gray-700">zaznacz radio</span>
+                                            <span x-show="picFtLastSelectedPass(si) !== undefined"
+                                                  x-text="'Finalizuje: ' + (slot.custom_passes?.[picFtLastSelectedPass(si)]?.name || ('Pass '+(picFtLastSelectedPass(si)+1)))"></span>
+                                            <span x-show="picFtLastSelectedPass(si) === undefined"
+                                                  class="text-gray-700">brak zaznaczonych passów</span>
                                         </span>
                                         <button @click="picFinalizeFtPass(si)"
-                                                :disabled="(tileModal.ftSelectedPasses||{})[si] === undefined"
+                                                :disabled="picFtLastSelectedPass(si) === undefined"
                                                 class="text-xs bg-green-900 hover:bg-green-800 border border-green-700 text-white rounded px-2 py-1 transition disabled:opacity-40 disabled:cursor-not-allowed">
                                             ✔ Finalizuj
                                         </button>
@@ -9915,8 +9912,22 @@ function app() {
             });
         },
 
+        picFtLastSelectedPass(si) {
+            const passes  = this.tileModal.data.ft_slots?.[si]?.custom_passes || [];
+            const ftPasses = this.tileModal.status?.ft_slots?.[si]?.ft_passes || [];
+            // Last selected pass that has output
+            for (let i = passes.length - 1; i >= 0; i--) {
+                if (passes[i].selected !== false && ftPasses[i]?.path) return i;
+            }
+            // Fall back: last selected pass (no output yet)
+            for (let i = passes.length - 1; i >= 0; i--) {
+                if (passes[i].selected !== false) return i;
+            }
+            return undefined;
+        },
+
         async picFinalizeFtPass(si) {
-            const cpi = (this.tileModal.ftSelectedPasses || {})[si];
+            const cpi = this.picFtLastSelectedPass(si);
             if (cpi === undefined) return;
             const runId  = this.selectedRun?.filename;
             const tileId = this.tileModal.tileId;
