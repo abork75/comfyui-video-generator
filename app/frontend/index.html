@@ -154,23 +154,23 @@
         <!-- Flow / Post tabs — only when run is active -->
         <template x-if="selectedRun && (selectedRun.compatibility === 'current' || selectedRun.compatibility === 'yaml') && !selectedRun.syntax_error">
             <div class="flex items-center border-l border-gray-700 px-2 gap-0.5 flex-shrink-0">
-                <button @click="picMode=true; preMode=false; postMode=false; editMode=false; sortMode=false; loadPicTiles()"
+                <button @click="tryLeaveSort(() => { picMode=true; preMode=false; postMode=false; editMode=false; sortMode=false; loadPicTiles() })"
                         :class="picMode ? 'bg-pink-900 text-pink-200' : 'text-gray-500 hover:text-gray-300 hover:bg-gray-700/50'"
                         class="text-xs px-2.5 py-1 rounded-l transition"
                         title="Pic Studio — biblioteka promptów I2I">🖼 Pic</button>
-                <button @click="preMode=true; postMode=false; picMode=false; editMode=false; sortMode=false; loadPreClips()"
+                <button @click="tryLeaveSort(() => { preMode=true; postMode=false; picMode=false; editMode=false; sortMode=false; loadPreClips() })"
                         :class="preMode ? 'bg-purple-900 text-purple-200' : 'text-gray-500 hover:text-gray-300 hover:bg-gray-700/50'"
                         class="text-xs px-2.5 py-1 transition"
                         title="Pre-processing (hurtowy upscale)">🔧 Pre</button>
-                <button @click="preMode=false; postMode=false; picMode=false; editMode=true; sortMode=false"
-                        :class="!preMode && !postMode && !picMode ? 'bg-gray-700 text-white' : 'text-gray-500 hover:text-gray-300 hover:bg-gray-700/50'"
+                <button @click="tryLeaveSort(() => { preMode=false; postMode=false; picMode=false; editMode=true; sortMode=false })"
+                        :class="!preMode && !postMode && !picMode && !sortMode ? 'bg-gray-700 text-white' : 'text-gray-500 hover:text-gray-300 hover:bg-gray-700/50'"
                         class="text-xs px-2.5 py-1 transition"
                         title="Widok FLOW">📋 Flow</button>
-                <button @click="preMode=false; postMode=false; picMode=false; editMode=false; sortMode=true; loadSortFlow()"
+                <button @click="preMode=false; postMode=false; picMode=false; editMode=false; sortMode=true"
                         :class="sortMode ? 'bg-teal-900 text-teal-200' : 'text-gray-500 hover:text-gray-300 hover:bg-gray-700/50'"
                         class="text-xs px-2.5 py-1 transition"
                         title="Sort — układanie kolejności ujęć">🗂 Sort</button>
-                <button @click="preMode=false; postMode=true; picMode=false; editMode=false; sortMode=false; loadPostClips()"
+                <button @click="tryLeaveSort(() => { preMode=false; postMode=true; picMode=false; editMode=false; sortMode=false; loadPostClips() })"
                         :class="postMode ? 'bg-blue-900 text-blue-200' : 'text-gray-500 hover:text-gray-300 hover:bg-gray-700/50'"
                         class="text-xs px-2.5 py-1 rounded-r transition"
                         title="Post-processing">🎬 Post</button>
@@ -281,7 +281,7 @@
     <main class="flex-1 flex flex-col overflow-hidden">
 
         <!-- TOOLBAR — hidden in post/pre/pic mode -->
-        <div x-show="selectedRun && !postMode && !preMode && !picMode" class="border-b border-gray-700 px-5 py-2 flex items-center gap-3 flex-shrink-0 bg-gray-900">
+        <div x-show="selectedRun && !postMode && !preMode && !picMode && !sortMode" class="border-b border-gray-700 px-5 py-2 flex items-center gap-3 flex-shrink-0 bg-gray-900">
             <!-- Generuj brakujące -->
             <button @click="startGeneration(false)"
                     :disabled="!canGenerate"
@@ -400,7 +400,7 @@
             </template>
 
             <!-- Current run — FLOW view -->
-            <template x-if="selectedRun && (selectedRun.compatibility === 'current' || selectedRun.compatibility === 'yaml') && !selectedRun.syntax_error && !postMode && !preMode && !picMode">
+            <template x-if="selectedRun && (selectedRun.compatibility === 'current' || selectedRun.compatibility === 'yaml') && !selectedRun.syntax_error && !postMode && !preMode && !picMode && !sortMode">
                 <div class="p-4 space-y-2">
                         <template x-if="flowLoading">
                             <div class="flex items-center gap-2 text-gray-500 text-sm py-4">
@@ -423,8 +423,48 @@
                         <template x-for="(seg, segIdx) in flowSegments()" :key="segIdx">
                             <div>
 
+                                <!-- ── Scene break separator (między ujęciami, nie wewnątrz) ── -->
+                                <template x-if="seg.sceneBreak">
+                                    <div class="flex items-center gap-3 py-1.5 px-3 rounded-lg mb-1"
+                                         style="background:linear-gradient(90deg,#022c22 0%,#064e3b 50%,#022c22 100%);border:1px solid #065f46">
+                                        <div class="flex-1 flex items-center gap-3 min-w-0">
+                                            <div class="h-px w-8 opacity-40 flex-shrink-0" style="background:linear-gradient(90deg,transparent,#34d399)"></div>
+                                            <span class="text-teal-400 text-sm flex-shrink-0">🎬</span>
+                                            <input type="text"
+                                                   :value="seg.sceneBreak.item.name || ''"
+                                                   @change="setSceneBreakName(seg.sceneBreak.idx, $event.target.value)"
+                                                   placeholder="Nazwa sceny…"
+                                                   class="flex-1 min-w-0 bg-transparent text-xs font-semibold text-teal-300 outline-none border-b border-transparent focus:border-teal-600 transition placeholder-teal-800" />
+                                            <div class="h-px w-8 opacity-40 flex-shrink-0" style="background:linear-gradient(90deg,#34d399,transparent)"></div>
+                                        </div>
+                                        <template x-if="editMode">
+                                            <div class="flex items-center gap-1 flex-shrink-0">
+                                                <button @click="editMoveItem(seg.sceneBreak.idx, -1)"
+                                                        :disabled="seg.sceneBreak.idx === 0"
+                                                        :class="seg.sceneBreak.idx === 0 ? 'opacity-30 cursor-not-allowed' : 'hover:text-white'"
+                                                        class="text-gray-600 text-xs px-1 py-0.5 rounded hover:bg-gray-700">↑</button>
+                                                <button @click="editMoveItem(seg.sceneBreak.idx, 1)"
+                                                        :disabled="seg.sceneBreak.idx >= flowData.flow.length - 1"
+                                                        :class="seg.sceneBreak.idx >= flowData.flow.length - 1 ? 'opacity-30 cursor-not-allowed' : 'hover:text-white'"
+                                                        class="text-gray-600 text-xs px-1 py-0.5 rounded hover:bg-gray-700">↓</button>
+                                                <button @click="editDeleteItem(seg.sceneBreak.idx)"
+                                                        class="text-gray-600 hover:text-red-400 text-xs px-1 py-0.5 rounded hover:bg-gray-800 transition">✕</button>
+                                            </div>
+                                        </template>
+                                    </div>
+                                </template>
+
+                                <!-- ── Add-zone po belce sceny (pusta i niepusta) ── -->
+                                <template x-if="editMode && seg.sceneBreak">
+                                    <div @click="openAddItemModal(seg.sceneBreak.idx)"
+                                         class="add-zone active w-full flex items-center justify-center gap-2 py-1 mb-1 text-xs font-medium text-blue-400 bg-blue-950/40 border border-dashed border-blue-800 rounded hover:bg-blue-900/50 hover:border-blue-500 hover:text-blue-300 transition cursor-pointer">
+                                        <span>+</span><span>wstaw element</span>
+                                    </div>
+                                </template>
+
                                 <!-- ── Ujęcie wrapper box ── -->
-                                <div class="rounded-xl border mb-1 p-1.5 space-y-1.5"
+                                <div x-show="seg.items.length > 0"
+                                     class="rounded-xl border mb-1 p-1.5 space-y-1.5"
                                      :class="segmentHasMissing(seg) ? 'border-orange-800/70 bg-orange-950/15' : 'border-gray-600/50 bg-gray-800/20'">
 
                                     <!-- Ujęcie header: label + move buttons + Regeneruj button -->
@@ -483,6 +523,34 @@
                                                     <div class="flex items-center gap-1 flex-shrink-0">
                                                         <button @click="editOpenItem(entry.idx)"
                                                                 class="text-violet-400 hover:text-violet-200 text-xs px-1.5 py-0.5 rounded hover:bg-violet-900/40 transition" title="Edytuj nagłówek">✎</button>
+                                                        <button @click="editDuplicateItem(entry.idx)"
+                                                                class="text-gray-500 hover:text-blue-300 text-xs px-1 py-0.5 rounded hover:bg-gray-700 transition" title="Kopiuj element">⧉</button>
+                                                        <button @click="editMoveItem(entry.idx, -1)" :disabled="entry.idx === 0"
+                                                                :class="entry.idx === 0 ? 'opacity-30 cursor-not-allowed' : 'hover:text-white'"
+                                                                class="text-gray-600 text-xs px-1 py-0.5 rounded hover:bg-gray-700">↑</button>
+                                                        <button @click="editMoveItem(entry.idx, 1)" :disabled="entry.idx === flowData.flow.length - 1"
+                                                                :class="entry.idx === flowData.flow.length - 1 ? 'opacity-30 cursor-not-allowed' : 'hover:text-white'"
+                                                                class="text-gray-600 text-xs px-1 py-0.5 rounded hover:bg-gray-700">↓</button>
+                                                        <button @click="editDeleteItem(entry.idx)"
+                                                                class="text-gray-600 hover:text-red-400 text-xs px-1 py-0.5 rounded hover:bg-gray-800 transition">✕</button>
+                                                    </div>
+                                                </template>
+                                            </div>
+                                        </template>
+
+                                        <!-- SCENE BREAK -->
+                                        <template x-if="entry.item.type === 'scene_break'">
+                                            <div class="flex items-center gap-3 py-1.5 px-3 rounded-lg"
+                                                 style="background:linear-gradient(90deg,#022c22 0%,#064e3b 50%,#022c22 100%);border:1px solid #065f46">
+                                                <div class="flex-1 flex items-center justify-center gap-3 min-w-0">
+                                                    <div class="h-px flex-1 opacity-40" style="background:linear-gradient(90deg,transparent,#34d399)"></div>
+                                                    <span class="text-xs font-semibold tracking-widest text-teal-300 uppercase flex-shrink-0">🎬 <span x-text="entry.item.name || 'Scena'"></span></span>
+                                                    <div class="h-px flex-1 opacity-40" style="background:linear-gradient(90deg,#34d399,transparent)"></div>
+                                                </div>
+                                                <template x-if="editMode">
+                                                    <div class="flex items-center gap-1 flex-shrink-0">
+                                                        <button @click="editOpenItem(entry.idx)"
+                                                                class="text-teal-400 hover:text-teal-200 text-xs px-1.5 py-0.5 rounded hover:bg-teal-900/40 transition" title="Edytuj scenę">✎</button>
                                                         <button @click="editDuplicateItem(entry.idx)"
                                                                 class="text-gray-500 hover:text-blue-300 text-xs px-1 py-0.5 rounded hover:bg-gray-700 transition" title="Kopiuj element">⧉</button>
                                                         <button @click="editMoveItem(entry.idx, -1)" :disabled="entry.idx === 0"
@@ -905,7 +973,7 @@
                                 </div><!-- /segment wrapper box -->
 
                                 <!-- Break separator between segments -->
-                                <template x-if="seg.breakIdx !== null">
+                                <template x-if="seg.breakIdx !== null && !seg.hideBreak">
                                     <div>
                                         <div class="flex items-center gap-3 py-1">
                                             <div class="flex-1 border-t border-dashed border-gray-700"></div>
@@ -1267,7 +1335,7 @@
             </template>
 
             <!-- ═══ SORT VIEW ═══ -->
-            <template x-if="selectedRun && (selectedRun.compatibility === 'yaml') && !selectedRun.syntax_error && sortMode">
+            <template x-if="selectedRun && !selectedRun.syntax_error && sortMode">
                 <div class="flex flex-col h-full overflow-hidden">
 
                     <!-- Toolbar -->
@@ -1277,29 +1345,103 @@
                         <span class="text-xs text-gray-500" x-text="(sortFlow.filter(i=>i._type!=='scene_break'&&i._type!=='break').length) + ' ujęć'"></span>
                         <span class="text-xs text-gray-600">·</span>
                         <span class="text-xs text-gray-500" x-text="(sortFlow.filter(i=>i._type==='scene_break').length) + ' scen'"></span>
+                        <span class="text-xs text-orange-400 font-mono" x-text="sortDbg"></span>
                         <div class="flex-1"></div>
                         <button @click="sortAddSceneBreak(0, true)"
                                 class="text-xs text-teal-500 border border-teal-800 hover:border-teal-500 rounded px-2 py-1 transition">
                             + Scena na początku
                         </button>
-                        <button @click="sortSave()"
-                                :disabled="!sortDirty"
-                                :class="sortDirty ? 'bg-teal-700 hover:bg-teal-600 text-white' : 'bg-gray-700 text-gray-500 cursor-not-allowed'"
+                        <button @click="doSortSave()"
+                                :class="sortDirty ? 'bg-teal-700 hover:bg-teal-600 text-white' : 'bg-gray-600 hover:bg-gray-500 text-gray-300'"
                                 class="text-xs rounded px-3 py-1 transition font-semibold">
-                            💾 Zapisz kolejność
+                            💾 Zapisz zmiany
                         </button>
                         <span x-show="sortSaving" class="text-xs text-teal-400 animate-pulse">Zapisuję…</span>
                         <span x-show="sortSaved && !sortSaving" class="text-xs text-green-400">✓ Zapisano</span>
                     </div>
 
+                    <!-- Non-YAML warning -->
+                    <template x-if="selectedRun.compatibility !== 'yaml'">
+                        <div class="flex items-center justify-center flex-1 text-yellow-500 text-sm gap-2 flex-col py-8">
+                            <span class="text-2xl">⚠️</span>
+                            <span>Sort działa tylko z plikami YAML.</span>
+                            <span class="text-gray-500 text-xs" x-text="'Aktualny run: ' + selectedRun.compatibility"></span>
+                        </div>
+                    </template>
+
                     <!-- Loading -->
-                    <div x-show="sortLoading" class="flex items-center justify-center flex-1 text-gray-500 text-sm gap-2">
+                    <div x-show="sortLoading && selectedRun.compatibility === 'yaml'" class="flex items-center justify-center flex-1 text-gray-500 text-sm gap-2">
                         <span class="animate-spin">⟳</span> Ładowanie…
                     </div>
 
-                    <!-- Grid container (SortableJS renders here) -->
-                    <div x-show="!sortLoading" class="flex-1 overflow-y-auto px-4 py-4">
-                        <div x-ref="sortGrid" class="space-y-3"></div>
+                    <!-- Grupy ujęć — każda ramka to ujęcie z kafelkami wewnątrz -->
+                    <div x-show="!sortLoading && selectedRun.compatibility === 'yaml'" class="flex-1 overflow-y-auto px-4 py-4">
+                        <div x-ref="sortGroupsContainer" class="flex flex-col gap-3">
+                            <template x-for="(group, gIdx) in sortGroups" :key="gIdx">
+                                <div class="sort-group-item flex items-stretch gap-2">
+                                    <!-- Duże ⠿ — przesuwa całą grupę -->
+                                    <div class="sort-group-handle flex-shrink-0 flex items-center justify-center w-7 cursor-grab active:cursor-grabbing select-none text-gray-600 hover:text-gray-200 text-2xl leading-none transition">⠿</div>
+                                    <!-- Ramka grupy -->
+                                    <div class="flex-1 border border-gray-700 hover:border-gray-600 rounded-lg overflow-hidden transition"
+                                         :style="'border-left: 4px solid ' + ['#0d9488','#2563eb','#7c3aed','#db2777','#ea580c','#16a34a','#ca8a04','#6b7280'][gIdx % 8]">
+                                        <!-- Nagłówek: edytowalna nazwa -->
+                                        <div class="flex items-center gap-2 px-3 py-1.5 bg-gray-800 border-b border-gray-700">
+                                            <span class="text-xs flex-shrink-0"
+                                                  :style="'color:' + ['#2dd4bf','#60a5fa','#a78bfa','#f472b6','#fb923c','#4ade80','#fcd34d','#9ca3af'][gIdx % 8]">🎬</span>
+                                            <input type="text"
+                                                   :value="group.name"
+                                                   @input="sortGroups[gIdx].name = $event.target.value; sortDirty = true"
+                                                   @keydown.enter="$el.blur()"
+                                                   class="flex-1 min-w-0 bg-transparent text-sm font-medium outline-none placeholder-gray-600 border-b border-transparent hover:border-gray-600 focus:border-teal-500 transition"
+                                                   :style="'color:' + ['#2dd4bf','#60a5fa','#a78bfa','#f472b6','#fb923c','#4ade80','#fcd34d','#9ca3af'][gIdx % 8]"
+                                                   placeholder="Nazwa ujęcia…">
+                                            <span class="text-xs text-gray-600 flex-shrink-0" x-text="group.shots.length + (group.shots.length === 1 ? ' kadr' : ' kadry/kadrów')"></span>
+                                        </div>
+                                        <!-- Ujęcia wewnątrz sceny (każde ujęcie = itemy między breakami) -->
+                                        <div class="sort-shots-grid flex flex-wrap gap-2 p-2 bg-gray-900" :data-gidx="gIdx">
+                                            <template x-for="(shot, sIdx) in group.shots" :key="sIdx">
+                                                <!-- ⠿ PRZED ramką ujęcia -->
+                                                <div class="sort-shot-item flex items-stretch gap-1" style="width:172px; flex-shrink:0">
+                                                    <div class="sort-shot-handle flex-shrink-0 flex items-center justify-center w-4 cursor-grab active:cursor-grabbing select-none text-gray-600 hover:text-gray-200 transition text-base leading-none">⠿</div>
+                                                    <!-- Ramka ujęcia -->
+                                                    <div class="flex-1 min-w-0 border border-gray-500 hover:border-gray-400 rounded-lg overflow-hidden bg-gray-800 flex flex-col transition">
+                                                        <!-- Miniatura pierwszego itemu ujęcia -->
+                                                        <div class="relative bg-gray-900" style="aspect-ratio:16/9">
+                                                            <template x-if="shot.items.length > 0 && shot.items.find(i => i._thumb_url)">
+                                                                <img :src="(shot.items.find(i => i._thumb_url) || {})._thumb_url || ''"
+                                                                     class="w-full h-full object-cover pointer-events-none"
+                                                                     @error="$el.style.display='none'">
+                                                            </template>
+                                                            <template x-if="!shot.items.find(i => i._thumb_url)">
+                                                                <span class="absolute inset-0 flex items-center justify-center text-xl"
+                                                                      x-text="shot.items[0] ? (shot.items[0]._type==='talk'?'🗣':shot.items[0]._type==='chain'?'⛓':shot.items[0]._type==='video'?'🎞':'🖼') : '🖼'"></span>
+                                                            </template>
+                                                            <!-- Numer ujęcia -->
+                                                            <span class="absolute top-0.5 left-0.5 text-xs bg-gray-900/80 rounded px-0.5 text-gray-300 font-mono"
+                                                                  x-text="_shotGlobalIdx(gIdx, sIdx)"></span>
+                                                            <!-- Liczba itemów jeśli > 1 -->
+                                                            <span x-show="shot.items.length > 1"
+                                                                  class="absolute top-0.5 right-0.5 text-xs bg-gray-900/80 rounded px-0.5 text-gray-400"
+                                                                  x-text="shot.items.length + '×'"></span>
+                                                        </div>
+                                                        <!-- Edytowalna nazwa ujęcia -->
+                                                        <input type="text"
+                                                               :value="shot.name"
+                                                               @input="sortGroups[gIdx].shots[sIdx].name = $event.target.value; sortDirty = true"
+                                                               @keydown.enter="$el.blur()"
+                                                               class="w-full text-xs text-gray-300 bg-transparent outline-none px-1.5 py-1 border-t border-gray-700 hover:bg-gray-700/40 focus:bg-gray-700/60 focus:border-teal-500 transition placeholder-gray-600 cursor-text"
+                                                               :placeholder="'Ujęcie ' + _shotGlobalIdx(gIdx, sIdx)">
+                                                    </div>
+                                                </div>
+                                            </template>
+                                            <div x-show="group.shots.length === 0" class="text-gray-600 text-xs py-2 px-1 italic">pusta scena</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </template>
+                            <div x-show="sortGroups.length === 0 && !sortLoading"
+                                 class="text-center text-gray-600 text-sm py-12">Brak elementów w flow</div>
+                        </div>
                     </div>
                 </div>
             </template>
@@ -1772,6 +1914,35 @@
         </div>
         <pre class="flex-1 overflow-auto px-5 py-4 text-xs font-mono text-gray-300 leading-relaxed whitespace-pre"
              x-text="sourceModal.content"></pre>
+    </div>
+</div>
+
+<!-- ═══ SORT UNSAVED GUARD MODAL ══════════════════════════════════ -->
+<div x-show="sortGuardModal.open" x-cloak
+     class="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4"
+     @keydown.escape.window="sortGuardCancel()">
+    <div class="bg-gray-900 rounded-xl border border-teal-800 w-full max-w-sm p-6 space-y-4">
+        <div class="flex items-start gap-3">
+            <span class="text-2xl leading-none mt-0.5">⚠️</span>
+            <div>
+                <p class="text-sm font-semibold text-white">Niezapisane zmiany w Sort</p>
+                <p class="text-xs text-gray-400 mt-1">Masz niezapisane zmiany kolejności lub nazw. Co chcesz zrobić?</p>
+            </div>
+        </div>
+        <div class="flex flex-col gap-2 pt-1">
+            <button @click="sortGuardSave()"
+                    class="w-full bg-teal-700 hover:bg-teal-600 text-white text-sm font-semibold rounded-lg px-4 py-2 transition">
+                💾 Zapisz zmiany i przejdź
+            </button>
+            <button @click="sortGuardDiscard()"
+                    class="w-full bg-gray-700 hover:bg-red-900 text-gray-300 hover:text-red-200 text-sm rounded-lg px-4 py-2 transition">
+                🗑 Odrzuć zmiany i przejdź
+            </button>
+            <button @click="sortGuardCancel()"
+                    class="w-full bg-transparent hover:bg-gray-800 text-gray-500 hover:text-gray-300 text-sm rounded-lg px-4 py-2 transition">
+                Zostań w Sort
+            </button>
+        </div>
     </div>
 </div>
 
@@ -5441,10 +5612,10 @@
                 <span class="text-2xl">✂</span>
                 <span class="text-xs text-gray-300">Break</span>
             </button>
-            <button @click="addItemDo('header')"
-                    class="flex flex-col items-center gap-2 bg-gray-800 hover:bg-gray-700 border border-indigo-900 hover:border-indigo-600 rounded-lg p-4 transition">
-                <span class="text-2xl">📌</span>
-                <span class="text-xs text-violet-300">Nagłówek</span>
+            <button @click="addItemDo('scene_break')"
+                    class="flex flex-col items-center gap-2 bg-gray-800 hover:bg-gray-700 border border-teal-900 hover:border-teal-600 rounded-lg p-4 transition">
+                <span class="text-2xl">🎬</span>
+                <span class="text-xs text-teal-300">Scena</span>
             </button>
         </div>
     </div>
@@ -5453,6 +5624,165 @@
 
 <!-- ═══ JS ════════════════════════════════════════════════════════ -->
 <script>
+// ─ Sort helpers — poza Alpine, żeby działały w async $watch ─────
+//
+// Hierarchia:  flow → sceny (między scene_break) → ujęcia (między break) → itemy
+//
+// Globalny proxy reference (this-binding w Alpine v3 nie działa w @click→method)
+let _sortProxy = null;
+
+function _flattenSortGroups() {
+    const proxy = _sortProxy;
+    if (!proxy) return [];
+    const flow = [];
+    for (let i = 0; i < proxy.sortGroups.length; i++) {
+        const scene = proxy.sortGroups[i];
+        if (i === 0) {
+            // Leading scene_break for first scene (only if named — preserves files without scene_break at start)
+            if (scene.name) flow.push({ type: 'scene_break', name: scene.name });
+        } else {
+            // Correct YAML order: break+label of prev scene's last shot BEFORE scene_break
+            const prevShots = proxy.sortGroups[i - 1].shots;
+            const prevLast  = prevShots[prevShots.length - 1];
+            if (prevLast && prevLast.name) flow.push({ break: true, label: prevLast.name });
+            flow.push({ type: 'scene_break', name: scene.name });
+        }
+        for (let j = 0; j < scene.shots.length; j++) {
+            if (j > 0) {
+                const br = { break: true };
+                if (scene.shots[j - 1].name) br.label = scene.shots[j - 1].name;
+                flow.push(br);
+            }
+            for (const item of scene.shots[j].items) flow.push(item);
+        }
+    }
+    // Trailing break preserves last shot's name (no natural break follows end-of-film)
+    const lastScene = proxy.sortGroups[proxy.sortGroups.length - 1];
+    if (lastScene && lastScene.shots.length > 0) {
+        const lastShot = lastScene.shots[lastScene.shots.length - 1];
+        if (lastShot && lastShot.name) flow.push({ break: true, label: lastShot.name });
+    }
+    return flow;
+}
+
+async function doSortSave() {
+    const proxy = _sortProxy;
+    if (!proxy) return;
+    proxy.sortDbg  = 'save:start';
+    proxy.logLine('sys', `💾 sortSave: run=${proxy.selectedRun?.filename}, groups=${proxy.sortGroups?.length}`);
+    if (!proxy.selectedRun) { proxy.sortDbg = 'save:noRun'; return; }
+    proxy.sortSaving = true;
+    proxy.sortSaved  = false;
+    try {
+        const flow = _flattenSortGroups();
+        proxy.sortDbg = `save:flow(${flow.length})`;
+        proxy.logLine('sys', `💾 flattenGroups → ${flow.length} items`);
+        const url = `/api/sort/${encodeURIComponent(proxy.selectedRun.filename)}`;
+        const res = await fetch(url, {
+            method:  'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body:    JSON.stringify({ flow }),
+        });
+        proxy.sortDbg = `save:http${res.status}`;
+        proxy.logLine('sys', `💾 PUT ${res.status}`);
+        if (!res.ok) {
+            const detail = (await res.json()).detail || `HTTP ${res.status}`;
+            proxy.sortDbg = `ERR:${detail}`;
+            throw new Error(detail);
+        }
+        const json = await res.json();
+        proxy.sortDirty = false;
+        proxy.sortSaved = true;
+        proxy.sortDbg   = `saved(${json.saved ?? flow.length})`;
+        proxy.logLine('sys', `✅ Sort zapisano: ${json.saved ?? flow.length} items`);
+        setTimeout(() => { proxy.sortSaved = false; }, 3000);
+        // Odśwież flowData żeby Flow view miał aktualną kolejność bez przeładowania strony
+        if (proxy.selectedRun) proxy.loadFlow(proxy.selectedRun.filename);
+    } catch(e) {
+        proxy.sortDbg = `ERR:${e.message}`;
+        proxy.logLine('sys', `❌ Sort save: ${e.message}`);
+        alert(`❌ Sort save: ${e.message}`);
+    } finally {
+        proxy.sortSaving = false;
+    }
+}
+
+function buildSortGroups(flow) {
+    const scenes = [];
+    let curScene = { name: '', shots: [] };
+    let curShot  = { name: '', items: [] };
+
+    const flushShot = () => {
+        if (curShot.items.length > 0) {
+            if (!curShot.name) {
+                const named = curShot.items.find(i => i.name);
+                if (named) curShot.name = named.name;
+            }
+            curScene.shots.push(curShot);
+            curShot = { name: '', items: [] };
+        }
+    };
+    const flushScene = () => {
+        flushShot();
+        if (curScene.shots.length > 0 || curScene.name) {
+            scenes.push(curScene);
+            curScene = { name: '', shots: [] };
+        }
+    };
+    // label na breaku pochodzi PO treści ujęcia → nadaj nazwę ostatniemu flush-owanemu ujęciu
+    const nameLastShot = (label) => {
+        if (curScene.shots.length > 0) {
+            const s = curScene.shots[curScene.shots.length - 1];
+            if (!s.name) s.name = label;
+        } else if (scenes.length > 0) {
+            const prevScene = scenes[scenes.length - 1];
+            if (prevScene.shots.length > 0) {
+                const s = prevScene.shots[prevScene.shots.length - 1];
+                if (!s.name) s.name = label;
+            }
+        }
+    };
+
+    for (const item of flow) {
+        if (item._type === 'scene_break') {
+            flushScene();
+            curScene.name = item.name || '';
+        } else if (item._type === 'break') {
+            flushShot();
+            if (item.label) nameLastShot(item.label);
+        } else {
+            curShot.items.push(item);
+        }
+    }
+    flushScene();
+    return scenes;
+}
+
+function initSortInnerSortables(proxy) {
+    proxy._innerSortables.forEach(s => s.destroy());
+    proxy._innerSortables = [];
+    if (typeof Sortable === 'undefined') return;
+    document.querySelectorAll('.sort-shots-grid').forEach(grid => {
+        const gIdx = parseInt(grid.dataset.gidx);
+        const s = Sortable.create(grid, {
+            animation:     150,
+            forceFallback: true,
+            handle:        '.sort-shot-handle',
+            ghostClass:    'opacity-30',
+            onEnd: (evt) => {
+                const o = evt.oldIndex, n = evt.newIndex;
+                if (o !== n && proxy.sortGroups[gIdx]) {
+                    const moved = proxy.sortGroups[gIdx].shots.splice(o, 1)[0];
+                    proxy.sortGroups[gIdx].shots.splice(n, 0, moved);
+                    proxy.sortDirty = true;
+                }
+            },
+        });
+        proxy._innerSortables.push(s);
+    });
+}
+// ────────────────────────────────────────────────────────────────
+
 function app() {
     return {
         // ─ State ──────────────────────────────────────────
@@ -5529,10 +5859,75 @@ function app() {
             } catch(e) {}
             this.connectWS();
             this._pollEnvStatus();   // start env health polling
+            window.addEventListener('beforeunload', (e) => {
+                if (this.sortDirty) { e.preventDefault(); e.returnValue = ''; }
+            });
             await this.loadRuns();
             window.addEventListener('pic-mask-changed', () => {
                 if (this.tileModal.data?.type === 'character_insert') this.checkCISceneMasks();
                 if (this.tileModal.data?.type === 'paste_character' || this.tileModal.data?.type === 'fine_tune')  this.checkSbMasks();
+            });
+            this.$watch('sortMode', async (val) => {
+                const proxy = this;
+                if (!val || !proxy.selectedRun || proxy.selectedRun.syntax_error) return;
+                proxy.sortLoading = true;
+                proxy.sortFlow    = [];
+                proxy.sortGroups  = [];
+                proxy.sortDbg     = 'loading…';
+                proxy.sortDirty   = false;
+                proxy.sortSaved   = false;
+                if (proxy._sortable) { proxy._sortable.destroy(); proxy._sortable = null; }
+                proxy._innerSortables.forEach(s => s.destroy());
+                proxy._innerSortables = [];
+                try {
+                    const url = `/api/sort/${encodeURIComponent(proxy.selectedRun.filename)}`;
+                    const res  = await fetch(url);
+                    if (!res.ok) {
+                        proxy.sortDbg = `HTTP ${res.status}`;
+                        proxy.logLine('sys', `❌ Sort API ${res.status}`);
+                        return;
+                    }
+                    const data = await res.json();
+                    proxy.sortFlow   = data.flow || [];
+                    proxy.sortGroups = buildSortGroups(proxy.sortFlow);
+                    _sortProxy       = proxy;
+                    proxy.sortDbg    = `ok:${proxy.sortFlow.length}→${proxy.sortGroups.length}gr`;
+                    proxy.logLine('sys', `🗂 Sort: ${proxy.sortFlow.length} elementów → ${proxy.sortGroups.length} grup`);
+                } catch(e) {
+                    proxy.sortDbg = `ERR:${e.message}`;
+                    proxy.logLine('sys', `❌ Sort fetch error: ${e.message}`);
+                } finally {
+                    proxy.sortLoading = false;
+                    await proxy.$nextTick();
+                    const _cont = proxy.$refs.sortGroupsContainer;
+                    if (!_cont) { proxy.sortDbg += '|NO-CONT'; }
+                    else if (typeof Sortable === 'undefined') { proxy.sortDbg += '|NO-LIB'; }
+                    else {
+                        if (proxy._sortable) { proxy._sortable.destroy(); proxy._sortable = null; }
+                        // Outer: drag całych grup
+                        proxy._sortable = Sortable.create(_cont, {
+                            animation:     150,
+                            forceFallback: true,
+                            handle:        '.sort-group-handle',
+                            ghostClass:    'opacity-30',
+                            onStart: (evt) => { proxy.sortDbg = `grp-drag:${evt.oldIndex}`; },
+                            onEnd: async (evt) => {
+                                const o = evt.oldIndex, n = evt.newIndex;
+                                proxy.sortDbg = `grp-drop:${o}→${n}`;
+                                if (o !== n) {
+                                    const moved = proxy.sortGroups.splice(o, 1)[0];
+                                    proxy.sortGroups.splice(n, 0, moved);
+                                    proxy.sortDirty = true;
+                                    await proxy.$nextTick();
+                                    initSortInnerSortables(proxy);
+                                }
+                            },
+                        });
+                        // Inner: drag kadrów w obrębie grupy
+                        initSortInnerSortables(proxy);
+                        proxy.sortDbg += `|rdy(${proxy.sortGroups.length}gr)`;
+                    }
+                }
             });
         },
 
@@ -6120,16 +6515,50 @@ function app() {
         // The break item ends the segment (separator shown after the box).
         // Move an entire segment (all its items + trailing break) one position up or down.
         async setSegmentLabel(seg, segIdx, value) {
-            if (seg.breakIdx === null) return; // last segment has no break item to persist to
             const newFlow = JSON.parse(JSON.stringify(this.flowData.flow));
-            const breakItem = newFlow[seg.breakIdx];
-            if (value.trim()) {
-                breakItem.label = value.trim();
+            if (seg.breakIdx === null) {
+                // Last segment — no trailing break exists yet; create one to carry the label
+                if (!value.trim()) return;
+                newFlow.push({ break: true, label: value.trim() });
             } else {
-                delete breakItem.label;
+                const breakItem = newFlow[seg.breakIdx];
+                if (value.trim()) {
+                    breakItem.label = value.trim();
+                } else {
+                    delete breakItem.label;
+                }
             }
             const ok = await this._saveFlow(newFlow);
             if (ok) this.flowData.flow = newFlow;
+        },
+
+        async setSceneBreakName(idx, value) {
+            const newFlow = JSON.parse(JSON.stringify(this.flowData.flow));
+            newFlow[idx].name = value.trim();
+            const ok = await this._saveFlow(newFlow);
+            if (ok) this.flowData.flow = newFlow;
+        },
+
+        // ─── Sort unsaved-changes guard ───────────────────────────────
+        tryLeaveSort(fn) {
+            if (!this.sortMode || !this.sortDirty) { fn(); return; }
+            this.sortGuardModal = { open: true, pendingFn: fn };
+        },
+        async sortGuardSave() {
+            const fn = this.sortGuardModal.pendingFn;
+            this.sortGuardModal = { open: false, pendingFn: null };
+            await doSortSave();
+            // doSortSave clears sortDirty on success; only navigate if it succeeded
+            if (!this.sortDirty) fn();
+        },
+        sortGuardDiscard() {
+            const fn = this.sortGuardModal.pendingFn;
+            this.sortGuardModal = { open: false, pendingFn: null };
+            this.sortDirty = false;
+            fn();
+        },
+        sortGuardCancel() {
+            this.sortGuardModal = { open: false, pendingFn: null };
         },
 
         async moveSegment(segIdx, dir) {
@@ -6140,9 +6569,9 @@ function app() {
             const segA = segs[Math.min(segIdx, targetIdx)];
             const segB = segs[Math.max(segIdx, targetIdx)];
 
-            // Build contiguous index lists for each block (items + optional break)
-            const indicesA = [...segA.items.map(e => e.idx), ...(segA.breakIdx !== null ? [segA.breakIdx] : [])];
-            const indicesB = [...segB.items.map(e => e.idx), ...(segB.breakIdx !== null ? [segB.breakIdx] : [])];
+            // Build contiguous index lists: sceneBreak (leading) + items + break (trailing)
+            const indicesA = [...(segA.sceneBreak ? [segA.sceneBreak.idx] : []), ...segA.items.map(e => e.idx), ...(segA.breakIdx !== null ? [segA.breakIdx] : [])];
+            const indicesB = [...(segB.sceneBreak ? [segB.sceneBreak.idx] : []), ...segB.items.map(e => e.idx), ...(segB.breakIdx !== null ? [segB.breakIdx] : [])];
 
             const newFlow = JSON.parse(JSON.stringify(this.flowData.flow));
             const blockA = indicesA.map(i => newFlow[i]);
@@ -6162,25 +6591,30 @@ function app() {
         flowSegments() {
             if (!this.flowData) return [];
             const segs = [];
-            let current = { items: [] };
+            let current = { items: [], sceneBreak: null, breakIdx: null, label: '' };
             this.flowData.flow.forEach((item, idx) => {
                 if (item.break) {
                     current.breakIdx = idx;
                     current.label = item.label || '';
                     segs.push(current);
-                    current = { items: [] };
+                    current = { items: [], sceneBreak: null, breakIdx: null, label: '' };
+                } else if (item.type === 'scene_break') {
+                    if (current.items.length > 0 || current.sceneBreak !== null) {
+                        // flush: albo są elementy, albo poprzedni scene_break czeka (dwie sceny z rzędu)
+                        segs.push(current);
+                        current = { items: [], sceneBreak: null, breakIdx: null, label: '' };
+                    }
+                    current.sceneBreak = { item, idx };
                 } else {
                     current.items.push({ item, idx });
                 }
             });
-            // Always push the last segment (may have no trailing break)
-            if (current.items.length > 0) {
-                current.breakIdx = null;
-                current.label = '';
-                segs.push(current);
-            }
-            // Edge case: flow is empty or only breaks
-            if (segs.length === 0) segs.push({ items: [], breakIdx: null, label: '' });
+            if (current.items.length > 0 || current.sceneBreak) segs.push(current);
+            if (segs.length === 0) segs.push({ items: [], breakIdx: null, label: '', sceneBreak: null });
+            // Ukryj ✂ break gdy następny segment zaczyna się od scene_break (scene bar zastępuje go wizualnie)
+            segs.forEach((seg, i) => {
+                seg.hideBreak = seg.breakIdx !== null && i + 1 < segs.length && !!segs[i + 1].sceneBreak;
+            });
             return segs;
         },
 
@@ -6390,12 +6824,16 @@ function app() {
         globalPicOpen: false,
 
         // ─ Sort view ──────────────────────────────────────
-        sortFlow:      [],
-        sortLoading:   false,
-        sortDirty:     false,
-        sortSaving:    false,
-        sortSaved:     false,
-        _sortable:     null,
+        sortFlow:        [],
+        sortGroups:      [],   // [{name, shots:[]}]  — widok grup
+        sortLoading:     false,
+        sortDirty:       false,
+        sortSaving:      false,
+        sortSaved:       false,
+        sortDbg:         '',
+        sortGuardModal:  { open: false, pendingFn: null },
+        _sortable:       null,
+        _innerSortables: [],
 
         // ─ Pic Studio per-project ─────────────────────────
         picTiles:        [],
@@ -7229,7 +7667,7 @@ function app() {
 
         editOpenItem(idx) {
             const item = this.flowData?.flow?.[idx];
-            if (!item || item.break) return;
+            if (!item || item.break || item.type === 'scene_break') return;
             const kind = item.chain !== undefined ? 'chain'
                        : item.header !== undefined ? 'header'
                        : item.type === 'talk' ? 'talk'
@@ -7417,6 +7855,11 @@ function app() {
                 copies.push(brk);
             }
 
+            // Prepend sceneBreak copy if segment has one (leading separator)
+            if (seg.sceneBreak) {
+                copies.unshift(JSON.parse(JSON.stringify(seg.sceneBreak.item)));
+            }
+
             // Insert right after the current segment's break (or at end if no break)
             const insertAt = seg.breakIdx !== null ? seg.breakIdx + 1 : flow.length;
             flow.splice(insertAt, 0, ...copies);
@@ -7487,6 +7930,8 @@ function app() {
                 newItem = { break: true };
             } else if (kind === 'header') {
                 newItem = { header: 'Nowa sekcja' };
+            } else if (kind === 'scene_break') {
+                newItem = { type: 'scene_break', name: 'Nowa scena' };
             } else if (kind === 'file') {
                 newItem = { file: 'nowy_plik.png', backend: 'linux', duration: 2, pos: 'NONE', neg: 'NONE' };
             } else if (kind === 'talk') {
@@ -9954,18 +10399,30 @@ function picMaskEditor() {
         // ── Sort view ──────────────────────────────────────────────────────────
 
         async loadSortFlow() {
-            if (!this.selectedRun) return;
+            if (!this.selectedRun) { this.sortDbg = 'no run'; return; }
+            this.sortDbg     = 'loading…';
             this.sortLoading = true;
             this.sortDirty   = false;
             this.sortSaved   = false;
+            this.sortFlow    = [];
             if (this._sortable) { this._sortable.destroy(); this._sortable = null; }
             try {
-                const res  = await fetch(`/api/sort/${this.selectedRun.filename}`);
-                if (!res.ok) throw new Error(await res.text());
+                const url = `/api/sort/${encodeURIComponent(this.selectedRun.filename)}`;
+                this.sortDbg = `fetch→${url}`;
+                const res  = await fetch(url);
+                if (!res.ok) {
+                    const detail = await res.text();
+                    this.sortDbg = `HTTP ${res.status}`;
+                    this.logLine('sys', `❌ Sort API ${res.status}: ${detail}`);
+                    return;
+                }
                 const data = await res.json();
-                this.sortFlow = data.flow;
+                this.sortFlow = data.flow || [];
+                this.sortDbg  = `ok:${this.sortFlow.length}`;
+                this.logLine('sys', `🗂 Sort: załadowano ${this.sortFlow.length} elementów`);
             } catch(e) {
-                this.logLine('sys', `❌ Sort: ${e.message}`);
+                this.sortDbg = `ERR:${e.message}`;
+                this.logLine('sys', `❌ Sort fetch error: ${e.message}`);
             } finally {
                 this.sortLoading = false;
                 await this.$nextTick();
@@ -9981,106 +10438,110 @@ function picMaskEditor() {
             return '—';
         },
 
-        _renderSortGrid() {
-            const grid = this.$refs.sortGrid;
-            if (!grid) return;
-            grid.innerHTML = '';
-
-            this.sortFlow.forEach((item, idx) => {
-                const el = document.createElement('div');
-                el.dataset.idx = idx;
-
-                if (item._type === 'scene_break') {
-                    el.className = 'sort-scene-break flex items-center gap-2 py-1';
-                    el.innerHTML = `
-                        <div class="h-px flex-1 bg-teal-800"></div>
-                        <div class="flex items-center gap-1.5 bg-teal-950 border border-teal-700 rounded-lg px-3 py-1.5 cursor-grab select-none">
-                            <span class="text-teal-400 text-xs">🎬</span>
-                            <input type="text" value="${(item.name||'').replace(/"/g,'&quot;')}"
-                                   placeholder="Nazwa sceny…"
-                                   class="bg-transparent text-teal-200 text-xs font-semibold focus:outline-none w-40 placeholder-teal-700"
-                                   data-scene-name="${idx}">
-                            <button class="text-teal-700 hover:text-red-400 text-xs ml-1 transition sort-remove" data-idx="${idx}">✕</button>
-                        </div>
-                        <div class="h-px flex-1 bg-teal-800"></div>
-                        <button class="text-xs text-teal-700 hover:text-teal-400 px-1 transition sort-add-scene" data-idx="${idx}" title="Dodaj scenę po tym">+</button>`;
-
-                } else if (item._type === 'break') {
-                    el.className = 'sort-break flex items-center gap-2 py-1 cursor-grab';
-                    el.innerHTML = `<div class="h-px flex-1 bg-gray-700"></div>
-                        <span class="text-gray-600 text-xs px-2 border border-gray-700 rounded">— break —</span>
-                        <div class="h-px flex-1 bg-gray-700"></div>`;
-
-                } else {
-                    // Shot card
-                    const label = this._sortItemLabel(item);
-                    const typeIcon = item._type === 'talk' ? '🗣' : item._type === 'chain' ? '⛓' : item._type === 'video' ? '🎞' : '🖼';
-                    const thumb = item._thumb_url
-                        ? `<img src="${item._thumb_url}" class="w-full h-full object-cover" onerror="this.style.display='none'">`
-                        : `<span class="text-2xl">${typeIcon}</span>`;
-
-                    el.className = 'sort-card cursor-grab active:cursor-grabbing bg-gray-800 border border-gray-700 hover:border-gray-500 rounded-lg overflow-hidden select-none transition';
-                    el.innerHTML = `
-                        <div class="aspect-video bg-gray-900 flex items-center justify-center relative overflow-hidden">
-                            ${thumb}
-                            <span class="absolute bottom-1 right-1 text-xs bg-gray-900/80 rounded px-1 text-gray-400">${typeIcon}</span>
-                        </div>
-                        <div class="px-2 py-1.5">
-                            <p class="text-xs text-gray-300 truncate" title="${label.replace(/"/g,'&quot;')}">${label}</p>
-                        </div>`;
+        _flattenGroups() {
+            // scena → scene_break między scenami; ujęcie → break między ujęciami
+            // nazwy ujęć zapisywane jako label: na breaku PO treści ujęcia
+            const flow = [];
+            for (let i = 0; i < this.sortGroups.length; i++) {
+                if (i > 0) {
+                    // scene_break, a po nim labeled break dla ostatniego ujęcia poprzedniej sceny
+                    flow.push({ type: 'scene_break', _type: 'scene_break', name: this.sortGroups[i].name });
+                    const prevShots = this.sortGroups[i - 1].shots;
+                    const prevLast  = prevShots[prevShots.length - 1];
+                    if (prevLast && prevLast.name) flow.push({ break: true, label: prevLast.name });
                 }
+                const scene = this.sortGroups[i];
+                for (let j = 0; j < scene.shots.length; j++) {
+                    if (j > 0) {
+                        // break po ujęciu j-1, z opcjonalnym label
+                        const br = { break: true };
+                        if (scene.shots[j - 1].name) br.label = scene.shots[j - 1].name;
+                        flow.push(br);
+                    }
+                    for (const item of scene.shots[j].items) flow.push(item);
+                }
+            }
+            return flow;
+        },
 
-                grid.appendChild(el);
-            });
+        _shotGlobalIdx(gIdx, sIdx) {
+            let n = 0;
+            for (let g = 0; g < gIdx; g++) n += this.sortGroups[g].shots.length;
+            return n + sIdx + 1;
+        },
 
-            // Bind scene name inputs
-            grid.querySelectorAll('[data-scene-name]').forEach(input => {
-                const idx = parseInt(input.dataset.sceneName);
-                input.addEventListener('input', () => {
-                    this.sortFlow[idx].name = input.value;
-                    this.sortDirty = true;
+        _shotThumb(shot) {
+            const img = shot.items.find(i => i._thumb_url);
+            return img ? img._thumb_url : null;
+        },
+
+        _shotIcon(shot) {
+            const first = shot.items[0];
+            if (!first) return '🖼';
+            return first._type === 'talk' ? '🗣' : first._type === 'chain' ? '⛓' : first._type === 'video' ? '🎞' : '🖼';
+        },
+
+        _shotLabel(shot) {
+            if (shot.name) return shot.name;
+            const first = shot.items[0];
+            if (!first) return '—';
+            if (first.name)  return first.name;
+            if (first.file)  return first.file.replace(/^.*[\\/]/, '');
+            if (first.chain) return `Chain: ${first.chain_prefix || ''}`;
+            return '—';
+        },
+
+        _initInnerSortables() {
+            this._innerSortables.forEach(s => s.destroy());
+            this._innerSortables = [];
+            if (typeof Sortable === 'undefined') return;
+            const proxy = this;
+            document.querySelectorAll('.sort-shots-grid').forEach(grid => {
+                const gIdx = parseInt(grid.dataset.gidx);
+                const s = Sortable.create(grid, {
+                    animation:     150,
+                    forceFallback: true,
+                    handle:        '.sort-shot-handle',
+                    ghostClass:    'opacity-30',
+                    onEnd: (evt) => {
+                        const o = evt.oldIndex, n = evt.newIndex;
+                        if (o !== n && proxy.sortGroups[gIdx]) {
+                            const moved = proxy.sortGroups[gIdx].shots.splice(o, 1)[0];
+                            proxy.sortGroups[gIdx].shots.splice(n, 0, moved);
+                            proxy.sortDirty = true;
+                        }
+                    },
                 });
-            });
-
-            // Bind remove buttons
-            grid.querySelectorAll('.sort-remove').forEach(btn => {
-                btn.addEventListener('click', () => {
-                    const idx = parseInt(btn.dataset.idx);
-                    this.sortFlow.splice(idx, 1);
-                    this.sortDirty = true;
-                    this._renderSortGrid();
-                    this._initSortable();
-                });
-            });
-
-            // Bind add-scene buttons
-            grid.querySelectorAll('.sort-add-scene').forEach(btn => {
-                btn.addEventListener('click', () => {
-                    const idx = parseInt(btn.dataset.idx);
-                    this.sortAddSceneBreak(idx + 1);
-                });
+                proxy._innerSortables.push(s);
             });
         },
 
         _initSortable() {
             const grid = this.$refs.sortGrid;
-            if (!grid || typeof Sortable === 'undefined') return;
-            this._renderSortGrid();
-            if (this._sortable) this._sortable.destroy();
+            if (!grid) { this.sortDbg += '|NO-GRID'; this.logLine('sys', '❌ Sort: brak sortGrid ref'); return; }
+            if (typeof Sortable === 'undefined') { this.sortDbg += '|NO-SORTABLE-LIB'; return; }
+            if (this._sortable) { this._sortable.destroy(); this._sortable = null; }
+            const ch = grid.children.length;
+            this.logLine('sys', `🗂 _initSortable: grid=${grid.tagName} children=${ch}`);
             this._sortable = Sortable.create(grid, {
-                animation:     150,
-                ghostClass:    'opacity-30',
-                chosenClass:   'ring-2 ring-teal-500',
-                dragClass:     'shadow-2xl',
+                animation:  150,
+                ghostClass: 'opacity-30',
+                onStart: (evt) => {
+                    this.sortDbg = `drag:${evt.oldIndex}`;
+                    this.logLine('sys', `🗂 Sort onStart idx=${evt.oldIndex}`);
+                },
                 onEnd: (evt) => {
-                    const moved = this.sortFlow.splice(evt.oldIndex, 1)[0];
-                    this.sortFlow.splice(evt.newIndex, 0, moved);
+                    const o = evt.oldIndex, n = evt.newIndex;
+                    this.logLine('sys', `🗂 Sort onEnd ${o}→${n}`);
+                    if (o === n) { this.sortDbg = `ok:${this.sortFlow.length}`; return; }
+                    this.sortDbg = `drop:${o}→${n}`;
+                    const moved = this.sortFlow.splice(o, 1)[0];
+                    this.sortFlow.splice(n, 0, moved);
                     this.sortDirty = true;
-                    // Re-render so data-idx attributes stay in sync
-                    this._renderSortGrid();
-                    this._initSortable();
+                    this.$nextTick(() => this._initSortable());
                 },
             });
+            this.sortDbg += `|S(${ch}ch)`;
         },
 
         sortAddSceneBreak(afterIdx, atStart = false) {
@@ -10089,26 +10550,42 @@ function picMaskEditor() {
                 _type: 'scene_break', _sort_idx: -1, type: 'scene_break', name: ''
             });
             this.sortDirty = true;
-            this._renderSortGrid();
-            this._initSortable();
+            this.$nextTick(() => this._initSortable());
         },
 
         async sortSave() {
-            if (!this.selectedRun || !this.sortDirty) return;
+            this.sortDbg = 'save:start';
+            this.logLine('sys', `💾 sortSave wywołany, selectedRun=${this.selectedRun?.filename}, groups=${this.sortGroups?.length}`);
+            if (!this.selectedRun) { this.sortDbg = 'save:noRun'; return; }
             this.sortSaving = true;
             this.sortSaved  = false;
             try {
-                const res = await fetch(`/api/sort/${this.selectedRun.filename}`, {
+                const flow = this._flattenGroups();
+                this.sortDbg = `save:flow(${flow.length})`;
+                this.logLine('sys', `💾 flattenGroups → ${flow.length} items`);
+                const url  = `/api/sort/${encodeURIComponent(this.selectedRun.filename)}`;
+                const res  = await fetch(url, {
                     method:  'PUT',
                     headers: { 'Content-Type': 'application/json' },
-                    body:    JSON.stringify({ flow: this.sortFlow }),
+                    body:    JSON.stringify({ flow }),
                 });
-                if (!res.ok) throw new Error((await res.json()).detail || 'Błąd zapisu');
+                this.sortDbg = `save:http${res.status}`;
+                this.logLine('sys', `💾 PUT ${res.status}`);
+                if (!res.ok) {
+                    const detail = (await res.json()).detail || `HTTP ${res.status}`;
+                    this.sortDbg = `ERR:${detail}`;
+                    throw new Error(detail);
+                }
+                const json = await res.json();
                 this.sortDirty = false;
                 this.sortSaved = true;
+                this.sortDbg   = `saved(${json.saved ?? flow.length})`;
+                this.logLine('sys', `✅ Sort zapisano: ${json.saved ?? flow.length} items`);
                 setTimeout(() => { this.sortSaved = false; }, 3000);
             } catch(e) {
+                this.sortDbg = `ERR:${e.message}`;
                 this.logLine('sys', `❌ Sort save: ${e.message}`);
+                alert(`❌ Sort save: ${e.message}`);
             } finally {
                 this.sortSaving = false;
             }

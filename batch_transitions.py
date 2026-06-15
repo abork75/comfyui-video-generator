@@ -1089,13 +1089,21 @@ def run_batch_generation(config):
                 # reached this file) over _end.png (static source image).
                 # This eliminates the visual jump caused by WAN not reaching
                 # the target end frame exactly.
+                # Guard: only use _real.png if from_file is actually the target
+                # of some transition in the current run. If it's a section start
+                # (no preceding transition ends here), a stale _real.png from a
+                # previous run with different config must not be used.
                 _real = _real_frame_path(Path(from_file).stem)
-                if _real.exists():
+                _has_prev_transition = any(p['to_file'] == from_file for p in pairs)
+                if _real.exists() and _has_prev_transition:
                     start_frame = _real
                     logger.info(f"  🎯 {Path(from_file).stem}: using _real.png as start frame")
                 else:
                     start_frame = _frame_path(Path(from_file).stem, 'end')
-                    logger.info(f"  ℹ️  {Path(from_file).stem}: no _real.png — using static end frame")
+                    if _real.exists() and not _has_prev_transition:
+                        logger.info(f"  ℹ️  {Path(from_file).stem}: ignoring stale _real.png (section start — no preceding transition)")
+                    else:
+                        logger.info(f"  ℹ️  {Path(from_file).stem}: no _real.png — using static end frame")
                 if not start_frame.exists():
                     logger.warning(
                         f"⏳ Start frame missing for {trans['name']} "

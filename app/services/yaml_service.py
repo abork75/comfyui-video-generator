@@ -89,6 +89,8 @@ def _check_flow_item(item: Any, idx: int) -> list[str]:
         return []
     if "header" in item:
         return []  # header items are display-only, always valid
+    if item.get("type") == "scene_break":
+        return []  # scene_break items are always valid
     if "chain" in item:
         chain = item["chain"]
         if not isinstance(chain, dict):
@@ -288,7 +290,14 @@ def load_yaml_run(yaml_path: Path) -> dict | None:
     try:
         doc = yaml.safe_load(content)
     except yaml.YAMLError as e:
+        mark = getattr(e, 'problem_mark', None)
         info["error"] = f"YAML parse error: {e}"
+        info["syntax_error"] = {
+            "msg":    getattr(e, 'problem', str(e)),
+            "line":   (mark.line + 1) if mark else None,
+            "offset": (mark.column + 1) if mark else None,
+            "text":   (mark.get_snippet() if (mark and hasattr(mark, 'get_snippet')) else None),
+        }
         return info
 
     errors = validate_yaml_doc(doc)

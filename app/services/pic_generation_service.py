@@ -840,15 +840,24 @@ def _finalize_slot_file(
     output_dir = Path(tile.get("output_dir", ""))
     work_dir   = _working_dir(output_dir)
 
-    chars   = slot.get("characters", [])
-    n_chars = len(chars)
+    chars         = slot.get("characters", [])
+    n_chars       = len(chars)
+    custom_passes = slot.get("custom_passes", [])
 
-    # Determine "most advanced existing" file: scene > edge > pil.
+    # Determine "most advanced existing" file: custom_pass > scene > edge > pil.
     # We intentionally ignore the current toggle state (global_eb, global_sb, etc.)
     # so that a file generated when a pass was enabled can still be finalized
     # even if that pass is now disabled.
     src: "Path | None" = None
-    if n_chars:
+
+    # Custom passes take priority — scan from last to first
+    for ci in range(len(custom_passes) - 1, -1, -1):
+        candidate = _custom_pass_path(work_dir, output_id, ci)
+        if candidate.exists():
+            src = candidate
+            break
+
+    if src is None and n_chars:
         for candidate in (
             _scene_path(work_dir, output_id),
             _char_edge_path(work_dir, output_id, n_chars - 1),

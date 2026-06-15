@@ -98,7 +98,7 @@ class FlowParser:
         flow_list = list(self.flow)  # ensure indexable for lookahead
         for _idx, item in enumerate(flow_list):
             # ===== BREAK =====
-            if isinstance(item, dict) and 'break' in item:
+            if isinstance(item, dict) and ('break' in item or item.get('type') == 'scene_break'):
                 if current_segment.files:
                     self.segments.append(current_segment)
                 current_segment = FlowSegment()
@@ -118,7 +118,7 @@ class FlowParser:
                 # can use it as the I2V2I end frame ("dociągnij do następnego ujęcia").
                 _chain_end_target = None
                 for _nxt in flow_list[_idx + 1:]:
-                    if isinstance(_nxt, dict) and 'break' in _nxt:
+                    if isinstance(_nxt, dict) and ('break' in _nxt or _nxt.get('type') == 'scene_break'):
                         break  # segment boundary — no target
                     if isinstance(_nxt, dict) and 'chain' in _nxt:
                         break  # another chain immediately after — no target
