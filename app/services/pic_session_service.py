@@ -510,6 +510,18 @@ def reorder_tiles(run_id: str, ids: list[str]) -> list[dict]:
     return data["pic_flow"]
 
 
+def get_groups(run_id: str) -> list[dict]:
+    data = _load(run_id)
+    return data.get("pic_groups", [])
+
+
+def save_groups(run_id: str, groups: list[dict]) -> list[dict]:
+    data = _load(run_id)
+    data["pic_groups"] = groups
+    _save(run_id, data)
+    return groups
+
+
 def add_prompt_to_slot(
     run_id: str,
     tile_id: str,

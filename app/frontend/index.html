@@ -1092,95 +1092,212 @@
                                     </div>
                                 </template>
 
-                                <!-- Tiles -->
-                                <template x-for="(tile, tileIdx) in picTiles" :key="tile.id">
-                                    <div @click="if(!$event.target.closest('button')) picOpenTileModal(tile)"
-                                         :class="picTileStatusClass(tile.id)"
-                                         class="bg-gray-800 border border-gray-700 hover:border-gray-600 rounded-lg p-4 cursor-pointer group transition flex items-center gap-4">
+                                <!-- Grouped tiles -->
+                                <template x-if="picTiles.length > 0 || picGroups.length > 0">
+                                    <div>
+                                        <!-- [+ Dodaj zestaw] -->
+                                        <div class="mb-3">
+                                            <button @click="picAddGroup()"
+                                                    class="text-xs text-teal-400 hover:text-teal-300 border border-teal-800 hover:border-teal-500 rounded px-3 py-1.5 transition">
+                                                + Dodaj zestaw
+                                            </button>
+                                        </div>
 
-                                        <!-- Source image thumbnail (first slot) -->
-                                        <div class="w-14 h-14 flex-shrink-0 rounded overflow-hidden bg-gray-700 flex items-center justify-center relative group/thumb">
-                                            <template x-if="picTileImageUrl(tile)">
-                                                <img :src="picTileImageUrl(tile)"
-                                                     class="w-full h-full object-cover cursor-zoom-in"
-                                                     @click.stop="picOpenPreview(picTileImageUrl(tile), tile.scene_image || tile.image_slots?.[0]?.image || '', picOiSlotFilepath(tile.image_slots?.[0]?.image || ''))"
-                                                     @error="$el.style.display='none'; $el.nextElementSibling.style.display='flex'">
+                                        <!-- Groups container (sortable) -->
+                                        <div x-ref="picGroupsContainer" class="flex flex-col gap-3">
+
+                                            <!-- Named groups -->
+                                            <template x-for="(grp, gIdx) in picGroups" :key="grp.id">
+                                                <div class="pic-group-item flex items-stretch gap-2">
+                                                    <!-- Outer ⠿ handle — drag whole group -->
+                                                    <div class="pic-group-handle flex-shrink-0 flex items-center justify-center w-7 cursor-grab active:cursor-grabbing select-none text-gray-600 hover:text-gray-200 text-2xl leading-none transition">⠿</div>
+                                                    <!-- Group frame -->
+                                                    <div class="flex-1 border border-gray-700 rounded-lg overflow-hidden transition"
+                                                         :style="'border-left: 4px solid ' + ['#0d9488','#2563eb','#7c3aed','#db2777','#ea580c','#16a34a','#ca8a04','#6b7280'][gIdx % 8]">
+                                                        <!-- Group header -->
+                                                        <div class="flex items-center gap-2 px-3 py-1.5 bg-gray-800 border-b border-gray-700 cursor-pointer select-none"
+                                                             @click.self="picToggleGroupCollapse(grp.id)">
+                                                            <span class="text-gray-500 text-xs flex-shrink-0 w-4 text-center pointer-events-none"
+                                                                  x-text="picCollapse[grp.id] ? '▶' : '▼'"></span>
+                                                            <input type="text"
+                                                                   :value="grp.name"
+                                                                   @input="picGroups[gIdx].name = $event.target.value"
+                                                                   @change="picSaveGroups()"
+                                                                   @keydown.enter="$el.blur()"
+                                                                   @click.stop
+                                                                   class="flex-1 min-w-0 bg-transparent text-sm font-medium outline-none placeholder-gray-600 border-b border-transparent hover:border-gray-600 focus:border-teal-500 transition cursor-text"
+                                                                   :style="'color:' + ['#2dd4bf','#60a5fa','#a78bfa','#f472b6','#fb923c','#4ade80','#fcd34d','#9ca3af'][gIdx % 8]"
+                                                                   placeholder="Nazwa zestawu…">
+                                                            <span class="text-xs text-gray-600 flex-shrink-0 pointer-events-none"
+                                                                  x-text="(grp.tile_ids?.length || 0) + ' kafelków'"></span>
+                                                            <button @click.stop="picDeleteGroup(grp.id)"
+                                                                    class="text-gray-700 hover:text-red-400 text-xs px-1 py-0.5 rounded hover:bg-gray-700 transition flex-shrink-0"
+                                                                    title="Usuń zestaw">🗑</button>
+                                                        </div>
+                                                        <!-- Tiles inside group -->
+                                                        <div x-show="!picCollapse[grp.id]">
+                                                            <div class="pic-tiles-grid flex flex-col gap-1.5 p-2 bg-gray-900 min-h-[40px]"
+                                                                 :data-grpid="grp.id">
+                                                                <template x-for="tile in picTilesForGroup(grp.id)" :key="tile.id">
+                                                                    <div class="pic-tile-item flex items-stretch gap-1.5" :data-tileid="tile.id">
+                                                                        <!-- Inner ⠿ handle -->
+                                                                        <div class="pic-tile-handle flex-shrink-0 flex items-center justify-center w-5 cursor-grab active:cursor-grabbing select-none text-gray-600 hover:text-gray-300 text-base leading-none transition">⠿</div>
+                                                                        <!-- Tile card -->
+                                                                        <div @click="picOpenTileModal(tile)"
+                                                                             :class="picTileStatusClass(tile.id)"
+                                                                             class="flex-1 bg-gray-800 border border-gray-700 hover:border-gray-600 rounded-lg p-3 cursor-pointer group transition flex items-center gap-3">
+                                                                            <!-- Thumbnail -->
+                                                                            <div class="w-10 h-10 flex-shrink-0 rounded overflow-hidden bg-gray-700 flex items-center justify-center">
+                                                                                <template x-if="picTileImageUrl(tile)">
+                                                                                    <img :src="picTileImageUrl(tile)" class="w-full h-full object-cover" @error="$el.style.display='none'" style="pointer-events:none">
+                                                                                </template>
+                                                                                <span class="text-gray-500 text-lg" :style="picTileImageUrl(tile) ? 'display:none' : ''">🖼</span>
+                                                                            </div>
+                                                                            <!-- Info -->
+                                                                            <div class="flex-1 min-w-0">
+                                                                                <div class="flex items-center gap-2">
+                                                                                    <h3 class="text-sm font-medium text-white truncate" x-text="tile.name"></h3>
+                                                                                    <template x-if="picStatuses[tile.id]">
+                                                                                        <span :class="{
+                                                                                                'bg-green-900 text-green-300':  picStatuses[tile.id].overall === 'all',
+                                                                                                'bg-yellow-900 text-yellow-300': picStatuses[tile.id].overall === 'partial',
+                                                                                                'bg-gray-700 text-gray-400':    picStatuses[tile.id].overall === 'none' || picStatuses[tile.id].overall === 'empty'
+                                                                                              }"
+                                                                                              class="text-xs px-1.5 py-0.5 rounded flex-shrink-0"
+                                                                                              x-text="picStatuses[tile.id].done + '/' + picStatuses[tile.id].total + ' gotowych'">
+                                                                                        </span>
+                                                                                    </template>
+                                                                                </div>
+                                                                                <div class="text-xs text-gray-500 mt-0.5 flex items-center gap-1.5">
+                                                                                    <template x-if="tile.type === 'character_insert'"><span class="text-purple-500">🎭</span></template>
+                                                                                    <template x-if="tile.type === 'paste_character'"><span class="text-green-500">📌</span></template>
+                                                                                    <template x-if="tile.type === 'fine_tune'"><span class="text-orange-400">🎨</span></template>
+                                                                                    <span x-text="tile.type === 'character_insert'
+                                                                                        ? ((tile.scene_slots?.length||0)+' slotów')
+                                                                                        : tile.type === 'paste_character'
+                                                                                        ? ((tile.paste_slots?.length||0)+' slotów')
+                                                                                        : tile.type === 'fine_tune'
+                                                                                        ? ((tile.ft_slots?.length||0)+' sl × '+(tile.ft_slots?.[0]?.custom_passes?.length||0)+' pass')
+                                                                                        : ((tile.image_slots?.length||0)+' '+ ((tile.image_slots?.length||0)===1?'obraz':'obrazów'))"></span>
+                                                                                    <span class="text-gray-700">·</span>
+                                                                                    <span class="font-mono truncate text-gray-600" x-text="tile.output_dir || '—'"></span>
+                                                                                </div>
+                                                                            </div>
+                                                                            <!-- Actions -->
+                                                                            <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition flex-shrink-0">
+                                                                                <button @click.stop="picCopyTile(tile.id)"
+                                                                                        class="text-xs text-gray-500 hover:text-white px-1.5 py-1 rounded hover:bg-gray-700 transition"
+                                                                                        title="Kopiuj">📋</button>
+                                                                                <button @click.stop="picDeleteTile(tile.id)"
+                                                                                        class="text-xs text-gray-500 hover:text-red-400 px-1.5 py-1 rounded hover:bg-gray-700 transition"
+                                                                                        title="Usuń">🗑</button>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                </template>
+                                                            </div>
+                                                            <!-- Empty group placeholder — outside sortable grid -->
+                                                            <div x-show="(grp.tile_ids?.length || 0) === 0"
+                                                                 class="text-gray-700 text-xs py-1 px-4 pb-2 italic bg-gray-900">
+                                                                pusty zestaw — przeciągnij kafelek tutaj
+                                                            </div>
+                                                        </div>
+                                                        <!-- [+ Dodaj kafelek] always visible -->
+                                                        <div x-show="!picCollapse[grp.id]"
+                                                             class="border-t border-gray-800 bg-gray-900 px-2 py-1.5">
+                                                            <button @click="picAddTileToGroup(grp.id)"
+                                                                    class="text-xs text-blue-500 hover:text-blue-300 transition w-full text-left px-1">
+                                                                + Dodaj kafelek
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </div>
                                             </template>
-                                            <span class="text-gray-500 text-2xl" :style="picTileImageUrl(tile) ? 'display:none' : ''">🖼</span>
-                                            <!-- multi-image badge -->
-                                            <div x-show="(tile.image_slots?.length || 0) > 1"
-                                                 class="absolute bottom-0 right-0 bg-black/80 text-white rounded-tl px-1 leading-none"
-                                                 style="font-size:9px" x-text="'×' + tile.image_slots.length">
-                                            </div>
-                                            <div x-show="picTileImageUrl(tile)"
-                                                 class="absolute inset-0 bg-black/0 group-hover/thumb:bg-black/30 transition pointer-events-none flex items-center justify-center">
-                                                <span class="text-white text-xs opacity-0 group-hover/thumb:opacity-100 transition">🔍</span>
-                                            </div>
-                                        </div>
 
-                                        <!-- Info -->
-                                        <div class="flex-1 min-w-0">
-                                            <div class="flex items-center gap-2">
-                                                <h3 class="text-sm font-medium text-white truncate" x-text="tile.name"></h3>
-                                                <!-- Status badge -->
-                                                <template x-if="picStatuses[tile.id]">
-                                                    <span :class="{
-                                                            'bg-green-900 text-green-300':  picStatuses[tile.id].overall === 'all',
-                                                            'bg-yellow-900 text-yellow-300': picStatuses[tile.id].overall === 'partial',
-                                                            'bg-gray-700 text-gray-400':    picStatuses[tile.id].overall === 'none' || picStatuses[tile.id].overall === 'empty'
-                                                          }"
-                                                          class="text-xs px-1.5 py-0.5 rounded flex-shrink-0"
-                                                          x-text="picStatuses[tile.id].done + '/' + picStatuses[tile.id].total + ' gotowych'">
-                                                    </span>
-                                                </template>
+                                            <!-- Nieprzypisane — always last, non-removable -->
+                                            <div class="pic-unassigned flex items-stretch gap-2">
+                                                <div class="w-7 flex-shrink-0"></div>
+                                                <div class="flex-1 border border-gray-700 rounded-lg overflow-hidden"
+                                                     style="border-left: 4px solid #6b7280">
+                                                    <!-- Header -->
+                                                    <div class="flex items-center gap-2 px-3 py-1.5 bg-gray-800 border-b border-gray-700 cursor-pointer select-none"
+                                                         @click="picToggleGroupCollapse('__unassigned')">
+                                                        <span class="text-gray-500 text-xs flex-shrink-0 w-4 text-center"
+                                                              x-text="picCollapse['__unassigned'] ? '▶' : '▼'"></span>
+                                                        <span class="text-sm font-medium text-gray-400 flex-1">Nieprzypisane</span>
+                                                        <span class="text-xs text-gray-600 flex-shrink-0"
+                                                              x-text="picUnassignedTiles().length + ' kafelków'"></span>
+                                                    </div>
+                                                    <!-- Unassigned tiles -->
+                                                    <div x-show="!picCollapse['__unassigned']">
+                                                        <div class="pic-tiles-grid flex flex-col gap-1.5 p-2 bg-gray-900 min-h-[40px]"
+                                                             data-grpid="__unassigned">
+                                                            <template x-for="tile in picUnassignedTiles()" :key="tile.id">
+                                                                <div class="pic-tile-item flex items-stretch gap-1.5" :data-tileid="tile.id">
+                                                                    <div class="pic-tile-handle flex-shrink-0 flex items-center justify-center w-5 cursor-grab active:cursor-grabbing select-none text-gray-600 hover:text-gray-300 text-base leading-none transition">⠿</div>
+                                                                    <div @click="picOpenTileModal(tile)"
+                                                                         :class="picTileStatusClass(tile.id)"
+                                                                         class="flex-1 bg-gray-800 border border-gray-700 hover:border-gray-600 rounded-lg p-3 cursor-pointer group transition flex items-center gap-3">
+                                                                        <!-- Thumbnail -->
+                                                                        <div class="w-10 h-10 flex-shrink-0 rounded overflow-hidden bg-gray-700 flex items-center justify-center">
+                                                                            <template x-if="picTileImageUrl(tile)">
+                                                                                <img :src="picTileImageUrl(tile)" class="w-full h-full object-cover" @error="$el.style.display='none'" style="pointer-events:none">
+                                                                            </template>
+                                                                            <span class="text-gray-500 text-lg" :style="picTileImageUrl(tile) ? 'display:none' : ''">🖼</span>
+                                                                        </div>
+                                                                        <!-- Info -->
+                                                                        <div class="flex-1 min-w-0">
+                                                                            <div class="flex items-center gap-2">
+                                                                                <h3 class="text-sm font-medium text-white truncate" x-text="tile.name"></h3>
+                                                                                <template x-if="picStatuses[tile.id]">
+                                                                                    <span :class="{
+                                                                                            'bg-green-900 text-green-300':  picStatuses[tile.id].overall === 'all',
+                                                                                            'bg-yellow-900 text-yellow-300': picStatuses[tile.id].overall === 'partial',
+                                                                                            'bg-gray-700 text-gray-400':    picStatuses[tile.id].overall === 'none' || picStatuses[tile.id].overall === 'empty'
+                                                                                          }"
+                                                                                          class="text-xs px-1.5 py-0.5 rounded flex-shrink-0"
+                                                                                          x-text="picStatuses[tile.id].done + '/' + picStatuses[tile.id].total + ' gotowych'">
+                                                                                    </span>
+                                                                                </template>
+                                                                            </div>
+                                                                            <div class="text-xs text-gray-500 mt-0.5 flex items-center gap-1.5">
+                                                                                <template x-if="tile.type === 'character_insert'"><span class="text-purple-500">🎭</span></template>
+                                                                                <template x-if="tile.type === 'paste_character'"><span class="text-green-500">📌</span></template>
+                                                                                <template x-if="tile.type === 'fine_tune'"><span class="text-orange-400">🎨</span></template>
+                                                                                <span x-text="tile.type === 'character_insert'
+                                                                                    ? ((tile.scene_slots?.length||0)+' slotów')
+                                                                                    : tile.type === 'paste_character'
+                                                                                    ? ((tile.paste_slots?.length||0)+' slotów')
+                                                                                    : tile.type === 'fine_tune'
+                                                                                    ? ((tile.ft_slots?.length||0)+' sl × '+(tile.ft_slots?.[0]?.custom_passes?.length||0)+' pass')
+                                                                                    : ((tile.image_slots?.length||0)+' '+((tile.image_slots?.length||0)===1?'obraz':'obrazów'))"></span>
+                                                                                <span class="text-gray-700">·</span>
+                                                                                <span class="font-mono truncate text-gray-600" x-text="tile.output_dir || '—'"></span>
+                                                                            </div>
+                                                                        </div>
+                                                                        <!-- Actions -->
+                                                                        <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition flex-shrink-0">
+                                                                            <button @click.stop="picCopyTile(tile.id)"
+                                                                                    class="text-xs text-gray-500 hover:text-white px-1.5 py-1 rounded hover:bg-gray-700 transition"
+                                                                                    title="Kopiuj">📋</button>
+                                                                            <button @click.stop="picDeleteTile(tile.id)"
+                                                                                    class="text-xs text-gray-500 hover:text-red-400 px-1.5 py-1 rounded hover:bg-gray-700 transition"
+                                                                                    title="Usuń">🗑</button>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </template>
+                                                        </div>
+                                                        <!-- Empty placeholder — outside sortable grid -->
+                                                        <div x-show="picUnassignedTiles().length === 0"
+                                                             class="text-gray-700 text-xs py-1 px-4 pb-2 italic bg-gray-900">
+                                                            brak nieprzypisanych kafelków
+                                                        </div>
+                                                    </div>
+                                                </div>
                                             </div>
-                                            <div class="text-xs text-gray-500 mt-0.5 flex items-center gap-2">
-                                                <template x-if="tile.type === 'character_insert'">
-                                                    <span class="text-purple-500">🎭</span>
-                                                </template>
-                                                <template x-if="tile.type === 'paste_character'">
-                                                    <span class="text-green-500">📌</span>
-                                                </template>
-                                                <template x-if="tile.type === 'fine_tune'">
-                                                    <span class="text-orange-400">🎨</span>
-                                                </template>
-                                                <span x-text="tile.type === 'character_insert'
-                                                    ? ((tile.scene_slots?.length || 0) + ' slotów')
-                                                    : tile.type === 'paste_character'
-                                                    ? ((tile.paste_slots?.length || 0) + ' slotów')
-                                                    : tile.type === 'fine_tune'
-                                                    ? ((tile.ft_slots?.length || 0) + ' slotów × ' + (tile.ft_slots?.[0]?.custom_passes?.length || 0) + ' passów')
-                                                    : ((tile.image_slots?.length || 0) + ' ' + ((tile.image_slots?.length || 0) === 1 ? 'obraz' : 'obrazów'))"></span>
-                                                <span class="text-gray-700">·</span>
-                                                <span x-text="tile.type === 'paste_character'
-                                                    ? 'PIL composite'
-                                                    : tile.type === 'fine_tune'
-                                                    ? 'I2I chain'
-                                                    : tile.type === 'character_insert'
-                                                    ? ((tile.scene_slots?.reduce((s,sl) => s + (sl.prompts?.length||0), 0) || 0) + ' promptów')
-                                                    : ((tile.image_slots?.reduce((s,sl) => s + (sl.prompts?.length||0), 0) || 0) + ' promptów')"></span>
-                                                <span class="text-gray-700">·</span>
-                                                <span class="font-mono truncate text-gray-600" x-text="tile.output_dir || '—'"></span>
-                                            </div>
-                                        </div>
 
-                                        <!-- Actions (hover) -->
-                                        <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition flex-shrink-0">
-                                            <button @click.stop="picMoveTile(tileIdx, -1)"
-                                                    :disabled="tileIdx === 0"
-                                                    class="text-xs text-gray-500 hover:text-white px-1.5 py-1.5 rounded hover:bg-gray-700 transition disabled:opacity-20 disabled:cursor-not-allowed"
-                                                    title="Przesuń wyżej">↑</button>
-                                            <button @click.stop="picMoveTile(tileIdx, 1)"
-                                                    :disabled="tileIdx === picTiles.length - 1"
-                                                    class="text-xs text-gray-500 hover:text-white px-1.5 py-1.5 rounded hover:bg-gray-700 transition disabled:opacity-20 disabled:cursor-not-allowed"
-                                                    title="Przesuń niżej">↓</button>
-                                            <button @click.stop="picCopyTile(tile.id)"
-                                                    class="text-xs text-gray-500 hover:text-white px-2 py-1.5 rounded hover:bg-gray-700 transition"
-                                                    title="Kopiuj kafelek">📋</button>
-                                            <button @click.stop="picDeleteTile(tile.id)"
-                                                    class="text-xs text-gray-500 hover:text-red-400 px-2 py-1.5 rounded hover:bg-gray-700 transition"
-                                                    title="Usuń kafelek">🗑</button>
-                                        </div>
+                                        </div><!-- /picGroupsContainer -->
                                     </div>
                                 </template>
                             </div>
@@ -3103,11 +3220,11 @@
 <!-- ══════ PIC TYPE SELECT MODAL ══════════════════════════════════ -->
 <template x-if="picTypeModal.open">
 <div class="fixed inset-0 bg-black/85 flex items-center justify-center z-50 p-4"
-     @keydown.escape.window="picTypeModal.open = false">
+     @keydown.escape.window="picTypeModal.open = false; _pendingNewTileGroup = null">
     <div class="bg-gray-900 rounded-xl border border-gray-700 w-full max-w-sm p-5">
         <div class="flex items-center justify-between mb-4">
             <h3 class="text-sm font-semibold text-gray-200">Nowy kafelek — wybierz typ</h3>
-            <button @click="picTypeModal.open = false" class="text-gray-500 hover:text-white text-xl leading-none">×</button>
+            <button @click="picTypeModal.open = false; _pendingNewTileGroup = null" class="text-gray-500 hover:text-white text-xl leading-none">×</button>
         </div>
         <div class="grid grid-cols-2 gap-3">
             <button @click="picTypeSelectedDo('one_image_many_prompts')"
@@ -6220,6 +6337,9 @@ function app() {
             this.picMode  = false;
             this.sortMode = false;
             this.picTiles = []; this.picStatuses = {}; this.picTypeModal = { open: false };
+            this.picGroups = []; this.picCollapse = {}; this._pendingNewTileGroup = null;
+            if (this._picGroupSortable) { this._picGroupSortable.destroy(); this._picGroupSortable = null; }
+            this._picTileSortables.forEach(s => s.destroy()); this._picTileSortables = [];
             this.logLine('sys', `Wybrano: ${run.display_name} [${run.compatibility}]`);
             if (run.syntax_error) {
                 this.logLine('sys', `❌ Błąd składni linia ${run.syntax_error.line}: ${run.syntax_error.msg}`);
@@ -6839,6 +6959,10 @@ function app() {
         picTiles:        [],
         picTilesLoading: false,
         picStatuses:     {},   // { tile_id: {overall, done, enabled_total, prompts:{}} }
+        picGroups:       [],   // [{id, name, tile_ids:[]}]
+        picCollapse:     {},   // {grp_id: bool} — from localStorage
+        _picGroupSortable: null,
+        _picTileSortables: [],
 
         // FS/file browser modal
         fsBrowser: {
@@ -8479,16 +8603,155 @@ function app() {
                 const res = await fetch(`/api/pic/session/${this.selectedRun.filename}/tiles`);
                 if (!res.ok) throw new Error(`HTTP ${res.status}`);
                 const data = await res.json();
-                this.picTiles = data.tiles || [];
+                this.picTiles  = data.tiles      || [];
+                this.picGroups = data.pic_groups || [];
+                // Load collapse state from localStorage
+                const colKey = `pic_collapse_${this.selectedRun.filename}`;
+                try { this.picCollapse = JSON.parse(localStorage.getItem(colKey) || '{}'); } catch(e) { this.picCollapse = {}; }
                 // Load statuses in background
                 for (const tile of this.picTiles) {
                     this._loadPicTileStatus(tile.id);
                 }
+                this.$nextTick(() => this._initPicSortables());
             } catch(e) {
                 this.logLine('sys', `❌ Pic: błąd ładowania kafelków: ${e.message}`);
             } finally {
                 this.picTilesLoading = false;
             }
+        },
+
+        _initPicSortables() {
+            if (typeof Sortable === 'undefined') return;
+
+            // Destroy old
+            if (this._picGroupSortable) { this._picGroupSortable.destroy(); this._picGroupSortable = null; }
+            this._picTileSortables.forEach(s => s.destroy());
+            this._picTileSortables = [];
+
+            const proxy = this;
+
+            // Outer: group reorder
+            const groupCont = this.$refs.picGroupsContainer;
+            if (groupCont) {
+                this._picGroupSortable = Sortable.create(groupCont, {
+                    animation:     150,
+                    handle:        '.pic-group-handle',
+                    ghostClass:    'opacity-30',
+                    filter:        '.pic-unassigned',
+                    onMove(evt) { return !evt.related.classList.contains('pic-unassigned'); },
+                    onEnd(evt) {
+                        const o = evt.oldIndex, n = evt.newIndex;
+                        if (o !== n) {
+                            const moved = proxy.picGroups.splice(o, 1)[0];
+                            proxy.picGroups.splice(n, 0, moved);
+                            proxy.picSaveGroups();
+                        }
+                    },
+                });
+            }
+
+            // Inner: tile D&D per group (cross-group)
+            document.querySelectorAll('.pic-tiles-grid').forEach(grid => {
+                const grpId = grid.dataset.grpid;
+                const s = Sortable.create(grid, {
+                    animation:     150,
+                    group:         'pic-tiles',
+                    handle:        '.pic-tile-handle',
+                    ghostClass:    'opacity-30',
+                    onEnd(evt) {
+                        const fromGrpId = evt.from.dataset.grpid;
+                        const toGrpId   = evt.to.dataset.grpid;
+                        const tileId    = evt.item.dataset.tileid;
+                        const newIdx    = evt.newIndex;
+
+                        // Remove from source group
+                        if (fromGrpId === '__unassigned') {
+                            // nothing to remove from picGroups
+                        } else {
+                            const fromGrp = proxy.picGroups.find(g => g.id === fromGrpId);
+                            if (fromGrp) fromGrp.tile_ids = fromGrp.tile_ids.filter(id => id !== tileId);
+                        }
+
+                        // Add to target group
+                        if (toGrpId !== '__unassigned') {
+                            const toGrp = proxy.picGroups.find(g => g.id === toGrpId);
+                            if (toGrp) {
+                                toGrp.tile_ids = toGrp.tile_ids.filter(id => id !== tileId);
+                                toGrp.tile_ids.splice(newIdx, 0, tileId);
+                            }
+                        }
+
+                        // Reorder within same named group (already spliced above via tile_ids)
+                        if (fromGrpId === toGrpId && fromGrpId !== '__unassigned') {
+                            // already handled — fromGrp tile_ids was filter+splice
+                        }
+
+                        proxy.picSaveGroups();
+                    },
+                });
+                proxy._picTileSortables.push(s);
+            });
+        },
+
+        async picSaveGroups() {
+            if (!this.selectedRun?.filename) return;
+            // Persist collapse state
+            const colKey = `pic_collapse_${this.selectedRun.filename}`;
+            try { localStorage.setItem(colKey, JSON.stringify(this.picCollapse)); } catch(e) {}
+            try {
+                await fetch(`/api/pic/session/${this.selectedRun.filename}/groups`, {
+                    method:  'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body:    JSON.stringify({ pic_groups: this.picGroups }),
+                });
+            } catch(e) { this.logLine('sys', `❌ Pic: błąd zapisu grup: ${e.message}`); }
+        },
+
+        picAddGroup() {
+            const id   = 'grp_' + Math.random().toString(36).slice(2, 9);
+            const idx  = this.picGroups.length;
+            const name = `Zestaw ${idx + 1}`;
+            this.picGroups.push({ id, name, tile_ids: [] });
+            this.picSaveGroups();
+            this.$nextTick(() => this._initPicSortables());
+        },
+
+        async picDeleteGroup(grpId) {
+            const grp = this.picGroups.find(g => g.id === grpId);
+            if (!grp) return;
+            if (!confirm(`Usunąć zestaw "${grp.name}"? Kafelki trafią do Nieprzypisane.`)) return;
+            this.picGroups = this.picGroups.filter(g => g.id !== grpId);
+            await this.picSaveGroups();
+            this.$nextTick(() => this._initPicSortables());
+        },
+
+        picToggleGroupCollapse(grpId) {
+            this.picCollapse = { ...this.picCollapse, [grpId]: !this.picCollapse[grpId] };
+            const colKey = `pic_collapse_${this.selectedRun?.filename}`;
+            try { localStorage.setItem(colKey, JSON.stringify(this.picCollapse)); } catch(e) {}
+        },
+
+        picAssignedTileIds() {
+            const all = new Set();
+            for (const g of this.picGroups) for (const id of (g.tile_ids || [])) all.add(id);
+            return all;
+        },
+
+        picTilesForGroup(grpId) {
+            const grp = this.picGroups.find(g => g.id === grpId);
+            if (!grp) return [];
+            return (grp.tile_ids || []).map(id => this.picTiles.find(t => t.id === id)).filter(Boolean);
+        },
+
+        picUnassignedTiles() {
+            const assigned = this.picAssignedTileIds();
+            return this.picTiles.filter(t => !assigned.has(t.id));
+        },
+
+        async picAddTileToGroup(grpId) {
+            // Opens the type modal; after tile creation, assigns to group
+            this._pendingNewTileGroup = grpId;
+            this.picOpenTypeModal();
         },
 
         async _loadPicTileStatus(tileId) {
@@ -8775,6 +9038,12 @@ function app() {
                     if (m.mode === 'create' && data.tile?.id) {
                         m.tileId = data.tile.id;
                         m.mode   = 'edit';
+                        // Assign to pending group if set
+                        if (this._pendingNewTileGroup) {
+                            const grp = this.picGroups.find(g => g.id === this._pendingNewTileGroup);
+                            if (grp) { grp.tile_ids.push(data.tile.id); await this.picSaveGroups(); }
+                            this._pendingNewTileGroup = null;
+                        }
                     }
                     // Sync output_ids assigned by server back into tileModal.data.
                     // Server calls _ensure_output_ids which assigns IDs to empty slots —
@@ -8808,6 +9077,12 @@ function app() {
                         }
                     }
                 } else {
+                    // Non-silent: assign to pending group if this was a create
+                    if (m.mode === 'create' && data.tile?.id && this._pendingNewTileGroup) {
+                        const grp = this.picGroups.find(g => g.id === this._pendingNewTileGroup);
+                        if (grp) { grp.tile_ids.push(data.tile.id); await this.picSaveGroups(); }
+                        this._pendingNewTileGroup = null;
+                    }
                     m.open = false;
                     this.logLine('sys', `✅ Kafelek zapisany: ${m.data.name}`);
                 }

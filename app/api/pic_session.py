@@ -114,9 +114,35 @@ class TilePayload(BaseModel):
 @router.get("/session/{run_id}/tiles")
 async def get_tiles(run_id: str):
     try:
-        return {"tiles": pic_session_service.get_tiles(run_id)}
+        return {
+            "tiles":      pic_session_service.get_tiles(run_id),
+            "pic_groups": pic_session_service.get_groups(run_id),
+        }
     except FileNotFoundError as exc:
         raise HTTPException(status_code=404, detail=str(exc))
+
+
+class GroupsPayload(BaseModel):
+    pic_groups: list[dict]
+
+
+@router.get("/session/{run_id}/groups")
+async def get_groups(run_id: str):
+    try:
+        return {"pic_groups": pic_session_service.get_groups(run_id)}
+    except FileNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc))
+
+
+@router.put("/session/{run_id}/groups")
+async def save_groups(run_id: str, body: GroupsPayload):
+    try:
+        groups = pic_session_service.save_groups(run_id, body.pic_groups)
+        return {"ok": True, "pic_groups": groups}
+    except FileNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc))
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc))
 
 
 _COMMON_KEYS = {"type", "name", "output_dir", "global_suffix", "crop_to_subject", "pad_input_to_ratio"}
