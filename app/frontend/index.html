@@ -4228,10 +4228,31 @@
                                                     <div class="space-y-1.5">
                                                         <div class="flex items-center gap-2">
                                                             <label class="text-xs text-gray-400 shrink-0">Model</label>
-                                                            <input type="text" x-model="cp.params.atlascloud_model"
-                                                                   placeholder="qwen/qwen-image-2.0-pro/edit"
-                                                                   class="flex-1 bg-gray-800 border border-violet-800 rounded px-2 py-1 text-xs text-gray-300 font-mono focus:outline-none focus:border-violet-500">
+                                                            <select x-model="cp.params.atlascloud_model"
+                                                                    class="flex-1 bg-gray-800 border border-violet-800 rounded px-2 py-1 text-xs text-gray-300 focus:outline-none focus:border-violet-500">
+                                                                <option value="qwen/qwen-image-2.0-pro/edit">Qwen 2.0 Pro</option>
+                                                                <option value="qwen/qwen-image-1.0-pro/edit">Qwen 1.0 Pro</option>
+                                                                <option value="alibaba/wan-2.7-pro/image-edit">WAN 2.7 Pro I2I</option>
+                                                            </select>
                                                         </div>
+                                                        <!-- WAN-specific options -->
+                                                        <template x-if="(cp.params.atlascloud_model || '').startsWith('alibaba/wan')">
+                                                            <div class="flex items-center gap-3">
+                                                                <div class="flex items-center gap-1.5">
+                                                                    <label class="text-xs text-gray-400 shrink-0">Rozdzielczość</label>
+                                                                    <select x-model="cp.params.wan_size"
+                                                                            class="bg-gray-800 border border-gray-600 rounded px-2 py-0.5 text-xs text-gray-300 focus:outline-none focus:border-violet-500">
+                                                                        <option value="1K">1K</option>
+                                                                        <option value="2K">2K</option>
+                                                                    </select>
+                                                                </div>
+                                                                <label class="flex items-center gap-1.5 cursor-pointer">
+                                                                    <input type="checkbox" x-model="cp.params.thinking_mode"
+                                                                           class="accent-violet-500 w-3 h-3">
+                                                                    <span class="text-xs text-gray-400">Tryb myślenia</span>
+                                                                </label>
+                                                            </div>
+                                                        </template>
                                                         <div class="flex items-center gap-1.5">
                                                             <label class="text-xs text-gray-400 shrink-0">Seed</label>
                                                             <input type="number" x-model.number="cp.params.seed" min="-1" max="2147483647"
@@ -4316,7 +4337,7 @@
                                                 class="text-xs text-blue-400 border border-blue-800 hover:border-blue-500 rounded px-2 py-1 transition">
                                             + Import
                                         </button>
-                                        <button @click="(slot.custom_passes = slot.custom_passes || []).push({ name: '', enabled: true, mode: 'i2i', ref_image: '', positive: '', negative: '', params: { steps: 30, cfg: 8, denoise: 0.65, controlnet_strength: 0.8 } })"
+                                        <button @click="(slot.custom_passes = slot.custom_passes || []).push({ name: '', enabled: true, mode: 'i2i', ref_image: '', positive: '', negative: '', params: { steps: 30, cfg: 8, denoise: 0.65, controlnet_strength: 0.8, atlascloud_model: 'qwen/qwen-image-2.0-pro/edit', wan_size: '2K', thinking_mode: false, seed: -1 } })"
                                                 class="text-xs text-gray-300 bg-gray-700 hover:bg-gray-600 border border-gray-600 rounded px-2 py-1 transition">
                                             + Nowy
                                         </button>

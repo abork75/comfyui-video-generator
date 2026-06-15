@@ -1297,15 +1297,20 @@ async def _generate_ci_one(
 # ── AtlasCloud I2I pass ───────────────────────────────────────────────────────
 
 async def _run_atlascloud_pass(
-    src_path:  "Path",
-    prompt:    str,
-    dest_path: "Path",
-    model:     str  = "qwen/qwen-image-2.0-pro/edit",
-    seed:      int  = -1,
+    src_path:      "Path",
+    prompt:        str,
+    dest_path:     "Path",
+    model:         str        = "qwen/qwen-image-2.0-pro/edit",
+    seed:          int        = -1,
+    thinking_mode: bool       = False,
+    wan_size:      "str|None" = None,
 ) -> None:
     """
     Send src_path to AtlasCloud image-edit API, poll until done, save to dest_path.
     Raises on any error (HTTP, timeout, API failure).
+
+    wan_size: "1K" or "2K" — used only for WAN models (alibaba/wan-*).
+              Qwen models use exact pixel dimensions derived from the source image.
     """
     import os
     import base64
@@ -1316,23 +1321,27 @@ async def _run_atlascloud_pass(
     if not api_key:
         raise RuntimeError("ATLAS_CLOUD_API_KEY not set — nie można użyć backendu AtlasCloud")
 
+    is_wan = model.startswith("alibaba/wan")
+
     # ── encode source image ───────────────────────────────────────────────────
     suffix = src_path.suffix.lower()
     mime   = "image/png" if suffix == ".png" else "image/jpeg"
     b64    = base64.b64encode(src_path.read_bytes()).decode()
     image_b64 = f"data:{mime};base64,{b64}"
 
-    # ── derive size from actual image dimensions ──────────────────────────────
-    try:
-        from PIL import Image as _PILImage
-        with _PILImage.open(src_path) as _im:
-            w, h = _im.size
-        # clamp each side to [512, 2048], round to nearest 8
-        w = max(512, min(2048, (w // 8) * 8))
-        h = max(512, min(2048, (h // 8) * 8))
-        size_str = f"{w}*{h}"
-    except Exception:
-        size_str = None  # let the API decide
+    # ── derive size ───────────────────────────────────────────────────────────
+    if is_wan:
+        size_param: "str|None" = wan_size or "2K"
+    else:
+        try:
+            from PIL import Image as _PILImage
+            with _PILImage.open(src_path) as _im:
+                w, h = _im.size
+            w = max(512, min(2048, (w // 8) * 8))
+            h = max(512, min(2048, (h // 8) * 8))
+            size_param = f"{w}*{h}"
+        except Exception:
+            size_param = None
 
     # ── submit (retry on rate limit) ──────────────────────────────────────────
     headers = {
@@ -1345,8 +1354,10 @@ async def _run_atlascloud_pass(
         "prompt": prompt,
         "seed":   seed,
     }
-    if size_str:
-        payload["size"] = size_str
+    if size_param:
+        payload["size"] = size_param
+    if is_wan:
+        payload["thinking_mode"] = thinking_mode
 
     loop = asyncio.get_running_loop()
     _retry_delays = [15, 30, 60]
@@ -1590,6 +1601,8 @@ async def _run_fine_tune_async(
                         ac_model = params.get("atlascloud_model") or "qwen/qwen-image-2.0-pro/edit"
                         _raw_seed = params.get("seed")
                         ac_seed  = int(_raw_seed) if _raw_seed is not None else -1
+                        ac_thinking = bool(params.get("thinking_mode", False))
+                        ac_wan_size = params.get("wan_size") or None
                         if carry_mask:
                             _log(f"[fine_tune] slot={si} pass={cpi} WARN: carry_mask ignorowana — AtlasCloud nie obsługuje masek")
                         await _run_atlascloud_pass(
@@ -1598,6 +1611,8 @@ async def _run_fine_tune_async(
                             dest_path=dest_out,
                             model=ac_model,
                             seed=ac_seed,
+                            thinking_mode=ac_thinking,
+                            wan_size=ac_wan_size,
                         )
                     elif mode == "i2i_ref":
                         ref_image = cp.get("ref_image", "")
