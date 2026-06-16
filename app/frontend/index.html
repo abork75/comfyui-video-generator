@@ -7677,7 +7677,7 @@ function app() {
                 return;
             }
 
-            this.talkStatus = { status: 'queued', talk_name: null, segment: null, total_segs: null, error: null, elapsed_s: null };
+            this.talkStatus = { status: 'queued', talk_name: null, segment: null, total_segs: null, error: null, elapsed_s: null, flow_idx: flowIdx };
             this.logLine('sys', `🎙️ Startuję Talk: ${startImage} + ${JSON.stringify(item.audio)}`);
 
             try {
@@ -7716,6 +7716,15 @@ function app() {
                     this.logLine('sys', `✅ Talk gotowy: ${data.output_name} (${data.elapsed_s}s)`);
                     this.statusData = null;
                     await this.refreshStatus();
+                    // Auto-generate bridge (transition to next scene) if configured
+                    const _talkFlowIdx = this.talkStatus.flow_idx;
+                    if (_talkFlowIdx != null) {
+                        const _talkSi = this._si(_talkFlowIdx);
+                        if (_talkSi?.status === 'partial' && _talkSi?.bridge_name) {
+                            this.logLine('sys', `🎬 Generuję tranzycję do następnej sceny: ${_talkSi.bridge_name}`);
+                            await this._startOnly([_talkSi.bridge_name]);
+                        }
+                    }
                 } else if (data.status === 'error') {
                     clearInterval(this._talkPollTimer);
                     this._talkPollTimer = null;
