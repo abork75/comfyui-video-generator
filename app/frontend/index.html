@@ -874,8 +874,19 @@
                                                                         title="Archiwizuj talk clip">🗑</button>
                                                             </div>
                                                         </template>
+                                                        <!-- Partial: clip OK, bridge missing → generate bridge button -->
+                                                        <template x-if="_si(entry.idx)?.status === 'partial'">
+                                                            <div class="flex items-center gap-1">
+                                                                <span class="text-xs text-yellow-600" title="Talk clip gotowy, brak tranzycji do następnej sceny">🎬○</span>
+                                                                <button @click.stop="_startOnly([_si(entry.idx).bridge_name])"
+                                                                        :disabled="isRunning"
+                                                                        :class="isRunning ? 'opacity-30 cursor-not-allowed text-gray-600' : 'text-yellow-500 hover:text-yellow-300'"
+                                                                        class="text-sm px-1 py-0.5 rounded transition"
+                                                                        title="Generuj tranzycję do następnej sceny">↺</button>
+                                                            </div>
+                                                        </template>
                                                         <!-- Red: missing indicator -->
-                                                        <template x-if="_si(entry.idx)?.status !== 'green'">
+                                                        <template x-if="_si(entry.idx)?.status === 'red'">
                                                             <span class="text-xs text-red-700">○</span>
                                                         </template>
                                                         <!-- Versions (always when archived exist) -->
@@ -7697,6 +7708,7 @@ function app() {
             try {
                 const res  = await fetch('/api/talk/status');
                 const data = await res.json();
+                const prevSegment = this.talkStatus.segment;
                 this.talkStatus = { ...data };
                 if (data.status === 'done') {
                     clearInterval(this._talkPollTimer);
@@ -7709,7 +7721,7 @@ function app() {
                     this._talkPollTimer = null;
                     this.logLine('sys', `❌ Talk błąd: ${data.error}`);
                 } else if (data.status === 'running' && data.segment) {
-                    if (data.segment !== this.talkStatus.segment) {
+                    if (data.segment !== prevSegment) {
                         this.logLine('sys', `🎙️ Talk: segment ${data.segment}…`);
                     }
                 }

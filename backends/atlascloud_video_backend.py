@@ -415,11 +415,8 @@ class AtlasCloudVideoBackend(BaseBackend):
             self.logger.error(f"  ✗ Talk concat błąd: {exc}")
             return False
 
-        # RIFE — same default as video transitions; disable with frame_interpolation=False
-        fi_cfg = self.config.get("frame_interpolation", True)
-        should_rife = (frame_interpolation is not False) and (fi_cfg is not False)
-        if should_rife:
-            self._rife_interpolate(dest_path)
+        # RIFE is intentionally skipped for talk clips — applying 2x slow-motion
+        # to a lip-sync video desynchronises the audio track.
 
         return dest_path.exists()
 
