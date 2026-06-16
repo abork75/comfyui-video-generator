@@ -2603,6 +2603,17 @@
                         <p x-show="editModal.resHint" class="text-xs text-teal-600 mt-1" x-text="editModal.resHint"></p>
                     </div>
 
+                    <!-- Backend -->
+                    <div>
+                        <label class="block text-xs text-gray-400 mb-1">Backend</label>
+                        <select :value="editModal.data.backend || 'linux'"
+                                @change="editModal.data.backend = $event.target.value"
+                                class="w-full bg-gray-800 border border-gray-600 rounded px-2 py-1.5 text-sm text-gray-200 focus:outline-none focus:border-teal-500">
+                            <option value="linux">linux (InfiniteTalk lokalny)</option>
+                            <option value="atlascloud">atlascloud (WAN 2.7 lip-sync ☁)</option>
+                        </select>
+                    </div>
+
                     <!-- Transition (optional accordion) -->
                     <div class="border border-gray-700 rounded-lg overflow-hidden">
                         <button @click="editModal.showTalkTransition = !editModal.showTalkTransition"
@@ -8428,7 +8439,7 @@ function app() {
             } else if (kind === 'file') {
                 newItem = { file: 'nowy_plik.png', backend: 'linux', duration: 2, pos: 'NONE', neg: 'NONE' };
             } else if (kind === 'talk') {
-                newItem = { type: 'talk', audio: ['glos.mp3'], width: 480, height: 832, pos: '' };
+                newItem = { type: 'talk', audio: ['glos.mp3'], width: 480, height: 832, pos: '', backend: 'linux' };
             } else {
                 newItem = {
                     chain_prefix: this.nextChainPrefix(),
