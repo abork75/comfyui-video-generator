@@ -7709,7 +7709,9 @@ function app() {
                     this._talkPollTimer = null;
                     this.logLine('sys', `❌ Talk błąd: ${data.error}`);
                 } else if (data.status === 'running' && data.segment) {
-                    this.logLine('sys', `🎙️ Talk: segment ${data.segment}…`);
+                    if (data.segment !== this.talkStatus.segment) {
+                        this.logLine('sys', `🎙️ Talk: segment ${data.segment}…`);
+                    }
                 }
             } catch(e) { /* network hiccup — ignore */ }
         },
