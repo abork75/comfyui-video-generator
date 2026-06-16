@@ -21,6 +21,7 @@ from backends.local_backend import LocalBackend
 from backends.linux_backend import LinuxBackend
 
 from helpers.chain_handler import ChainHandler
+from backends.atlascloud_video_backend import AtlasCloudVideoBackend
 
 def _upscale_video_inplace(video_path: Path, width: int, height: int) -> bool:
     """
@@ -246,6 +247,8 @@ def run_batch_generation(config):
 
                 # Mark as normal I2V2I (not chain I2V)
                 'is_i2v_mode': False,
+                'atlascloud_resolution':    transition_to_next.get('atlascloud_resolution',    chain_config.get('atlascloud_resolution')),
+                'atlascloud_prompt_extend': transition_to_next.get('atlascloud_prompt_extend', chain_config.get('atlascloud_prompt_extend')),
             }
             
         else:
@@ -284,6 +287,8 @@ def run_batch_generation(config):
                     'blocks_to_swap': to_config.get('blocks_to_swap', from_config.get('blocks_to_swap', default_blocks_to_swap)),
                     'frame_interpolation': to_config.get('frame_interpolation', from_config.get('frame_interpolation', default_frame_interpolation)),
                     'is_i2v_mode': True,  # Chain is always I2V
+                    'atlascloud_resolution':    to_config.get('atlascloud_resolution',    from_config.get('atlascloud_resolution')),
+                    'atlascloud_prompt_extend': to_config.get('atlascloud_prompt_extend', from_config.get('atlascloud_prompt_extend')),
                 }
             else:
                 # NORMAL TRANSITION - use FROM config first
@@ -308,6 +313,8 @@ def run_batch_generation(config):
                     'blocks_to_swap': from_config.get('blocks_to_swap', to_config.get('blocks_to_swap', default_blocks_to_swap)),
                     'frame_interpolation': from_config.get('frame_interpolation', to_config.get('frame_interpolation', default_frame_interpolation)),
                     'is_i2v_mode': False,
+                    'atlascloud_resolution':    from_config.get('atlascloud_resolution',    to_config.get('atlascloud_resolution')),
+                    'atlascloud_prompt_extend': from_config.get('atlascloud_prompt_extend', to_config.get('atlascloud_prompt_extend')),
                 }
 
         if DEBUG_LOG:
@@ -741,14 +748,16 @@ def run_batch_generation(config):
     logger.header(f"GENERATING {len(to_generate)} TRANSITIONS")
     
     # Group by backend
-    cloud_transitions = [t for t in to_generate if t['config']['backend'] == 'cloud']
-    local_transitions = [t for t in to_generate if t['config']['backend'] == 'local']
-    linux_transitions = [t for t in to_generate if t['config']['backend'] == 'linux']
+    cloud_transitions      = [t for t in to_generate if t['config']['backend'] == 'cloud']
+    local_transitions      = [t for t in to_generate if t['config']['backend'] == 'local']
+    linux_transitions      = [t for t in to_generate if t['config']['backend'] == 'linux']
+    atlascloud_transitions = [t for t in to_generate if t['config']['backend'] == 'atlascloud']
 
     logger.section("Backend Distribution")
-    logger.info(f"  Cloud: {len(cloud_transitions)}")
-    logger.info(f"  Local: {len(local_transitions)}")
-    logger.info(f"  Linux: {len(linux_transitions)}")
+    logger.info(f"  Cloud:       {len(cloud_transitions)}")
+    logger.info(f"  Local:       {len(local_transitions)}")
+    logger.info(f"  Linux:       {len(linux_transitions)}")
+    logger.info(f"  AtlasCloud:  {len(atlascloud_transitions)}")
     print()
 
     # ============================================================
@@ -762,16 +771,23 @@ def run_batch_generation(config):
     cloud_time = len(cloud_transitions) * 1.5
     local_time = len(local_transitions) * 4.0
     linux_time = len(linux_transitions) * 4.0
-    total_time = cloud_time + local_time + linux_time
+    # AtlasCloud WAN 2.7: ~$0.15/s, default 5s → ~$0.75/clip, ~3min generation
+    _ac_default_dur = config.get('duration', 5)
+    ac_cost = len(atlascloud_transitions) * _ac_default_dur * 0.15
+    ac_time = len(atlascloud_transitions) * 3.0
+    total_time = cloud_time + local_time + linux_time + ac_time
+    total_cost = cloud_cost + ac_cost
 
     logger.info(f"  Transitions: {len(to_generate)}")
     if cloud_transitions:
-        logger.info(f"  Cloud: {len(cloud_transitions)} (est. ${cloud_cost:.2f}, ~{cloud_time:.0f}min)")
+        logger.info(f"  Cloud:      {len(cloud_transitions)} (est. ${cloud_cost:.2f}, ~{cloud_time:.0f}min)")
     if local_transitions:
-        logger.info(f"  Local: {len(local_transitions)} (FREE, ~{local_time:.0f}min)")
+        logger.info(f"  Local:      {len(local_transitions)} (FREE, ~{local_time:.0f}min)")
     if linux_transitions:
-        logger.info(f"  Linux: {len(linux_transitions)} (FREE, ~{linux_time:.0f}min)")
-    logger.info(f"  Total estimate: ${cloud_cost:.2f}, ~{total_time:.0f}min")
+        logger.info(f"  Linux:      {len(linux_transitions)} (FREE, ~{linux_time:.0f}min)")
+    if atlascloud_transitions:
+        logger.info(f"  AtlasCloud: {len(atlascloud_transitions)} (est. ${ac_cost:.2f}, ~{ac_time:.0f}min) ⚠ ~${ac_cost/max(len(atlascloud_transitions),1):.2f}/klip")
+    logger.info(f"  Total estimate: ${total_cost:.2f}, ~{total_time:.0f}min")
     print()
     
     # Ask for confirmation
@@ -806,6 +822,9 @@ def run_batch_generation(config):
 
     if linux_transitions:
         backends['linux'] = LinuxBackend(config)
+
+    if atlascloud_transitions:
+        backends['atlascloud'] = AtlasCloudVideoBackend(config)
     
     # ============================================================
     # GENERATE TRANSITIONS — retry loop
@@ -1194,7 +1213,7 @@ def run_batch_generation(config):
 
             backend = backends[backend_type]
 
-            success = backend.generate_transition(
+            _gt_kwargs = dict(
                 start_frame=start_frame,
                 end_frame=end_frame,
                 output_path=output_path,
@@ -1210,6 +1229,16 @@ def run_batch_generation(config):
                 blocks_to_swap=trans_config.get('blocks_to_swap'),
                 frame_interpolation=trans_config.get('frame_interpolation'),
             )
+            # Pass AtlasCloud-specific per-item overrides (ignored by other backends)
+            if backend_type == 'atlascloud':
+                _ac_res = trans_config.get('atlascloud_resolution')
+                _ac_pe  = trans_config.get('atlascloud_prompt_extend')
+                if _ac_res is not None:
+                    backend.config['atlascloud_resolution']    = _ac_res
+                if _ac_pe is not None:
+                    backend.config['atlascloud_prompt_extend'] = _ac_pe
+
+            success = backend.generate_transition(**_gt_kwargs)
 
             # ── Post-generation: cache chain end-frame ────────────────
             if success and is_chain_step:
