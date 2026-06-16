@@ -6559,9 +6559,21 @@ function app() {
 
         async _doStartGeneration() {
             this.preflightModal.open = false;
-            // Guard: Linux ComfyUI must be running
-            if (this.envStatus.linux !== 'ready') {
+            // Guard: check backends needed by this flow
+            const flow = this.flowData?.flow || [];
+            const needsLinux = flow.some(item =>
+                item && !item.break && !item.header && item.type !== 'scene_break' &&
+                (!item.backend || item.backend === 'linux' || item.backend === 'local')
+            );
+            const needsAtlas = flow.some(item =>
+                item && item.backend === 'atlascloud'
+            );
+            if (needsLinux && this.envStatus.linux !== 'ready') {
                 this.logLine('sys', '❌ 🐧 Linux ComfyUI nie działa (port 8189) — uruchom środowisko Linux i spróbuj ponownie');
+                return;
+            }
+            if (needsAtlas && this.envStatus.atlascloud !== 'ready') {
+                this.logLine('sys', '❌ ☁ AtlasCloud nieaktywny — sprawdź klucz ATLAS_CLOUD_API_KEY');
                 return;
             }
 
