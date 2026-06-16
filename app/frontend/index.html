@@ -889,10 +889,10 @@
                                                               x-text="(Array.isArray(entry.item.audio) ? entry.item.audio.length : 1) + ' step' + ((Array.isArray(entry.item.audio) ? entry.item.audio.length : 1) !== 1 ? 's' : '')"></span>
                                                         <!-- Generate / re-generate -->
                                                         <button @click.stop="startTalkGen(entry.idx)"
-                                                                :disabled="talkStatus.status === 'running' || talkStatus.status === 'queued' || envStatus.linux !== 'ready'"
-                                                                :class="(talkStatus.status === 'running' || talkStatus.status === 'queued' || envStatus.linux !== 'ready') ? 'opacity-30 cursor-not-allowed text-gray-600' : (_si(entry.idx)?.status === 'green' ? 'text-gray-500 hover:text-blue-400' : 'text-teal-500 hover:text-teal-300')"
+                                                                :disabled="talkStatus.status === 'running' || talkStatus.status === 'queued' || (entry.item.backend === 'atlascloud' ? envStatus.atlascloud !== 'ready' : envStatus.linux !== 'ready')"
+                                                                :class="(talkStatus.status === 'running' || talkStatus.status === 'queued' || (entry.item.backend === 'atlascloud' ? envStatus.atlascloud !== 'ready' : envStatus.linux !== 'ready')) ? 'opacity-30 cursor-not-allowed text-gray-600' : (_si(entry.idx)?.status === 'green' ? 'text-gray-500 hover:text-blue-400' : 'text-teal-500 hover:text-teal-300')"
                                                                 class="text-sm px-1 py-0.5 rounded transition"
-                                                                :title="envStatus.linux !== 'ready' ? '🐧 Linux nieaktywny' : (_si(entry.idx)?.status === 'green' ? 'Re-generuj talk' : 'Generuj Talk')">
+                                                                :title="(entry.item.backend === 'atlascloud' ? envStatus.atlascloud !== 'ready' : envStatus.linux !== 'ready') ? (entry.item.backend === 'atlascloud' ? '☁ AtlasCloud nieaktywny' : '🐧 Linux nieaktywny') : (_si(entry.idx)?.status === 'green' ? 'Re-generuj talk' : 'Generuj Talk')">
                                                             <span x-show="talkStatus.status === 'running' && talkStatus.talk_name === _si(entry.idx)?.name" class="animate-spin inline-block">⟳</span>
                                                             <span x-show="!(talkStatus.status === 'running' && talkStatus.talk_name === _si(entry.idx)?.name)">↺</span>
                                                         </button>
