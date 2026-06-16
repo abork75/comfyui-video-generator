@@ -7627,12 +7627,20 @@ function app() {
 
         async startTalkGen(flowIdx) {
             if (!this.selectedRun) return;
-            if (this.envStatus.linux !== 'ready') {
-                this.logLine('sys', '❌ 🐧 Linux ComfyUI nie działa (port 8189) — uruchom środowisko Linux i spróbuj ponownie');
-                return;
-            }
             const item = this.flowData?.flow?.[flowIdx];
             if (!item || item.type !== 'talk') return;
+            const talkBackend = item.backend || 'linux';
+            if (talkBackend === 'atlascloud') {
+                if (this.envStatus.atlascloud !== 'ready') {
+                    this.logLine('sys', '❌ ☁ AtlasCloud nieaktywny — sprawdź klucz ATLAS_CLOUD_API_KEY');
+                    return;
+                }
+            } else {
+                if (this.envStatus.linux !== 'ready') {
+                    this.logLine('sys', '❌ 🐧 Linux ComfyUI nie działa (port 8189) — uruchom środowisko Linux i spróbuj ponownie');
+                    return;
+                }
+            }
 
             // Find the start frame: previous file item in flow
             let startImage = null;
