@@ -823,7 +823,12 @@ def run_batch_generation(config):
     if linux_transitions:
         backends['linux'] = LinuxBackend(config)
 
-    if atlascloud_transitions:
+    _atlascloud_talk_tiles = [
+        t for t in to_generate
+        if t.get('to_config', {}).get('_is_talk')
+        and (t.get('to_config', {}).get('backend') == 'atlascloud')
+    ]
+    if atlascloud_transitions or _atlascloud_talk_tiles:
         backends['atlascloud'] = AtlasCloudVideoBackend(config)
     
     # ============================================================
@@ -881,18 +886,22 @@ def run_batch_generation(config):
 
             # ── Talk clip generation ──────────────────────────────────
             if to_config.get('_is_talk'):
+                # Talk clip backend is always determined by the talk tile itself
+                # (to_config), not the pair's combined backend which inherits from
+                # the preceding image (from_config) and would override the talk tile.
+                talk_backend_type = to_config.get('backend') or backend_type
                 talk_dest = talks_folder / to_file
 
                 if talk_dest.exists() and config.get('skip_existed', True):
                     _rel = str(Path('transitions') / 'talks' / to_file)
                     extractor.extract_end_frame(_rel, target_width, target_height)
-                    results.append({'name': to_file, 'backend': backend_type,
+                    results.append({'name': to_file, 'backend': talk_backend_type,
                                     'success': True, 'is_chain': False})
                     continue
 
-                if not _gen_fn and backend_type != 'atlascloud':
+                if not _gen_fn and talk_backend_type != 'atlascloud':
                     logger.error(f"  🎙️  {to_file}: talk service unavailable")
-                    results.append({'name': to_file, 'backend': backend_type,
+                    results.append({'name': to_file, 'backend': talk_backend_type,
                                     'success': False, 'is_chain': False})
                     continue
 
@@ -987,7 +996,7 @@ def run_batch_generation(config):
                     _audio_entries.append({'path': _apath, 'pos': _ap2, 'neg': _an2})
 
                 if not _audio_ok or not _audio_entries:
-                    results.append({'name': to_file, 'backend': backend_type,
+                    results.append({'name': to_file, 'backend': talk_backend_type,
                                     'success': False, 'is_chain': False})
                     continue
 
@@ -999,11 +1008,11 @@ def run_batch_generation(config):
                 logger.info(f"  audio  : {[e['path'].name for e in _audio_entries]}")
                 logger.info(f"  size   : {_tw}x{_th}")
 
-                if backend_type == 'atlascloud':
+                if talk_backend_type == 'atlascloud':
                     _ac_talk_backend = backends.get('atlascloud')
                     if not _ac_talk_backend:
                         logger.error(f"  🎙️  {to_file}: AtlasCloud backend unavailable")
-                        results.append({'name': to_file, 'backend': 'atlascloud',
+                        results.append({'name': to_file, 'backend': talk_backend_type,
                                         'success': False, 'is_chain': False})
                         continue
                     _t_success = _ac_talk_backend.generate_talk_clip(
@@ -1058,7 +1067,7 @@ def run_batch_generation(config):
                 else:
                     logger.error(f"  {to_file}: generation failed")
 
-                results.append({'name': to_file, 'backend': backend_type,
+                results.append({'name': to_file, 'backend': talk_backend_type,
                                 'success': _t_success, 'is_chain': False})
                 continue
 
