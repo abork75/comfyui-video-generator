@@ -3131,24 +3131,32 @@
         <!-- ── Mask editor ── -->
         <template x-if="picMask.active">
             <div class="flex gap-3 items-start">
-                <!-- Canvas wrapper -->
-                <div class="relative flex-shrink-0" style="line-height:0">
-                    <img :src="picImgPreview.url"
-                         x-ref="previewImg"
-                         class="block max-h-[80vh] max-w-[75vw] rounded object-contain select-none"
-                         style="display:block"
-                         @load="onImgLoad($el)">
-                    <canvas x-ref="maskCanvas"
-                            class="absolute inset-0 rounded"
-                            style="cursor:crosshair; opacity:0.55"
-                            @mousedown="startDraw($event)"
-                            @mousemove="draw($event)"
-                            @mouseup="stopDraw()"
-                            @mouseleave="stopDraw()"
-                            @touchstart.prevent="startDraw($event.touches[0])"
-                            @touchmove.prevent="draw($event.touches[0])"
-                            @touchend="stopDraw()">
-                    </canvas>
+                <!-- Canvas wrapper — scrollable, zoom via CSS transform -->
+                <div class="overflow-auto rounded border border-gray-700 flex-shrink-0"
+                     style="max-height:80vh; max-width:75vw"
+                     @wheel.prevent="setMaskZoom(picMask.zoom * ($event.deltaY < 0 ? 1.2 : 1/1.2))">
+                    <!-- Size placeholder: gives the scrollable div its scrollable area at zoom>1 -->
+                    <div :style="picMask._baseW ? 'width:' + Math.ceil(picMask._baseW * picMask.zoom) + 'px; height:' + Math.ceil(picMask._baseH * picMask.zoom) + 'px' : ''">
+                        <!-- CSS transform on this div scales img+canvas together; layout untouched -->
+                        <div :style="'transform:scale(' + picMask.zoom + '); transform-origin:0 0; display:inline-block; position:relative; line-height:0'">
+                            <img :src="picImgPreview.url"
+                                 x-ref="previewImg"
+                                 class="block max-h-[80vh] max-w-[75vw] rounded object-contain select-none"
+                                 style="display:block"
+                                 @load="onImgLoad($el)">
+                            <canvas x-ref="maskCanvas"
+                                    class="absolute inset-0 rounded"
+                                    style="cursor:crosshair; opacity:0.55"
+                                    @mousedown="startDraw($event)"
+                                    @mousemove="draw($event)"
+                                    @mouseup="stopDraw()"
+                                    @mouseleave="stopDraw()"
+                                    @touchstart.prevent="startDraw($event.touches[0])"
+                                    @touchmove.prevent="draw($event.touches[0])"
+                                    @touchend="stopDraw()">
+                            </canvas>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Tools panel -->
@@ -3175,6 +3183,21 @@
                         <input type="range" min="5" max="120" step="5"
                                x-model.number="picMask.size"
                                class="w-full accent-orange-500">
+                    </div>
+
+                    <hr class="border-gray-700">
+
+                    <!-- Zoom -->
+                    <div>
+                        <p class="text-xs text-gray-500 mb-1">Zoom: <span x-text="Math.round(picMask.zoom * 100) + '%'"></span></p>
+                        <div class="flex gap-1">
+                            <button @click="setMaskZoom(picMask.zoom / 1.5)"
+                                    class="flex-1 py-1 rounded text-xs bg-gray-700 hover:bg-gray-600 text-gray-300 transition">−</button>
+                            <button @click="setMaskZoom(1)"
+                                    class="flex-1 py-1 rounded text-xs bg-gray-700 hover:bg-gray-600 text-gray-300 transition">1:1</button>
+                            <button @click="setMaskZoom(picMask.zoom * 1.5)"
+                                    class="flex-1 py-1 rounded text-xs bg-gray-700 hover:bg-gray-600 text-gray-300 transition">+</button>
+                        </div>
                     </div>
 
                     <hr class="border-gray-700">
@@ -3840,7 +3863,7 @@
                                                 <span x-show="p._notInLibrary"
                                                       class="text-xs text-gray-500 flex-shrink-0" title="Spoza biblioteki">⚠</span>
                                                 <span class="text-xs text-gray-600 font-mono flex-shrink-0"
-                                                      x-text="'s:' + (p.params?.steps ?? 30) + ' c:' + (p.params?.cfg ?? 8)"></span>
+                                                      x-text="p.mode === 'atlascloud' ? ('☁ ' + ((p.params?.atlascloud_model || '').includes('wan') ? 'WAN' : 'Qwen')) : ('s:' + (p.params?.steps ?? 30) + ' c:' + (p.params?.cfg ?? 8))"></span>
                                                 <span x-show="p._editing" class="text-xs text-yellow-500 flex-shrink-0">▲</span>
                                                 <span x-show="!p._editing" class="text-xs text-gray-600 group-hover:text-gray-400 flex-shrink-0 transition">▼</span>
                                                 <button @click.stop="picMoveItem(slot.prompts, pIdx, -1)"
@@ -3864,13 +3887,23 @@
                                                 <input type="text" x-model="p.name" placeholder="Nazwa prompta"
                                                        @input="_picComputePromptFlags()"
                                                        class="w-full bg-gray-700 border border-gray-600 rounded px-2 py-1.5 text-xs text-white focus:outline-none focus:border-blue-500">
+                                                <!-- Tryb generowania -->
+                                                <div class="flex gap-1">
+                                                    <button @click="picSetPromptMode(slotIdx, pIdx, 'i2i')"
+                                                            :class="(!p.mode || p.mode === 'i2i') ? 'bg-blue-700 text-white' : 'bg-gray-700 text-gray-400 hover:bg-gray-600'"
+                                                            class="flex-1 text-xs py-0.5 rounded transition">🖼 i2i</button>
+                                                    <button @click="picSetPromptMode(slotIdx, pIdx, 'atlascloud')"
+                                                            :class="p.mode === 'atlascloud' ? 'bg-violet-700 text-white' : 'bg-gray-700 text-gray-400 hover:bg-gray-600'"
+                                                            class="flex-1 text-xs py-0.5 rounded transition">☁ AtlasCloud</button>
+                                                </div>
                                                 <textarea x-model="p.positive" rows="3" placeholder="Positive prompt…"
                                                           @input="_picComputePromptFlags()"
                                                           class="w-full bg-gray-700 border border-green-900 rounded px-2 py-1.5 text-xs text-green-300 font-mono resize-y focus:outline-none focus:border-green-600"></textarea>
                                                 <textarea x-model="p.negative" rows="2" placeholder="Negative prompt…"
                                                           @input="_picComputePromptFlags()"
                                                           class="w-full bg-gray-700 border border-red-900 rounded px-2 py-1.5 text-xs text-red-300 font-mono resize-y focus:outline-none focus:border-red-700"></textarea>
-                                                <div class="flex gap-4 text-xs items-center">
+                                                <!-- i2i params -->
+                                                <div class="flex gap-4 text-xs items-center" x-show="!p.mode || p.mode === 'i2i'">
                                                     <label class="text-gray-500">Steps
                                                         <input type="number" x-model.number="p.params.steps" min="1" max="100"
                                                                @change="_picComputePromptFlags()"
@@ -3886,8 +3919,65 @@
                                                                @change="_picComputePromptFlags()"
                                                                class="ml-1 w-16 bg-gray-700 border border-gray-600 rounded px-1 py-0.5 text-white text-center focus:outline-none">
                                                     </label>
+                                                </div>
+                                                <!-- AtlasCloud params -->
+                                                <div x-show="p.mode === 'atlascloud'" class="space-y-1.5">
+                                                    <div class="flex items-center gap-2">
+                                                        <label class="text-xs text-gray-400 shrink-0">Model</label>
+                                                        <select x-model="p.params.atlascloud_model"
+                                                                class="flex-1 bg-gray-800 border border-violet-800 rounded px-2 py-1 text-xs text-gray-300 focus:outline-none focus:border-violet-500">
+                                                            <option value="qwen/qwen-image-2.0-pro/edit">Qwen 2.0 Pro</option>
+                                                            <option value="alibaba/wan-2.7-pro/image-edit">WAN 2.7 Pro I2I</option>
+                                                        </select>
+                                                    </div>
+                                                    <div class="flex items-center gap-3" x-show="(p.params.atlascloud_model || '').startsWith('alibaba/wan')">
+                                                        <div class="flex items-center gap-1.5">
+                                                            <label class="text-xs text-gray-400 shrink-0">Rozdzielczość</label>
+                                                            <select x-model="p.params.wan_size"
+                                                                    class="bg-gray-800 border border-gray-600 rounded px-2 py-0.5 text-xs text-gray-300 focus:outline-none focus:border-violet-500">
+                                                                <option value="1K">1K</option>
+                                                                <option value="2K">2K</option>
+                                                            </select>
+                                                        </div>
+                                                        <label class="flex items-center gap-1.5 cursor-pointer">
+                                                            <input type="checkbox" x-model="p.params.thinking_mode" class="accent-violet-500 w-3 h-3">
+                                                            <span class="text-xs text-gray-400">Tryb myślenia</span>
+                                                        </label>
+                                                    </div>
+                                                    <div class="flex items-center gap-1.5">
+                                                        <label class="text-xs text-gray-400 shrink-0">Seed</label>
+                                                        <input type="number" x-model.number="p.params.seed" min="-1" max="2147483647"
+                                                               class="w-28 bg-gray-800 border border-gray-600 rounded px-2 py-0.5 text-xs text-gray-300 text-center focus:outline-none focus:border-violet-500">
+                                                        <span class="text-xs text-gray-600">(-1 = losowy)</span>
+                                                    </div>
+                                                    <div class="space-y-1">
+                                                        <label class="block text-xs text-gray-400">Referencja <span class="text-gray-600">(opcjonalna)</span></label>
+                                                        <div class="flex gap-2">
+                                                            <input type="text" x-model="p.params.ac_ref_image"
+                                                                   placeholder="C:\...\reference.png"
+                                                                   class="flex-1 bg-gray-800 border border-gray-600 rounded px-2 py-1 text-xs text-gray-300 font-mono focus:outline-none focus:border-violet-500">
+                                                            <button @click="openFsBrowser('image', (p.params.ac_ref_image ? p.params.ac_ref_image.replace(/[^\\/]+$/, '').replace(/[\\/]+$/, '') : null) || tileModal.data.output_dir, 'Wybierz obraz referencyjny', (fp) => { p.params.ac_ref_image = fp; })"
+                                                                    class="flex-shrink-0 text-xs text-gray-400 border border-gray-600 hover:border-gray-400 rounded px-2 py-1 transition">📂</button>
+                                                            <button x-show="p.params.ac_ref_image" @click="p.params.ac_ref_image = ''"
+                                                                    class="flex-shrink-0 text-xs text-red-700 hover:text-red-400 px-1 transition">✕</button>
+                                                        </div>
+                                                        <template x-if="p.params.ac_ref_image">
+                                                            <div class="inline-flex items-center gap-2 mt-0.5">
+                                                                <img :src="'/api/fs/image?path=' + encodeURIComponent(p.params.ac_ref_image)"
+                                                                     class="h-12 rounded object-cover cursor-zoom-in ring-1 ring-gray-600"
+                                                                     @click="picOpenPreview('/api/fs/image?path=' + encodeURIComponent(p.params.ac_ref_image), p.params.ac_ref_image.split(/[\\/]/).pop(), p.params.ac_ref_image)"
+                                                                     @error="$el.style.display='none'">
+                                                                <span class="text-xs text-gray-500 font-mono truncate max-w-xs" x-text="p.params.ac_ref_image.split(/[\\/]/).pop()"></span>
+                                                            </div>
+                                                        </template>
+                                                    </div>
+                                                    <template x-if="envStatus.atlascloud !== 'ready'">
+                                                        <p class="text-xs text-red-400">⚠ Brak klucza ATLAS_CLOUD_API_KEY</p>
+                                                    </template>
+                                                </div>
+                                                <div class="flex justify-end pt-1">
                                                     <button @click="picToggleTilePromptEdit(slotIdx, pIdx)"
-                                                            class="ml-auto text-green-400 hover:text-green-300 transition">✓ Gotowe</button>
+                                                            class="text-xs text-green-400 hover:text-green-300 transition">✓ Gotowe</button>
                                                 </div>
                                             </div>
                                         </div>
@@ -4138,7 +4228,7 @@
                         </div>
 
                         <template x-for="(slot, si) in (tileModal.data.ft_slots || [])" :key="slot.id || si">
-                            <div class="border border-gray-600 rounded-xl p-3 space-y-2 bg-gray-800/40">
+                            <div class="border border-gray-600 rounded-xl p-3 space-y-2 bg-gray-800/40" :data-ft-slot="si">
                                 <!-- Slot header -->
                                 <div class="flex items-center gap-2">
                                     <span class="text-xs font-semibold text-orange-300"
@@ -4148,7 +4238,11 @@
                                         <span class="text-xs text-gray-500">🎭 przenoś maskę</span>
                                     </label>
                                     <div class="flex-1"></div>
-                                    <button @click="(() => { const c = JSON.parse(JSON.stringify(slot)); c.id = crypto.randomUUID(); c.output_id = ''; tileModal.data.ft_slots.splice(si+1, 0, c); })()"
+                                    <button @click="picMoveItem(tileModal.data.ft_slots, si, -1)" :disabled="si===0"
+                                            class="text-xs text-gray-600 hover:text-white px-1 rounded hover:bg-gray-700 disabled:opacity-20 transition" title="Przesuń slot wyżej">↑</button>
+                                    <button @click="picMoveItem(tileModal.data.ft_slots, si, 1)" :disabled="si===(tileModal.data.ft_slots||[]).length-1"
+                                            class="text-xs text-gray-600 hover:text-white px-1 rounded hover:bg-gray-700 disabled:opacity-20 transition" title="Przesuń slot niżej">↓</button>
+                                    <button @click="(() => { const c = JSON.parse(JSON.stringify(slot)); c.id = crypto.randomUUID(); c.output_id = ''; for (const cp of (c.custom_passes || [])) cp.pass_id = Math.random().toString(36).slice(2,10); tileModal.data.ft_slots.splice(si+1, 0, c); $nextTick(() => { document.querySelector('[data-ft-slot=\'' + (si+1) + '\']')?.scrollIntoView({behavior:'smooth', block:'nearest'}); }); })()"
                                             class="text-xs text-blue-500 hover:text-blue-300 px-2 py-0.5 rounded hover:bg-gray-700 transition"
                                             title="Wstaw kopię tego slotu za nim">
                                         ⎘ Kopiuj
@@ -4221,6 +4315,9 @@
                                                     <button @click="cp.mode = 'atlascloud'; cp.params = cp.params || {}; cp.params.atlascloud_model = cp.params.atlascloud_model || 'qwen/qwen-image-2.0-pro/edit'; cp.params.wan_size = cp.params.wan_size || '2K'; if (cp.params.thinking_mode === undefined) cp.params.thinking_mode = false; if (cp.params.seed === undefined) cp.params.seed = -1;"
                                                             :class="cp.mode === 'atlascloud' ? 'bg-violet-700 text-white' : 'bg-gray-700 text-gray-400 hover:bg-gray-600'"
                                                             class="text-xs px-2 py-0.5 rounded transition">☁ AtlasCloud</button>
+                                                    <button @click="cp.mode = 'blend'; cp.params = cp.params || {}; if (cp.params.blend_factor === undefined) cp.params.blend_factor = 0.5; if (cp.blend_use_mask === undefined) cp.blend_use_mask = true; if (!cp.blend_image && slot.input_image) cp.blend_image = slot.input_image;"
+                                                            :class="cp.mode === 'blend' ? 'bg-green-700 text-white' : 'bg-gray-700 text-gray-400 hover:bg-gray-600'"
+                                                            class="text-xs px-2 py-0.5 rounded transition">🎨 Blend</button>
                                                 </div>
 
                                                 <!-- AtlasCloud: model selector + warning -->
@@ -4258,6 +4355,29 @@
                                                                    class="w-28 bg-gray-800 border border-gray-600 rounded px-2 py-0.5 text-xs text-gray-300 text-center focus:outline-none focus:border-violet-500">
                                                             <span class="text-xs text-gray-600">(-1 = losowy)</span>
                                                         </div>
+                                                        <!-- Optional reference image for AtlasCloud -->
+                                                        <div class="space-y-1">
+                                                            <label class="block text-xs text-gray-400">Referencja <span class="text-gray-600">(opcjonalna)</span></label>
+                                                            <div class="flex gap-2">
+                                                                <input type="text" x-model="cp.params.ac_ref_image"
+                                                                       placeholder="C:\...\reference.png"
+                                                                       class="flex-1 bg-gray-800 border border-gray-600 rounded px-2 py-1 text-xs text-gray-300 font-mono focus:outline-none focus:border-violet-500">
+                                                                <button @click="openFsBrowser('image', (cp.params.ac_ref_image ? cp.params.ac_ref_image.replace(/[^\\/]+$/, '').replace(/[\\/]+$/, '') : null) || tileModal.data.output_dir, 'Wybierz obraz referencyjny (AtlasCloud)', (p) => { cp.params.ac_ref_image = p; })"
+                                                                        class="flex-shrink-0 text-xs text-gray-400 border border-gray-600 hover:border-gray-400 rounded px-2 py-1 transition">📂</button>
+                                                                <button x-show="cp.params.ac_ref_image"
+                                                                        @click="cp.params.ac_ref_image = ''"
+                                                                        class="flex-shrink-0 text-xs text-red-700 hover:text-red-400 px-1 transition" title="Wyczyść">✕</button>
+                                                            </div>
+                                                            <template x-if="cp.params.ac_ref_image">
+                                                                <div class="inline-flex items-center gap-2 mt-0.5">
+                                                                    <img :src="'/api/fs/image?path=' + encodeURIComponent(cp.params.ac_ref_image)"
+                                                                         class="h-12 rounded object-cover cursor-zoom-in ring-1 ring-gray-600"
+                                                                         @click="picOpenPreview('/api/fs/image?path=' + encodeURIComponent(cp.params.ac_ref_image), cp.params.ac_ref_image.split(/[\\/]/).pop(), cp.params.ac_ref_image)"
+                                                                         @error="$el.style.display='none'">
+                                                                    <span class="text-xs text-gray-500 font-mono truncate max-w-xs" x-text="cp.params.ac_ref_image.split(/[\\/]/).pop()"></span>
+                                                                </div>
+                                                            </template>
+                                                        </div>
                                                         <template x-if="slot.carry_mask">
                                                             <p class="text-xs text-amber-500">⚠ AtlasCloud nie obsługuje masek — opcja „przenoś maskę" zostanie zignorowana</p>
                                                         </template>
@@ -4290,22 +4410,132 @@
                                                     </div>
                                                 </template>
 
-                                                <!-- Prompts (shared — AtlasCloud uses positive only) -->
-                                                <div>
-                                                    <label class="block text-xs text-gray-400 mb-1">Positive</label>
-                                                    <textarea x-model="cp.positive" rows="2"
-                                                              class="w-full bg-gray-800 border border-gray-600 rounded px-2 py-1.5 text-xs text-gray-300 resize-y focus:outline-none focus:border-orange-500"></textarea>
-                                                </div>
-                                                <template x-if="cp.mode !== 'atlascloud'">
-                                                    <div>
-                                                        <label class="block text-xs text-gray-400 mb-1">Negative</label>
-                                                        <textarea x-model="cp.negative" rows="1"
-                                                                  class="w-full bg-gray-800 border border-gray-600 rounded px-2 py-1.5 text-xs text-gray-300 resize-y focus:outline-none focus:border-red-700"></textarea>
+                                                <!-- Blend mode params -->
+                                                <template x-if="cp.mode === 'blend'">
+                                                    <div class="space-y-2">
+                                                        <!-- Tryb blendowania + ikonka info -->
+                                                        <div x-data="{ showBlendInfo: false }">
+                                                            <div class="flex items-center gap-1.5 mb-1">
+                                                                <label class="text-xs text-gray-400">Tryb</label>
+                                                                <div class="relative">
+                                                                    <button @click="showBlendInfo = !showBlendInfo"
+                                                                            class="w-4 h-4 rounded-full border border-gray-600 hover:border-green-500 text-gray-500 hover:text-green-400 flex items-center justify-center text-[10px] font-bold transition leading-none">i</button>
+                                                                    <div x-show="showBlendInfo" x-cloak
+                                                                         @click.outside="showBlendInfo = false"
+                                                                         class="absolute left-0 top-5 z-50 w-80 bg-gray-950 border border-gray-600 rounded-lg p-3 shadow-2xl text-xs text-gray-300 space-y-2.5">
+                                                                        <div class="flex items-center justify-between">
+                                                                            <span class="font-semibold text-gray-100">Jak działa Blend?</span>
+                                                                            <button @click="showBlendInfo = false" class="text-gray-500 hover:text-gray-300">✕</button>
+                                                                        </div>
+                                                                        <p class="text-gray-400 leading-relaxed">Pass Blend łączy <b class="text-gray-200">A</b> (wynik poprzedniego passa) z <b class="text-gray-200">Obrazem B</b> wybranym poniżej. Działa lokalnie w obszarze maski jeśli jest zaznaczone "Ogranicz do maski".</p>
+                                                                        <div class="space-y-1.5 border-t border-gray-700 pt-2">
+                                                                            <p class="font-medium text-gray-200">🔀 Normalny</p>
+                                                                            <p class="text-gray-400 leading-relaxed">Zwykłe mieszanie pikselowe: wynik = A×(1−f) + B×f. Przy 80% dominuje B. Odcień skóry z B może przenikać do wyniku.</p>
+                                                                        </div>
+                                                                        <div class="space-y-1.5 border-t border-gray-700 pt-2">
+                                                                            <p class="font-medium text-gray-200">✖ Mnożenie</p>
+                                                                            <p class="text-gray-400 leading-relaxed">wynik = A × (B/255). Jasne piksele B ≈ brak efektu; ciemne piksele B ściemniają A. Globalnie przyciemnia cały obraz.</p>
+                                                                        </div>
+                                                                        <div class="space-y-1.5 border-t border-gray-700 pt-2">
+                                                                            <p class="font-medium text-gray-200">✦ Ślady <span class="text-green-400 font-normal">(zalecany dla śladów na skórze)</span></p>
+                                                                            <p class="text-gray-400 leading-relaxed">Wyciąga lokalne kontrasty z B — czyli to czym każdy piksel różni się od okolicznej skóry — i nakłada je na A. Odcień skóry AI pozostaje niezmieniony.</p>
+                                                                            <div class="space-y-1 bg-gray-900 rounded p-2 mt-1">
+                                                                                <p class="text-gray-300"><span class="text-green-400">Siła śladów</span> — jak mocno ślady są widoczne. 0% = brak efektu, 100% = pełna siła.</p>
+                                                                                <p class="text-gray-300"><span class="text-green-400">Wzmocnienie kontrastu</span> — amplifikuje odchylenia od neutralnej skóry. 1× = bez zmiany, 2× = podwójny kontrast (ślady wyraźniejsze, ale też bliki mocniejsze). Pomaga gdy ślady w oryginale są blade.</p>
+                                                                            </div>
+                                                                        </div>
+                                                                        <div class="space-y-1 border-t border-gray-700 pt-2">
+                                                                            <p class="font-medium text-gray-200">📐 Obraz B</p>
+                                                                            <p class="text-gray-400 leading-relaxed">Źródło śladów — zazwyczaj oryginalny obraz wejściowy. Domyślnie ustawia się na pierwszy obraz slotu.</p>
+                                                                            <p class="font-medium text-gray-200 pt-0.5">🎭 Maska</p>
+                                                                            <p class="text-gray-400 leading-relaxed">Efekt blend działa tylko w obszarze namalowanym w edytorze maski. Poza maską A pozostaje niezmienione.</p>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                            <div class="flex gap-1">
+                                                                <button @click="cp.blend_mode = 'normal'"
+                                                                        :class="(!cp.blend_mode || cp.blend_mode === 'normal') ? 'bg-green-700 text-white' : 'bg-gray-700 text-gray-400 hover:bg-gray-600'"
+                                                                        class="flex-1 text-xs py-0.5 rounded transition">🔀 Normalny</button>
+                                                                <button @click="cp.blend_mode = 'multiply'"
+                                                                        :class="cp.blend_mode === 'multiply' ? 'bg-green-700 text-white' : 'bg-gray-700 text-gray-400 hover:bg-gray-600'"
+                                                                        class="flex-1 text-xs py-0.5 rounded transition">✖ Mnożenie</button>
+                                                                <button @click="cp.blend_mode = 'marks'; cp.params = cp.params || {}; if (!cp.params.blend_contrast) cp.params.blend_contrast = 1.5;"
+                                                                        :class="cp.blend_mode === 'marks' ? 'bg-green-700 text-white' : 'bg-gray-700 text-gray-400 hover:bg-gray-600'"
+                                                                        class="flex-1 text-xs py-0.5 rounded transition">✦ Ślady</button>
+                                                            </div>
+                                                        </div>
+                                                        <!-- Obraz B -->
+                                                        <div class="space-y-1">
+                                                            <label class="block text-xs text-gray-400">Obraz B
+                                                                <span class="text-gray-600" x-text="cp.blend_mode === 'marks' ? '(źródło śladów — oryginalny obraz)' : '(nakładany na wynik poprzedniego pasa)'"></span>
+                                                            </label>
+                                                            <div class="flex gap-2">
+                                                                <input type="text" x-model="cp.blend_image"
+                                                                       placeholder="C:\...\obraz_z_markami.png"
+                                                                       class="flex-1 bg-gray-800 border border-gray-600 rounded px-2 py-1 text-xs text-gray-300 font-mono focus:outline-none focus:border-green-500">
+                                                                <button @click="openFsBrowser('image', (cp.blend_image ? cp.blend_image.replace(/[^\\/]+$/, '').replace(/[\\/]+$/, '') : null) || tileModal.data.output_dir, 'Wybierz obraz B (blend)', (p) => { cp.blend_image = p; })"
+                                                                        class="flex-shrink-0 text-xs text-gray-400 border border-gray-600 hover:border-gray-400 rounded px-2 py-1 transition">📂</button>
+                                                            </div>
+                                                            <template x-if="cp.blend_image">
+                                                                <div class="inline-flex items-center gap-2 mt-0.5">
+                                                                    <img :src="'/api/fs/image?path=' + encodeURIComponent(cp.blend_image)"
+                                                                         class="h-12 rounded object-cover cursor-zoom-in ring-1 ring-gray-600"
+                                                                         @click="picOpenPreview('/api/fs/image?path=' + encodeURIComponent(cp.blend_image), cp.blend_image.split(/[\\/]/).pop(), cp.blend_image)"
+                                                                         @error="$el.style.display='none'">
+                                                                    <span class="text-xs text-gray-500 font-mono truncate max-w-xs" x-text="cp.blend_image.split(/[\\/]/).pop()"></span>
+                                                                </div>
+                                                            </template>
+                                                        </div>
+                                                        <!-- Suwak 1: siła -->
+                                                        <div class="flex items-center gap-3">
+                                                            <label class="text-xs text-gray-400 shrink-0 w-28"
+                                                                   x-text="cp.blend_mode === 'marks' ? 'Siła śladów' : 'Blend B'"></label>
+                                                            <input type="range" x-model.number="cp.params.blend_factor" min="0" max="1" step="0.05"
+                                                                   class="flex-1 accent-green-500">
+                                                            <span class="text-xs text-gray-300 w-8 text-right font-mono" x-text="((cp.params.blend_factor ?? 0.5) * 100).toFixed(0) + '%'"></span>
+                                                        </div>
+                                                        <!-- Suwak 2: kontrast (tylko tryb Ślady) -->
+                                                        <div class="flex items-center gap-3" x-show="cp.blend_mode === 'marks'">
+                                                            <label class="text-xs text-gray-400 shrink-0 w-28">Wzmocnienie</label>
+                                                            <input type="range" x-model.number="cp.params.blend_contrast" min="0.5" max="4" step="0.1"
+                                                                   class="flex-1 accent-green-500">
+                                                            <span class="text-xs text-gray-300 w-8 text-right font-mono" x-text="(cp.params.blend_contrast ?? 1.0).toFixed(1) + '×'"></span>
+                                                        </div>
+                                                        <!-- Maska -->
+                                                        <label class="flex items-center gap-1.5 cursor-pointer">
+                                                            <input type="checkbox" x-model="cp.blend_use_mask" class="rounded accent-green-500">
+                                                            <span class="text-xs text-gray-400">Ogranicz blend do maski użytkownika</span>
+                                                        </label>
+                                                    </div>
+                                                </template>
+
+                                                <!-- Prompts (not used in blend or atlascloud-negative) -->
+                                                <template x-if="cp.mode !== 'blend'">
+                                                    <div class="space-y-2">
+                                                        <div>
+                                                            <label class="block text-xs text-gray-400 mb-1">Positive</label>
+                                                            <textarea x-model="cp.positive" rows="2"
+                                                                      class="w-full bg-gray-800 border border-gray-600 rounded px-2 py-1.5 text-xs text-gray-300 resize-y focus:outline-none focus:border-orange-500"></textarea>
+                                                            <div class="flex gap-1.5 mt-1">
+                                                                <button @click="picOpenPromptImport('ft-' + si + '-' + cpi)"
+                                                                        class="text-xs text-blue-400 border border-blue-800 hover:border-blue-500 rounded px-2 py-0.5 transition">+ Import</button>
+                                                                <button @click="picNewPromptFromPassContent(cp.positive, cp.negative, cp.name)"
+                                                                        class="text-xs text-gray-300 bg-gray-700 hover:bg-gray-600 border border-gray-600 rounded px-2 py-0.5 transition">+ Nowy</button>
+                                                            </div>
+                                                        </div>
+                                                        <template x-if="cp.mode !== 'atlascloud'">
+                                                            <div>
+                                                                <label class="block text-xs text-gray-400 mb-1">Negative</label>
+                                                                <textarea x-model="cp.negative" rows="1"
+                                                                          class="w-full bg-gray-800 border border-gray-600 rounded px-2 py-1.5 text-xs text-gray-300 resize-y focus:outline-none focus:border-red-700"></textarea>
+                                                            </div>
+                                                        </template>
                                                     </div>
                                                 </template>
 
                                                 <!-- Params (ComfyUI only) -->
-                                                <template x-if="cp.mode !== 'atlascloud'">
+                                                <template x-if="cp.mode !== 'atlascloud' && cp.mode !== 'blend'">
                                                     <div class="flex flex-wrap gap-3 text-xs items-center">
                                                         <label class="text-gray-500">Steps
                                                             <input type="number" x-model.number="cp.params.steps" min="1" max="100"
@@ -4336,7 +4566,7 @@
                                                 class="text-xs text-blue-400 border border-blue-800 hover:border-blue-500 rounded px-2 py-1 transition">
                                             + Import
                                         </button>
-                                        <button @click="(slot.custom_passes = slot.custom_passes || []).push({ name: '', enabled: true, selected: true, mode: 'i2i', ref_image: '', positive: '', negative: '', params: { steps: 30, cfg: 8, denoise: 0.65, controlnet_strength: 0.8, atlascloud_model: 'qwen/qwen-image-2.0-pro/edit', wan_size: '2K', thinking_mode: false, seed: -1 } })"
+                                        <button @click="(slot.custom_passes = slot.custom_passes || []).push({ name: '', enabled: true, selected: true, pass_id: Math.random().toString(36).slice(2,10), mode: 'i2i', ref_image: '', blend_image: '', blend_use_mask: true, blend_mode: 'normal', positive: '', negative: '', params: { steps: 30, cfg: 8, denoise: 0.65, controlnet_strength: 0.8, atlascloud_model: 'qwen/qwen-image-2.0-pro/edit', wan_size: '2K', thinking_mode: false, seed: -1, blend_factor: 0.5, blend_contrast: 1.5 } })"
                                                 class="text-xs text-gray-300 bg-gray-700 hover:bg-gray-600 border border-gray-600 rounded px-2 py-1 transition">
                                             + Nowy
                                         </button>
@@ -4512,7 +4742,7 @@
                                                       class="text-xs text-green-400 border border-green-800 rounded px-1 py-0.5 flex-shrink-0 leading-none">▶ aktywny</span>
                                                 <span x-show="p._notInLibrary" class="text-xs text-gray-500 flex-shrink-0" title="Spoza biblioteki">⚠</span>
                                                 <span class="text-xs text-gray-600 font-mono flex-shrink-0"
-                                                      x-text="'s:' + (p.params?.steps??30) + ' c:' + (p.params?.cfg??8) + ' d:' + (p.params?.denoise??0.6)"></span>
+                                                      x-text="p.mode === 'atlascloud' ? ('☁ ' + ((p.params?.atlascloud_model||'').includes('wan') ? 'WAN' : 'Qwen')) : ('s:' + (p.params?.steps??30) + ' c:' + (p.params?.cfg??8) + ' d:' + (p.params?.denoise??0.6))"></span>
                                                 <span x-show="p._editing" class="text-xs text-yellow-500 flex-shrink-0">▲</span>
                                                 <span x-show="!p._editing" class="text-xs text-gray-600 group-hover:text-gray-400 flex-shrink-0 transition">▼</span>
                                                 <button @click.stop="picDuplicateBlendPrompt('edge_blend_prompts', pIdx)" title="Duplikuj do lokalnej edycji"
@@ -4534,7 +4764,17 @@
                                                           class="w-full bg-gray-700 border border-green-900 rounded px-2 py-1.5 text-xs text-green-300 font-mono resize-y focus:outline-none focus:border-green-600"></textarea>
                                                 <textarea x-model="p.negative" rows="2" placeholder="Negative…"
                                                           class="w-full bg-gray-700 border border-red-900 rounded px-2 py-1.5 text-xs text-red-300 font-mono resize-y focus:outline-none focus:border-red-700"></textarea>
-                                                <div class="flex gap-4 text-xs items-center">
+                                                <!-- tryb generowania -->
+                                                <div class="flex gap-1">
+                                                    <button @click="picSetBlendPromptMode('edge_blend_prompts', pIdx, 'i2i')"
+                                                            :class="(!p.mode || p.mode === 'i2i') ? 'bg-blue-700 text-white' : 'bg-gray-700 text-gray-400 hover:bg-gray-600'"
+                                                            class="flex-1 text-xs py-0.5 rounded transition">🖼 i2i</button>
+                                                    <button @click="picSetBlendPromptMode('edge_blend_prompts', pIdx, 'atlascloud')"
+                                                            :class="p.mode === 'atlascloud' ? 'bg-violet-700 text-white' : 'bg-gray-700 text-gray-400 hover:bg-gray-600'"
+                                                            class="flex-1 text-xs py-0.5 rounded transition">☁ AtlasCloud</button>
+                                                </div>
+                                                <!-- i2i params -->
+                                                <div class="flex gap-4 text-xs items-center" x-show="!p.mode || p.mode === 'i2i'">
                                                     <label class="text-gray-500">Steps <input type="number" x-model.number="p.params.steps" min="1" max="100"
                                                            class="ml-1 w-14 bg-gray-700 border border-gray-600 rounded px-1 py-0.5 text-white text-center focus:outline-none"></label>
                                                     <label class="text-gray-500">CFG <input type="number" x-model.number="p.params.cfg" min="1" max="30" step="0.5"
@@ -4543,6 +4783,35 @@
                                                            class="ml-1 w-16 bg-gray-700 border border-gray-600 rounded px-1 py-0.5 text-white text-center focus:outline-none"></label>
                                                     <button @click="picTogglePromptEditBlend('edge_blend_prompts', pIdx)"
                                                             class="ml-auto text-green-400 hover:text-green-300 transition">✓ Gotowe</button>
+                                                </div>
+                                                <!-- AtlasCloud params -->
+                                                <div x-show="p.mode === 'atlascloud'" class="space-y-1.5">
+                                                    <div class="flex gap-2 items-center">
+                                                        <span class="text-xs text-gray-500 w-14 flex-shrink-0">Model</span>
+                                                        <select x-model="p.params.atlascloud_model"
+                                                                class="flex-1 bg-gray-700 border border-gray-600 rounded px-2 py-0.5 text-xs text-white focus:outline-none focus:border-violet-500">
+                                                            <option value="qwen/qwen-image-2.0-pro/edit">Qwen Image 2.0 Pro</option>
+                                                            <option value="alibaba/wan-2.7-pro/image-edit">WAN 2.7 Pro I2I</option>
+                                                        </select>
+                                                    </div>
+                                                    <div class="flex gap-3 items-center flex-wrap">
+                                                        <label class="text-xs text-gray-500">Seed
+                                                            <input type="number" x-model.number="p.params.seed" min="-1"
+                                                                   class="ml-1 w-20 bg-gray-700 border border-gray-600 rounded px-1 py-0.5 text-white text-center focus:outline-none text-xs">
+                                                        </label>
+                                                        <label class="flex items-center gap-1 text-xs text-gray-500 cursor-pointer">
+                                                            <input type="checkbox" x-model="p.params.thinking_mode" class="accent-violet-500"> Thinking
+                                                        </label>
+                                                        <div x-show="(p.params.atlascloud_model||'').startsWith('alibaba/wan')" class="flex items-center gap-1">
+                                                            <span class="text-xs text-gray-500">WAN size</span>
+                                                            <select x-model="p.params.wan_size"
+                                                                    class="bg-gray-700 border border-gray-600 rounded px-1 py-0.5 text-xs text-white focus:outline-none">
+                                                                <option>480p</option><option>720p</option><option>1K</option><option>2K</option>
+                                                            </select>
+                                                        </div>
+                                                        <button @click="picTogglePromptEditBlend('edge_blend_prompts', pIdx)"
+                                                                class="ml-auto text-green-400 hover:text-green-300 transition text-xs">✓ Gotowe</button>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
@@ -4618,7 +4887,7 @@
                                                       class="text-xs text-green-400 border border-green-800 rounded px-1 py-0.5 flex-shrink-0 leading-none">▶ aktywny</span>
                                                 <span x-show="p._notInLibrary" class="text-xs text-gray-500 flex-shrink-0" title="Spoza biblioteki">⚠</span>
                                                 <span class="text-xs text-gray-600 font-mono flex-shrink-0"
-                                                      x-text="'s:' + (p.params?.steps??30) + ' c:' + (p.params?.cfg??8) + ' d:' + (p.params?.denoise??0.4)"></span>
+                                                      x-text="p.mode === 'atlascloud' ? ('☁ ' + ((p.params?.atlascloud_model||'').includes('wan') ? 'WAN' : 'Qwen')) : ('s:' + (p.params?.steps??30) + ' c:' + (p.params?.cfg??8) + ' d:' + (p.params?.denoise??0.4))"></span>
                                                 <span x-show="p._editing" class="text-xs text-yellow-500 flex-shrink-0">▲</span>
                                                 <span x-show="!p._editing" class="text-xs text-gray-600 group-hover:text-gray-400 flex-shrink-0 transition">▼</span>
                                                 <button @click.stop="picDuplicateBlendPrompt('scene_blend_prompts', pIdx)" title="Duplikuj do lokalnej edycji"
@@ -4640,7 +4909,17 @@
                                                           class="w-full bg-gray-700 border border-green-900 rounded px-2 py-1.5 text-xs text-green-300 font-mono resize-y focus:outline-none focus:border-green-600"></textarea>
                                                 <textarea x-model="p.negative" rows="2" placeholder="Negative…"
                                                           class="w-full bg-gray-700 border border-red-900 rounded px-2 py-1.5 text-xs text-red-300 font-mono resize-y focus:outline-none focus:border-red-700"></textarea>
-                                                <div class="flex gap-4 text-xs items-center">
+                                                <!-- tryb generowania -->
+                                                <div class="flex gap-1">
+                                                    <button @click="picSetBlendPromptMode('scene_blend_prompts', pIdx, 'i2i')"
+                                                            :class="(!p.mode || p.mode === 'i2i') ? 'bg-blue-700 text-white' : 'bg-gray-700 text-gray-400 hover:bg-gray-600'"
+                                                            class="flex-1 text-xs py-0.5 rounded transition">🖼 i2i</button>
+                                                    <button @click="picSetBlendPromptMode('scene_blend_prompts', pIdx, 'atlascloud')"
+                                                            :class="p.mode === 'atlascloud' ? 'bg-violet-700 text-white' : 'bg-gray-700 text-gray-400 hover:bg-gray-600'"
+                                                            class="flex-1 text-xs py-0.5 rounded transition">☁ AtlasCloud</button>
+                                                </div>
+                                                <!-- i2i params -->
+                                                <div class="flex gap-4 text-xs items-center" x-show="!p.mode || p.mode === 'i2i'">
                                                     <label class="text-gray-500">Steps <input type="number" x-model.number="p.params.steps" min="1" max="100"
                                                            class="ml-1 w-14 bg-gray-700 border border-gray-600 rounded px-1 py-0.5 text-white text-center focus:outline-none"></label>
                                                     <label class="text-gray-500">CFG <input type="number" x-model.number="p.params.cfg" min="1" max="30" step="0.5"
@@ -4649,6 +4928,35 @@
                                                            class="ml-1 w-16 bg-gray-700 border border-gray-600 rounded px-1 py-0.5 text-white text-center focus:outline-none"></label>
                                                     <button @click="picTogglePromptEditBlend('scene_blend_prompts', pIdx)"
                                                             class="ml-auto text-green-400 hover:text-green-300 transition">✓ Gotowe</button>
+                                                </div>
+                                                <!-- AtlasCloud params -->
+                                                <div x-show="p.mode === 'atlascloud'" class="space-y-1.5">
+                                                    <div class="flex gap-2 items-center">
+                                                        <span class="text-xs text-gray-500 w-14 flex-shrink-0">Model</span>
+                                                        <select x-model="p.params.atlascloud_model"
+                                                                class="flex-1 bg-gray-700 border border-gray-600 rounded px-2 py-0.5 text-xs text-white focus:outline-none focus:border-violet-500">
+                                                            <option value="qwen/qwen-image-2.0-pro/edit">Qwen Image 2.0 Pro</option>
+                                                            <option value="alibaba/wan-2.7-pro/image-edit">WAN 2.7 Pro I2I</option>
+                                                        </select>
+                                                    </div>
+                                                    <div class="flex gap-3 items-center flex-wrap">
+                                                        <label class="text-xs text-gray-500">Seed
+                                                            <input type="number" x-model.number="p.params.seed" min="-1"
+                                                                   class="ml-1 w-20 bg-gray-700 border border-gray-600 rounded px-1 py-0.5 text-white text-center focus:outline-none text-xs">
+                                                        </label>
+                                                        <label class="flex items-center gap-1 text-xs text-gray-500 cursor-pointer">
+                                                            <input type="checkbox" x-model="p.params.thinking_mode" class="accent-violet-500"> Thinking
+                                                        </label>
+                                                        <div x-show="(p.params.atlascloud_model||'').startsWith('alibaba/wan')" class="flex items-center gap-1">
+                                                            <span class="text-xs text-gray-500">WAN size</span>
+                                                            <select x-model="p.params.wan_size"
+                                                                    class="bg-gray-700 border border-gray-600 rounded px-1 py-0.5 text-xs text-white focus:outline-none">
+                                                                <option>480p</option><option>720p</option><option>1K</option><option>2K</option>
+                                                            </select>
+                                                        </div>
+                                                        <button @click="picTogglePromptEditBlend('scene_blend_prompts', pIdx)"
+                                                                class="ml-auto text-green-400 hover:text-green-300 transition text-xs">✓ Gotowe</button>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
@@ -7059,6 +7367,9 @@ function app() {
             msg:      '',
             msgOk:    true,
             filepath: '',   // absolute path — stable across picImgPreview replacements
+            zoom:     1,
+            _baseW:   0,
+            _baseH:   0,
         },
 
         // Scene Blend mask indicator: { [absolute_path]: true }
@@ -8365,6 +8676,20 @@ function app() {
             });
         },
 
+        /** Set mode on a blend prompt (edge/scene), pre-initialising AC params for Alpine reactivity. */
+        picSetBlendPromptMode(arrayKey, pIdx, mode) {
+            const p = (this.tileModal.data[arrayKey] || [])[pIdx];
+            if (!p) return;
+            p.mode = mode;
+            if (mode === 'atlascloud') {
+                p.params = p.params || {};
+                if (!p.params.atlascloud_model) p.params.atlascloud_model = 'qwen/qwen-image-2.0-pro/edit';
+                if (p.params.seed          === undefined) p.params.seed          = -1;
+                if (p.params.thinking_mode === undefined) p.params.thinking_mode = false;
+                if (!p.params.wan_size)                  p.params.wan_size       = '2K';
+            }
+        },
+
         /** Toggle inline edit for a blend prompt. */
         picTogglePromptEditBlend(arrayKey, pIdx) {
             const p = (this.tileModal.data[arrayKey] || [])[pIdx];
@@ -8558,7 +8883,10 @@ function app() {
             this.picMask.active   = false;
             this.picMask.msg      = '';
             this.picMask.exists   = false;
-            this.picMask.filepath = filepath;   // stable: picMask is mutated, never replaced
+            this.picMask.filepath = filepath;
+            this.picMask.zoom     = 1;
+            this.picMask._baseW   = 0;
+            this.picMask._baseH   = 0;
             this.picImgPreview    = { open: true, url, title, filepath };
         },
 
@@ -8909,6 +9237,41 @@ function app() {
                     for (const k of ['scene_blend_positive','scene_blend_negative','scene_blend_params'])
                         delete tileData[k];
                     tileData.scene_blend_enabled  = tileData.scene_blend_enabled  ?? false;
+                }
+                if (tileData.type === 'fine_tune') {
+                    // Migrate: assign stable pass_id to each custom_pass (String(index) preserves existing _ft0/_ft1 file associations)
+                    for (let ssi = 0; ssi < (tileData.ft_slots || []).length; ssi++) {
+                        for (let pi = 0; pi < (tileData.ft_slots[ssi].custom_passes || []).length; pi++) {
+                            const cp = tileData.ft_slots[ssi].custom_passes[pi];
+                            if (!cp.pass_id) cp.pass_id = String(pi);
+                        }
+                    }
+                }
+                // Migrate paste_character: ensure mode + AC params exist on blend prompts
+                if (tileData.type === 'paste_character') {
+                    for (const arrayKey of ['edge_blend_prompts', 'scene_blend_prompts']) {
+                        for (const p of (tileData[arrayKey] || [])) {
+                            if (!p.mode) p.mode = 'i2i';
+                            p.params = p.params || {};
+                            if (p.params.atlascloud_model === undefined) p.params.atlascloud_model = 'qwen/qwen-image-2.0-pro/edit';
+                            if (p.params.seed              === undefined) p.params.seed              = -1;
+                            if (p.params.thinking_mode     === undefined) p.params.thinking_mode     = false;
+                            if (p.params.wan_size          === undefined) p.params.wan_size          = '2K';
+                        }
+                    }
+                }
+                // Migrate one_image_many_prompts: ensure p.mode exists so Alpine tracks it reactively
+                if (!tileData.type || tileData.type === 'one_image_many_prompts') {
+                    for (const slot of (tileData.image_slots || [])) {
+                        for (const p of (slot.prompts || [])) {
+                            if (!p.mode) p.mode = 'i2i';
+                            p.params = p.params || {};
+                            if (p.params.atlascloud_model === undefined) p.params.atlascloud_model = 'qwen/qwen-image-2.0-pro/edit';
+                            if (p.params.seed              === undefined) p.params.seed              = -1;
+                            if (p.params.thinking_mode     === undefined) p.params.thinking_mode     = false;
+                            if (p.params.wan_size          === undefined) p.params.wan_size          = '2K';
+                        }
+                    }
                 }
                 if (tileData.type === 'character_insert') {
                     if (!tileData.scene_dirs) {
@@ -10254,6 +10617,8 @@ function app() {
                         slot.custom_passes.push({
                             name:     p.name || '',
                             enabled:  true,
+                            selected: true,
+                            pass_id:  Math.random().toString(36).slice(2, 10),
                             mode:     'i2i',
                             ref_image: '',
                             positive: p.positive || '',
@@ -10347,6 +10712,14 @@ function app() {
             }
         },
 
+        picNewPromptFromPassContent(positive, negative, name) {
+            if (!this.pic.categories.length) this.loadPicLibrary();
+            this.picOpenPromptModal(null);
+            this.pic.promptModal.data.positive = positive || '';
+            this.pic.promptModal.data.negative = negative || '';
+            if (name) this.pic.promptModal.data.name = name;
+        },
+
         async picAddBlankPrompt(slotIdx) {
             // Open global prompt modal so new prompts get library IDs.
             const runId  = this.selectedRun?.filename;
@@ -10394,6 +10767,19 @@ function app() {
         picToggleTilePromptEdit(slotIdx, promptIdx) {
             const p = this.tileModal.data.image_slots?.[slotIdx]?.prompts?.[promptIdx];
             if (p) p._editing = !p._editing;
+        },
+
+        picSetPromptMode(slotIdx, promptIdx, mode) {
+            const p = this.tileModal.data.image_slots?.[slotIdx]?.prompts?.[promptIdx];
+            if (!p) return;
+            p.mode = mode;
+            if (mode === 'atlascloud') {
+                p.params = p.params || {};
+                if (!p.params.atlascloud_model) p.params.atlascloud_model = 'qwen/qwen-image-2.0-pro/edit';
+                if (p.params.seed          === undefined) p.params.seed          = -1;
+                if (p.params.thinking_mode === undefined) p.params.thinking_mode = false;
+                if (!p.params.wan_size)                  p.params.wan_size       = '2K';
+            }
         },
 
         // ─ Log panel ──────────────────────────────────────
@@ -10523,14 +10909,19 @@ function picMaskEditor() {
             }
         },
 
+        setMaskZoom(v) {
+            this.picMask.zoom = Math.max(0.25, Math.min(8, v));
+        },
+
         _initCanvas() {
             const img    = this.$refs.previewImg;
             const canvas = this.$refs.maskCanvas;
             if (!img || !canvas) return;
             canvas.width  = img.naturalWidth  || img.offsetWidth;
             canvas.height = img.naturalHeight || img.offsetHeight;
-            canvas.style.width  = img.offsetWidth  + 'px';
-            canvas.style.height = img.offsetHeight + 'px';
+            // Store display size at zoom=1 — used by size-placeholder div to enable scrolling at zoom>1
+            this.picMask._baseW = img.offsetWidth;
+            this.picMask._baseH = img.offsetHeight;
             this._imgW = canvas.width;
             this._imgH = canvas.height;
             this._ctx  = canvas.getContext('2d');

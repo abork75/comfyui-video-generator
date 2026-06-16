@@ -648,4 +648,46 @@ prompts:
     steps: 30
     cfg: 8
     denoise: 1
-last_id: 57
+- id: p0000058
+  category: repose
+  name: Siedzi z szeroko rozchylonymi nogami
+  note: ''
+  positive: "Repose the woman so she is sitting with her legs spread wide apart. She sits with knees bent and thighs opened significantly, feet placed on the ground or slightly apart. The pose is confident, sensual and provocative with an open-legged sitting position.\n\nKeep her exact upper body posture, torso angle, head position, facial expression, hair, clothing, arms, lighting and background completely unchanged. Only modify the position of her legs and hips. \n\nMaintain realistic anatomy, natural hip rotation, correct perspective and proportions. Photorealistic, seamless edit, high detail."
+  negative: legs closed, knees together, modest pose, crossed legs, straight legs, bad anatomy, deformed legs, extra limbs, unnatural hip position, stiff pose, changed upper body, changed clothing, altered face, low quality, artifacts
+  params:
+    steps: 30
+    cfg: 8.0
+    denoise: 1.0
+- id: p0000059
+  category: ''
+  name: usun czarodziejke
+  note: ''
+  positive: Remove sorceress from image
+  negative: background change
+  params:
+    steps: 30
+    cfg: 8
+    denoise: 1
+- id: p0000060
+  category: fotorealizm
+  name: Poprawa anatomii
+  note: ''
+  positive: 'Preserve any existing skin details, tattoos, scars, or markings exactly as they appear. Do not alter or remove existing skin texture. Do not alter composition or crop. Full body visible, unchanged pose. Realistic detailed nipples, natural breast shape with realistic skin texture. Remove any flat or smooth areas on chest — add full anatomical detail.
+
+    Subtle, mild skin texture enhancement only. Natural smooth skin with minimal pores visible. Do not over-enhance or add excessive skin detail.'
+  negative: ''
+  params:
+    steps: 30
+    cfg: 8.0
+    denoise: 1.0
+- id: p0000061
+  category: character_insert
+  name: Usun postać ze zdjęcia
+  note: ''
+  positive: Remove person from picture
+  negative: background change, lighting change
+  params:
+    steps: 30
+    cfg: 8
+    denoise: 1
+last_id: 61

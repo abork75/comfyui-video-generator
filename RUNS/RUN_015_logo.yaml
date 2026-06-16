@@ -20,19 +20,10 @@ pic_flow:
         steps: 30
         cfg: 8
         denoise: 1
-  scene_dirs: []
-  characters_dirs: []
-  scene_slots: []
-  paste_slots: []
-  edge_blend_enabled: false
-  edge_blend_px: 15
   edge_blend_cfg: null
   edge_blend_denoise: null
-  edge_blend_prompts: []
-  scene_blend_enabled: false
   scene_blend_cfg: null
   scene_blend_denoise: null
-  scene_blend_prompts: []
   output_dir: C:\Users\abork\AppData\Local\CapCut\Videos\UXResearchLOGO
   global_suffix: ''
   crop_to_subject: false

@@ -805,10 +805,10 @@ def get_tile_status(run_id: str, tile_id: str) -> dict:
         work_dir     = output_dir / "robocze"
         ft_slot_data = tile.get("ft_slots", [])
 
-        def _ft_find_oid(oid: str, ci: int) -> str | None:
+        def _ft_find_oid(oid: str, pass_id: str) -> str | None:
             if not oid or not output_dir.is_dir():
                 return None
-            stem = f"{oid}_ft{ci}"
+            stem = f"{oid}_ft{pass_id}"
             for search_dir in (work_dir, output_dir):
                 for ext in _IMAGE_EXTS:
                     p = search_dir / f"{stem}{ext}"
@@ -816,8 +816,8 @@ def get_tile_status(run_id: str, tile_id: str) -> dict:
                         return str(p)
             return None
 
-        def _ft_final_oid(oid: str, ci: int) -> bool:
-            stem = f"{oid}_ft{ci}"
+        def _ft_final_oid(oid: str, pass_id: str) -> bool:
+            stem = f"{oid}_ft{pass_id}"
             for ext in _IMAGE_EXTS:
                 if (output_dir / f"{stem}{ext}").exists():
                     return True
@@ -832,8 +832,9 @@ def get_tile_status(run_id: str, tile_id: str) -> dict:
             custom_passes = slot.get("custom_passes", [])
             passes: list[dict] = []
             for ci, cp in enumerate(custom_passes):
-                path  = _ft_find_oid(oid, ci)
-                final = _ft_final_oid(oid, ci)
+                pass_id = str(cp.get("pass_id") or ci)
+                path  = _ft_find_oid(oid, pass_id)
+                final = _ft_final_oid(oid, pass_id)
                 passes.append({
                     "path":    path,
                     "final":   final,

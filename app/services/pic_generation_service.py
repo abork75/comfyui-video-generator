@@ -753,7 +753,10 @@ def archive_ft_pass(
     archive_dir = work_dir / "archive"
     archive_dir.mkdir(parents=True, exist_ok=True)
 
-    stem     = f"{oid}_ft{pass_index}"
+    ft_slots_a    = tile.get("ft_slots", [])
+    custom_passes_a = ft_slots_a[slot_index].get("custom_passes", []) if slot_index < len(ft_slots_a) else []
+    pass_id_str_a = str(custom_passes_a[pass_index].get("pass_id") or pass_index) if pass_index < len(custom_passes_a) else str(pass_index)
+    stem     = f"{oid}_ft{pass_id_str_a}"
     archived: list[str] = []
     for ext in (".png", ".jpg", ".jpeg", ".webp"):
         src = work_dir / f"{stem}{ext}"
@@ -785,7 +788,10 @@ def swap_ft_pass(
     work_dir   = output_dir / "robocze"
     work_dir.mkdir(parents=True, exist_ok=True)
 
-    dest = work_dir / f"{oid}_ft{pass_index}.png"
+    ft_slots_s    = tile.get("ft_slots", [])
+    custom_passes_s = ft_slots_s[slot_index].get("custom_passes", []) if slot_index < len(ft_slots_s) else []
+    pass_id_str_s = str(custom_passes_s[pass_index].get("pass_id") or pass_index) if pass_index < len(custom_passes_s) else str(pass_index)
+    dest = work_dir / f"{oid}_ft{pass_id_str_s}.png"
     shutil.copy2(src, dest)
     return str(dest)
 
@@ -806,7 +812,10 @@ def finalize_ft_pass(
     oid        = _ft_slot_oid(tile, slot_index)
     output_dir = Path(tile.get("output_dir", ""))
     work_dir   = output_dir / "robocze"
-    stem       = f"{oid}_ft{pass_index}"
+    ft_slots   = tile.get("ft_slots", [])
+    custom_passes = ft_slots[slot_index].get("custom_passes", []) if slot_index < len(ft_slots) else []
+    pass_id_str = str(custom_passes[pass_index].get("pass_id") or pass_index) if pass_index < len(custom_passes) else str(pass_index)
+    stem       = f"{oid}_ft{pass_id_str}"
 
     src: Path | None = None
     for ext in (".png", ".jpg", ".jpeg", ".webp"):
@@ -1304,6 +1313,7 @@ async def _run_atlascloud_pass(
     seed:          int        = -1,
     thinking_mode: bool       = False,
     wan_size:      "str|None" = None,
+    ref_path:      "Path|None" = None,
 ) -> None:
     """
     Send src_path to AtlasCloud image-edit API, poll until done, save to dest_path.
@@ -1311,6 +1321,7 @@ async def _run_atlascloud_pass(
 
     wan_size: "1K" or "2K" — used only for WAN models (alibaba/wan-*).
               Qwen models use exact pixel dimensions derived from the source image.
+    ref_path: optional second image sent as images[1] (reference).
     """
     import os
     import base64
@@ -1348,9 +1359,16 @@ async def _run_atlascloud_pass(
         "Content-Type":  "application/json",
         "Authorization": f"Bearer {api_key}",
     }
+    images_list = [image_b64]
+    if ref_path and ref_path.exists():
+        ref_suffix = ref_path.suffix.lower()
+        ref_mime   = "image/png" if ref_suffix == ".png" else "image/jpeg"
+        ref_b64    = f"data:{ref_mime};base64,{base64.b64encode(ref_path.read_bytes()).decode()}"
+        images_list.append(ref_b64)
+
     payload: dict = {
         "model":  model,
-        "images": [image_b64],
+        "images": images_list,
         "prompt": prompt,
         "seed":   seed,
     }
@@ -1549,8 +1567,9 @@ async def _run_fine_tune_async(
 
             for cpi in pass_indices:
                 cp = custom_passes[cpi]
+                pass_id_str = str(cp.get("pass_id") or cpi)
 
-                dest_stem = f"{oid}_ft{cpi}"
+                dest_stem = f"{oid}_ft{pass_id_str}"
                 dest_exists: Path | None = None
                 for ext in (".png", ".jpg", ".jpeg", ".webp"):
                     candidate = work_dir / f"{dest_stem}{ext}"
@@ -1567,7 +1586,9 @@ async def _run_fine_tune_async(
                 # Source: last existing output from any previous pass, or original input
                 src_path = None
                 for prev_cpi in range(cpi - 1, -1, -1):
-                    prev_stem = f"{oid}_ft{prev_cpi}"
+                    prev_cp = custom_passes[prev_cpi]
+                    prev_pass_id_str = str(prev_cp.get("pass_id") or prev_cpi)
+                    prev_stem = f"{oid}_ft{prev_pass_id_str}"
                     for ext in (".png", ".jpg", ".jpeg", ".webp"):
                         candidate = work_dir / f"{prev_stem}{ext}"
                         if candidate.exists():
@@ -1600,7 +1621,15 @@ async def _run_fine_tune_async(
                         ac_seed  = int(_raw_seed) if _raw_seed is not None else -1
                         ac_thinking = bool(params.get("thinking_mode", False))
                         ac_wan_size = params.get("wan_size") or None
-                        _log(f"[atlascloud] model={ac_model} seed={ac_seed} thinking={ac_thinking} size={ac_wan_size or 'auto'}")
+                        ac_ref_str  = params.get("ac_ref_image") or None
+                        ac_ref_path: "Path|None" = None
+                        if ac_ref_str:
+                            _p = Path(ac_ref_str)
+                            if _p.exists():
+                                ac_ref_path = _p
+                            else:
+                                _log(f"[atlascloud] WARN: ref_image nie istnieje — pomijam: {ac_ref_str}")
+                        _log(f"[atlascloud] model={ac_model} seed={ac_seed} thinking={ac_thinking} size={ac_wan_size or 'auto'} ref={'tak' if ac_ref_path else 'nie'}")
                         if carry_mask:
                             _log(f"[fine_tune] slot={si} pass={cpi} WARN: carry_mask ignorowana — AtlasCloud nie obsługuje masek")
                         await _run_atlascloud_pass(
@@ -1611,6 +1640,7 @@ async def _run_fine_tune_async(
                             seed=ac_seed,
                             thinking_mode=ac_thinking,
                             wan_size=ac_wan_size,
+                            ref_path=ac_ref_path,
                         )
                     elif mode == "i2i_ref":
                         ref_image = cp.get("ref_image", "")
@@ -1630,6 +1660,57 @@ async def _run_fine_tune_async(
                             steps=steps_val, cfg=cfg_val, denoise=denoise,
                             dest_path=dest_out, label=label,
                         )
+                    elif mode == "blend":
+                        blend_img_str = cp.get("blend_image", "")
+                        if not blend_img_str:
+                            raise ValueError(f"Pass {cpi}: tryb blend — brak obrazu B (blend_image)")
+                        blend_img_path = Path(blend_img_str)
+                        if not blend_img_path.exists():
+                            raise FileNotFoundError(f"Blend image B nie istnieje: {blend_img_str}")
+                        blend_factor   = float(params.get("blend_factor", 0.5))
+                        blend_use_mask = cp.get("blend_use_mask", True)
+                        blend_mode_str = cp.get("blend_mode", "normal")
+
+                        from PIL import Image as _PILImg, ImageChops, ImageFilter
+                        import numpy as _np
+
+                        img_a = _PILImg.open(src_path).convert("RGB")
+                        img_b = _PILImg.open(blend_img_path).convert("RGB").resize(img_a.size, _PILImg.LANCZOS)
+
+                        blend_contrast = float(params.get("blend_contrast", 1.0))
+
+                        if blend_mode_str == "multiply":
+                            # Ściemnia AI proporcjonalnie do ciemności oryginału
+                            multiplied = ImageChops.multiply(img_a, img_b)
+                            blended    = _PILImg.blend(img_a, multiplied, blend_factor)
+                        elif blend_mode_str == "marks":
+                            # Wyciąga ślady jako lokalny kontrast z oryginału, nakłada na skórę AI
+                            orig_f  = _np.array(img_b, dtype=_np.float32)
+                            blur_r  = max(10, min(img_a.width, img_a.height) // 30)
+                            blur_f  = _np.array(img_b.filter(ImageFilter.GaussianBlur(radius=blur_r)), dtype=_np.float32)
+                            # marks_layer: odchylenie od lokalnego tła; 1.0 = neutralna skóra
+                            deviation = orig_f / _np.maximum(blur_f, 1.0) - 1.0
+                            marks     = 1.0 + deviation * blend_contrast
+                            ai_f      = _np.array(img_a, dtype=_np.float32)
+                            with_marks = _np.clip(ai_f * marks, 0, 255)
+                            blended_f  = ai_f + (with_marks - ai_f) * blend_factor
+                            blended    = _PILImg.fromarray(blended_f.astype(_np.uint8))
+                        else:  # normal
+                            blended = _PILImg.blend(img_a, img_b, blend_factor)
+
+                        mask_img = None
+                        if blend_use_mask:
+                            for _mask_candidate in (
+                                input_path.parent / "masks" / input_path.name,
+                                work_dir / "masks" / input_path.name,
+                            ):
+                                if _mask_candidate.exists():
+                                    mask_img = _PILImg.open(_mask_candidate).convert("L").resize(img_a.size, _PILImg.LANCZOS)
+                                    break
+
+                        result = _PILImg.composite(blended, img_a, mask_img) if mask_img else blended
+                        result.save(dest_out)
+                        _log(f"[blend] slot={si} pass={cpi} mode={blend_mode_str} factor={blend_factor:.2f} mask={'tak' if mask_img else 'nie'}")
                     else:
                         wf_template = _load_workflow("i2i")
                         if wf_template is None:
@@ -1761,6 +1842,7 @@ async def _run_paste_character_async(
     eb_positive = (_eb_prm.get("positive", "") if _eb_prm else "").strip()
     eb_negative = (_eb_prm.get("negative", "") if _eb_prm else "")
     _eb_p       = (_eb_prm.get("params", {}) if _eb_prm else {})
+    eb_mode     = (_eb_prm.get("mode", "i2i") if _eb_prm else "i2i")
     eb_steps    = int(_eb_p.get("steps", 30))
     eb_cfg      = float(tile["edge_blend_cfg"])    if tile.get("edge_blend_cfg")    is not None else float(_eb_p.get("cfg",    8.0))
     eb_denoise  = float(tile["edge_blend_denoise"]) if tile.get("edge_blend_denoise") is not None else float(_eb_p.get("denoise", 0.6))
@@ -1771,13 +1853,14 @@ async def _run_paste_character_async(
     sb_positive = (_sb_prm.get("positive", "") if _sb_prm else "").strip()
     sb_negative = (_sb_prm.get("negative", "") if _sb_prm else "")
     _sb_p       = (_sb_prm.get("params", {}) if _sb_prm else {})
+    sb_mode     = (_sb_prm.get("mode", "i2i") if _sb_prm else "i2i")
     sb_steps    = int(_sb_p.get("steps", 30))
     sb_cfg      = float(tile["scene_blend_cfg"])    if tile.get("scene_blend_cfg")    is not None else float(_sb_p.get("cfg",    8.0))
     sb_denoise  = float(tile["scene_blend_denoise"]) if tile.get("scene_blend_denoise") is not None else float(_sb_p.get("denoise", 0.4))
     sb_wf = sb_url = sb_in_dir = sb_out_dir = None
 
-    # Load workflows (always if prompt set -- from_stage logic handled per-char/per-slot)
-    if eb_positive:
+    # Load ComfyUI workflows only for i2i mode
+    if eb_positive and eb_mode == "i2i":
         win        = app_config_service.get_backend("windows")
         eb_url     = win.get("api_url")    or settings.comfyui_upscale_url
         eb_in_dir  = Path(win.get("input_dir")  or settings.comfyui_upscale_input_dir)
@@ -1793,7 +1876,7 @@ async def _run_paste_character_async(
         else:
             _log("  ⚠ Edge Blend: brak ścieżki ci_1ref — edge wyłączony")
 
-    if sb_positive:
+    if sb_positive and sb_mode == "i2i":
         win        = app_config_service.get_backend("windows")
         sb_url     = win.get("api_url")    or settings.comfyui_upscale_url
         sb_in_dir  = Path(win.get("input_dir")  or settings.comfyui_upscale_input_dir)
@@ -1995,7 +2078,7 @@ async def _run_paste_character_async(
                 force_edge_this = (from_stage == edge_stage_idx)
                 char_eb = bool(char.get("edge_blend_enabled", True))
                 do_edge = (
-                    bool(eb_positive) and eb_wf is not None
+                    bool(eb_positive) and (eb_wf is not None or eb_mode == "atlascloud")
                     and from_stage <= edge_stage_idx
                     and (end_stage is None or edge_stage_idx <= end_stage)
                     and ((eb_enabled and char_eb) or force_edge_this)
@@ -2059,31 +2142,48 @@ async def _run_paste_character_async(
                             eb_tmp   = working_dir / f"_tmp_eb_{ts}_{ci}.png"
                             scene_rgba.save(rgba_tmp, "PNG")
 
-                            _log(f"  ✂️ [{idx}] {char_label} — edge blend "
-                                 f"(maska {eb_px}px  steps={eb_steps}  cfg={eb_cfg}  denoise={eb_denoise}) ...")
-                            try:
-                                await _generate_ci_one(
-                                    loop, eb_url, eb_in_dir, eb_out_dir,
-                                    eb_wf, rgba_tmp, model_path,
-                                    eb_positive, eb_negative,
-                                    eb_steps, eb_cfg, eb_denoise,
-                                    eb_tmp,
-                                    label=f"edge_blend {char_label}",
-                                )
-                                c_edge = _char_edge_path(working_dir, output_id, ci)
-                                _archive_path_to(c_edge, archive_dir)
-                                shutil.copy2(str(eb_tmp), str(c_edge))
-                                current_path = c_edge
-                                _log(f"  ✂️ [{idx}] {char_label}: c{ci}_edge -> {c_edge.name}")
-                            finally:
+                            c_edge = _char_edge_path(working_dir, output_id, ci)
+                            _archive_path_to(c_edge, archive_dir)
+
+                            if eb_mode == "atlascloud":
+                                _eb_ac_model    = _eb_p.get("atlascloud_model", "qwen/qwen-image-2.0-pro/edit")
+                                _eb_ac_seed     = int(_eb_p.get("seed", -1))
+                                _eb_ac_thinking = bool(_eb_p.get("thinking_mode", False))
+                                _eb_ac_wan_size = _eb_p.get("wan_size", "2K") if _eb_ac_model.startswith("alibaba/wan") else None
+                                _eb_ref         = model_path if model_path.exists() else None
+                                _log(f"  ✂️☁ [{idx}] {char_label} — edge blend AtlasCloud "
+                                     f"({_eb_ac_model}  ref={'model' if _eb_ref else 'none'}) ...")
                                 rgba_tmp.unlink(missing_ok=True)
-                                eb_tmp.unlink(missing_ok=True)
+                                await _run_atlascloud_pass(
+                                    src_path=current_path, prompt=eb_positive, dest_path=c_edge,
+                                    model=_eb_ac_model, seed=_eb_ac_seed, thinking_mode=_eb_ac_thinking,
+                                    wan_size=_eb_ac_wan_size, ref_path=_eb_ref,
+                                )
+                            else:
+                                _log(f"  ✂️ [{idx}] {char_label} — edge blend "
+                                     f"(maska {eb_px}px  steps={eb_steps}  cfg={eb_cfg}  denoise={eb_denoise}) ...")
+                                try:
+                                    await _generate_ci_one(
+                                        loop, eb_url, eb_in_dir, eb_out_dir,
+                                        eb_wf, rgba_tmp, model_path,
+                                        eb_positive, eb_negative,
+                                        eb_steps, eb_cfg, eb_denoise,
+                                        eb_tmp,
+                                        label=f"edge_blend {char_label}",
+                                    )
+                                    shutil.copy2(str(eb_tmp), str(c_edge))
+                                finally:
+                                    rgba_tmp.unlink(missing_ok=True)
+                                    eb_tmp.unlink(missing_ok=True)
+
+                            current_path = c_edge
+                            _log(f"  ✂️ [{idx}] {char_label}: c{ci}_edge -> {c_edge.name}")
 
             # -- Scene blend --------------------------------------------------
             _force_scene = from_stage == scene_stage_idx  # explicit "run scene" stage
             _scene_exists = _scene_path(working_dir, output_id).exists()
             run_scene = (
-                bool(sb_positive) and sb_wf is not None
+                bool(sb_positive) and (sb_wf is not None or sb_mode == "atlascloud")
                 and from_stage <= scene_stage_idx     # don't run if starting after scene (cp-only)
                 and ((sb_enabled and slot_sb) or _force_scene)
                 and (end_stage is None or scene_stage_idx <= end_stage)
@@ -2095,28 +2195,46 @@ async def _run_paste_character_async(
                 current_path = _scene_path(working_dir, output_id)
             if run_scene:
                 _has_ov = bool(slot.get("sb_override"))
-                _log(f"  \U0001f3a8 [{idx}/{len(slots_to_run)}] {label} — scene blend "
-                     f"(steps={sb_steps}  cfg={sb_cfg}  denoise={_eff_sb_den}"
-                     + ("  ⚙custom" if _has_ov else "") + ") ...")
                 scene_out = _scene_path(working_dir, output_id)
                 _archive_path_to(scene_out, archive_dir)
-                # Apply user-drawn scene blend mask if painted on PIL or Edge output
-                _sb_input   = _apply_user_mask(current_path, working_dir, current_path)
-                _sb_masked  = _sb_input != current_path
-                if _sb_masked:
-                    _log(f"  🎭 [{idx}] scene blend: maska użytkownika zastosowana")
-                try:
-                    await _generate_one(
-                        loop, sb_url, sb_in_dir, sb_out_dir,
-                        sb_wf, _sb_input,
-                        _eff_sb_pos, _eff_sb_neg,
-                        sb_steps, sb_cfg, _eff_sb_den,
-                        scene_out,
-                        label=f"scene_blend {label}",
+
+                if sb_mode == "atlascloud":
+                    _sb_ac_model    = _sb_p.get("atlascloud_model", "qwen/qwen-image-2.0-pro/edit")
+                    _sb_ac_seed     = int(_sb_p.get("seed", -1))
+                    _sb_ac_thinking = bool(_sb_p.get("thinking_mode", False))
+                    _sb_ac_wan_size = _sb_p.get("wan_size", "2K") if _sb_ac_model.startswith("alibaba/wan") else None
+                    # Use user-drawn mask as reference image if it exists
+                    _sb_mask_path = current_path.parent / "masks" / current_path.name
+                    _sb_ref = _sb_mask_path if _sb_mask_path.exists() else None
+                    _log(f"  \U0001f3a8☁ [{idx}/{len(slots_to_run)}] {label} — scene blend AtlasCloud "
+                         f"({_sb_ac_model}  ref={'mask' if _sb_ref else 'none'}) ...")
+                    await _run_atlascloud_pass(
+                        src_path=current_path, prompt=_eff_sb_pos, dest_path=scene_out,
+                        model=_sb_ac_model, seed=_sb_ac_seed, thinking_mode=_sb_ac_thinking,
+                        wan_size=_sb_ac_wan_size, ref_path=_sb_ref,
                     )
-                finally:
+                else:
+                    _log(f"  \U0001f3a8 [{idx}/{len(slots_to_run)}] {label} — scene blend "
+                         f"(steps={sb_steps}  cfg={sb_cfg}  denoise={_eff_sb_den}"
+                         + ("  ⚙custom" if _has_ov else "") + ") ...")
+                    # Apply user-drawn scene blend mask if painted on PIL or Edge output
+                    _sb_input  = _apply_user_mask(current_path, working_dir, current_path)
+                    _sb_masked = _sb_input != current_path
                     if _sb_masked:
-                        _sb_input.unlink(missing_ok=True)
+                        _log(f"  🎭 [{idx}] scene blend: maska użytkownika zastosowana")
+                    try:
+                        await _generate_one(
+                            loop, sb_url, sb_in_dir, sb_out_dir,
+                            sb_wf, _sb_input,
+                            _eff_sb_pos, _eff_sb_neg,
+                            sb_steps, sb_cfg, _eff_sb_den,
+                            scene_out,
+                            label=f"scene_blend {label}",
+                        )
+                    finally:
+                        if _sb_masked:
+                            _sb_input.unlink(missing_ok=True)
+
                 current_path = scene_out
                 _log(f"  \U0001f3a8 [{idx}] {label}: scene -> {scene_out.name}")
 
@@ -2689,33 +2807,58 @@ async def _run_tile_async(
                 pos = p.get("positive", "")
                 if global_suffix:
                     pos = f"{pos}, {global_suffix}" if pos else global_suffix
-                neg     = p.get("negative", "")
-                params  = p.get("params", {})
-                steps   = int(params.get("steps",   30))
-                cfg     = float(params.get("cfg",    8.0))
-                denoise = float(params.get("denoise", 1.0))
-                _log(f"  📝 [{idx}] steps={steps}  cfg={cfg}  denoise={denoise}  "
-                     f"prompt: {pos[:100]}{'…' if len(pos) > 100 else ''}")
-
-                # Pad source to project ratio if requested
-                padded_path: "Path | None" = None
-                if pad_input_to_ratio:
-                    padded_path = _pad_to_ratio(source_path, target_w, target_h)
-                effective_source = padded_path if padded_path else source_path
-
-                # Embed user-drawn mask as alpha channel if one exists.
-                # Pass source_path as original_path so the mask is looked up
-                # under the original filename (not the _padded_* temp name).
-                effective_source = _apply_user_mask(
-                    effective_source, input_dir, original_path=source_path
-                )
+                neg    = p.get("negative", "")
+                params = p.get("params", {})
+                mode   = p.get("mode", "i2i")
 
                 try:
-                    await _generate_one(
-                        loop, comfyui_url, input_dir, comfyui_out,
-                        workflow_template, effective_source,
-                        pos, neg, steps, cfg, denoise, dest, label=label,
-                    )
+                    if mode == "atlascloud":
+                        ac_model    = params.get("atlascloud_model", "qwen/qwen-image-2.0-pro/edit")
+                        ac_seed     = int(params.get("seed", -1))
+                        ac_thinking = bool(params.get("thinking_mode", False))
+                        ac_wan_size = params.get("wan_size") if ac_model.startswith("alibaba/wan") else None
+                        ac_ref_str  = params.get("ac_ref_image", "")
+                        ac_ref_path = Path(ac_ref_str) if ac_ref_str else None
+                        if ac_ref_path and not ac_ref_path.exists():
+                            _log(f"  ⚠ ac_ref_image nie istnieje — pomijam: {ac_ref_str}")
+                            ac_ref_path = None
+                        _log(f"  📝 [{idx}] ☁ AtlasCloud model={ac_model} seed={ac_seed} "
+                             f"ref={'tak' if ac_ref_path else 'nie'} prompt: {pos[:80]}{'…' if len(pos) > 80 else ''}")
+                        await _run_atlascloud_pass(
+                            src_path=source_path,
+                            prompt=pos,
+                            dest_path=dest,
+                            model=ac_model,
+                            seed=ac_seed,
+                            thinking_mode=ac_thinking,
+                            wan_size=ac_wan_size,
+                            ref_path=ac_ref_path,
+                        )
+                    else:
+                        steps   = int(params.get("steps",   30))
+                        cfg     = float(params.get("cfg",    8.0))
+                        denoise = float(params.get("denoise", 1.0))
+                        _log(f"  📝 [{idx}] steps={steps}  cfg={cfg}  denoise={denoise}  "
+                             f"prompt: {pos[:100]}{'…' if len(pos) > 100 else ''}")
+
+                        padded_path: "Path | None" = None
+                        if pad_input_to_ratio:
+                            padded_path = _pad_to_ratio(source_path, target_w, target_h)
+                        effective_source = padded_path if padded_path else source_path
+                        effective_source = _apply_user_mask(
+                            effective_source, input_dir, original_path=source_path
+                        )
+                        await _generate_one(
+                            loop, comfyui_url, input_dir, comfyui_out,
+                            workflow_template, effective_source,
+                            pos, neg, steps, cfg, denoise, dest, label=label,
+                        )
+                        if padded_path and padded_path.exists():
+                            try:
+                                padded_path.unlink()
+                            except Exception:
+                                pass
+
                     if tile.get("crop_to_subject") and dest.exists():
                         _crop_to_subject(dest)
                     done += 1
@@ -2730,13 +2873,6 @@ async def _run_tile_async(
                     })
                     _update_job(run_id, tile_id, errors=list(errors))
                     _log(f"  ❌ [{idx}/{total_prompts}] {label}: {exc}")
-                finally:
-                    # Clean up padded temp file
-                    if padded_path and padded_path.exists():
-                        try:
-                            padded_path.unlink()
-                        except Exception:
-                            pass
 
         final_status = "error" if (errors and done == 0) else "done"
         _update_job(

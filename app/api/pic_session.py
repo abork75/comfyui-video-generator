@@ -46,6 +46,7 @@ class PromptItem(BaseModel):
     negative:  str  = ""
     note:      str  = ""
     params:    dict = Field(default_factory=lambda: {"steps": 30, "cfg": 8, "denoise": 1.0})
+    mode:      str  = "i2i"
 
 
 class ImageSlot(BaseModel):

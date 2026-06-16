@@ -24,6 +24,7 @@ if errorlevel 1 (
     echo.
 )
 
+echo  [*] Start: %TIME%
 echo  [*] Uruchamianie serwera na http://0.0.0.0:8001
 echo  [*] Lokalnie:  http://127.0.0.1:8001
 echo  [*] Sieciowo:  http://%COMPUTERNAME%:8001

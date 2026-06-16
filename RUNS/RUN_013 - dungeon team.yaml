@@ -1,3 +1,7 @@
+# RUN_013 - dungeon team.yaml
+# Edited: 2026-06-16 15:06:54
+# Edit this file freely — regenerate .py with generate_py_from_yaml()
+#
 defaults:
   fps: 16
   steps: 6
@@ -8,17 +12,1104 @@ defaults:
   resolution:
   - 1024
   - 1024
+
 linux_backend:
   config_path: D:\streamlit_project\comfyui_integration\workflow_configs\wan_i2v.yaml
   workflows_path: D:\streamlit_project\comfyui_integration\workflows
   comfyui_output_folder: D:\ComfyUI\output\Wan22_I2V
   api_url: http://127.0.0.1:8189
+
 use_test_flow: false
-flow: []
+
+# ──────────────────────────────────────────────────────────
+# FLOW — lista generacji
+# ──────────────────────────────────────────────────────────
+flow:
+- type: scene_break
+  name: PREZENTACJA ZŁEJ KRÓLOWEJ
+
+- file: zla krolowa.png
+  backend: linux
+  duration: 5.5
+  pos: |-
+    Smooth transition on evil queen face
+  neg: |-
+    NONE
+
+- file: zla_krolowa_zoom.png
+  backend: linux
+  duration: 2
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- break: true
+  label: Zła królowa
+
+- type: scene_break
+  name: WKROCZENIE DO PODZIEMI
+
+- file: Dungeon_entrance_large.png
+  backend: linux
+  duration: 5.5
+  pos: |-
+    Sorceress slowly approaches the dungeon entrance
+  neg: |-
+    NONE
+
+- file: Dungeon_entrance_small.png
+  backend: linux
+  duration: 2
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- break: true
+  label: wejscie do podziemi
+
+- type: scene_break
+  name: WALKA Z POTWORAMI
+
+- file: redwarrior.jpg
+  backend: linux
+  duration: 2
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- chain:
+    prefix: red warrior
+    transitions:
+    - duration: 3
+      pos: "2-second I2V: A fierce female warrior quickly rises from a kneeling position in a powerful upward motion. As she stands up, she swiftly reaches down, grabs the sword lying on the ground with her right hand and lifts it in one continuous, fluid and aggressive movement. \n\nDynamic, intense and heroic action, realistic physics, strong warrior energy, photorealistic, ultra detailed, cinematic."
+      neg: ""
+    backend: linux
+    fps: 16
+    steps: 6
+    cfg: 2
+    neg: |-
+      static, frozen, no movement
+
+- break: true
+  label: redwarrior
+
+- file: wampirzyce.jpg
+  backend: linux
+  duration: 2.5
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- chain:
+    prefix: Wampirzyce
+    transitions:
+    - duration: 3
+      pos: "3-second cinematic I2V: Three beautiful, dangerously seductive vampire women stare straight into the camera with raw lust and hunger. They provocatively invite the viewer to approach them — slowly reaching out their hands, licking their lips, smiling with fangs visible, moving their bodies in a tempting, sexual way. \n\nIntense eye contact, seductive body language, erotic and predatory atmosphere. Moody cinematic lighting with deep shadows and red accents, photorealistic, highly detailed."
+      neg: ""
+    backend: linux
+    fps: 16
+    steps: 6
+    cfg: 2
+    neg: |-
+      static, frozen, no movement
+
+- break: true
+  label: Wapirzyce
+
+- file: undead.jpg
+  backend: linux
+  duration: 2
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- chain:
+    prefix: undead
+    transitions:
+    - duration: 3
+      pos: |-
+        Undead is approaching the camera waving his sword
+      neg: ""
+    backend: linux
+    fps: 16
+    steps: 6
+    cfg: 2
+    neg: |-
+      static, frozen, no movement
+
+- break: true
+  label: Undead
+
+- file: dungeon_ghost.jpg
+  backend: linux
+  duration: 2
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- chain:
+    prefix: duch nekromantki
+    transitions:
+    - duration: 3
+      pos: |-
+        Horror 3-second I2V: A vengeful spirit trapped in the painting suddenly comes alive and violently reaches out. It stretches both arms aggressively toward the camera, desperately trying to seize something in front of the painting. Pale, ghostly hands with long fingers clawing forward. Twisted, terrifying facial expression. Slow build-up followed by a fast, frightening lunge. Extremely creepy and tense atmosphere, photorealistic, high detail.
+      neg: |-
+        static ghost, no movement, arms not reaching, weak gesture, ghost staying inside painting, friendly ghost, bright lighting, no horror, deformed hands, extra limbs, bad anatomy, rubbery motion, blurry, low quality, cartoonish ghost, slow motion only, no lunge, changed pose
+    backend: linux
+    fps: 16
+    steps: 6
+    cfg: 2
+    neg: |-
+      static, frozen, no movement
+
+- break: true
+  label: Duch nekromantki
+
+- file: monster_slaver.jpg
+  backend: linux
+  duration: 2.5
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- chain:
+    prefix: monster slaver
+    transitions:
+    - duration: 3
+      pos: |-
+        Monster is trying to catch naked women next to him. Women are freezed with horror
+      neg: ""
+    backend: linux
+    fps: 16
+    steps: 6
+    cfg: 2
+    neg: |-
+      static, frozen, no movement
+
+- break: true
+  label: monster slaver
+
+- file: wladczyni ciemnych elfow.jpg
+  backend: linux
+  duration: 2
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- chain:
+    prefix: dark elf queen casting a spell
+    transitions:
+    - duration: 3
+      pos: |-
+        Evil dark elf queen is casting a spell
+      neg: ""
+    backend: linux
+    fps: 16
+    steps: 6
+    cfg: 2
+    neg: |-
+      static, frozen, no movement
+
+- break: true
+  label: Dark Elves Queen
+
+- file: Diablo.png
+  backend: linux
+  duration: 3
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- chain:
+    prefix: diablo
+    transitions:
+    - duration: 3
+      pos: |-
+        Red diablo monster is pointing at camera. Demonic woman is touching his belly
+      neg: ""
+    backend: linux
+    fps: 16
+    steps: 6
+    cfg: 2
+    neg: |-
+      static, frozen, no movement
+
+- break: true
+  label: Diablo
+
+- file: wiedzma.jpg
+  backend: linux
+  duration: 3.5
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- chain:
+    prefix: wiedzma
+    transitions:
+    - duration: 3
+      pos: "Witch slowly raises both arms above her head, dark swirling mist expands and \nflows outward around her body, she performs a dramatic magical incantation gesture"
+      neg: |-
+        static, frozen, no movement
+    - duration: 3
+      pos: |-
+        Which is casting spell, throwing hand towards camera and smiling cruelly
+      neg: |-
+        static, frozen, no movement
+    backend: linux
+    fps: 16
+    steps: 6
+    cfg: 2
+    neg: ""
+
+- break: true
+
+- file: walka z wiedzma 1.jpg
+  backend: linux
+  duration: 2
+  pos: ""
+  neg: ""
+
+- chain:
+    prefix: walka z wiedzma 1
+    transitions:
+    - duration: 4
+      pos: |-
+        Cinematic 4-second I2V video: A beautiful sorceress stands in a powerful pose and casts a strong spell. She raises her hands dramatically, magical energy swirls around her, and she releases the spell.
+
+        A bright white light suddenly explodes from her hands and body, rapidly expanding and growing in intensity. The light becomes stronger and stronger until it completely fills the entire screen with blinding pure white light by the end of the clip.
+
+        Elegant and intense spellcasting motion, glowing magical particles, dramatic light burst, smooth transition from normal lighting to full white screen. Photorealistic, highly detailed, cinematic atmosphere, 4K.
+      neg: |-
+        weak light, small light burst, colored light, blue light, golden light, slow light growth, partial white screen, still image at the end, dark screen, no light explosion, bad magic effect, low quality particles, deformed hands, blurry, artifacts, cartoonish, sudden cut, minimal light change
+    backend: linux
+    fps: 16
+    steps: 6
+    cfg: 2
+    neg: |-
+      static, frozen, no movement
+
+- break: true
+
+- file: walka z wiedzma 2.jpg
+  backend: linux
+  duration: 2
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- chain:
+    prefix: walka z wiedzma 2
+    transitions:
+    - duration: 4
+      pos: |-
+        4-second cinematic I2V: A sorceress is violently hit by a powerful white magic orb in the chest. A massive blinding white flash erupts on impact. Her body starts cracking with glowing lines, then dramatically disintegrates and dissolves into sparkling white particles and light energy. She fades away completely with a look of shock and agony until nothing remains.
+
+        Intense magical attack effect, powerful light explosion, smooth disintegration, photorealistic, high emotional impact.
+      neg: |-
+        no reaction, survives the hit, minimal light, weak explosion, woman stays intact, bad disintegration, deformed body, low quality particles, sudden cut, no pain, static pose, rubbery motion, blurry, artifacts, cartoonish effect, woman flies away, blood, gore
+    - duration: 3
+      pos: "3-second cinematic I2V: A sorceress is hit by a devastating spell and violently disintegrates. Her body cracks and explodes into countless glowing fragments. The destruction is fast, brutal and spectacular — limbs and torso break apart, skin and clothes tear away as she collapses inward and dissolves into swirling particles and bright energy dust. \n\nDynamic, chaotic disintegration in the center of the frame. She completely vanishes by the end, leaving only faint glowing particles. Intense magical destruction, high motion, photorealistic, high detail."
+      neg: |-
+        woman flies away, woman runs, woman falls down, body stays intact, survives the spell, minimal destruction, slow disintegration, low detail particles, bad physics, deformed body, cartoonish explosion, leaves the frame, static pose, no destruction, weak effect
+    backend: linux
+    fps: 16
+    steps: 6
+    cfg: 2
+    neg: |-
+      static, frozen, no movement
+
+- break: true
+
+- type: scene_break
+  name: ZDOBYCIE ARTEFAKTU
+
+- file: zdobycie artefaktu_1.jpg
+  backend: linux
+  duration: 3
+  pos: "Cinematic 3-4 second I2V2I video: \n\nStart frame (Image 1): Empty mysterious chamber with an old wooden doorway on the right side of the frame. The door is slightly open, no one is visible.\n\nA beautiful sorceress slowly and cautiously enters the chamber from the right through the doorway. She steps carefully into the room, moving from the right edge toward the center with alert, graceful steps. She holds her staff ready, head slightly turned, scanning the surroundings with caution.\n\nEnd frame (Image 2): The sorceress is already inside the chamber, standing in a cautious pose, looking around.\n\nSmooth, tense and atmospheric entrance. Natural, realistic movement with high caution, dark fantasy atmosphere, dramatic cinematic lighting, photorealistic, highly detailed, 4K."
+  neg: |-
+    static camera, no entrance, sorceress not entering, already in the room at start, sudden appearance, teleport effect, fast running, jerky animation, bad walking, stiff movement, no caution, overconfident pose, bad anatomy, extra limbs, deformed hands, staff floating, changed pose during movement, wrong door, empty room at the end, low detail, blurry, artifacts, rubbery motion, cartoonish, plastic skin, overexposed, underexposed, different clothing, changed hair, looking directly at camera
+
+- file: zdobycie artefaktu_2.jpg
+  backend: linux
+  duration: 4.5
+  pos: |-
+    Cinematic 4.5-second I2V2I video continuation: The sorceress is already standing inside the mysterious chamber. She slowly and cautiously walks forward, moving from the mid-ground closer toward the center of the room, with elegant but alert steps.
+
+    As she approaches, a magical staff lying on a stone pedestal begins to levitate slowly. The staff rises into the air, glowing with bright cyan and golden magical energy, surrounded by swirling sparkling particles and ethereal light trails. The staff then gracefully flies toward the sorceress and smoothly lands in her outstretched right hand.
+
+    Strong emphasis on beautiful, visible magic effects — glowing runes, floating particles, energy streams. The sorceress maintains a focused, slightly surprised yet powerful expression while accepting the staff. Dark fantasy atmosphere, dramatic cinematic lighting, photorealistic, ultra detailed, 4K.
+  neg: |-
+    static scene, no movement, sorceress not walking, staff not levitating, no magic effects, sudden staff appearance, bad levitation, staff teleporting, weak magic, low detail magic, deformed staff, jerky motion, rubbery movement, bad hand catch, changed pose, looking at camera, fast movement, running, low quality, artifacts, blurry particles, cartoonish magic, bright lighting, changed clothing
+
+- file: zdobycie artefaktu_3.jpg
+  backend: linux
+  duration: 0
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- break: true
+  label: Wiedzma
+
+- type: scene_break
+  name: CZARODZIEJKA RZUCA CZAR TAŃCA
+
+- file: czarodziejka.png
+  backend: linux
+  duration: 4
+  pos: "Cinematic 4-5 second I2V2I video: A beautiful sorceress stands in the exact same elegant pose as in the reference images. Her magical clothing and staff slowly and sensually disappear in a magical way.\n\nThe elegant robes and fabric gradually dissolve into glowing sparkling particles and soft light, vanishing piece by piece from her body. Her staff also fades away with magical effects. The disappearance is graceful, smooth and highly seductive. \n\nAt the end she stands completely naked in the exact same pose, with nothing on her body. Mesmerizing magical transformation, beautiful glowing particles, soft cinematic lighting, sensual atmosphere, photorealistic, ultra detailed, 4K."
+  neg: |-
+    clothing remains, partial nudity, censored, underwear stays, staff remains, sudden disappearance, bad transition, deformed body, extra limbs, blurry, low quality, artifacts, rubbery motion, changed pose, different body, modest clothing, fast transition, cartoonish particles
+
+- file: naga.png
+  backend: linux
+  duration: 2
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- chain:
+    prefix: taniec
+    transitions:
+    - duration: 3
+      pos: "Cinematic 5-second I2V video: A beautiful sorceress performs a very sensual and hypnotic dance. She moves slowly and gracefully, arching her back, rolling her hips seductively, and sliding her hands over her body. Her movements are fluid, elegant and highly erotic — she caresses her curves, runs fingers through her hair, and looks at the camera with intense, seductive eye contact. \n\nMagical glowing particles and soft light trails follow her movements. Mysterious and enchanting atmosphere, soft cinematic lighting, extremely sensual and feminine dance, photorealistic, ultra detailed, 4K."
+      neg: |-
+        static pose, minimal movement, stiff dance, awkward movement, bad anatomy, deformed body, extra limbs, mutated hands, blurry motion, low quality, artifacts, rubbery motion, jerky movement, unnatural bending, modest dance, shy pose, looking away from camera, closed body language, boring dance, no hip movement, no body waves, flat expression, censored, clothing on body, partial clothing, deformed breasts, plastic skin, cartoonish, overexposed, underexposed, bad lighting, changed background, low detail, poor anatomy, floating particles without reason
+    - duration: 3
+      pos: |-
+        Cinematic 5-second I2V video: A seductive sorceress dances in a raw, provocative and highly erotic way. She moves with passion — intense hip swaying, body waves, slow sensual twerking motions, running her hands from her breasts down to her hips and thighs. She arches her back deeply, bites her lip, and gives the camera a dominant, lustful look.
+
+        Her dance is teasing and confident, full of sexual energy. Dramatic lighting, magical sparks and glowing effects around her, photorealistic, highly detailed, sensual atmosphere, 4K.
+      neg: |-
+        static pose, minimal movement, stiff dance, awkward movement, bad anatomy, deformed body, extra limbs, mutated hands, blurry motion, low quality, artifacts, rubbery motion, jerky movement, unnatural bending, modest dance, shy pose, looking away from camera, closed body language, boring dance, no hip movement, no body waves, flat expression, censored, clothing on body, partial clothing, deformed breasts, plastic skin, cartoonish, overexposed, underexposed, bad lighting, changed background, low detail, poor anatomy, floating particles without reason
+    - duration: 4
+      pos: |-
+        Sorceress is leaving dungeon to the entrance in full sun
+      neg: ""
+    backend: linux
+    fps: 16
+    steps: 6
+    cfg: 2
+    neg: |-
+      static, frozen, no movement
+
+- break: true
+  label: przemiana
+
+- type: scene_break
+  name: CZARODZIEJKA ODCZAROWUJE KRAINĘ
+
+- file: zamek.png
+  backend: linux
+  duration: 2
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- chain:
+    prefix: taniec zamek
+    transitions:
+    - duration: 3
+      pos: "Cinematic 5-second I2V video: A beautiful sorceress performs a very sensual and hypnotic dance. She moves slowly and gracefully, arching her back, rolling her hips seductively, and sliding her hands over her body. Her movements are fluid, elegant and highly erotic — she caresses her curves, runs fingers through her hair, and looks at the camera with intense, seductive eye contact. \n\nMagical glowing particles and soft light trails follow her movements. Mysterious and enchanting atmosphere, soft cinematic lighting, extremely sensual and feminine dance, photorealistic, ultra detailed, 4K."
+      neg: |-
+        static pose, minimal movement, stiff dance, awkward movement, bad anatomy, deformed body, extra limbs, mutated hands, blurry motion, low quality, artifacts, rubbery motion, jerky movement, unnatural bending, modest dance, shy pose, looking away from camera, closed body language, boring dance, no hip movement, no body waves, flat expression, censored, clothing on body, partial clothing, deformed breasts, plastic skin, cartoonish, overexposed, underexposed, bad lighting, changed background, low detail, poor anatomy, floating particles without reason
+    - duration: 3
+      pos: |-
+        Cinematic 5-second I2V video: A seductive sorceress dances in a raw, provocative and highly erotic way. She moves with passion — intense hip swaying, body waves, slow sensual twerking motions, running her hands from her breasts down to her hips and thighs. She arches her back deeply, bites her lip, and gives the camera a dominant, lustful look.
+
+        Her dance is teasing and confident, full of sexual energy. Dramatic lighting, magical sparks and glowing effects around her, photorealistic, highly detailed, sensual atmosphere, 4K.
+      neg: |-
+        static pose, minimal movement, stiff dance, awkward movement, bad anatomy, deformed body, extra limbs, mutated hands, blurry motion, low quality, artifacts, rubbery motion, jerky movement, unnatural bending, modest dance, shy pose, looking away from camera, closed body language, boring dance, no hip movement, no body waves, flat expression, censored, clothing on body, partial clothing, deformed breasts, plastic skin, cartoonish, overexposed, underexposed, bad lighting, changed background, low detail, poor anatomy, floating particles without reason
+    backend: linux
+    fps: 16
+    steps: 6
+    cfg: 2
+    neg: |-
+      static, frozen, no movement
+
+- break: true
+  label: zamek
+
+- file: las.png
+  backend: linux
+  duration: 2
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- chain:
+    prefix: taniec las
+    transitions:
+    - duration: 3
+      pos: "Cinematic 5-second I2V video: A beautiful sorceress performs a very sensual and hypnotic dance. She moves slowly and gracefully, arching her back, rolling her hips seductively, and sliding her hands over her body. Her movements are fluid, elegant and highly erotic — she caresses her curves, runs fingers through her hair, and looks at the camera with intense, seductive eye contact. \n\nMagical glowing particles and soft light trails follow her movements. Mysterious and enchanting atmosphere, soft cinematic lighting, extremely sensual and feminine dance, photorealistic, ultra detailed, 4K."
+      neg: |-
+        static pose, minimal movement, stiff dance, awkward movement, bad anatomy, deformed body, extra limbs, mutated hands, blurry motion, low quality, artifacts, rubbery motion, jerky movement, unnatural bending, modest dance, shy pose, looking away from camera, closed body language, boring dance, no hip movement, no body waves, flat expression, censored, clothing on body, partial clothing, deformed breasts, plastic skin, cartoonish, overexposed, underexposed, bad lighting, changed background, low detail, poor anatomy, floating particles without reason
+    - duration: 3
+      pos: |-
+        Cinematic 5-second I2V video: A seductive sorceress dances in a raw, provocative and highly erotic way. She moves with passion — intense hip swaying, body waves, slow sensual twerking motions, running her hands from her breasts down to her hips and thighs. She arches her back deeply, bites her lip, and gives the camera a dominant, lustful look.
+
+        Her dance is teasing and confident, full of sexual energy. Dramatic lighting, magical sparks and glowing effects around her, photorealistic, highly detailed, sensual atmosphere, 4K.
+      neg: |-
+        static pose, minimal movement, stiff dance, awkward movement, bad anatomy, deformed body, extra limbs, mutated hands, blurry motion, low quality, artifacts, rubbery motion, jerky movement, unnatural bending, modest dance, shy pose, looking away from camera, closed body language, boring dance, no hip movement, no body waves, flat expression, censored, clothing on body, partial clothing, deformed breasts, plastic skin, cartoonish, overexposed, underexposed, bad lighting, changed background, low detail, poor anatomy, floating particles without reason
+    backend: linux
+    fps: 16
+    steps: 6
+    cfg: 2
+    neg: |-
+      static, frozen, no movement
+
+- break: true
+  label: ciemny las
+
+- file: wioska.png
+  backend: linux
+  duration: 2
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- chain:
+    prefix: taniec wioska
+    transitions:
+    - duration: 3
+      pos: "Cinematic 5-second I2V video: A beautiful sorceress performs a very sensual and hypnotic dance. She moves slowly and gracefully, arching her back, rolling her hips seductively, and sliding her hands over her body. Her movements are fluid, elegant and highly erotic — she caresses her curves, runs fingers through her hair, and looks at the camera with intense, seductive eye contact. \n\nMagical glowing particles and soft light trails follow her movements. Mysterious and enchanting atmosphere, soft cinematic lighting, extremely sensual and feminine dance, photorealistic, ultra detailed, 4K."
+      neg: |-
+        static pose, minimal movement, stiff dance, awkward movement, bad anatomy, deformed body, extra limbs, mutated hands, blurry motion, low quality, artifacts, rubbery motion, jerky movement, unnatural bending, modest dance, shy pose, looking away from camera, closed body language, boring dance, no hip movement, no body waves, flat expression, censored, clothing on body, partial clothing, deformed breasts, plastic skin, cartoonish, overexposed, underexposed, bad lighting, changed background, low detail, poor anatomy, floating particles without reason
+    - duration: 3
+      pos: |-
+        Cinematic 5-second I2V video: A seductive sorceress dances in a raw, provocative and highly erotic way. She moves with passion — intense hip swaying, body waves, slow sensual twerking motions, running her hands from her breasts down to her hips and thighs. She arches her back deeply, bites her lip, and gives the camera a dominant, lustful look.
+
+        Her dance is teasing and confident, full of sexual energy. Dramatic lighting, magical sparks and glowing effects around her, photorealistic, highly detailed, sensual atmosphere, 4K.
+      neg: |-
+        static pose, minimal movement, stiff dance, awkward movement, bad anatomy, deformed body, extra limbs, mutated hands, blurry motion, low quality, artifacts, rubbery motion, jerky movement, unnatural bending, modest dance, shy pose, looking away from camera, closed body language, boring dance, no hip movement, no body waves, flat expression, censored, clothing on body, partial clothing, deformed breasts, plastic skin, cartoonish, overexposed, underexposed, bad lighting, changed background, low detail, poor anatomy, floating particles without reason
+    backend: linux
+    fps: 16
+    steps: 6
+    cfg: 2
+    neg: |-
+      static, frozen, no movement
+
+- break: true
+  label: zrujnowane miasto
+
+- file: prisoners.png
+  backend: linux
+  duration: 2
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- chain:
+    prefix: taniec prisoners
+    transitions:
+    - duration: 3
+      pos: "Cinematic 5-second I2V video: A beautiful sorceress performs a very sensual and hypnotic dance. She moves slowly and gracefully, arching her back, rolling her hips seductively, and sliding her hands over her body. Her movements are fluid, elegant and highly erotic — she caresses her curves, runs fingers through her hair, and looks at the camera with intense, seductive eye contact. \n\nMagical glowing particles and soft light trails follow her movements. Mysterious and enchanting atmosphere, soft cinematic lighting, extremely sensual and feminine dance, photorealistic, ultra detailed, 4K."
+      neg: |-
+        static pose, minimal movement, stiff dance, awkward movement, bad anatomy, deformed body, extra limbs, mutated hands, blurry motion, low quality, artifacts, rubbery motion, jerky movement, unnatural bending, modest dance, shy pose, looking away from camera, closed body language, boring dance, no hip movement, no body waves, flat expression, censored, clothing on body, partial clothing, deformed breasts, plastic skin, cartoonish, overexposed, underexposed, bad lighting, changed background, low detail, poor anatomy, floating particles without reason
+    - duration: 3
+      pos: |-
+        Cinematic 5-second I2V video: A seductive sorceress dances in a raw, provocative and highly erotic way. She moves with passion — intense hip swaying, body waves, slow sensual twerking motions, running her hands from her breasts down to her hips and thighs. She arches her back deeply, bites her lip, and gives the camera a dominant, lustful look.
+
+        Her dance is teasing and confident, full of sexual energy. Dramatic lighting, magical sparks and glowing effects around her, photorealistic, highly detailed, sensual atmosphere, 4K.
+      neg: |-
+        static pose, minimal movement, stiff dance, awkward movement, bad anatomy, deformed body, extra limbs, mutated hands, blurry motion, low quality, artifacts, rubbery motion, jerky movement, unnatural bending, modest dance, shy pose, looking away from camera, closed body language, boring dance, no hip movement, no body waves, flat expression, censored, clothing on body, partial clothing, deformed breasts, plastic skin, cartoonish, overexposed, underexposed, bad lighting, changed background, low detail, poor anatomy, floating particles without reason
+    backend: linux
+    fps: 16
+    steps: 6
+    cfg: 2
+    neg: |-
+      static, frozen, no movement
+
+- break: true
+  label: więzienie
+
+- file: city.png
+  backend: linux
+  duration: 2
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- chain:
+    prefix: taniec zamek_kopia
+    transitions:
+    - duration: 3
+      pos: "Cinematic 5-second I2V video: A beautiful sorceress performs a very sensual and hypnotic dance. She moves slowly and gracefully, arching her back, rolling her hips seductively, and sliding her hands over her body. Her movements are fluid, elegant and highly erotic — she caresses her curves, runs fingers through her hair, and looks at the camera with intense, seductive eye contact. \n\nMagical glowing particles and soft light trails follow her movements. Mysterious and enchanting atmosphere, soft cinematic lighting, extremely sensual and feminine dance, photorealistic, ultra detailed, 4K."
+      neg: |-
+        static pose, minimal movement, stiff dance, awkward movement, bad anatomy, deformed body, extra limbs, mutated hands, blurry motion, low quality, artifacts, rubbery motion, jerky movement, unnatural bending, modest dance, shy pose, looking away from camera, closed body language, boring dance, no hip movement, no body waves, flat expression, censored, clothing on body, partial clothing, deformed breasts, plastic skin, cartoonish, overexposed, underexposed, bad lighting, changed background, low detail, poor anatomy, floating particles without reason
+    backend: linux
+    fps: 16
+    steps: 6
+    cfg: 2
+    neg: |-
+      static, frozen, no movement
+
+- break: true
+  label: miasto
+
+- file: roadtonowhere.png
+  backend: linux
+  duration: 2
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- chain:
+    prefix: taniec roadtonowhere
+    transitions:
+    - duration: 3
+      pos: "Cinematic 5-second I2V video: A beautiful sorceress performs a very sensual and hypnotic dance. She moves slowly and gracefully, arching her back, rolling her hips seductively, and sliding her hands over her body. Her movements are fluid, elegant and highly erotic — she caresses her curves, runs fingers through her hair, and looks at the camera with intense, seductive eye contact. \n\nMagical glowing particles and soft light trails follow her movements. Mysterious and enchanting atmosphere, soft cinematic lighting, extremely sensual and feminine dance, photorealistic, ultra detailed, 4K."
+      neg: |-
+        static pose, minimal movement, stiff dance, awkward movement, bad anatomy, deformed body, extra limbs, mutated hands, blurry motion, low quality, artifacts, rubbery motion, jerky movement, unnatural bending, modest dance, shy pose, looking away from camera, closed body language, boring dance, no hip movement, no body waves, flat expression, censored, clothing on body, partial clothing, deformed breasts, plastic skin, cartoonish, overexposed, underexposed, bad lighting, changed background, low detail, poor anatomy, floating particles without reason
+    - duration: 3
+      pos: |-
+        Cinematic 5-second I2V video: A seductive sorceress dances in a raw, provocative and highly erotic way. She moves with passion — intense hip swaying, body waves, slow sensual twerking motions, running her hands from her breasts down to her hips and thighs. She arches her back deeply, bites her lip, and gives the camera a dominant, lustful look.
+
+        Her dance is teasing and confident, full of sexual energy. Dramatic lighting, magical sparks and glowing effects around her, photorealistic, highly detailed, sensual atmosphere, 4K.
+      neg: |-
+        static pose, minimal movement, stiff dance, awkward movement, bad anatomy, deformed body, extra limbs, mutated hands, blurry motion, low quality, artifacts, rubbery motion, jerky movement, unnatural bending, modest dance, shy pose, looking away from camera, closed body language, boring dance, no hip movement, no body waves, flat expression, censored, clothing on body, partial clothing, deformed breasts, plastic skin, cartoonish, overexposed, underexposed, bad lighting, changed background, low detail, poor anatomy, floating particles without reason
+    backend: linux
+    fps: 16
+    steps: 6
+    cfg: 2
+    neg: |-
+      static, frozen, no movement
+
+- break: true
+  label: droga
+
+- file: farmers.png
+  backend: linux
+  duration: 2
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- chain:
+    prefix: taniec farmers
+    transitions:
+    - duration: 3
+      pos: "Cinematic 5-second I2V video: A beautiful sorceress performs a very sensual and hypnotic dance. She moves slowly and gracefully, arching her back, rolling her hips seductively, and sliding her hands over her body. Her movements are fluid, elegant and highly erotic — she caresses her curves, runs fingers through her hair, and looks at the camera with intense, seductive eye contact. \n\nMagical glowing particles and soft light trails follow her movements. Mysterious and enchanting atmosphere, soft cinematic lighting, extremely sensual and feminine dance, photorealistic, ultra detailed, 4K."
+      neg: |-
+        static pose, minimal movement, stiff dance, awkward movement, bad anatomy, deformed body, extra limbs, mutated hands, blurry motion, low quality, artifacts, rubbery motion, jerky movement, unnatural bending, modest dance, shy pose, looking away from camera, closed body language, boring dance, no hip movement, no body waves, flat expression, censored, clothing on body, partial clothing, deformed breasts, plastic skin, cartoonish, overexposed, underexposed, bad lighting, changed background, low detail, poor anatomy, floating particles without reason
+    - duration: 3
+      pos: |-
+        Cinematic 5-second I2V video: A seductive sorceress dances in a raw, provocative and highly erotic way. She moves with passion — intense hip swaying, body waves, slow sensual twerking motions, running her hands from her breasts down to her hips and thighs. She arches her back deeply, bites her lip, and gives the camera a dominant, lustful look.
+
+        Her dance is teasing and confident, full of sexual energy. Dramatic lighting, magical sparks and glowing effects around her, photorealistic, highly detailed, sensual atmosphere, 4K.
+      neg: |-
+        static pose, minimal movement, stiff dance, awkward movement, bad anatomy, deformed body, extra limbs, mutated hands, blurry motion, low quality, artifacts, rubbery motion, jerky movement, unnatural bending, modest dance, shy pose, looking away from camera, closed body language, boring dance, no hip movement, no body waves, flat expression, censored, clothing on body, partial clothing, deformed breasts, plastic skin, cartoonish, overexposed, underexposed, bad lighting, changed background, low detail, poor anatomy, floating particles without reason
+    backend: linux
+    fps: 16
+    steps: 6
+    cfg: 2
+    neg: |-
+      static, frozen, no movement
+
+- break: true
+  label: wioska
+
+- file: barracks.png
+  backend: linux
+  duration: 2
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- chain:
+    prefix: taniec barracks
+    transitions:
+    - duration: 3
+      pos: "Cinematic 5-second I2V video: A beautiful sorceress performs a very sensual and hypnotic dance. She moves slowly and gracefully, arching her back, rolling her hips seductively, and sliding her hands over her body. Her movements are fluid, elegant and highly erotic — she caresses her curves, runs fingers through her hair, and looks at the camera with intense, seductive eye contact. \n\nMagical glowing particles and soft light trails follow her movements. Mysterious and enchanting atmosphere, soft cinematic lighting, extremely sensual and feminine dance, photorealistic, ultra detailed, 4K."
+      neg: |-
+        static pose, minimal movement, stiff dance, awkward movement, bad anatomy, deformed body, extra limbs, mutated hands, blurry motion, low quality, artifacts, rubbery motion, jerky movement, unnatural bending, modest dance, shy pose, looking away from camera, closed body language, boring dance, no hip movement, no body waves, flat expression, censored, clothing on body, partial clothing, deformed breasts, plastic skin, cartoonish, overexposed, underexposed, bad lighting, changed background, low detail, poor anatomy, floating particles without reason
+    - duration: 3
+      pos: |-
+        Cinematic 5-second I2V video: A seductive sorceress dances in a raw, provocative and highly erotic way. She moves with passion — intense hip swaying, body waves, slow sensual twerking motions, running her hands from her breasts down to her hips and thighs. She arches her back deeply, bites her lip, and gives the camera a dominant, lustful look.
+
+        Her dance is teasing and confident, full of sexual energy. Dramatic lighting, magical sparks and glowing effects around her, photorealistic, highly detailed, sensual atmosphere, 4K.
+      neg: |-
+        static pose, minimal movement, stiff dance, awkward movement, bad anatomy, deformed body, extra limbs, mutated hands, blurry motion, low quality, artifacts, rubbery motion, jerky movement, unnatural bending, modest dance, shy pose, looking away from camera, closed body language, boring dance, no hip movement, no body waves, flat expression, censored, clothing on body, partial clothing, deformed breasts, plastic skin, cartoonish, overexposed, underexposed, bad lighting, changed background, low detail, poor anatomy, floating particles without reason
+    backend: linux
+    fps: 16
+    steps: 6
+    cfg: 2
+    neg: |-
+      static, frozen, no movement
+
+- break: true
+  label: baraki
+
+- file: pustynia.png
+  backend: linux
+  duration: 2
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- chain:
+    prefix: taniec pustynia
+    transitions:
+    - duration: 3
+      pos: "Cinematic 5-second I2V video: A beautiful sorceress performs a very sensual and hypnotic dance. She moves slowly and gracefully, arching her back, rolling her hips seductively, and sliding her hands over her body. Her movements are fluid, elegant and highly erotic — she caresses her curves, runs fingers through her hair, and looks at the camera with intense, seductive eye contact. \n\nMagical glowing particles and soft light trails follow her movements. Mysterious and enchanting atmosphere, soft cinematic lighting, extremely sensual and feminine dance, photorealistic, ultra detailed, 4K."
+      neg: |-
+        static pose, minimal movement, stiff dance, awkward movement, bad anatomy, deformed body, extra limbs, mutated hands, blurry motion, low quality, artifacts, rubbery motion, jerky movement, unnatural bending, modest dance, shy pose, looking away from camera, closed body language, boring dance, no hip movement, no body waves, flat expression, censored, clothing on body, partial clothing, deformed breasts, plastic skin, cartoonish, overexposed, underexposed, bad lighting, changed background, low detail, poor anatomy, floating particles without reason
+    - duration: 3
+      pos: |-
+        Cinematic 5-second I2V video: A seductive sorceress dances in a raw, provocative and highly erotic way. She moves with passion — intense hip swaying, body waves, slow sensual twerking motions, running her hands from her breasts down to her hips and thighs. She arches her back deeply, bites her lip, and gives the camera a dominant, lustful look.
+
+        Her dance is teasing and confident, full of sexual energy. Dramatic lighting, magical sparks and glowing effects around her, photorealistic, highly detailed, sensual atmosphere, 4K.
+      neg: |-
+        static pose, minimal movement, stiff dance, awkward movement, bad anatomy, deformed body, extra limbs, mutated hands, blurry motion, low quality, artifacts, rubbery motion, jerky movement, unnatural bending, modest dance, shy pose, looking away from camera, closed body language, boring dance, no hip movement, no body waves, flat expression, censored, clothing on body, partial clothing, deformed breasts, plastic skin, cartoonish, overexposed, underexposed, bad lighting, changed background, low detail, poor anatomy, floating particles without reason
+    backend: linux
+    fps: 16
+    steps: 6
+    cfg: 2
+    neg: |-
+      static, frozen, no movement
+
+- break: true
+  label: pustynia
+
+- file: fullsun.png
+  backend: linux
+  duration: 2
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- chain:
+    prefix: taniec fullsun
+    transitions:
+    - duration: 3
+      pos: "Cinematic 5-second I2V video: A beautiful sorceress performs a very sensual and hypnotic dance. She moves slowly and gracefully, arching her back, rolling her hips seductively, and sliding her hands over her body. Her movements are fluid, elegant and highly erotic — she caresses her curves, runs fingers through her hair, and looks at the camera with intense, seductive eye contact. \n\nMagical glowing particles and soft light trails follow her movements. Mysterious and enchanting atmosphere, soft cinematic lighting, extremely sensual and feminine dance, photorealistic, ultra detailed, 4K."
+      neg: |-
+        static pose, minimal movement, stiff dance, awkward movement, bad anatomy, deformed body, extra limbs, mutated hands, blurry motion, low quality, artifacts, rubbery motion, jerky movement, unnatural bending, modest dance, shy pose, looking away from camera, closed body language, boring dance, no hip movement, no body waves, flat expression, censored, clothing on body, partial clothing, deformed breasts, plastic skin, cartoonish, overexposed, underexposed, bad lighting, changed background, low detail, poor anatomy, floating particles without reason
+    - duration: 3
+      pos: |-
+        Cinematic 5-second I2V video: A seductive sorceress dances in a raw, provocative and highly erotic way. She moves with passion — intense hip swaying, body waves, slow sensual twerking motions, running her hands from her breasts down to her hips and thighs. She arches her back deeply, bites her lip, and gives the camera a dominant, lustful look.
+
+        Her dance is teasing and confident, full of sexual energy. Dramatic lighting, magical sparks and glowing effects around her, photorealistic, highly detailed, sensual atmosphere, 4K.
+      neg: |-
+        static pose, minimal movement, stiff dance, awkward movement, bad anatomy, deformed body, extra limbs, mutated hands, blurry motion, low quality, artifacts, rubbery motion, jerky movement, unnatural bending, modest dance, shy pose, looking away from camera, closed body language, boring dance, no hip movement, no body waves, flat expression, censored, clothing on body, partial clothing, deformed breasts, plastic skin, cartoonish, overexposed, underexposed, bad lighting, changed background, low detail, poor anatomy, floating particles without reason
+    backend: linux
+    fps: 16
+    steps: 6
+    cfg: 2
+    neg: |-
+      static, frozen, no movement
+
+- break: true
+  label: słońce
+
+- file: fullmoon.png
+  backend: linux
+  duration: 2
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- chain:
+    prefix: taniec fullmoon
+    transitions:
+    - duration: 3
+      pos: "Cinematic 5-second I2V video: A beautiful sorceress performs a very sensual and hypnotic dance. She moves slowly and gracefully, arching her back, rolling her hips seductively, and sliding her hands over her body. Her movements are fluid, elegant and highly erotic — she caresses her curves, runs fingers through her hair, and looks at the camera with intense, seductive eye contact. \n\nMagical glowing particles and soft light trails follow her movements. Mysterious and enchanting atmosphere, soft cinematic lighting, extremely sensual and feminine dance, photorealistic, ultra detailed, 4K."
+      neg: |-
+        static pose, minimal movement, stiff dance, awkward movement, bad anatomy, deformed body, extra limbs, mutated hands, blurry motion, low quality, artifacts, rubbery motion, jerky movement, unnatural bending, modest dance, shy pose, looking away from camera, closed body language, boring dance, no hip movement, no body waves, flat expression, censored, clothing on body, partial clothing, deformed breasts, plastic skin, cartoonish, overexposed, underexposed, bad lighting, changed background, low detail, poor anatomy, floating particles without reason
+    - duration: 3
+      pos: |-
+        Cinematic 5-second I2V video: A seductive sorceress dances in a raw, provocative and highly erotic way. She moves with passion — intense hip swaying, body waves, slow sensual twerking motions, running her hands from her breasts down to her hips and thighs. She arches her back deeply, bites her lip, and gives the camera a dominant, lustful look.
+
+        Her dance is teasing and confident, full of sexual energy. Dramatic lighting, magical sparks and glowing effects around her, photorealistic, highly detailed, sensual atmosphere, 4K.
+      neg: |-
+        static pose, minimal movement, stiff dance, awkward movement, bad anatomy, deformed body, extra limbs, mutated hands, blurry motion, low quality, artifacts, rubbery motion, jerky movement, unnatural bending, modest dance, shy pose, looking away from camera, closed body language, boring dance, no hip movement, no body waves, flat expression, censored, clothing on body, partial clothing, deformed breasts, plastic skin, cartoonish, overexposed, underexposed, bad lighting, changed background, low detail, poor anatomy, floating particles without reason
+    backend: linux
+    fps: 16
+    steps: 6
+    cfg: 2
+    neg: |-
+      static, frozen, no movement
+
+- break: true
+  label: księżyc
+
+- file: vallley.png
+  backend: linux
+  duration: 2
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- chain:
+    prefix: taniec valley
+    transitions:
+    - duration: 3
+      pos: "Cinematic 5-second I2V video: A beautiful sorceress performs a very sensual and hypnotic dance. She moves slowly and gracefully, arching her back, rolling her hips seductively, and sliding her hands over her body. Her movements are fluid, elegant and highly erotic — she caresses her curves, runs fingers through her hair, and looks at the camera with intense, seductive eye contact. \n\nMagical glowing particles and soft light trails follow her movements. Mysterious and enchanting atmosphere, soft cinematic lighting, extremely sensual and feminine dance, photorealistic, ultra detailed, 4K."
+      neg: |-
+        static pose, minimal movement, stiff dance, awkward movement, bad anatomy, deformed body, extra limbs, mutated hands, blurry motion, low quality, artifacts, rubbery motion, jerky movement, unnatural bending, modest dance, shy pose, looking away from camera, closed body language, boring dance, no hip movement, no body waves, flat expression, censored, clothing on body, partial clothing, deformed breasts, plastic skin, cartoonish, overexposed, underexposed, bad lighting, changed background, low detail, poor anatomy, floating particles without reason
+    - duration: 3
+      pos: |-
+        Cinematic 5-second I2V video: A seductive sorceress dances in a raw, provocative and highly erotic way. She moves with passion — intense hip swaying, body waves, slow sensual twerking motions, running her hands from her breasts down to her hips and thighs. She arches her back deeply, bites her lip, and gives the camera a dominant, lustful look.
+
+        Her dance is teasing and confident, full of sexual energy. Dramatic lighting, magical sparks and glowing effects around her, photorealistic, highly detailed, sensual atmosphere, 4K.
+      neg: |-
+        static pose, minimal movement, stiff dance, awkward movement, bad anatomy, deformed body, extra limbs, mutated hands, blurry motion, low quality, artifacts, rubbery motion, jerky movement, unnatural bending, modest dance, shy pose, looking away from camera, closed body language, boring dance, no hip movement, no body waves, flat expression, censored, clothing on body, partial clothing, deformed breasts, plastic skin, cartoonish, overexposed, underexposed, bad lighting, changed background, low detail, poor anatomy, floating particles without reason
+    backend: linux
+    fps: 16
+    steps: 6
+    cfg: 2
+    neg: |-
+      static, frozen, no movement
+
+- break: true
+  label: wiosna
+
+- file: lake.png
+  backend: linux
+  duration: 2
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- chain:
+    prefix: taniec lake
+    transitions:
+    - duration: 3
+      pos: "Cinematic 5-second I2V video: A beautiful sorceress performs a very sensual and hypnotic dance. She moves slowly and gracefully, arching her back, rolling her hips seductively, and sliding her hands over her body. Her movements are fluid, elegant and highly erotic — she caresses her curves, runs fingers through her hair, and looks at the camera with intense, seductive eye contact. \n\nMagical glowing particles and soft light trails follow her movements. Mysterious and enchanting atmosphere, soft cinematic lighting, extremely sensual and feminine dance, photorealistic, ultra detailed, 4K."
+      neg: |-
+        static pose, minimal movement, stiff dance, awkward movement, bad anatomy, deformed body, extra limbs, mutated hands, blurry motion, low quality, artifacts, rubbery motion, jerky movement, unnatural bending, modest dance, shy pose, looking away from camera, closed body language, boring dance, no hip movement, no body waves, flat expression, censored, clothing on body, partial clothing, deformed breasts, plastic skin, cartoonish, overexposed, underexposed, bad lighting, changed background, low detail, poor anatomy, floating particles without reason
+    - duration: 3
+      pos: |-
+        Cinematic 5-second I2V video: A seductive sorceress dances in a raw, provocative and highly erotic way. She moves with passion — intense hip swaying, body waves, slow sensual twerking motions, running her hands from her breasts down to her hips and thighs. She arches her back deeply, bites her lip, and gives the camera a dominant, lustful look.
+
+        Her dance is teasing and confident, full of sexual energy. Dramatic lighting, magical sparks and glowing effects around her, photorealistic, highly detailed, sensual atmosphere, 4K.
+      neg: |-
+        static pose, minimal movement, stiff dance, awkward movement, bad anatomy, deformed body, extra limbs, mutated hands, blurry motion, low quality, artifacts, rubbery motion, jerky movement, unnatural bending, modest dance, shy pose, looking away from camera, closed body language, boring dance, no hip movement, no body waves, flat expression, censored, clothing on body, partial clothing, deformed breasts, plastic skin, cartoonish, overexposed, underexposed, bad lighting, changed background, low detail, poor anatomy, floating particles without reason
+    backend: linux
+    fps: 16
+    steps: 6
+    cfg: 2
+    neg: |-
+      static, frozen, no movement
+
+- break: true
+  label: lato
+
+- file: rain.png
+  backend: linux
+  duration: 2
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- chain:
+    prefix: taniec rain
+    transitions:
+    - duration: 3
+      pos: "Cinematic 5-second I2V video: A beautiful sorceress performs a very sensual and hypnotic dance. She moves slowly and gracefully, arching her back, rolling her hips seductively, and sliding her hands over her body. Her movements are fluid, elegant and highly erotic — she caresses her curves, runs fingers through her hair, and looks at the camera with intense, seductive eye contact. \n\nMagical glowing particles and soft light trails follow her movements. Mysterious and enchanting atmosphere, soft cinematic lighting, extremely sensual and feminine dance, photorealistic, ultra detailed, 4K."
+      neg: |-
+        static pose, minimal movement, stiff dance, awkward movement, bad anatomy, deformed body, extra limbs, mutated hands, blurry motion, low quality, artifacts, rubbery motion, jerky movement, unnatural bending, modest dance, shy pose, looking away from camera, closed body language, boring dance, no hip movement, no body waves, flat expression, censored, clothing on body, partial clothing, deformed breasts, plastic skin, cartoonish, overexposed, underexposed, bad lighting, changed background, low detail, poor anatomy, floating particles without reason
+    - duration: 3
+      pos: |-
+        Cinematic 5-second I2V video: A seductive sorceress dances in a raw, provocative and highly erotic way. She moves with passion — intense hip swaying, body waves, slow sensual twerking motions, running her hands from her breasts down to her hips and thighs. She arches her back deeply, bites her lip, and gives the camera a dominant, lustful look.
+
+        Her dance is teasing and confident, full of sexual energy. Dramatic lighting, magical sparks and glowing effects around her, photorealistic, highly detailed, sensual atmosphere, 4K.
+      neg: |-
+        static pose, minimal movement, stiff dance, awkward movement, bad anatomy, deformed body, extra limbs, mutated hands, blurry motion, low quality, artifacts, rubbery motion, jerky movement, unnatural bending, modest dance, shy pose, looking away from camera, closed body language, boring dance, no hip movement, no body waves, flat expression, censored, clothing on body, partial clothing, deformed breasts, plastic skin, cartoonish, overexposed, underexposed, bad lighting, changed background, low detail, poor anatomy, floating particles without reason
+    backend: linux
+    fps: 16
+    steps: 6
+    cfg: 2
+    neg: |-
+      static, frozen, no movement
+
+- break: true
+  label: jesień
+
+- file: icyforrest.png
+  backend: linux
+  duration: 2
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- chain:
+    prefix: taniec icyforrest
+    transitions:
+    - duration: 3
+      pos: "Cinematic 5-second I2V video: A beautiful sorceress performs a very sensual and hypnotic dance. She moves slowly and gracefully, arching her back, rolling her hips seductively, and sliding her hands over her body. Her movements are fluid, elegant and highly erotic — she caresses her curves, runs fingers through her hair, and looks at the camera with intense, seductive eye contact. \n\nMagical glowing particles and soft light trails follow her movements. Mysterious and enchanting atmosphere, soft cinematic lighting, extremely sensual and feminine dance, photorealistic, ultra detailed, 4K."
+      neg: |-
+        static pose, minimal movement, stiff dance, awkward movement, bad anatomy, deformed body, extra limbs, mutated hands, blurry motion, low quality, artifacts, rubbery motion, jerky movement, unnatural bending, modest dance, shy pose, looking away from camera, closed body language, boring dance, no hip movement, no body waves, flat expression, censored, clothing on body, partial clothing, deformed breasts, plastic skin, cartoonish, overexposed, underexposed, bad lighting, changed background, low detail, poor anatomy, floating particles without reason
+    - duration: 3
+      pos: |-
+        Cinematic 5-second I2V video: A seductive sorceress dances in a raw, provocative and highly erotic way. She moves with passion — intense hip swaying, body waves, slow sensual twerking motions, running her hands from her breasts down to her hips and thighs. She arches her back deeply, bites her lip, and gives the camera a dominant, lustful look.
+
+        Her dance is teasing and confident, full of sexual energy. Dramatic lighting, magical sparks and glowing effects around her, photorealistic, highly detailed, sensual atmosphere, 4K.
+      neg: |-
+        static pose, minimal movement, stiff dance, awkward movement, bad anatomy, deformed body, extra limbs, mutated hands, blurry motion, low quality, artifacts, rubbery motion, jerky movement, unnatural bending, modest dance, shy pose, looking away from camera, closed body language, boring dance, no hip movement, no body waves, flat expression, censored, clothing on body, partial clothing, deformed breasts, plastic skin, cartoonish, overexposed, underexposed, bad lighting, changed background, low detail, poor anatomy, floating particles without reason
+    backend: linux
+    fps: 16
+    steps: 6
+    cfg: 2
+    neg: |-
+      static, frozen, no movement
+
+- break: true
+  label: zima
+
+- file: sky.png
+  backend: linux
+  duration: 2
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- chain:
+    prefix: taniec sky
+    transitions:
+    - duration: 3
+      pos: "Cinematic 5-second I2V video: A beautiful sorceress performs a very sensual and hypnotic dance. She moves slowly and gracefully, arching her back, rolling her hips seductively, and sliding her hands over her body. Her movements are fluid, elegant and highly erotic — she caresses her curves, runs fingers through her hair, and looks at the camera with intense, seductive eye contact. \n\nMagical glowing particles and soft light trails follow her movements. Mysterious and enchanting atmosphere, soft cinematic lighting, extremely sensual and feminine dance, photorealistic, ultra detailed, 4K."
+      neg: |-
+        static pose, minimal movement, stiff dance, awkward movement, bad anatomy, deformed body, extra limbs, mutated hands, blurry motion, low quality, artifacts, rubbery motion, jerky movement, unnatural bending, modest dance, shy pose, looking away from camera, closed body language, boring dance, no hip movement, no body waves, flat expression, censored, clothing on body, partial clothing, deformed breasts, plastic skin, cartoonish, overexposed, underexposed, bad lighting, changed background, low detail, poor anatomy, floating particles without reason
+    - duration: 3
+      pos: |-
+        Cinematic 5-second I2V video: A seductive sorceress dances in a raw, provocative and highly erotic way. She moves with passion — intense hip swaying, body waves, slow sensual twerking motions, running her hands from her breasts down to her hips and thighs. She arches her back deeply, bites her lip, and gives the camera a dominant, lustful look.
+
+        Her dance is teasing and confident, full of sexual energy. Dramatic lighting, magical sparks and glowing effects around her, photorealistic, highly detailed, sensual atmosphere, 4K.
+      neg: |-
+        static pose, minimal movement, stiff dance, awkward movement, bad anatomy, deformed body, extra limbs, mutated hands, blurry motion, low quality, artifacts, rubbery motion, jerky movement, unnatural bending, modest dance, shy pose, looking away from camera, closed body language, boring dance, no hip movement, no body waves, flat expression, censored, clothing on body, partial clothing, deformed breasts, plastic skin, cartoonish, overexposed, underexposed, bad lighting, changed background, low detail, poor anatomy, floating particles without reason
+    backend: linux
+    fps: 16
+    steps: 6
+    cfg: 2
+    neg: |-
+      static, frozen, no movement
+
+- break: true
+  label: niebiosa
+
+- file: underground.png
+  backend: linux
+  duration: 2
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- chain:
+    prefix: taniec underground
+    transitions:
+    - duration: 3
+      pos: "Cinematic 5-second I2V video: A beautiful sorceress performs a very sensual and hypnotic dance. She moves slowly and gracefully, arching her back, rolling her hips seductively, and sliding her hands over her body. Her movements are fluid, elegant and highly erotic — she caresses her curves, runs fingers through her hair, and looks at the camera with intense, seductive eye contact. \n\nMagical glowing particles and soft light trails follow her movements. Mysterious and enchanting atmosphere, soft cinematic lighting, extremely sensual and feminine dance, photorealistic, ultra detailed, 4K."
+      neg: |-
+        static pose, minimal movement, stiff dance, awkward movement, bad anatomy, deformed body, extra limbs, mutated hands, blurry motion, low quality, artifacts, rubbery motion, jerky movement, unnatural bending, modest dance, shy pose, looking away from camera, closed body language, boring dance, no hip movement, no body waves, flat expression, censored, clothing on body, partial clothing, deformed breasts, plastic skin, cartoonish, overexposed, underexposed, bad lighting, changed background, low detail, poor anatomy, floating particles without reason
+    - duration: 3
+      pos: |-
+        Cinematic 5-second I2V video: A seductive sorceress dances in a raw, provocative and highly erotic way. She moves with passion — intense hip swaying, body waves, slow sensual twerking motions, running her hands from her breasts down to her hips and thighs. She arches her back deeply, bites her lip, and gives the camera a dominant, lustful look.
+
+        Her dance is teasing and confident, full of sexual energy. Dramatic lighting, magical sparks and glowing effects around her, photorealistic, highly detailed, sensual atmosphere, 4K.
+      neg: |-
+        static pose, minimal movement, stiff dance, awkward movement, bad anatomy, deformed body, extra limbs, mutated hands, blurry motion, low quality, artifacts, rubbery motion, jerky movement, unnatural bending, modest dance, shy pose, looking away from camera, closed body language, boring dance, no hip movement, no body waves, flat expression, censored, clothing on body, partial clothing, deformed breasts, plastic skin, cartoonish, overexposed, underexposed, bad lighting, changed background, low detail, poor anatomy, floating particles without reason
+    backend: linux
+    fps: 16
+    steps: 6
+    cfg: 2
+    neg: |-
+      static, frozen, no movement
+
+- type: scene_break
+  name: CZARODZIEJKA NA TRONIE
+
+- file: as_a_qeen.png
+  backend: linux
+  duration: 3
+  pos: "Cinematic 4-second I2V video: A regal queen is sitting elegantly on an ornate throne. Suddenly, a magical transformation begins — her luxurious royal dress slowly and sensually dissolves into glowing golden particles and sparkling light. The fabric gracefully fades away piece by piece, revealing her naked body underneath.\n\nShe remains seated in the exact same elegant pose on the throne throughout the entire transformation — back straight, hands resting on the armrests, head held high with a majestic expression. \n\nThe magical undressing is beautiful, smooth and hypnotic, with shimmering particles and soft glowing effects. At the end she sits completely naked on the throne in the same regal pose. Luxurious, sensual and magical atmosphere, dramatic cinematic lighting, photorealistic, ultra detailed, 4K."
+  neg: |-
+    clothing remains, partial clothing, sudden disappearance, bad transition, deformed body, changed pose, standing up, looking away, low quality magic, no particles, cartoonish effects, blurry, artifacts, rubbery motion, modest pose, censorship, extra limbs
+
+- file: as a qeen naked.png
+  backend: linux
+  duration: 2
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- type: scene_break
+  name: ZŁA KRÓLOWA UKARANA
+
+- file: zla krolowa sen 1.png
+  backend: linux
+  duration: 2
+  pos: "Cinematic 2-second I2V2I dream sequence: The evil queen sits regally on a luxurious golden throne in a royal chamber. Slowly and magically her royal dress dissolves into golden sparkling particles, leaving her completely naked. At the same time the environment around her transforms into a dark, cold dungeon. The golden throne gradually turns into a crude stone throne. \n\nDreamy, surreal and hypnotic transition with soft glowing particles and ethereal light. She remains seated in the exact same majestic pose. Moody, dark fantasy atmosphere, smooth surreal transformation, photorealistic, highly detailed."
+  neg: |-
+    clothing remains, dress stays on body, partial clothing, sudden disappearance, no particles, no magic effects, weak dissolution, queen moving, changed pose, looking at camera, throne disappearing, fast undressing, bad anatomy, deformed body, extra limbs, blurry, low quality, artifacts, rubbery motion, cartoonish particles, bright lighting, no dream effect, static scene, no environmental change
+
+- file: zla krolowa sen 2.png
+  backend: linux
+  duration: 2
+  pos: "Cinematic 2-second I2V2I dream sequence continuation: The completely naked queen remains seated in the exact same majestic pose on the throne. \n\nThe luxurious golden throne slowly and magically transforms into a crude, heavy stone throne. At the same time the surrounding environment changes from a dark dungeon corridor into a small, grim prison cell with stone walls, iron bars and chains. The camera continues a slow, subtle push-in, keeping focus on the queen sitting on the now stone throne.\n\nDreamy, surreal and unsettling transition with soft glowing particles, slight visual distortion and hazy atmosphere. Dark, oppressive and claustrophobic mood, cold lighting, photorealistic, highly detailed."
+  neg: |-
+    static scene, no movement, throne stays golden, throne not changing, environment not changing, corridor remains, no cell transformation, queen moving or standing up, changed pose, sudden jump, no particles, weak transition, bad blending, deformed throne, unrealistic stone texture, bright lighting, no dream haze, sharp realistic scene, low detail transition, artifacts, blurry environment, inconsistent lighting
+
+- file: zla krolowa sen 3.png
+  backend: linux
+  duration: 2
+  pos: |-
+    Cinematic 2-second I2V2I dream sequence: The completely naked queen sits motionless on the crude stone throne inside the dark prison cell, maintaining the exact same regal yet vulnerable pose.
+
+    Fresh, red-pink whip marks and welts slowly materialize on her skin. The marks appear gradually across her breasts, stomach, and thighs — delicate at first, then becoming more visible and pronounced. The flogging welts emerge as if being inflicted by an invisible force.
+
+    The scene is almost static with only very subtle dreamy movement. Soft blur, slight haze and ethereal dream-like distortion throughout the shot, creating an unsettling nightmare atmosphere. Cold, dim lighting, photorealistic skin details, highly emotional and disturbing, ultra detailed.
+  neg: |-
+    sudden appearance of marks, violent movement, queen moving, changing pose, throne moving, new objects, bright lighting, no blur, sharp realistic scene, static without dream effect, cartoonish marks, bloody wounds, black bruises, deformed body, low quality, artifacts
+
+- file: zla krolowa sen 4.png
+  backend: linux
+  duration: 2
+  pos: "Cinematic 2-second I2V2I dream sequence finale: Everything in the nightmare begins to rapidly dissolve and disappear. The stone throne, the prison cell walls and the naked queen with whip marks all break apart into swirling dark particles, mist and shadows. \n\nThe scene quickly transitions into reality — the queen is now lying on the cold, dirty stone floor of the real dungeon cell. She lies curled on her side with eyes closed. At the very end of the clip she suddenly opens her eyes wide with a strong expression of shock, terror and disorientation, realizing it was only a nightmare.\n\nFast, chaotic and unsettling dream collapse, dramatic dissolution into darkness, realistic falling onto the floor, intense and frightening awakening moment, cold harsh lighting, photorealistic, highly detailed."
+  neg: |-
+    slow dissolution, throne remains, cell remains, queen stays sitting, gradual slow change, calm awakening, no shock, no fear in eyes, bad falling physics, deformed body, changed pose too early, static final pose, low quality, artifacts, blurry, rubbery motion, no particles, weak transition
+
+- file: zla_krolowa_sen_5.png
+  backend: linux
+  duration: 0
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- chain:
+    prefix: przebudzenie
+    transitions:
+    - duration: 3
+      pos: "3-second cinematic I2V: A woman lying on her back suddenly wakes up. She abruptly opens her eyes wide and looks straight up at the camera with intense fear and shock. Her expression is full of terror — wide eyes, raised eyebrows, slightly open mouth, panicked breathing. \n\nStrong emotional reaction, realistic eye movement, subtle body tension. Dark, dramatic lighting, unsettling atmosphere, photorealistic, ultra detailed facial emotions."
+      neg: |-
+        closed eyes, slow blinking, calm expression, neutral face, sleepy, relaxed, smiling, looking away, bad eye direction, deformed face, blurry, low quality, artifacts, minimal movement, no fear, cartoonish, plastic skin
+    backend: linux
+    fps: 16
+    steps: 6
+    cfg: 2
+    neg: |-
+      static, frozen, no movement
+
+- break: true
+  label: Zły sen złej królowej
+
+- file: taniec_zlej_krolowej_1.png
+  backend: linux
+  duration: 5
+  pos: "5-second erotic I2V2I: Naked woman dances seductively in a dark dungeon. \n\nStart: back view. \nShe performs slow, sensual body rolls and hip movements, then gracefully turns to face the camera. \n\nEnd: front view, standing with both hands raised high above her head, body fully exposed, intense seductive gaze. \n\nVery sensual and provocative dance, smooth transitions, dramatic volumetric lighting, photorealistic, high detail."
+  neg: |-
+    static scene, no movement, throne stays golden, throne not changing, environment not changing, corridor remains, no cell transformation, queen moving or standing up, changed pose, sudden jump, no particles, weak transition, bad blending, deformed throne, unrealistic stone texture, bright lighting, no dream haze, sharp realistic scene, low detail transition, artifacts, blurry environment, inconsistent lighting
+
+- file: taniec_zlej_krolowej_2.png
+  backend: linux
+  duration: 3
+  pos: "3-second erotic I2V2I: Naked woman dances seductively in a dark dungeon. She starts on the left side of the frame and slowly moves to the right while dancing. Her movements are very sensual — deep hip rolls, body waves, back arching, caressing her skin. \n\nShe ends on the right side with both hands behind her head, posing provocatively. Slow, hypnotic and highly erotic dance, intense eye contact with camera, cinematic volumetric lighting, photorealistic."
+  neg: |-
+    static pose, minimal movement, stiff dance, awkward motion, bad anatomy, deformed body, extra limbs, blurry, low quality, clothing on body, censored, jerky movement, rubbery motion, changed pose too fast, no hip movement, looking away, modest dance, poor lighting
+
+- file: taniec_zlej_krolowej_3.png
+  backend: linux
+  duration: 3
+  pos: "4-second erotic I2V2I: Naked woman dances seductively in a dark dungeon. \n\nStart: hands behind head, provocative pose on the left side. \nShe slowly moves closer to the camera while dancing with intense hip movements, back arching and sensual body waves. \n\nEnd: Close medium shot (visible from knees up), standing with hands on hips, powerful and teasing stance, looking straight into the camera.\n\nSlow, hypnotic and very erotic dance, cinematic volumetric lighting, photorealistic, high detail."
+  neg: |-
+    static pose, minimal movement, stiff dance, bad anatomy, deformed body, extra limbs, blurry motion, low quality, jerky movement, rubbery motion, changed pose too fast, clothing, censored, looking away, modest pose, poor hip movement, bad framing, full body shot at the end, too far from camera
+
+- file: taniec_zlej_krolowej_4.png
+  backend: linux
+  duration: 4
+  pos: "4-second erotic I2V2I: Naked woman dances seductively in a dark dungeon. \n\nStart: standing frontally with hands on hips. \nShe performs slow, teasing hip movements and body waves, then gracefully turns and moves deeper into the dungeon while dancing. \n\nEnd: kneeling in the background, back to the camera, in a sensual arched pose. \n\nSmooth, highly provocative and feminine dance, intense sensuality, cinematic volumetric lighting, photorealistic."
+  neg: |-
+    static pose, minimal movement, stiff dance, bad anatomy, deformed body, extra limbs, blurry motion, jerky movement, rubbery motion, clothing, censored, sudden turn, bad transition, changed pose too fast, low quality, artifacts, poor hip movement, looking at camera in end frame, wrong position
+
+- file: taniec_zlej_krolowej_5.png
+  backend: linux
+  duration: 0
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- break: true
+  label: Taniec re-edukacyjny złej królowej
+
+- file: taniec_zlej_krolowej_1_ultra.png
+  backend: linux
+  duration: 5
+  pos: "5-second erotic I2V2I: Naked woman dances seductively in a dark dungeon. \n\nStart: back view. \nShe performs slow, sensual body rolls and hip movements, then gracefully turns to face the camera. \n\nEnd: front view, standing with both hands raised high above her head, body fully exposed, intense seductive gaze. \n\nVery sensual and provocative dance, smooth transitions, dramatic volumetric lighting, photorealistic, high detail."
+  neg: |-
+    static scene, no movement, throne stays golden, throne not changing, environment not changing, corridor remains, no cell transformation, queen moving or standing up, changed pose, sudden jump, no particles, weak transition, bad blending, deformed throne, unrealistic stone texture, bright lighting, no dream haze, sharp realistic scene, low detail transition, artifacts, blurry environment, inconsistent lighting
+
+- file: taniec_zlej_krolowej_2_ultra.png
+  backend: linux
+  duration: 3
+  pos: "3-second erotic I2V2I: Naked woman dances seductively in a dark dungeon. She starts on the left side of the frame and slowly moves to the right while dancing. Her movements are very sensual — deep hip rolls, body waves, back arching, caressing her skin. \n\nShe ends on the right side with both hands behind her head, posing provocatively. Slow, hypnotic and highly erotic dance, intense eye contact with camera, cinematic volumetric lighting, photorealistic."
+  neg: |-
+    static pose, minimal movement, stiff dance, awkward motion, bad anatomy, deformed body, extra limbs, blurry, low quality, clothing on body, censored, jerky movement, rubbery motion, changed pose too fast, no hip movement, looking away, modest dance, poor lighting
+
+- file: taniec_zlej_krolowej_3_ultra.png
+  backend: linux
+  duration: 3
+  pos: "4-second erotic I2V2I: Naked woman dances seductively in a dark dungeon. \n\nStart: hands behind head, provocative pose on the left side. \nShe slowly moves closer to the camera while dancing with intense hip movements, back arching and sensual body waves. \n\nEnd: Close medium shot (visible from knees up), standing with hands on hips, powerful and teasing stance, looking straight into the camera.\n\nSlow, hypnotic and very erotic dance, cinematic volumetric lighting, photorealistic, high detail."
+  neg: |-
+    static pose, minimal movement, stiff dance, bad anatomy, deformed body, extra limbs, blurry motion, low quality, jerky movement, rubbery motion, changed pose too fast, clothing, censored, looking away, modest pose, poor hip movement, bad framing, full body shot at the end, too far from camera
+
+- file: taniec_zlej_krolowej_4_ultra.png
+  backend: linux
+  duration: 4
+  pos: "4-second erotic I2V2I: Naked woman dances seductively in a dark dungeon. \n\nStart: standing frontally with hands on hips. \nShe performs slow, teasing hip movements and body waves, then gracefully turns and moves deeper into the dungeon while dancing. \n\nEnd: kneeling in the background, back to the camera, in a sensual arched pose. \n\nSmooth, highly provocative and feminine dance, intense sensuality, cinematic volumetric lighting, photorealistic."
+  neg: |-
+    static pose, minimal movement, stiff dance, bad anatomy, deformed body, extra limbs, blurry motion, jerky movement, rubbery motion, clothing, censored, sudden turn, bad transition, changed pose too fast, low quality, artifacts, poor hip movement, looking at camera in end frame, wrong position
+
+- file: taniec_zlej_krolowej_5_ultra.png
+  backend: linux
+  duration: 0
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- break: true
+  label: Taniec re-edukacyjny złej królowej (kopia)
+
 project_folder: C:\Users\abork\AppData\Local\CapCut\Videos\dungeon_team\film
+
 pic_flow:
 - type: one_image_many_prompts
-  name: model
+  name: usun tlo
   output_dir: C:\Users\abork\AppData\Local\CapCut\Videos\dungeon_team\models\Heroes
   global_suffix: ''
   image_slots:
@@ -77,6 +1168,9 @@ pic_flow:
   id: model
   source_dirs:
   - C:\Users\abork\AppData\Local\CapCut\Videos\dungeon_team\Heroes
+  crop_to_subject: false
+  pad_input_to_ratio: false
+
 - type: one_image_many_prompts
   name: Generator modeli_heroes
   output_dir: C:\Users\abork\AppData\Local\CapCut\Videos\dungeon_team\models\Heroes
@@ -170,6 +1264,9 @@ pic_flow:
   id: generator_modeli
   source_dirs:
   - C:\Users\abork\AppData\Local\CapCut\Videos\dungeon_team\models
+  crop_to_subject: false
+  pad_input_to_ratio: false
+
 - type: one_image_many_prompts
   name: models_undead_level
   source_dirs:
@@ -243,6 +1340,7 @@ pic_flow:
         cfg: 8
         denoise: 1
   id: models_undead_level
+
 - type: one_image_many_prompts
   name: models_monster_level
   source_dirs:
@@ -381,6 +1479,9 @@ pic_flow:
         cfg: 8
         denoise: 1
   id: models_undead_level_kopia
+  crop_to_subject: false
+  pad_input_to_ratio: false
+
 - type: one_image_many_prompts
   name: models_diablo_level
   source_dirs:
@@ -506,6 +1607,7 @@ pic_flow:
         cfg: 8
         denoise: 1
   id: models_monster_level_kopia
+
 - type: one_image_many_prompts
   name: models_dark_elves_level
   source_dirs:
@@ -553,6 +1655,7 @@ pic_flow:
         cfg: 8
         denoise: 1
   id: models_diablo_level_kopia
+
 - type: one_image_many_prompts
   name: models_vampire_level
   source_dirs:
@@ -665,6 +1768,9 @@ pic_flow:
         cfg: 8
         denoise: 1
   id: models_dark_elves_level_kopia
+  crop_to_subject: false
+  pad_input_to_ratio: false
+
 - type: one_image_many_prompts
   name: models_warrior_level
   source_dirs:
@@ -803,6 +1909,7 @@ pic_flow:
         cfg: 8
         denoise: 1
   id: models_vampire_level_kopia
+
 - type: one_image_many_prompts
   name: models_which_level
   source_dirs:
@@ -941,3 +2048,984 @@ pic_flow:
         cfg: 8
         denoise: 1
   id: models_warrior_level_kopia
+
+- type: fine_tune
+  name: undress sorcerer
+  ft_slots:
+  - id: 48972cb9-9155-4f44-990d-ef994f498f01
+    input_image: C:\Users\abork\AppData\Local\CapCut\Videos\dungeon_team\Heroes\czarodziejka.png
+    output_id: SlHBcnMXVPkYFjx0UE
+    custom_passes:
+    - name: ''
+      enabled: true
+      mode: i2i
+      ref_image: ''
+      positive: undress sorcerert make her totally naked
+      negative: change pose change scene
+      params:
+        steps: 30
+        cfg: 8
+        denoise: 1
+        controlnet_strength: 0.8
+        atlascloud_model: qwen/qwen-image-2.0-pro/edit
+    - name: ''
+      enabled: true
+      mode: atlascloud
+      ref_image: ''
+      positive: Remove the entire background and replace it with a perfectly solid pure white (#FFFFFF) background. Remove all shadows, cast shadows, drop shadows and reflections from the floor. Keep the subject completely intact with clean, sharp edges. The result must be a clean studio cutout on flat white — no gradients, no vignette, no ground plane, no texture.
+      negative: ''
+      params:
+        steps: 30
+        cfg: 8
+        denoise: 0.65
+        controlnet_strength: 0.8
+        atlascloud_model: qwen/qwen-image-2.0-pro/edit
+    - name: ''
+      enabled: true
+      mode: atlascloud
+      ref_image: ''
+      positive: Add dark forest background
+      negative: ''
+      params:
+        steps: 30
+        cfg: 8
+        denoise: 0.65
+        controlnet_strength: 0.8
+        atlascloud_model: qwen/qwen-image-2.0-pro/edit
+    carry_mask: false
+  output_dir: C:\Users\abork\AppData\Local\CapCut\Videos\dungeon_team\scene with models
+  global_suffix: ''
+  crop_to_subject: false
+  pad_input_to_ratio: false
+  id: undress_sorcerer
+
+- type: one_image_many_prompts
+  name: Repose sorceress
+  source_dirs:
+  - C:\Users\abork\AppData\Local\CapCut\Videos\dungeon_team\models\Heroes
+  image_slots:
+  - image: FhurYQRP1SnNodvO2W.png
+    prompts:
+    - id: p0000004
+      output_id: Rpr8chjNYx5jIACd7r
+      enabled: true
+      name: Baczność tyłem
+      positive: Change the woman's pose to a very formal, strict standing position from the back. Her full body is visible from feet to head. She stands perfectly straight and tall, back view, facing away from the camera. Feet joined together, legs straight, arms relaxed but formal at her sides with palms facing inward and fingers extended along her thighs. Shoulders back, excellent posture, head looking straight forward. Preserve her current outfit exactly as it is. Elegant and disciplined body alignment, realistic anatomy, high detail, photorealistic.
+      negative: different face, wrong identity, clothing change, outfit change, uniform added, background change, blurry, distorted anatomy, extra limbs, artifacts, low quality
+      note: 'Uwaga: model może zmieniać strój na mundur'
+      params:
+        steps: 30
+        cfg: 8
+        denoise: 1
+  output_dir: C:\Users\abork\AppData\Local\CapCut\Videos\dungeon_team\models\Heroes
+  global_suffix: ''
+  crop_to_subject: true
+  pad_input_to_ratio: true
+  id: repose_sorceress
+
+- type: paste_character
+  name: Insert sorceress on stage deterministic
+  paste_slots:
+  - id: 75089f07-aad8-4793-9d94-6914ba658826
+    output_id: 2f585106-da0b-4ff7-9256-1652522c9c83
+    scene_image: C:\Users\abork\AppData\Local\CapCut\Videos\dungeon_team\Scenes\Main_entrance.jpg
+    characters:
+    - model_image: C:\Users\abork\AppData\Local\CapCut\Videos\dungeon_team\models\Heroes\Rpr8chjNYx5jIACd7r.png
+      top_pct: 32.0
+      bottom_pct: 95.0
+      x_center_pct: 50.0
+      erode_px: 3
+      blur_px: 2
+      edge_blend_enabled: false
+    scene_blend_enabled: true
+    sb_override: null
+    custom_passes: []
+  - id: 7cdcbf59-6bf4-424c-9721-64e270467cbb
+    output_id: 614bd4c9-b018-4661-a717-3de798f7b58e
+    scene_image: C:\Users\abork\AppData\Local\CapCut\Videos\dungeon_team\Scenes\Main_entrance.jpg
+    characters:
+    - model_image: C:\Users\abork\AppData\Local\CapCut\Videos\dungeon_team\models\Heroes\t51fOMNJuszxHN7r8U.png
+      top_pct: 38.0
+      bottom_pct: 66.0
+      x_center_pct: 50.0
+      erode_px: 3
+      blur_px: 2
+      edge_blend_enabled: false
+    scene_blend_enabled: true
+    sb_override: null
+    custom_passes: []
+  - id: 4cf7a549-f4cc-4332-971b-23559584c80e
+    output_id: b9462ed6-df2c-4873-96bd-3b68bd38de36
+    scene_image: C:\Users\abork\AppData\Local\CapCut\Videos\dungeon_team\Scenes\eCl4VHhk39n0bVdCqM.png
+    characters:
+    - model_image: C:\Users\abork\AppData\Local\CapCut\Videos\dungeon_team\models\Heroes\7f98e50c-63bc-4a1e-a83e-297071da30fd.png
+      top_pct: 46.0
+      bottom_pct: 96.0
+      x_center_pct: 50.0
+      erode_px: 3
+      blur_px: 2
+      edge_blend_enabled: true
+    scene_blend_enabled: true
+    sb_override: null
+    custom_passes: []
+  - id: 10fe6ea0-9901-4334-aadf-8ef1e2bc9c10
+    output_id: 26d31b71-4932-4979-af54-256f55719f3e
+    scene_image: C:\Users\abork\AppData\Local\CapCut\Videos\dungeon_team\Scenes\wI8y3vKoINUo4UDTyr.png
+    characters:
+    - model_image: C:\Users\abork\AppData\Local\CapCut\Videos\dungeon_team\models\Heroes\7f98e50c-63bc-4a1e-a83e-297071da30fd.png
+      top_pct: 34.0
+      bottom_pct: 85.0
+      x_center_pct: 50.0
+      erode_px: 3
+      blur_px: 2
+      edge_blend_enabled: true
+    scene_blend_enabled: true
+    sb_override: null
+    custom_passes:
+    - enabled: true
+      name: ''
+      positive: fix the junction between legs
+      negative: ''
+      denoise: 0.6
+      steps: 30
+      cfg: 8
+  - id: caf84dc2-689f-481c-bb9d-b9b2495f3700
+    output_id: e03d97c6-bf2f-44b7-9d38-e380f125b044
+    scene_image: C:\Users\abork\AppData\Local\CapCut\Videos\dungeon_team\Scenes\xR74sitLGqBwuzhk1v.png
+    characters:
+    - model_image: C:\Users\abork\AppData\Local\CapCut\Videos\dungeon_team\models\Heroes\7f98e50c-63bc-4a1e-a83e-297071da30fd.png
+      top_pct: 42.0
+      bottom_pct: 95.0
+      x_center_pct: 50.0
+      erode_px: 3
+      blur_px: 2
+      edge_blend_enabled: true
+    scene_blend_enabled: true
+    sb_override: null
+    custom_passes: []
+  edge_blend_enabled: true
+  edge_blend_px: 15
+  edge_blend_cfg: null
+  edge_blend_denoise: null
+  edge_blend_prompts:
+  - id: p0000021
+    category: system
+    name: Edge Blend — krawędzie postaci
+    note: Pass 1 — inpainting w strefie maski (15px wokół sylwetki). Używany z ci_1ref (scena+maska + ref postaci).
+    positive: |-
+      You have two inputs: image 1 is the composited scene, image 2 is the original reference character. Using image 2 as reference, repair and improve the character in image 1. Fix all of the following:
+
+      1. EDGES: Remove all hard cutout edges, halos and white fringing around the character's silhouette. Blend her edges naturally into the background — match local lighting, color temperature and depth of field.
+
+      2. BODY RECONSTRUCTION: Where parts of the character's body are blurry, incomplete, distorted or missing (e.g. blurry fingers, cut-off limbs, broken anatomy) — reconstruct them correctly using image 2 as the reference. Restore sharp, realistic anatomy.
+
+      3. SKIN AND DETAIL: Match the character's skin tone, sharpness and detail level to image 2. Remove any softness or blur on the character's body.
+
+      Do not move the character. Do not change her pose or position. Do not modify the background outside the character area. Preserve the character's face, clothing and identity.
+    negative: changed pose, moved character, different face, different clothing, background change, artifacts, distorted anatomy, color shift on character body, overexposed, underexposed, blurry fingers, missing limbs, broken anatomy
+    params:
+      steps: 30
+      cfg: 8
+      denoise: 1
+    enabled: true
+  scene_blend_enabled: true
+  scene_blend_cfg: null
+  scene_blend_denoise: 0.8
+  scene_blend_prompts:
+  - id: p0000022
+    category: system
+    name: Scene Blend — cienie i spójność sceny
+    note: Pass 2 — pełny obrazek, niski denoise. Dodaje cienie i wyrównuje całą scenę.
+    positive: 'Enhance the realism of the full composited scene. Add a natural cast shadow beneath the composited character''s feet and body — match the exact direction, length, softness and intensity of the shadows already cast by the other people in the scene. Use the existing shadows as a reference: if other figures cast long soft shadows to one side, the composited character must cast an identical shadow in the same direction with the same quality. Add subtle ambient occlusion where the character meets the floor or nearby surfaces. Match the character''s overall color grading, brightness and contrast to the other figures in the scene. Make the result look like a single unified photograph taken with one camera. Do not move or change the character''s position, pose, face or clothing. Do not alter the background structure or change the other people already in the scene.'
+    negative: changed pose, moved character, different face, different clothing, background restructured, artifacts, removed character, new people added, overexposed, underexposed, blurry, inconsistent shadow direction, shadow pointing wrong way, mismatched shadow length, no shadow under feet, floating character
+    params:
+      steps: 30
+      cfg: 8
+      denoise: 0.4
+    enabled: true
+  output_dir: C:\Users\abork\AppData\Local\CapCut\Videos\dungeon_team\scene with models
+  global_suffix: ''
+  crop_to_subject: false
+  pad_input_to_ratio: false
+  id: insert_on_entrance_level
+
+- type: one_image_many_prompts
+  name: Repose evil queen
+  source_dirs:
+  - C:\Users\abork\AppData\Local\CapCut\Videos\dungeon_team\models\evil_queen
+  image_slots:
+  - image: ComfyUI_00386_.png
+    prompts:
+    - id: p0000002
+      output_id: U2GIZBlxoABvTUnSdy
+      enabled: true
+      name: Ręce pod boki, rozstawione nogi
+      positive: 'Repose the woman: Her full body is visible from feet to head. Full frontal view, standing confidently facing the camera. Left leg stepped forward, right leg straight behind, hips cocked to the side. Both hands resting on her hips with elbows out, strong power pose. She looks straight at the viewer with a bold, defiant, provocative and seductive expression, intense eye contact, slightly raised chin. Confident and challenging attitude, sharp detailed face, realistic hands and body proportions, cinematic lighting, high detail'
+      negative: different face, wrong identity, changed facial features, altered eye color, different nose shape, different lip shape, different skin tone, clothing change, background change, blurry face, distorted face, deformed face, asymmetrical face, multiple faces, extra limbs, artifacts, low quality, bad anatomy
+      note: ''
+      params:
+        steps: 30
+        cfg: 8
+        denoise: 1
+    - id: p0000004
+      output_id: GlXsfyR8r7wAFSZjWR
+      enabled: true
+      name: Baczność tyłem
+      positive: Change the woman's pose to a very formal, strict standing position from the back. Her full body is visible from feet to head. She stands perfectly straight and tall, back view, facing away from the camera. Feet joined together, legs straight, arms relaxed but formal at her sides with palms facing inward and fingers extended along her thighs. Shoulders back, excellent posture, head looking straight forward. Preserve her current outfit exactly as it is. Elegant and disciplined body alignment, realistic anatomy, high detail, photorealistic.
+      negative: different face, wrong identity, clothing change, outfit change, uniform added, background change, blurry, distorted anatomy, extra limbs, artifacts, low quality
+      note: 'Uwaga: model może zmieniać strój na mundur'
+      params:
+        steps: 30
+        cfg: 8
+        denoise: 1
+    - id: p0000005
+      output_id: 1BfGNiJVLEAt0f6j4y
+      enabled: true
+      name: Rozchylone nogi, ręce w górze
+      positive: 'Edit the woman''s pose: Her full body is visible from feet to head. Change her stance so she is standing with her legs spread wide apart (shoulder-width or wider) and both arms raised straight up above her head. Her hands can be either clasped together or apart, palms facing forward. Keep her exact body proportions, torso position, head orientation, facial expression, hair, clothing, and all other details unchanged. Only modify the position of her legs and arms. Maintain realistic anatomy, natural balance, correct shoulder and hip positioning. Photorealistic, seamless edit, high detail, perfect body proportions.'
+      negative: different face, wrong identity, changed facial features, clothing change, background change, blurry face, distorted anatomy, extra limbs, artifacts, low quality, bad anatomy
+      note: ''
+      params:
+        steps: 30
+        cfg: 8
+        denoise: 1
+    - id: p0000006
+      output_id: jPjesIFXtpFno5gBPS
+      enabled: true
+      name: Pochylona przodem, ręce na udach
+      positive: 'Change the woman''s pose: Her full body is visible from feet to head. Her full body is visible from feet to head. She is now leaning forward at the waist, with her upper body tilted toward the camera. Both of her hands are resting on her thighs (palms on top of thighs or fingers gripping them). She is looking directly at the camera with a strong eye contact. Keep her exact facial expression, head angle (only slight adjustment for looking at camera), hair, clothing, body proportions, lighting, and background unchanged. Only modify the torso lean, arm position, and hand placement. Maintain realistic anatomy, natural spine curvature, balanced weight distribution, and correct shoulder positioning. Photorealistic, seamless edit, high detail, perfect proportions.'
+      negative: different face, wrong identity, changed facial features, clothing change, background change, blurry face, distorted anatomy, unnatural spine, extra limbs, artifacts, low quality
+      note: ''
+      params:
+        steps: 30
+        cfg: 8
+        denoise: 1
+    - id: p0000007
+      output_id: VQb3KiWPJ7mYDPxnZk
+      enabled: true
+      name: Stoi przodem, ręce za głową
+      positive: 'Change the woman''s pose: Her full body is visible from feet to head. She is now standing with her legs spread wide apart (feet significantly wider than shoulder width). Both hands are raised and placed behind her head, fingers interlocked or resting on the back of her head, elbows pointing outwards. Keep her exact torso position, upper body orientation, facial expression, head direction, hair, clothing, lighting, and background completely unchanged. Only modify the leg position (wide stance) and arm/hand position. Maintain realistic anatomy, natural balance, correct hip alignment, shoulder positioning and muscle tension. Photorealistic, seamless edit, high detail, perfect body proportions.'
+      negative: different face, wrong identity, changed facial features, clothing change, background change, blurry face, distorted anatomy, extra limbs, artifacts, low quality
+      note: ''
+      params:
+        steps: 30
+        cfg: 8
+        denoise: 1
+  - image: GlXsfyR8r7wAFSZjWR.png
+    prompts:
+    - id: p0000010
+      output_id: 8IQeqFp8sErS9ZGezh
+      enabled: true
+      name: Klęczy tyłem
+      positive: Repose the woman into a strict kneeling position seen from behind. Her full body is visible from feet to head. Back view, kneeling upright on both knees with her back to the camera, spine straight, shoulders back, head facing forward. Arms relaxed downward with hands resting on her thighs or lightly touching the back of her legs. Weight resting on her heels, natural and graceful kneeling posture. Preserve the exact same clothing and outfit as in the original image — do not change or replace any clothes. Highly detailed body, realistic skin and fabric, cinematic lighting
+      negative: different face, wrong identity, clothing change, outfit change, front view, standing pose, background change, blurry, distorted anatomy, extra limbs, artifacts, low quality
+      note: 'Uwaga: możliwy problem z rozmiarem postaci'
+      params:
+        steps: 30
+        cfg: 8
+        denoise: 1
+  output_dir: C:\Users\abork\AppData\Local\CapCut\Videos\dungeon_team\models\evil_queen
+  global_suffix: ''
+  crop_to_subject: true
+  pad_input_to_ratio: true
+  id: repose_evil_queen
+
+- type: paste_character
+  name: Insert evil queen
+  paste_slots:
+  - id: 53055bf3-527e-4b05-a600-f6896e0d60cb
+    output_id: 20cb34d8-779e-471f-bf55-b8bb1245c7fc
+    scene_image: C:\Users\abork\AppData\Local\CapCut\Videos\dungeon_team\Scenes\ComfyUI_00386_.png
+    characters:
+    - model_image: C:\Users\abork\AppData\Local\CapCut\Videos\dungeon_team\models\evil_queen\1BfGNiJVLEAt0f6j4y.png
+      top_pct: 9.0
+      bottom_pct: 86.0
+      x_center_pct: 34.0
+      erode_px: 3
+      blur_px: 2
+      edge_blend_enabled: true
+    scene_blend_enabled: true
+    sb_override: null
+    custom_passes: []
+  - id: 416f3252-a6ab-4b48-82c8-30a211888c59
+    output_id: fe9c18c4-ea4a-4008-9ff0-439b11e5c62e
+    scene_image: C:\Users\abork\AppData\Local\CapCut\Videos\dungeon_team\Scenes\ComfyUI_00386_.png
+    characters:
+    - model_image: C:\Users\abork\AppData\Local\CapCut\Videos\dungeon_team\models\evil_queen\GlXsfyR8r7wAFSZjWR.png
+      top_pct: 9.0
+      bottom_pct: 86.0
+      x_center_pct: 41.0
+      erode_px: 3
+      blur_px: 2
+      edge_blend_enabled: true
+    scene_blend_enabled: true
+    sb_override: null
+    custom_passes: []
+  - id: 08b558f1-4dde-4ca6-abec-81c92eda4b57
+    output_id: 37074292-5afc-4802-8f04-09f41b6f98b0
+    scene_image: C:\Users\abork\AppData\Local\CapCut\Videos\dungeon_team\Scenes\ComfyUI_00386_.png
+    characters:
+    - model_image: C:\Users\abork\AppData\Local\CapCut\Videos\dungeon_team\models\evil_queen\U2GIZBlxoABvTUnSdy.png
+      top_pct: 15.0
+      bottom_pct: 100.0
+      x_center_pct: 41.0
+      erode_px: 3
+      blur_px: 2
+      edge_blend_enabled: true
+    scene_blend_enabled: true
+    sb_override: null
+    custom_passes: []
+  - id: b8acbb12-3cb2-45de-8170-fa8ea0db87b2
+    output_id: 4064248e-5a40-4f4d-972f-0de601d73142
+    scene_image: C:\Users\abork\AppData\Local\CapCut\Videos\dungeon_team\Scenes\ComfyUI_00386_.png
+    characters:
+    - model_image: C:\Users\abork\AppData\Local\CapCut\Videos\dungeon_team\models\evil_queen\VQb3KiWPJ7mYDPxnZk.png
+      top_pct: 6.0
+      bottom_pct: 92.0
+      x_center_pct: 69.0
+      erode_px: 3
+      blur_px: 2
+      edge_blend_enabled: true
+    scene_blend_enabled: true
+    sb_override: null
+    custom_passes: []
+  - id: 437651a6-6dfa-4b28-9ec9-807cff7deb1f
+    output_id: 5c37c6f8-870d-4fcd-b7b0-493d68628e39
+    scene_image: C:\Users\abork\AppData\Local\CapCut\Videos\dungeon_team\Scenes\ComfyUI_00386_.png
+    characters:
+    - model_image: C:\Users\abork\AppData\Local\CapCut\Videos\dungeon_team\models\evil_queen\8IQeqFp8sErS9ZGezh.png
+      top_pct: 35.0
+      bottom_pct: 79.0
+      x_center_pct: 49.0
+      erode_px: 3
+      blur_px: 2
+      edge_blend_enabled: true
+    scene_blend_enabled: true
+    sb_override: null
+    custom_passes: []
+  edge_blend_enabled: true
+  edge_blend_px: 15
+  edge_blend_cfg: null
+  edge_blend_denoise: null
+  edge_blend_prompts:
+  - id: p0000021
+    category: system
+    name: Edge Blend — krawędzie postaci
+    note: Pass 1 — inpainting w strefie maski (15px wokół sylwetki). Używany z ci_1ref (scena+maska + ref postaci).
+    positive: |-
+      You have two inputs: image 1 is the composited scene, image 2 is the original reference character. Using image 2 as reference, repair and improve the character in image 1. Fix all of the following:
+
+      1. EDGES: Remove all hard cutout edges, halos and white fringing around the character's silhouette. Blend her edges naturally into the background — match local lighting, color temperature and depth of field.
+
+      2. BODY RECONSTRUCTION: Where parts of the character's body are blurry, incomplete, distorted or missing (e.g. blurry fingers, cut-off limbs, broken anatomy) — reconstruct them correctly using image 2 as the reference. Restore sharp, realistic anatomy.
+
+      3. SKIN AND DETAIL: Match the character's skin tone, sharpness and detail level to image 2. Remove any softness or blur on the character's body.
+
+      Do not move the character. Do not change her pose or position. Do not modify the background outside the character area. Preserve the character's face, clothing and identity.
+    negative: changed pose, moved character, different face, different clothing, background change, artifacts, distorted anatomy, color shift on character body, overexposed, underexposed, blurry fingers, missing limbs, broken anatomy
+    params:
+      steps: 30
+      cfg: 8
+      denoise: 1
+    enabled: true
+  scene_blend_enabled: true
+  scene_blend_cfg: null
+  scene_blend_denoise: null
+  scene_blend_prompts:
+  - id: p0000022
+    category: system
+    name: Scene Blend — cienie i spójność sceny
+    note: Pass 2 — pełny obrazek, niski denoise. Dodaje cienie i wyrównuje całą scenę.
+    positive: 'Enhance the realism of the full composited scene. Add a natural cast shadow beneath the composited character''s feet and body — match the exact direction, length, softness and intensity of the shadows already cast by the other people in the scene. Use the existing shadows as a reference: if other figures cast long soft shadows to one side, the composited character must cast an identical shadow in the same direction with the same quality. Add subtle ambient occlusion where the character meets the floor or nearby surfaces. Match the character''s overall color grading, brightness and contrast to the other figures in the scene. Make the result look like a single unified photograph taken with one camera. Do not move or change the character''s position, pose, face or clothing. Do not alter the background structure or change the other people already in the scene.'
+    negative: changed pose, moved character, different face, different clothing, background restructured, artifacts, removed character, new people added, overexposed, underexposed, blurry, inconsistent shadow direction, shadow pointing wrong way, mismatched shadow length, no shadow under feet, floating character
+    params:
+      steps: 30
+      cfg: 8
+      denoise: 0.4
+    enabled: true
+  output_dir: C:\Users\abork\AppData\Local\CapCut\Videos\dungeon_team\scene with models
+  global_suffix: ''
+  crop_to_subject: false
+  pad_input_to_ratio: false
+  id: insert_evil_queen
+
+- type: character_insert
+  name: Repose evil queen on scene
+  scene_dirs:
+  - C:\Users\abork\AppData\Local\CapCut\Videos\dungeon_team\Scenes
+  characters_dirs:
+  - C:\Users\abork\AppData\Local\CapCut\Videos\dungeon_team\models\evil_queen
+  scene_slots:
+  - scene_image: ComfyUI_00386_.png
+    character_images:
+    - VQb3KiWPJ7mYDPxnZk.png
+    prompts:
+    - id: tmp_ci_1781459950006
+      output_id: 0SFdRuXakj12jTf0OS
+      enabled: true
+      name: Lay on ground
+      positive: Lay woman on ground, eyes closed
+      negative: ''
+      note: ''
+      params:
+        steps: 30
+        cfg: 8
+        denoise: 1
+  output_dir: C:\Users\abork\AppData\Local\CapCut\Videos\dungeon_team\scene with models
+  global_suffix: ''
+  crop_to_subject: false
+  pad_input_to_ratio: false
+  id: repose_evil_queen_2
+
+- type: one_image_many_prompts
+  name: Removing sorceress
+  source_dirs:
+  - C:\Users\abork\AppData\Local\CapCut\Videos\dungeon_team\scene with models
+  image_slots:
+  - image: barracks.png
+    prompts:
+    - id: p0000059
+      output_id: wI8y3vKoINUo4UDTyr
+      enabled: true
+      name: usun czarodziejke
+      positive: Remove sorceress from image
+      negative: background change
+      note: ''
+      params:
+        steps: 30
+        cfg: 8
+        denoise: 1
+  - image: city.png
+    prompts:
+    - id: p0000059
+      output_id: xR74sitLGqBwuzhk1v
+      enabled: true
+      name: usun czarodziejke
+      positive: Remove sorceress from image
+      negative: background change
+      note: ''
+      params:
+        steps: 30
+        cfg: 8
+        denoise: 1
+  - image: wioska.png
+    prompts:
+    - id: p0000059
+      output_id: eCl4VHhk39n0bVdCqM
+      enabled: true
+      name: usun czarodziejke
+      positive: Remove sorceress from image
+      negative: background change
+      note: ''
+      params:
+        steps: 30
+        cfg: 8
+        denoise: 1
+  output_dir: C:\Users\abork\AppData\Local\CapCut\Videos\dungeon_team\Scenes
+  global_suffix: ''
+  crop_to_subject: false
+  pad_input_to_ratio: false
+  id: removing_sorceress
+
+- type: fine_tune
+  name: TEST budowy fotorealizmu
+  ft_slots:
+  - id: cc863ce1-e733-49b0-aa49-ee2d139cfaee
+    input_image: C:\Users\abork\AppData\Local\CapCut\Videos\dungeon_team\film\taniec_zlej_krolowej_4.png
+    output_id: A8y199dMuIAxy1wSAE
+    custom_passes:
+    - name: Poprawa anatomii
+      enabled: true
+      mode: atlascloud
+      ref_image: ''
+      positive: |-
+        Preserve any existing skin details, tattoos, scars, or markings exactly as they appear. Do not alter or remove existing skin texture. Do not alter composition or crop. Full body visible, unchanged pose. Realistic detailed nipples, natural breast shape with realistic skin texture. Remove any flat or smooth areas on chest — add full anatomical detail.
+        Subtle, mild skin texture enhancement only. Natural smooth skin with minimal pores visible. Do not over-enhance or add excessive skin detail.
+      negative: ''
+      params:
+        steps: 30
+        cfg: 8
+        denoise: 0.65
+        controlnet_strength: 0.8
+        atlascloud_model: alibaba/wan-2.7-pro/image-edit
+      pass_id: '0'
+    - name: Pełny fotorealizm
+      enabled: true
+      mode: atlascloud
+      ref_image: ''
+      positive: 'Enhance the overall photorealism of the entire image to the highest possible level while keeping the scene 100% unchanged. Dramatically improve skin texture, skin pores, micro skin details, realistic subsurface scattering, natural skin imperfections, realistic eye details, hair strands, fabric texture and material details. Add natural cinematic lighting, realistic shadows, subtle ambient occlusion and depth. Increase overall sharpness, clarity and photographic quality to look like a real high-end photo taken with a professional camera. Strictly preserve everything else: Do not change the scene, background, lighting direction or atmosphere. Do not change camera position, angle or perspective. Do not change any person''s pose, position or expression. Do not change any clothing, outfit, accessories or fabric. Do not add or remove any objects. Only enhance photorealism, texture quality and natural details. Make it look like an ultra-realistic photograph, 8k, extremely detailed, photorealistic, masterpiece, best quality'
+      negative: cartoon, illustration, painting, drawing, 3d render, cgi, plastic skin, waxy skin, doll face, anime, stylized, deformed, mutated, extra limbs, changed pose, moved camera, different angle, clothing change, outfit change, new objects, added elements, removed elements, different lighting, color grading change, overexposed, underexposed, artifacts, blur, low quality, bad anatomy
+      params:
+        steps: 30
+        cfg: 8
+        denoise: 1
+        controlnet_strength: 0.8
+      pass_id: '1'
+    - name: Pełny fotorealizm 2
+      enabled: true
+      selected: true
+      pass_id: f5esqits
+      mode: atlascloud
+      ref_image: ''
+      positive: Enhance the overall photorealism of the entire image to the highest possible level while keeping the scene 100% unchanged. Dramatically improve skin texture, skin pores, micro skin details, realistic subsurface scattering, natural skin imperfections, realistic eye details, hair strands, fabric texture and material details. Add natural cinematic lighting, realistic shadows, subtle ambient occlusion and depth. Increase overall sharpness, clarity and photographic quality to look like a real high-end photo taken with a professional camera. Strictly preserve everything else. Do not change the scene, background, lighting direction or atmosphere. Do not change camera position, angle or perspective. Do not change any person's pose, position or expression. Do not change any clothing, outfit, accessories or fabric. Do not add or remove any objects. Only enhance photorealism, texture quality and natural details. Make it look like an ultra-realistic photograph, 8k, extremely detailed, photorealistic, masterpiece, best quality
+      negative: cartoon, illustration, painting, drawing, 3d render, cgi, plastic skin, waxy skin, doll face, anime, stylized, deformed, mutated, extra limbs, changed pose, moved camera, different angle, clothing change, outfit change, new objects, added elements, removed elements, different lighting, color grading change, overexposed, underexposed, artifacts, blur, low quality, bad anatomy
+      params:
+        steps: 30
+        cfg: 8
+        denoise: 1
+        controlnet_strength: 0.8
+        atlascloud_model: alibaba/wan-2.7-pro/image-edit
+        wan_size: 2K
+        thinking_mode: true
+        seed: -1
+    - name: Preserve face
+      enabled: true
+      mode: i2i_ref
+      ref_image: C:\Users\abork\AppData\Local\CapCut\Videos\dungeon_team\film\zla_krolowa_zoom.png
+      positive: |-
+        start with Picture 1 as the base image, keeping its lighting, environment, and background. remove the head from Picture 1 completely and replace it with the head from Picture 2, strictly preserving the hair, eye color, and nose structure of Picture 2. adapt the head position and rotation from Picture 2 to match the angle and perspective of Picture 1, blend naturally with the neck and shoulders of Picture 1. high quality, sharp details, 4k
+
+        head swap from Image 2 to Image 1, keep all facial details and hair from Image 2, blend naturally with Image 1's body, remove all hair of Image 1 and replace by hair from Image 2, keep the same expression and head proportion as in Image 1
+      negative: |-
+        no skin tone mismatch, no different face, no blurry face, no distorted features, no change outside the mask
+
+        different face, wrong identity, changed facial features, altered eye color, different nose shape, different lip shape, different skin tone, face outside red area, changes outside masked region, body changes, hair changes, background changes, clothing changes, blurry face, distorted face, deformed face, asymmetrical face, multiple faces, extra faces, artifacts, low quality, overexposed skin, color mismatch, skin tone mismatch, unnatural blending, visible mask edges, sharp transition, seam visible
+      params:
+        steps: 30
+        cfg: 8
+        denoise: 1
+        controlnet_strength: 0.8
+      pass_id: '2'
+    carry_mask: true
+  - id: 0b20a8e9-8869-4105-ab5b-04980ee6898c
+    input_image: C:\Users\abork\AppData\Local\CapCut\Videos\dungeon_team\film\taniec_zlej_krolowej_3.png
+    output_id: jaQ8A3uwSqxrA7SUja
+    custom_passes:
+    - name: Poprawa anatomii
+      enabled: true
+      mode: atlascloud
+      ref_image: ''
+      positive: Add realistic nipples
+      negative: ''
+      params:
+        steps: 30
+        cfg: 8
+        denoise: 0.65
+        controlnet_strength: 0.8
+        atlascloud_model: alibaba/wan-2.7-pro/image-edit
+      pass_id: '0'
+    - name: Pełny fotorealizm
+      enabled: true
+      mode: atlascloud
+      ref_image: ''
+      positive: 'Enhance the overall photorealism of the entire image while keeping the scene 100% unchanged. Naturally improve skin texture, skin pores, subtle skin imperfections, realistic eye details, hair strands, fabric texture and material details. Add natural cinematic lighting, realistic shadows and depth. Increase sharpness and photographic quality to look like a real photo taken with a professional camera. Strictly preserve everything else: do not change the scene, background, lighting direction or atmosphere. Do not change camera position, angle or perspective. Do not change any person''s pose, position or expression. Do not change any clothing, outfit or accessories. Only enhance photorealism and natural details.'
+      negative: cartoon, illustration, painting, drawing, 3d render, cgi, plastic skin, waxy skin, doll face, anime, stylized, deformed, mutated, extra limbs, changed pose, moved camera, different angle, clothing change, outfit change, new objects, added elements, removed elements, different lighting, color grading change, overexposed, underexposed, artifacts, blur, low quality, bad anatomy
+      params:
+        steps: 30
+        cfg: 8
+        denoise: 1
+        controlnet_strength: 0.8
+        atlascloud_model: qwen/qwen-image-2.0-pro/edit
+        wan_size: 2K
+        thinking_mode: false
+        seed: -1
+      pass_id: '1'
+    - name: Preserve face
+      enabled: true
+      mode: i2i_ref
+      ref_image: C:\Users\abork\AppData\Local\CapCut\Videos\dungeon_team\film\zla_krolowa_zoom.png
+      positive: |-
+        start with Picture 1 as the base image, keeping its lighting, environment, and background. remove the head from Picture 1 completely and replace it with the head from Picture 2, strictly preserving the hair, eye color, and nose structure of Picture 2. adapt the head position and rotation from Picture 2 to match the angle and perspective of Picture 1, blend naturally with the neck and shoulders of Picture 1. high quality, sharp details, 4k
+
+        head swap from Image 2 to Image 1, keep all facial details and hair from Image 2, blend naturally with Image 1's body, remove all hair of Image 1 and replace by hair from Image 2, keep the same expression and head proportion as in Image 1
+      negative: |-
+        no skin tone mismatch, no different face, no blurry face, no distorted features, no change outside the mask
+
+        different face, wrong identity, changed facial features, altered eye color, different nose shape, different lip shape, different skin tone, face outside red area, changes outside masked region, body changes, hair changes, background changes, clothing changes, blurry face, distorted face, deformed face, asymmetrical face, multiple faces, extra faces, artifacts, low quality, overexposed skin, color mismatch, skin tone mismatch, unnatural blending, visible mask edges, sharp transition, seam visible
+      params:
+        steps: 30
+        cfg: 8
+        denoise: 1
+        controlnet_strength: 0.8
+      pass_id: '2'
+    carry_mask: true
+  - id: 509f9335-30fb-4229-8a7b-3f8e2756fa20
+    input_image: C:\Users\abork\AppData\Local\CapCut\Videos\dungeon_team\film\taniec_zlej_krolowej_2.png
+    output_id: hqAR8X8z4Ix7msjl27
+    custom_passes:
+    - name: Poprawa anatomii
+      enabled: true
+      selected: true
+      pass_id: 7p0w01st
+      mode: atlascloud
+      ref_image: ''
+      positive: |-
+        Preserve any existing skin details, tattoos, scars, or markings exactly as they appear. Do not alter or remove existing skin texture. Do not alter composition or crop. Full body visible, unchanged pose. Realistic detailed nipples, natural breast shape with realistic skin texture. Remove any flat or smooth areas on chest — add full anatomical detail.
+        Subtle, mild skin texture enhancement only. Natural smooth skin with minimal pores visible. Do not over-enhance or add excessive skin detail.
+      negative: ''
+      params:
+        steps: 30
+        cfg: 8
+        denoise: 1
+        controlnet_strength: 0.8
+        atlascloud_model: alibaba/wan-2.7-pro/image-edit
+        wan_size: 2K
+        thinking_mode: true
+        seed: -1
+    - name: Pełny fotorealizm
+      enabled: true
+      mode: atlascloud
+      ref_image: ''
+      positive: 'Enhance the overall photorealism of the entire image while keeping the scene 100% unchanged. Naturally improve skin texture, skin pores, subtle skin imperfections, realistic eye details, hair strands, fabric texture and material details. Add natural cinematic lighting, realistic shadows and depth. Increase sharpness and photographic quality to look like a real photo taken with a professional camera. Strictly preserve everything else: do not change the scene, background, lighting direction or atmosphere. Do not change camera position, angle or perspective. Do not change any person''s pose, position or expression. Do not change any clothing, outfit or accessories. Only enhance photorealism and natural details.'
+      negative: cartoon, illustration, painting, drawing, 3d render, cgi, plastic skin, waxy skin, doll face, anime, stylized, deformed, mutated, extra limbs, changed pose, moved camera, different angle, clothing change, outfit change, new objects, added elements, removed elements, different lighting, color grading change, overexposed, underexposed, artifacts, blur, low quality, bad anatomy
+      params:
+        steps: 30
+        cfg: 8
+        denoise: 1
+        controlnet_strength: 0.8
+        atlascloud_model: alibaba/wan-2.7-pro/image-edit
+        wan_size: 2K
+        thinking_mode: true
+        seed: -1
+      pass_id: '0'
+    - name: Preserve face
+      enabled: true
+      mode: i2i_ref
+      ref_image: C:\Users\abork\AppData\Local\CapCut\Videos\dungeon_team\film\zla_krolowa_zoom.png
+      positive: |-
+        start with Picture 1 as the base image, keeping its lighting, environment, and background. remove the head from Picture 1 completely and replace it with the head from Picture 2, strictly preserving the hair, eye color, and nose structure of Picture 2. adapt the head position and rotation from Picture 2 to match the angle and perspective of Picture 1, blend naturally with the neck and shoulders of Picture 1. high quality, sharp details, 4k
+
+        head swap from Image 2 to Image 1, keep all facial details and hair from Image 2, blend naturally with Image 1's body, remove all hair of Image 1 and replace by hair from Image 2, keep the same expression and head proportion as in Image 1
+      negative: |-
+        no skin tone mismatch, no different face, no blurry face, no distorted features, no change outside the mask
+
+        different face, wrong identity, changed facial features, altered eye color, different nose shape, different lip shape, different skin tone, face outside red area, changes outside masked region, body changes, hair changes, background changes, clothing changes, blurry face, distorted face, deformed face, asymmetrical face, multiple faces, extra faces, artifacts, low quality, overexposed skin, color mismatch, skin tone mismatch, unnatural blending, visible mask edges, sharp transition, seam visible
+      params:
+        steps: 30
+        cfg: 8
+        denoise: 1
+        controlnet_strength: 0.8
+      selected: false
+      pass_id: '1'
+    carry_mask: true
+  - id: 2dc4516b-7125-46ea-912e-4ad7925a2029
+    input_image: C:\Users\abork\AppData\Local\CapCut\Videos\dungeon_team\film\taniec_zlej_krolowej_1.png
+    output_id: ro63prSRpcKjwg5nN1
+    custom_passes:
+    - name: Pełny fotorealizm
+      enabled: true
+      mode: atlascloud
+      ref_image: ''
+      positive: 'Enhance the overall photorealism of the entire image while keeping the scene 100% unchanged. Naturally improve skin texture, skin pores, subtle skin imperfections, realistic eye details, hair strands, fabric texture and material details. Add natural cinematic lighting, realistic shadows and depth. Increase sharpness and photographic quality to look like a real photo taken with a professional camera. Strictly preserve everything else: do not change the scene, background, lighting direction or atmosphere. Do not change camera position, angle or perspective. Do not change any person''s pose, position or expression. Do not change any clothing, outfit or accessories. Only enhance photorealism and natural details.'
+      negative: cartoon, illustration, painting, drawing, 3d render, cgi, plastic skin, waxy skin, doll face, anime, stylized, deformed, mutated, extra limbs, changed pose, moved camera, different angle, clothing change, outfit change, new objects, added elements, removed elements, different lighting, color grading change, overexposed, underexposed, artifacts, blur, low quality, bad anatomy
+      params:
+        steps: 30
+        cfg: 8
+        denoise: 1
+        controlnet_strength: 0.8
+        atlascloud_model: alibaba/wan-2.7-pro/image-edit
+        wan_size: 2K
+        thinking_mode: true
+        seed: -1
+      pass_id: '0'
+    carry_mask: true
+  - id: f4200f14-fcd1-4200-a8c1-ec4a0eb9119d
+    input_image: C:\Users\abork\AppData\Local\CapCut\Videos\dungeon_team\film\taniec_zlej_krolowej_5.png
+    output_id: TuLDBAzXDhPLNIGG5F
+    custom_passes:
+    - name: Pełny fotorealizm
+      enabled: true
+      mode: atlascloud
+      ref_image: ''
+      positive: 'Enhance the overall photorealism of the entire image while keeping the scene 100% unchanged. Naturally improve skin texture, skin pores, subtle skin imperfections, realistic eye details, hair strands, fabric texture and material details. Add natural cinematic lighting, realistic shadows and depth. Increase sharpness and photographic quality to look like a real photo taken with a professional camera. Strictly preserve everything else: do not change the scene, background, lighting direction or atmosphere. Do not change camera position, angle or perspective. Do not change any person''s pose, position or expression. Do not change any clothing, outfit or accessories. Only enhance photorealism and natural details.'
+      negative: cartoon, illustration, painting, drawing, 3d render, cgi, plastic skin, waxy skin, doll face, anime, stylized, deformed, mutated, extra limbs, changed pose, moved camera, different angle, clothing change, outfit change, new objects, added elements, removed elements, different lighting, color grading change, overexposed, underexposed, artifacts, blur, low quality, bad anatomy
+      params:
+        steps: 30
+        cfg: 8
+        denoise: 1
+        controlnet_strength: 0.8
+        atlascloud_model: alibaba/wan-2.7-pro/image-edit
+        wan_size: 2K
+        thinking_mode: true
+        seed: -1
+      pass_id: 8k5ihllb
+    - name: Blend
+      enabled: true
+      selected: true
+      pass_id: sijrnfex
+      mode: blend
+      ref_image: ''
+      blend_image: C:\Users\abork\AppData\Local\CapCut\Videos\dungeon_team\film\taniec_zlej_krolowej_5.png
+      blend_use_mask: true
+      positive: ''
+      negative: ''
+      params:
+        steps: 30
+        cfg: 8
+        denoise: 0.65
+        controlnet_strength: 0.8
+        atlascloud_model: qwen/qwen-image-2.0-pro/edit
+        wan_size: 2K
+        thinking_mode: false
+        seed: -1
+        blend_factor: 0.8
+        blend_contrast: 1.1
+      blend_mode: marks
+    carry_mask: true
+  output_dir: C:\Users\abork\AppData\Local\CapCut\Videos\dungeon_team\testy_setupow
+  global_suffix: ''
+  crop_to_subject: false
+  pad_input_to_ratio: false
+  id: test_budowy_fotorealizmu
+
+- type: one_image_many_prompts
+  name: Fotorealizm krok 2. usuwanie tła do modeli postaci
+  source_dirs:
+  - C:\Users\abork\AppData\Local\CapCut\Videos\dungeon_team\testy_setupow
+  - C:\Users\abork\AppData\Local\CapCut\Videos\dungeon_team\scene with models
+  image_slots:
+  - image: A8y199dMuIAxy1wSAE_ft2.png
+    prompts:
+    - id: p0000016
+      output_id: qXpYjqnYbwavoZbIaM
+      enabled: true
+      name: usun_tlo_1
+      positive: Remove the entire background and replace it with a perfectly solid pure white (#FFFFFF) background. Remove all shadows, cast shadows, drop shadows and reflections from the floor. Keep the subject completely intact with clean, sharp edges. The result must be a clean studio cutout on flat white — no gradients, no vignette, no ground plane, no texture.
+      negative: shadow, cast shadow, drop shadow, ground shadow, floor shadow, body shadow, reflection, gradient, gray background, off-white, texture, noise, vignette, background objects, floor, surface, dark corners
+      note: ''
+      params:
+        steps: 30
+        cfg: 8
+        denoise: 1
+        atlascloud_model: qwen/qwen-image-2.0-pro/edit
+        seed: -1
+        thinking_mode: false
+        wan_size: 2K
+      mode: i2i
+  - image: hqAR8X8z4Ix7msjl27_ft0.png
+    prompts:
+    - id: p0000016
+      output_id: 9nRpFB9KnzTuQXqrxy
+      enabled: true
+      name: usun_tlo_1
+      positive: Remove the entire background and replace it with a perfectly solid pure white (#FFFFFF) background. Remove all shadows, cast shadows, drop shadows and reflections from the floor. Keep the subject completely intact with clean, sharp edges. The result must be a clean studio cutout on flat white — no gradients, no vignette, no ground plane, no texture.
+      negative: shadow, cast shadow, drop shadow, ground shadow, floor shadow, body shadow, reflection, gradient, gray background, off-white, texture, noise, vignette, background objects, floor, surface, dark corners
+      note: ''
+      params:
+        steps: 30
+        cfg: 8
+        denoise: 1
+        atlascloud_model: qwen/qwen-image-2.0-pro/edit
+        seed: -1
+        thinking_mode: false
+        wan_size: 2K
+      mode: atlascloud
+  - image: jaQ8A3uwSqxrA7SUja_ft2.png
+    prompts:
+    - id: p0000016
+      output_id: jUZrsfJaEVt7zfaSHW
+      enabled: true
+      name: usun_tlo_1
+      positive: Remove the entire background and replace it with a perfectly solid pure white (#FFFFFF) background. Remove all shadows, cast shadows, drop shadows and reflections from the floor. Keep the subject completely intact with clean, sharp edges. The result must be a clean studio cutout on flat white — no gradients, no vignette, no ground plane, no texture.
+      negative: shadow, cast shadow, drop shadow, ground shadow, floor shadow, body shadow, reflection, gradient, gray background, off-white, texture, noise, vignette, background objects, floor, surface, dark corners
+      note: ''
+      params:
+        steps: 30
+        cfg: 8
+        denoise: 1
+        atlascloud_model: qwen/qwen-image-2.0-pro/edit
+        seed: -1
+        thinking_mode: false
+        wan_size: 2K
+      mode: i2i
+  - image: ro63prSRpcKjwg5nN1_ft0.png
+    prompts:
+    - id: p0000016
+      output_id: YuBV63lw1exLc9b041
+      enabled: true
+      name: usun_tlo_1
+      positive: Remove the entire background and replace it with a perfectly solid pure white (#FFFFFF) background. Remove all shadows, cast shadows, drop shadows and reflections from the floor. Keep the subject completely intact with clean, sharp edges. The result must be a clean studio cutout on flat white — no gradients, no vignette, no ground plane, no texture.
+      negative: shadow, cast shadow, drop shadow, ground shadow, floor shadow, body shadow, reflection, gradient, gray background, off-white, texture, noise, vignette, background objects, floor, surface, dark corners
+      note: ''
+      params:
+        steps: 30
+        cfg: 8
+        denoise: 1
+        atlascloud_model: qwen/qwen-image-2.0-pro/edit
+        seed: -1
+        thinking_mode: false
+        wan_size: 2K
+      mode: atlascloud
+  - image: taniec_zlej_krolowej_5.png
+    prompts:
+    - id: p0000061
+      output_id: 3qCRwLhttNvLxnS0JS
+      enabled: true
+      name: Usun postać ze zdjęcia
+      positive: Remove person from picture
+      negative: background change, lighting change
+      note: ''
+      params:
+        steps: 30
+        cfg: 8
+        denoise: 1
+        atlascloud_model: alibaba/wan-2.7-pro/image-edit
+        seed: -1
+        thinking_mode: false
+        wan_size: 2K
+      mode: atlascloud
+  output_dir: C:\Users\abork\AppData\Local\CapCut\Videos\dungeon_team\testy_setupow
+  global_suffix: ''
+  crop_to_subject: true
+  pad_input_to_ratio: false
+  id: fotorealizm_krok_2_usuwanie_t_a_do_modeli_postaci
+
+- type: paste_character
+  name: Wstaw złą królową do lochu - deterministycznie
+  paste_slots:
+  - id: 5b1c31fe-f9d7-450a-ba48-bbdad18ef544
+    output_id: 22611bb4-668a-4c06-a5e1-654ec48a65b9
+    scene_image: C:\Users\abork\AppData\Local\CapCut\Videos\dungeon_team\Scenes\loch_finalny.png
+    characters:
+    - model_image: C:\Users\abork\AppData\Local\CapCut\Videos\dungeon_team\models\evil_queen\qXpYjqnYbwavoZbIaM.png
+      top_pct: 21.0
+      bottom_pct: 100.0
+      x_center_pct: 30.0
+      erode_px: 3
+      blur_px: 2
+      edge_blend_enabled: false
+    scene_blend_enabled: true
+    sb_override: null
+    custom_passes: []
+  - id: 6059792d-68ae-4f26-a0b7-19172f6c3e62
+    output_id: c9ac21c0-42cd-41e8-b0eb-0bc66c2b60a2
+    scene_image: C:\Users\abork\AppData\Local\CapCut\Videos\dungeon_team\Scenes\loch_finalny.png
+    characters:
+    - model_image: C:\Users\abork\AppData\Local\CapCut\Videos\dungeon_team\models\evil_queen\9nRpFB9KnzTuQXqrxy.png
+      top_pct: 2.0
+      bottom_pct: 85.0
+      x_center_pct: 35.0
+      erode_px: 3
+      blur_px: 2
+      edge_blend_enabled: false
+    scene_blend_enabled: true
+    sb_override: null
+    custom_passes: []
+  - id: 15d89d00-622c-4855-949d-071d9161b8c3
+    output_id: 572afa9b-0d72-4ba7-ad37-9164fcc018e7
+    scene_image: C:\Users\abork\AppData\Local\CapCut\Videos\dungeon_team\Scenes\loch_finalny.png
+    characters:
+    - model_image: C:\Users\abork\AppData\Local\CapCut\Videos\dungeon_team\models\evil_queen\YuBV63lw1exLc9b041.png
+      top_pct: 11.0
+      bottom_pct: 80.0
+      x_center_pct: 39.0
+      erode_px: 3
+      blur_px: 2
+      edge_blend_enabled: false
+    scene_blend_enabled: true
+    sb_override: null
+    custom_passes: []
+  - id: d28a9584-8513-49d3-9c97-2570e1f96d84
+    output_id: aa33cd13-7a84-45db-b1b1-27269047562c
+    scene_image: C:\Users\abork\AppData\Local\CapCut\Videos\dungeon_team\Scenes\loch_finalny.png
+    characters:
+    - model_image: C:\Users\abork\AppData\Local\CapCut\Videos\dungeon_team\models\evil_queen\jUZrsfJaEVt7zfaSHW.png
+      top_pct: 10.0
+      bottom_pct: 85.0
+      x_center_pct: 73.0
+      erode_px: 3
+      blur_px: 2
+      edge_blend_enabled: false
+    scene_blend_enabled: true
+    sb_override: null
+    custom_passes: []
+  edge_blend_enabled: false
+  edge_blend_px: 15
+  edge_blend_cfg: null
+  edge_blend_denoise: 0.8
+  edge_blend_prompts:
+  - id: p0000021
+    category: system
+    name: Edge Blend — krawędzie postaci
+    note: Pass 1 — inpainting w strefie maski (15px wokół sylwetki). Używany z ci_1ref (scena+maska + ref postaci).
+    positive: |-
+      You have two inputs: image 1 is the composited scene, image 2 is the original reference character. Using image 2 as reference, repair and improve the character in image 1. Fix all of the following:
+
+      1. EDGES: Remove all hard cutout edges, halos and white fringing around the character's silhouette. Blend her edges naturally into the background — match local lighting, color temperature and depth of field.
+
+      2. BODY RECONSTRUCTION: Where parts of the character's body are blurry, incomplete, distorted or missing (e.g. blurry fingers, cut-off limbs, broken anatomy) — reconstruct them correctly using image 2 as the reference. Restore sharp, realistic anatomy.
+
+      3. SKIN AND DETAIL: Match the character's skin tone, sharpness and detail level to image 2. Remove any softness or blur on the character's body.
+
+      Do not move the character. Do not change her pose or position. Do not modify the background outside the character area. Preserve the character's face, clothing and identity.
+    negative: changed pose, moved character, different face, different clothing, background change, artifacts, distorted anatomy, color shift on character body, overexposed, underexposed, blurry fingers, missing limbs, broken anatomy
+    params:
+      steps: 30
+      cfg: 8
+      denoise: 1
+      atlascloud_model: alibaba/wan-2.7-pro/image-edit
+      seed: -1
+      thinking_mode: false
+      wan_size: 2K
+    enabled: true
+    mode: atlascloud
+    _editing: true
+  scene_blend_enabled: true
+  scene_blend_cfg: null
+  scene_blend_denoise: null
+  scene_blend_prompts:
+  - id: p0000022
+    category: system
+    name: Scene Blend — cienie i spójność sceny
+    note: Pass 2 — pełny obrazek, niski denoise. Dodaje cienie i wyrównuje całą scenę.
+    positive: 'Enhance the realism of the full composited scene. Add a natural cast shadow beneath the composited character''s feet and body — match the exact direction, length, softness and intensity of the shadows already cast by the other people in the scene. Use the existing shadows as a reference: if other figures cast long soft shadows to one side, the composited character must cast an identical shadow in the same direction with the same quality. Add subtle ambient occlusion where the character meets the floor or nearby surfaces. Match the character''s overall color grading, brightness and contrast to the other figures in the scene. Make the result look like a single unified photograph taken with one camera. Do not move or change the character''s position, pose, face or clothing. Do not alter the background structure or change the other people already in the scene.'
+    negative: changed pose, moved character, different face, different clothing, background restructured, artifacts, removed character, new people added, overexposed, underexposed, blurry, inconsistent shadow direction, shadow pointing wrong way, mismatched shadow length, no shadow under feet, floating character
+    params:
+      steps: 30
+      cfg: 8
+      denoise: 0.4
+      atlascloud_model: qwen/qwen-image-2.0-pro/edit
+      seed: -1
+      thinking_mode: false
+      wan_size: 2K
+    enabled: true
+    mode: atlascloud
+    _editing: true
+  output_dir: C:\Users\abork\AppData\Local\CapCut\Videos\dungeon_team\scene with models
+  global_suffix: ''
+  crop_to_subject: false
+  pad_input_to_ratio: false
+  id: wstaw_z_kr_low_do_lochu_-_deterministycznie
+
+pic_groups:
+- id: grp_2jmp1aw
+  name: MODELE BOHATERÓW
+  tile_ids:
+  - model
+  - generator_modeli
+
+- id: grp_3iud3as
+  name: MODELE POTWORÓW
+  tile_ids:
+  - models_monster_level_kopia
+  - models_undead_level_kopia
+  - models_undead_level
+  - models_vampire_level_kopia
+  - models_dark_elves_level_kopia
+  - models_warrior_level_kopia
+  - models_diablo_level_kopia
+
+- id: grp_585ec4f
+  name: CZARODZIEJKA
+  tile_ids:
+  - undress_sorcerer
+  - repose_sorceress
+  - removing_sorceress
+  - insert_on_entrance_level
+
+- id: grp_zaa1l1l
+  name: ZŁA KRÓLOWA
+  tile_ids:
+  - repose_evil_queen
+  - repose_evil_queen_2
+  - insert_evil_queen
