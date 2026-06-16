@@ -8,11 +8,16 @@ Supports:
 
 Resolution is set per-run in config['atlascloud_resolution'] (720P/1080P/1080P-SR/1440P-SR).
 The API preserves input aspect ratio regardless of the resolution label.
+After download, RIFE 2x frame interpolation is applied by default via local ComfyUI.
+Pass frame_interpolation=False to skip.
 """
 
+import json
 import os
+import shutil
 import time
 import base64
+import uuid
 from pathlib import Path
 
 from .base_backend import BaseBackend
@@ -78,9 +83,9 @@ class AtlasCloudVideoBackend(BaseBackend):
         """
         Override BaseBackend — maps I2V/I2V2I to AtlasCloud /generateVideo.
 
-        fps / steps / blocks_to_swap / frame_interpolation are ignored
-        (not supported by the cloud API).
+        steps / cfg / blocks_to_swap are ignored (not supported by the cloud API).
         resolution / prompt_extend are taken from self.config.
+        frame_interpolation=False skips RIFE post-processing; default is True.
         """
         resolution    = self.config.get("atlascloud_resolution",    "1080P")
         prompt_extend = self.config.get("atlascloud_prompt_extend", True)
@@ -102,7 +107,14 @@ class AtlasCloudVideoBackend(BaseBackend):
                 prompt_extend=prompt_extend,
                 seed=seed if seed is not None else -1,
             )
-            return result is not None and Path(output_path).exists()
+            if result is None or not Path(output_path).exists():
+                return False
+
+            # RIFE 2x frame interpolation (disable with frame_interpolation=False)
+            if frame_interpolation is not False:
+                self._rife_interpolate(Path(output_path), fps=fps or 16)
+
+            return True
         except Exception as exc:
             self.logger.error(f"  ✗ AtlasCloud błąd: {exc}")
             return False
@@ -116,6 +128,179 @@ class AtlasCloudVideoBackend(BaseBackend):
         mime = "image/png" if suffix == ".png" else "image/jpeg"
         data = base64.b64encode(path.read_bytes()).decode()
         return f"data:{mime};base64,{data}"
+
+    # known ComfyUI ports to probe when the configured api_url is unavailable
+    _RIFE_PROBE_PORTS = [8000, 8188, 8189]
+
+    def _find_comfyui_url(self) -> str | None:
+        """Return the first reachable ComfyUI base URL, or None."""
+        import requests
+
+        candidates = [self.config.get("api_url", "")]
+        for port in self._RIFE_PROBE_PORTS:
+            url = f"http://127.0.0.1:{port}"
+            if url not in candidates:
+                candidates.append(url)
+
+        for url in candidates:
+            if not url:
+                continue
+            try:
+                requests.get(f"{url}/system_stats", timeout=2).raise_for_status()
+                return url
+            except Exception:
+                continue
+        return None
+
+    @staticmethod
+    def _probe_video_info(video_path: Path) -> tuple[int, int, int]:
+        """Return (fps, width, height) via ffprobe, or (16, 0, 0) on failure."""
+        import subprocess
+        try:
+            result = subprocess.run(
+                [
+                    "ffprobe", "-v", "quiet",
+                    "-print_format", "json",
+                    "-show_streams", "-select_streams", "v:0",
+                    str(video_path),
+                ],
+                capture_output=True, text=True, timeout=10,
+            )
+            streams = json.loads(result.stdout).get("streams", [])
+            if streams:
+                s = streams[0]
+                w = int(s.get("width", 0))
+                h = int(s.get("height", 0))
+                # nb_frames/duration is the most accurate display fps —
+                # r_frame_rate and avg_frame_rate can be wrong for H.264/VFR
+                nb = int(s.get("nb_frames") or 0)
+                dur = float(s.get("duration") or 0)
+                if nb and dur:
+                    fps = max(1, round(nb / dur))
+                else:
+                    fps_str = s.get("avg_frame_rate") or s.get("r_frame_rate", "16/1")
+                    num, den = map(int, fps_str.split("/"))
+                    fps = max(1, round(num / den))
+                return fps, w, h
+        except Exception:
+            pass
+        return 16, 0, 0
+
+    def _rife_interpolate(self, video_path: Path, fps: int = 16) -> bool:
+        """Upload video to local ComfyUI, run RIFE 2x, replace file in-place."""
+        import requests
+
+        actual_fps, w, h = self._probe_video_info(video_path)
+        self.logger.info(f"  [RIFE] wykryto {actual_fps}fps {w}x{h}")
+
+        api_url = self._find_comfyui_url()
+        if api_url is None:
+            self.logger.error(
+                "  RIFE: brak działającego ComfyUI "
+                f"(próbowano porty {self._RIFE_PROBE_PORTS}) — pomijam"
+            )
+            return False
+
+        out_base = Path(self.config.get("comfyui_output_folder", ""))
+        # comfyui_output_folder is e.g. D:\ComfyUI\output\Wan22_I2V
+        # parent → D:\ComfyUI\output
+        comfy_out = out_base.parent if out_base.name else out_base
+
+        wf_path = Path(__file__).parent.parent / "workflows" / "rife_interpolate.json"
+        if not wf_path.exists():
+            self.logger.error("  RIFE: brak rife_interpolate.json — pomijam")
+            return False
+
+        # 1. Upload video to ComfyUI input
+        self.logger.info(f"  [RIFE] przesyłanie wideo ({api_url})…")
+        try:
+            with open(video_path, "rb") as f:
+                up = requests.post(
+                    f"{api_url}/upload/image",
+                    files={"image": (video_path.name, f, "video/mp4")},
+                    data={"type": "input", "subfolder": ""},
+                    timeout=60,
+                )
+            up.raise_for_status()
+            uploaded_name = up.json()["name"]
+        except Exception as exc:
+            self.logger.error(f"  RIFE upload błąd: {exc} — pomijam")
+            return False
+
+        # 2. Patch workflow: input filename, real dimensions, output fps = input fps (slow-motion 2×)
+        workflow = json.loads(wf_path.read_text(encoding="utf-8"))
+        workflow["1"]["inputs"]["video"]      = uploaded_name
+        if w and h:
+            workflow["1"]["inputs"]["custom_width"]  = w
+            workflow["1"]["inputs"]["custom_height"] = h
+        workflow["3"]["inputs"]["frame_rate"] = actual_fps
+
+        # 3. Submit to ComfyUI queue
+        client_id = str(uuid.uuid4())
+        try:
+            qr = requests.post(
+                f"{api_url}/prompt",
+                json={"prompt": workflow, "client_id": client_id},
+                timeout=30,
+            )
+            qr.raise_for_status()
+            prompt_id = qr.json()["prompt_id"]
+        except Exception as exc:
+            self.logger.error(f"  RIFE submit błąd: {exc} — pomijam")
+            return False
+
+        self.logger.info(
+            f"  [RIFE] {prompt_id[:8]}… interpolacja 2x → {actual_fps}fps slow-motion…"
+        )
+
+        # 4. Poll /history until done, then locate output file
+        t0 = time.monotonic()
+        rife_file = None
+        while time.monotonic() - t0 < 300:
+            time.sleep(3)
+            try:
+                hist = requests.get(
+                    f"{api_url}/history/{prompt_id}", timeout=10
+                ).json()
+            except Exception:
+                continue
+            if prompt_id not in hist:
+                continue
+            if hist[prompt_id].get("status", {}).get("status_str") == "error":
+                self.logger.error("  RIFE: błąd ComfyUI — pomijam")
+                return False
+            for node_out in hist[prompt_id].get("outputs", {}).values():
+                for vid in node_out.get("gifs", []):
+                    # prefer fullpath from history (avoids D:/C: drive mismatch)
+                    fp = vid.get("fullpath")
+                    if fp:
+                        candidate = Path(fp)
+                    else:
+                        sub  = vid.get("subfolder", "")
+                        name = vid["filename"]
+                        candidate = comfy_out / sub / name if sub else comfy_out / name
+                    if candidate.exists():
+                        rife_file = candidate
+                        break
+                if rife_file:
+                    break
+            if rife_file:
+                break
+            self.logger.info(
+                f"  [RIFE] czekam… ({int(time.monotonic() - t0)}s)"
+            )
+
+        if not rife_file:
+            self.logger.error("  RIFE: timeout lub brak pliku — pomijam")
+            return False
+
+        # 5. Replace original with RIFE output
+        shutil.move(str(rife_file), str(video_path))
+        size_mb = video_path.stat().st_size / 1_048_576
+        self.logger.success(
+            f"  ✓ RIFE 2x → {video_path.name} ({size_mb:.1f} MB, {actual_fps}fps slow-mo ×2)"
+        )
+        return True
 
     def _run_sync(
         self,
