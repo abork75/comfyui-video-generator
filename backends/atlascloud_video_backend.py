@@ -129,6 +129,32 @@ class AtlasCloudVideoBackend(BaseBackend):
         data = base64.b64encode(path.read_bytes()).decode()
         return f"data:{mime};base64,{data}"
 
+    @staticmethod
+    def _b64_audio(path: Path) -> str:
+        path = Path(path)
+        mime = "audio/mpeg" if path.suffix.lower() == ".mp3" else "audio/wav"
+        data = base64.b64encode(path.read_bytes()).decode()
+        return f"data:{mime};base64,{data}"
+
+    @staticmethod
+    def _audio_duration(path: Path) -> float:
+        """Return audio duration in seconds via ffprobe, or 5.0 on failure."""
+        import subprocess
+        try:
+            result = subprocess.run(
+                ["ffprobe", "-v", "quiet", "-print_format", "json",
+                 "-show_streams", "-select_streams", "a:0", str(path)],
+                capture_output=True, text=True, timeout=10,
+            )
+            streams = json.loads(result.stdout).get("streams", [])
+            if streams:
+                dur = float(streams[0].get("duration") or 0)
+                if dur:
+                    return dur
+        except Exception:
+            pass
+        return 5.0
+
     # known ComfyUI ports to probe when the configured api_url is unavailable
     _RIFE_PROBE_PORTS = [8000, 8188, 8189]
 
@@ -302,11 +328,104 @@ class AtlasCloudVideoBackend(BaseBackend):
         )
         return True
 
+    def generate_talk_clip(
+        self,
+        source_image: Path,
+        audio_entries: list,
+        dest_path: Path,
+        width: int = 480,
+        height: int = 832,
+        frame_interpolation=None,
+    ) -> bool:
+        """
+        AtlasCloud talk clip (lip-sync) via /generateVideo with 'audio' field.
+
+        Each audio_entry = {'path': Path, 'pos': str, 'neg': str}.
+        Multi-segment clips are concatenated with ffmpeg.
+        """
+        import subprocess
+
+        resolution    = self.config.get("atlascloud_resolution",    "1080P")
+        prompt_extend = self.config.get("atlascloud_prompt_extend", True)
+
+        segments: list[Path] = []
+        try:
+            for idx, entry in enumerate(audio_entries):
+                audio_path = Path(entry["path"])
+                pos = str(entry.get("pos", "") or "")
+                neg = str(entry.get("neg", "") or "")
+
+                raw_dur = self._audio_duration(audio_path)
+                dur = max(2, min(15, round(raw_dur)))
+                audio_b64 = self._b64_audio(audio_path)
+
+                self.logger.info(
+                    f"  ☁ AtlasCloud Talk — segment {idx + 1}/{len(audio_entries)} "
+                    f"· {dur}s · {resolution}"
+                )
+
+                seg_path = dest_path.parent / f"_talkac_{idx}_{dest_path.name}"
+                result = self._run_sync(
+                    start_frame=source_image,
+                    end_frame=None,
+                    output_path=seg_path,
+                    positive_prompt=pos,
+                    negative_prompt=neg,
+                    duration=dur,
+                    resolution=resolution,
+                    prompt_extend=prompt_extend,
+                    seed=-1,
+                    audio=audio_b64,
+                )
+                if result is None or not seg_path.exists():
+                    self.logger.error(
+                        f"  ✗ Talk segment {idx + 1} nieudany"
+                    )
+                    return False
+                segments.append(seg_path)
+
+        except Exception as exc:
+            self.logger.error(f"  ✗ AtlasCloud talk błąd: {exc}")
+            return False
+
+        # Concatenate segments or move single result to dest
+        try:
+            dest_path.parent.mkdir(parents=True, exist_ok=True)
+            if len(segments) == 1:
+                shutil.move(str(segments[0]), str(dest_path))
+            else:
+                list_file = dest_path.parent / f"_talkac_list_{dest_path.stem}.txt"
+                list_file.write_text(
+                    "\n".join(f"file '{s}'" for s in segments),
+                    encoding="utf-8",
+                )
+                subprocess.run(
+                    ["ffmpeg", "-y", "-f", "concat", "-safe", "0",
+                     "-i", str(list_file), "-c", "copy", str(dest_path)],
+                    check=True, capture_output=True, timeout=120,
+                )
+                list_file.unlink(missing_ok=True)
+                for s in segments:
+                    if s.exists():
+                        s.unlink()
+        except Exception as exc:
+            self.logger.error(f"  ✗ Talk concat błąd: {exc}")
+            return False
+
+        # RIFE — same default as video transitions; disable with frame_interpolation=False
+        fi_cfg = self.config.get("frame_interpolation", True)
+        should_rife = (frame_interpolation is not False) and (fi_cfg is not False)
+        if should_rife:
+            self._rife_interpolate(dest_path)
+
+        return dest_path.exists()
+
     def _run_sync(
         self,
         start_frame, end_frame, output_path,
         positive_prompt, negative_prompt,
         duration, resolution, prompt_extend, seed,
+        audio: str | None = None,
     ):
         import requests
 
@@ -326,6 +445,8 @@ class AtlasCloudVideoBackend(BaseBackend):
             "seed":            seed,
         }
 
+        if audio:
+            payload["audio"] = audio
         if end_frame and Path(end_frame).exists():
             payload["last_image"] = self._b64(end_frame)
 

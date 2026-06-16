@@ -886,13 +886,13 @@ def run_batch_generation(config):
                 if talk_dest.exists() and config.get('skip_existed', True):
                     _rel = str(Path('transitions') / 'talks' / to_file)
                     extractor.extract_end_frame(_rel, target_width, target_height)
-                    results.append({'name': to_file, 'backend': 'linux',
+                    results.append({'name': to_file, 'backend': backend_type,
                                     'success': True, 'is_chain': False})
                     continue
 
-                if not _gen_fn:
+                if not _gen_fn and backend_type != 'atlascloud':
                     logger.error(f"  🎙️  {to_file}: talk service unavailable")
-                    results.append({'name': to_file, 'backend': 'linux',
+                    results.append({'name': to_file, 'backend': backend_type,
                                     'success': False, 'is_chain': False})
                     continue
 
@@ -987,7 +987,7 @@ def run_batch_generation(config):
                     _audio_entries.append({'path': _apath, 'pos': _ap2, 'neg': _an2})
 
                 if not _audio_ok or not _audio_entries:
-                    results.append({'name': to_file, 'backend': 'linux',
+                    results.append({'name': to_file, 'backend': backend_type,
                                     'success': False, 'is_chain': False})
                     continue
 
@@ -999,17 +999,33 @@ def run_batch_generation(config):
                 logger.info(f"  audio  : {[e['path'].name for e in _audio_entries]}")
                 logger.info(f"  size   : {_tw}x{_th}")
 
-                _t_success = _gen_fn(
-                    comfyui_url=_talk_url,
-                    linux_input_dir=_linux_input,
-                    linux_output_dir=_linux_output,
-                    source_image=Path(_talk_src),
-                    audio_entries=_audio_entries,
-                    dest_path=talk_dest,
-                    width=_tw,
-                    height=_th,
-                    log_fn=lambda msg: logger.info(f"  {msg}"),
-                )
+                if backend_type == 'atlascloud':
+                    _ac_talk_backend = backends.get('atlascloud')
+                    if not _ac_talk_backend:
+                        logger.error(f"  🎙️  {to_file}: AtlasCloud backend unavailable")
+                        results.append({'name': to_file, 'backend': 'atlascloud',
+                                        'success': False, 'is_chain': False})
+                        continue
+                    _t_success = _ac_talk_backend.generate_talk_clip(
+                        source_image=Path(_talk_src),
+                        audio_entries=_audio_entries,
+                        dest_path=talk_dest,
+                        width=_tw,
+                        height=_th,
+                        frame_interpolation=to_config.get('frame_interpolation'),
+                    )
+                else:
+                    _t_success = _gen_fn(
+                        comfyui_url=_talk_url,
+                        linux_input_dir=_linux_input,
+                        linux_output_dir=_linux_output,
+                        source_image=Path(_talk_src),
+                        audio_entries=_audio_entries,
+                        dest_path=talk_dest,
+                        width=_tw,
+                        height=_th,
+                        log_fn=lambda msg: logger.info(f"  {msg}"),
+                    )
 
                 if not _t_success:
                     # Backend failure (OOM, timeout, etc.) → soft-fail so retry
@@ -1040,7 +1056,7 @@ def run_batch_generation(config):
                 else:
                     logger.error(f"  {to_file}: generation failed")
 
-                results.append({'name': to_file, 'backend': 'linux',
+                results.append({'name': to_file, 'backend': backend_type,
                                 'success': _t_success, 'is_chain': False})
                 continue
 
