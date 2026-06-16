@@ -1,0 +1,60 @@
+{
+  "1": {
+    "inputs": {
+      "video": "idzie do przedpokoju_001.mp4",
+      "force_rate": 16,
+      "force_uniform_fps": true,
+      "force_size": "Disabled",
+      "custom_width": 880,
+      "custom_height": 1184,
+      "frame_load_cap": 0,
+      "skip_first_frames": 0,
+      "select_every_nth": 1
+    },
+    "class_type": "VHS_LoadVideo",
+    "_meta": { "title": "Load Video — oryginał (wszystkie klatki)" }
+  },
+  "2": {
+    "inputs": {
+      "image": "12.51. siedzi na pilce 2.png",
+      "upload": "image"
+    },
+    "class_type": "LoadImage",
+    "_meta": { "title": "Reference Image (wzorzec koloru)" }
+  },
+  "3": {
+    "inputs": {
+      "method": "mkl",
+      "strength": 1.0,
+      "multithread": true,
+      "image_ref": ["2", 0],
+      "image_target": ["1", 0]
+    },
+    "class_type": "ColorMatch",
+    "_meta": { "title": "ColorMatch MKL strength=1.0 (wszystkie klatki)" }
+  },
+  "4": {
+    "inputs": {
+      "images_corrected": ["3", 0],
+      "images_original":  ["1", 0],
+      "fade_frames": 76,
+      "curve_power": 3.0
+    },
+    "class_type": "BatchFadeBlend",
+    "_meta": { "title": "Fade Blend  (klatki 1-76 → fade, 77+ oryginał)" }
+  },
+  "5": {
+    "inputs": {
+      "images": ["4", 0],
+      "frame_rate": 16,
+      "loop_count": 0,
+      "filename_prefix": "idzie_do_przedpokoju_mklfade",
+      "format": "video/h264-mp4",
+      "pingpong": false,
+      "save_output": true,
+      "audio": ["1", 2]
+    },
+    "class_type": "VHS_VideoCombine",
+    "_meta": { "title": "Save Video z fade korekcją" }
+  }
+}

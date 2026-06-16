@@ -79,9 +79,9 @@ class FrameExtractor:
         width = max(self.min_width, min(width, self.max_width))
         height = max(self.min_height, min(height, self.max_height))
         
-        # Round to multiple of 8 (for video encoding)
-        width = (width // 8) * 8
-        height = (height // 8) * 8
+        # Round to multiple of 16 (WanVideo ImageResizeKJv2 node uses divisible_by=16)
+        width = (width // 16) * 16
+        height = (height // 16) * 16
         
         return (width, height)
     
@@ -99,13 +99,14 @@ class FrameExtractor:
         """
         
         source_path = self.project_folder / filename
-        output_filename = f"{source_path.stem}_end.jpg"
-        
+        # PNG: lossless — eliminates second round of lossy compression
+        output_filename = f"{source_path.stem}_end.png"
+
         # Save to frames/ folder (INPUT - not in transitions/)
         frames_folder = self.project_folder / 'frames'
         frames_folder.mkdir(parents=True, exist_ok=True)
         output_path = frames_folder / output_filename
-        
+
         # Check if image
         if source_path.suffix.lower() in ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp']:
             # Process image
@@ -114,27 +115,28 @@ class FrameExtractor:
                     # Convert to RGB if needed
                     if img.mode != 'RGB':
                         img = img.convert('RGB')
-                    
+
                     # Resize
                     img_resized = img.resize((target_width, target_height), Image.LANCZOS)
-                    
-                    # Save
-                    img_resized.save(output_path, 'JPEG', quality=self.image_quality)
-                    
+
+                    # Save as PNG (lossless — even JPEG sources benefit: no second encode)
+                    img_resized.save(output_path, 'PNG')
+
                     return output_path
-                    
+
             except Exception as e:
                 print(f"Error processing image {filename}: {e}")
                 return None
-        
+
         # Check if video
         elif source_path.suffix.lower() in ['.mp4', '.avi', '.mov', '.mkv', '.webm']:
             # ============================================================
             # CRITICAL FIX: Extract ACTUAL last frame (not 1s before end)
             # Old: -sseof -1 gave frame from middle of video
             # New: Count frames → select last by index
+            # Output: PNG (lossless)
             # ============================================================
-            
+
             try:
                 # Step 1: Get total frame count
                 probe_cmd = [
@@ -146,37 +148,95 @@ class FrameExtractor:
                     '-of', 'csv=p=0',
                     str(source_path)
                 ]
-                
+
                 result = subprocess.run(probe_cmd, check=True, capture_output=True, text=True)
                 total_frames = int(result.stdout.strip())
-                
-                # Step 2: Extract last frame (index = total - 1)
+
+                # Step 2: Extract last frame (index = total - 1) as PNG
                 last_frame_idx = total_frames - 1
-                
+
                 cmd = [
                     'ffmpeg',
                     '-i', str(source_path),
                     '-vf', f'select=eq(n\\,{last_frame_idx}),scale={target_width}:{target_height}',
                     '-frames:v', '1',
-                    '-q:v', str(100 - self.image_quality),
                     '-y',
                     str(output_path)
                 ]
-                
+
                 result = subprocess.run(cmd, capture_output=True)
-                
+
                 if result.returncode == 0 and output_path.exists():
                     return output_path
                 else:
                     print(f"Error extracting last frame from {filename}")
                     return None
-                    
+
             except Exception as e:
                 print(f"Error extracting frame: {e}")
                 return None
         
         return None
-    
+
+    def extract_last_frame_to(self, source_path: Path, target_width: int, target_height: int, output_path: Path) -> Path | None:
+        """
+        Extract the last frame of a video and save to a specified output path.
+
+        Unlike extract_end_frame() (which derives the output path from the
+        source filename), this method lets the caller choose the destination —
+        used to write frames/{stem}_real.png after a transition is generated.
+
+        Args:
+            source_path: Absolute path to the source video file
+            target_width:  Scale to this width
+            target_height: Scale to this height
+            output_path:  Where to save the extracted PNG frame
+
+        Returns:
+            output_path on success, None on failure
+        """
+        if not source_path.exists():
+            return None
+        if source_path.suffix.lower() not in {'.mp4', '.avi', '.mov', '.mkv', '.webm'}:
+            return None
+
+        try:
+            output_path.parent.mkdir(parents=True, exist_ok=True)
+
+            # Step 1: count frames
+            probe_cmd = [
+                'ffprobe', '-v', 'error',
+                '-select_streams', 'v:0',
+                '-count_frames',
+                '-show_entries', 'stream=nb_read_frames',
+                '-of', 'csv=p=0',
+                str(source_path),
+            ]
+            result = subprocess.run(probe_cmd, check=True, capture_output=True, text=True)
+            total_frames = int(result.stdout.strip())
+            last_frame_idx = total_frames - 1
+
+            # Step 2: extract as PNG
+            cmd = [
+                'ffmpeg',
+                '-i', str(source_path),
+                '-vf', f'select=eq(n\\,{last_frame_idx}),scale={target_width}:{target_height}',
+                '-frames:v', '1',
+                '-y',
+                str(output_path),
+            ]
+            result = subprocess.run(cmd, capture_output=True)
+
+            if result.returncode == 0 and output_path.exists():
+                return output_path
+            else:
+                print(f"Error extracting last frame to {output_path}")
+                return None
+
+        except Exception as e:
+            print(f"Error in extract_last_frame_to: {e}")
+            return None
+
     def extract_start_frame(self, filename, target_width, target_height):
         """
         Extract first frame from video or process image
@@ -191,13 +251,14 @@ class FrameExtractor:
         """
         
         source_path = self.project_folder / filename
-        output_filename = f"{source_path.stem}_start.jpg"
-        
+        # PNG: lossless — eliminates second round of lossy compression
+        output_filename = f"{source_path.stem}_start.png"
+
         # Save to frames/ folder (INPUT - not in transitions/)
         frames_folder = self.project_folder / 'frames'
         frames_folder.mkdir(parents=True, exist_ok=True)
         output_path = frames_folder / output_filename
-        
+
         # Check if image
         if source_path.suffix.lower() in ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp']:
             # Process image
@@ -206,41 +267,40 @@ class FrameExtractor:
                     # Convert to RGB if needed
                     if img.mode != 'RGB':
                         img = img.convert('RGB')
-                    
+
                     # Resize
                     img_resized = img.resize((target_width, target_height), Image.LANCZOS)
-                    
-                    # Save
-                    img_resized.save(output_path, 'JPEG', quality=self.image_quality)
-                    
+
+                    # Save as PNG (lossless)
+                    img_resized.save(output_path, 'PNG')
+
                     return output_path
-                    
+
             except Exception as e:
                 print(f"Error processing image {filename}: {e}")
                 return None
-        
+
         # Check if video
         elif source_path.suffix.lower() in ['.mp4', '.avi', '.mov', '.mkv', '.webm']:
-            # Extract first frame
+            # Extract first frame as PNG (lossless)
             try:
                 cmd = [
                     'ffmpeg',
                     '-i', str(source_path),
                     '-vframes', '1',
                     '-vf', f'scale={target_width}:{target_height}',
-                    '-q:v', str(100 - self.image_quality),
                     '-y',
                     str(output_path)
                 ]
-                
+
                 result = subprocess.run(cmd, capture_output=True)
-                
+
                 if result.returncode == 0 and output_path.exists():
                     return output_path
                 else:
                     print(f"Error extracting first frame from {filename}")
                     return None
-                    
+
             except Exception as e:
                 print(f"Error extracting frame: {e}")
                 return None

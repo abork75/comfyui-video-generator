@@ -238,10 +238,19 @@ class LinuxBackend(BaseBackend):
         runner = self.workflow_runner
 
         if 'width' in params:
-            runner.set_parameter('width', params['width'])
+            # Snap to nearest multiple of 16 — WanVideo node 68 (ImageResizeKJv2)
+            # has divisible_by=16; passing non-aligned values causes silent adjustment
+            # and makes extracted frames inconsistent with actual video output.
+            w = (int(params['width']) // 16) * 16
+            if w != params['width']:
+                self.logger.info(f"  width {params['width']} → snap to 16 → {w}")
+            runner.set_parameter('width', w)
 
         if 'height' in params:
-            runner.set_parameter('height', params['height'])
+            h = (int(params['height']) // 16) * 16
+            if h != params['height']:
+                self.logger.info(f"  height {params['height']} → snap to 16 → {h}")
+            runner.set_parameter('height', h)
 
         if 'length' in params:
             runner.set_parameter('num_frames', params['length'])
@@ -258,6 +267,13 @@ class LinuxBackend(BaseBackend):
 
         if 'blocks_to_swap' in params:
             runner.set_parameter('blocks_to_swap', params['blocks_to_swap'])
+
+        if 'frame_interpolation' in params:
+            fi = params['frame_interpolation']
+            if fi is not None:
+                # True/False → RIFE multiplier (2 = enabled, 1 = disabled)
+                multiplier = 2 if fi else 1
+                runner.set_parameter('frame_interpolation', multiplier)
 
     def _set_seed(self, seed=None):
         """Ustawia unikalny seed (zapobiega cache ComfyUI)"""

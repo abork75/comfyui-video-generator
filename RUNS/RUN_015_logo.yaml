@@ -1,0 +1,31 @@
+project_folder: C:\Users\abork\AppData\Local\CapCut\Videos\UXResearchLOGO
+use_test_flow: false
+flow: []
+pic_flow:
+- type: one_image_many_prompts
+  name: Korekta logo
+  source_dirs:
+  - C:\Users\abork\AppData\Local\CapCut\Videos\UXResearchLOGO
+  image_slots:
+  - image: logo.png
+    prompts:
+    - id: p0000052
+      output_id: i2Oej8ckVvwlJbZPEC
+      enabled: true
+      name: human look
+      positive: Correct nose for more realistic human nose vector
+      negative: Full realistic face
+      note: ''
+      params:
+        steps: 30
+        cfg: 8
+        denoise: 1
+  edge_blend_cfg: null
+  edge_blend_denoise: null
+  scene_blend_cfg: null
+  scene_blend_denoise: null
+  output_dir: C:\Users\abork\AppData\Local\CapCut\Videos\UXResearchLOGO
+  global_suffix: ''
+  crop_to_subject: false
+  pad_input_to_ratio: false
+  id: korekta_logo

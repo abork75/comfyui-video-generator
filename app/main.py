@@ -18,6 +18,15 @@ from app.core.config import settings
 from app.api.runs import router as runs_router
 from app.api.generation import router as generation_router
 from app.api.media import router as media_router
+from app.api.upscale import router as upscale_router
+from app.api.env import router as env_router
+from app.api.talks import router as talks_router
+from app.api.capcut import router as capcut_router
+from app.api.app_config import router as app_config_router
+from app.api.i2i import router as i2i_router
+from app.api.fs import router as fs_router
+from app.api.pic_session import router as pic_session_router
+from app.api.sort import router as sort_router
 from app.services.process_service import process_service
 
 # ============================================================
@@ -37,6 +46,15 @@ app.add_middleware(BaseHTTPMiddleware, dispatch=auth_middleware)
 app.include_router(runs_router)
 app.include_router(generation_router)
 app.include_router(media_router)
+app.include_router(upscale_router)
+app.include_router(env_router)
+app.include_router(talks_router)
+app.include_router(capcut_router)
+app.include_router(app_config_router)
+app.include_router(i2i_router)
+app.include_router(fs_router)
+app.include_router(pic_session_router)
+app.include_router(sort_router)
 
 # Static files
 FRONTEND_DIR = Path(__file__).parent / "frontend"
@@ -139,7 +157,10 @@ async def ws_logs(websocket: WebSocket):
 
 @app.get("/", response_class=HTMLResponse)
 async def index():
-    return (FRONTEND_DIR / "index.html").read_text(encoding="utf-8")
+    return HTMLResponse(
+        content=(FRONTEND_DIR / "index.html").read_text(encoding="utf-8"),
+        headers={"Cache-Control": "no-cache, no-store, must-revalidate"},
+    )
 
 
 # ============================================================

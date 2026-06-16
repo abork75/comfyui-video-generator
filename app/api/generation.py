@@ -41,9 +41,27 @@ async def send_stdin(request: Request):
 
 
 @router.post("/{filename}")
-async def start_generation(filename: str):
-    """Start generation for the given RUN file."""
-    result = await process_service.start(filename)
+async def start_generation(filename: str, request: Request):
+    """
+    Start generation for the given RUN file.
+
+    Optional JSON body:
+      {"only": ["transition_name.mp4", ...]}   — re-generate only listed files
+      {"force_all": true}                       — regenerate ALL (skip_existed=False)
+    """
+    only: list[str] | None = None
+    force_all: bool = False
+    try:
+        body = await request.json()
+        raw = body.get("only")
+        if isinstance(raw, list) and raw:
+            only = [str(x) for x in raw if x]
+        if body.get("force_all"):
+            force_all = True
+    except Exception:
+        pass
+
+    result = await process_service.start(filename, only=only, force_all=force_all)
     if not result["ok"]:
         raise HTTPException(status_code=400, detail=result["error"])
     return result

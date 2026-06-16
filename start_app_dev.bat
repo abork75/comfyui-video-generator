@@ -18,9 +18,9 @@ if exist "..\\.streamlit_env\\Scripts\\activate.bat" (
     call venv\\Scripts\\activate.bat
 )
 
-echo  [*] Uruchamianie serwera DEV na http://127.0.0.1:8000
+echo  [*] Uruchamianie serwera DEV na http://127.0.0.1:8001
 echo.
 
-uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+uvicorn app.main:app --host 0.0.0.0 --port 8001 --reload
 
 pause

@@ -1,8 +1,12 @@
 # -*- coding: utf-8 -*-
 """
-RUN file service — scans, parses and validates RUN_*.py files.
+RUN file service — scans, parses and validates RUN_*.py and RUN_*.yaml files.
 
-Uses AST parsing (no exec!) so old/broken files cannot cause side effects.
+Uses AST parsing for .py (no exec!) so old/broken files cannot cause side effects.
+YAML files are handled via yaml_service (imported lazily to avoid circular imports).
+
+Priority rule: if both RUN_foo.yaml and RUN_foo.py exist, the YAML is the
+source of truth and the .py is treated as auto-generated (not shown separately).
 """
 
 import ast
@@ -144,30 +148,100 @@ def _build_run_info(path: Path) -> dict:
 
 
 # ============================================================
+# Run-info cache (avoids re-parsing files on every request)
+# ============================================================
+
+_run_info_cache: dict[str, dict] = {}   # filename → parsed info dict
+_scan_cache: list[dict] | None   = None  # cached scan result
+
+
+def invalidate_run_info_cache(filename: str | None = None) -> None:
+    """
+    Clear cached run info.
+    Pass a specific filename to evict just that entry,
+    or None to clear everything (e.g. after adding/removing a file).
+    """
+    global _scan_cache
+    _scan_cache = None
+    if filename is None:
+        _run_info_cache.clear()
+    else:
+        _run_info_cache.pop(filename, None)
+
+
+# ============================================================
 # Public API
 # ============================================================
 
 def scan_runs_folder() -> list[dict]:
     """
     Scan RUNS/ (top level only, skip sub-folders like RUNS/old/).
-    Returns only files matching RUN_*.py, sorted by name.
+
+    Returns entries for:
+      • RUN_*.yaml files  (loaded via yaml_service)
+      • RUN_*.py files that do NOT have a paired .yaml (to avoid duplicates)
+
+    List is sorted by filename.
+    Result is cached after the first call; call invalidate_run_info_cache()
+    to force a fresh scan (e.g. after adding/removing files).
     """
+    global _scan_cache
+    if _scan_cache is not None:
+        return _scan_cache
+
     if not RUNS_FOLDER.exists():
         return []
 
-    files = sorted(
-        f for f in RUNS_FOLDER.glob("RUN_*.py")
-        if f.is_file()
-    )
-    return [_build_run_info(f) for f in files]
+    # Collect stems that already have a .yaml source
+    yaml_stems = {
+        f.stem for f in RUNS_FOLDER.glob("RUN_*.yaml") if f.is_file()
+    }
+
+    results: list[dict] = []
+
+    # YAML files first
+    from app.services.yaml_service import load_yaml_run  # lazy import (module cached)
+    for yaml_path in sorted(RUNS_FOLDER.glob("RUN_*.yaml")):
+        if not yaml_path.is_file():
+            continue
+        info = load_yaml_run(yaml_path)
+        if info is not None:
+            results.append(info)
+            _run_info_cache[yaml_path.name] = info
+
+    # .py files only if no paired .yaml exists
+    for py_path in sorted(RUNS_FOLDER.glob("RUN_*.py")):
+        if not py_path.is_file():
+            continue
+        if py_path.stem in yaml_stems:
+            continue  # skip — the .yaml is the source of truth
+        info = _build_run_info(py_path)
+        results.append(info)
+        _run_info_cache[py_path.name] = info
+
+    # Sort combined list by filename
+    results.sort(key=lambda x: x["filename"])
+    _scan_cache = results
+    return results
 
 
 def get_run_details(filename: str) -> dict | None:
     """Return full parsed info for a single RUN file, or None if not found."""
+    if filename in _run_info_cache:
+        return _run_info_cache[filename]
+
     path = RUNS_FOLDER / filename
     if not path.exists() or not path.name.startswith("RUN_"):
         return None
-    return _build_run_info(path)
+    if path.suffix.lower() == ".yaml":
+        from app.services.yaml_service import load_yaml_run  # lazy import
+        info = load_yaml_run(path)
+    else:
+        info = _build_run_info(path)
+
+    if info is not None:
+        _run_info_cache[filename] = info
+    return info
 
 
 def get_run_content(filename: str) -> str | None:
@@ -180,9 +254,9 @@ def get_run_content(filename: str) -> str | None:
 
 def get_run_flow(filename: str) -> dict | None:
     """
-    Extract and return the active FLOW list from a RUN file.
+    Extract and return the active FLOW list from a RUN file (.py or .yaml).
 
-    Handles the common pattern:
+    Handles the common pattern in .py files:
         USE_TEST_FLOW = False
         FLOW_TEST = [...]
         FLOW_FULL = [...]
@@ -200,6 +274,12 @@ def get_run_flow(filename: str) -> dict | None:
     if not path.exists() or not path.name.startswith("RUN_"):
         return None
 
+    # Delegate YAML files to yaml_service
+    if path.suffix.lower() == ".yaml":
+        from app.services.yaml_service import get_yaml_flow  # lazy import
+        return get_yaml_flow(path)
+
+    # .py — original AST-based extraction
     content = path.read_text(encoding="utf-8", errors="replace")
     g = extract_globals(content)
 

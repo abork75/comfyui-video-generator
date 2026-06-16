@@ -196,18 +196,20 @@ def validate_and_prepare_config(config):
     # ============================================================
     
     project_folder = Path(config['project_folder'])
-    chains_folder = project_folder / 'transitions' / 'chains'
     missing_files = []
-    
+
     for flow_file in all_files:
+        # Only check physical SOURCE files (images/audio in project_folder).
+        # Skip generated outputs: chain videos (_is_chain), talk clips (mp4/talk_*),
+        # and any video file — those are always produced by the pipeline, never source.
         if flow_file.config.get('_is_chain', False):
-            file_path = chains_folder / flow_file.filename
-        else:
-            file_path = project_folder / flow_file.filename
-        
+            continue  # virtual chain output — will be generated
+        if flow_file.is_video():
+            continue  # talk clips and other generated mp4s — not source files
+        file_path = project_folder / flow_file.filename
         if not file_path.exists():
             missing_files.append(flow_file.filename)
-    
+
     if missing_files:
         result.add_warning(f"Missing {len(missing_files)} source file(s) - will fail at runtime")
     

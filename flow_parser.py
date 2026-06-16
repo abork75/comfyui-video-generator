@@ -95,9 +95,10 @@ class FlowParser:
         prev_file = None
         prev_config = None
         
-        for item in self.flow:
+        flow_list = list(self.flow)  # ensure indexable for lookahead
+        for _idx, item in enumerate(flow_list):
             # ===== BREAK =====
-            if isinstance(item, dict) and 'break' in item:
+            if isinstance(item, dict) and ('break' in item or item.get('type') == 'scene_break'):
                 if current_segment.files:
                     self.segments.append(current_segment)
                 current_segment = FlowSegment()
@@ -111,6 +112,24 @@ class FlowParser:
                 chain_base_config = {k: v for k, v in item.items() if k not in ['chain', 'chain_prefix', 'transition_to_next']}
                 chain_prefix = item.get('chain_prefix', 'chain_step')
                 transition_to_next = item.get('transition_to_next', None)
+
+                # Lookahead: find the next non-break physical file after this chain.
+                # Used to set _chain_end_target on the last step so batch generation
+                # can use it as the I2V2I end frame ("dociągnij do następnego ujęcia").
+                _chain_end_target = None
+                for _nxt in flow_list[_idx + 1:]:
+                    if isinstance(_nxt, dict) and ('break' in _nxt or _nxt.get('type') == 'scene_break'):
+                        break  # segment boundary — no target
+                    if isinstance(_nxt, dict) and 'chain' in _nxt:
+                        break  # another chain immediately after — no target
+                    if isinstance(_nxt, dict) and _nxt.get('type') == 'talk':
+                        break  # talk after chain — no end-frame target
+                    if isinstance(_nxt, dict) and 'file' in _nxt:
+                        _chain_end_target = _nxt['file']
+                        break
+                    if isinstance(_nxt, str):
+                        _chain_end_target = _nxt
+                        break
                 
                 # Expand each step as virtual file
                 for step_idx, step_config in enumerate(chain_steps, 1):
@@ -125,6 +144,10 @@ class FlowParser:
                     # Add transition_to_next ONLY to LAST step
                     if step_idx == len(chain_steps) and transition_to_next:
                         merged_config['transition_to_next'] = transition_to_next
+
+                    # Mark last step with end-target so batch can use I2V2I
+                    if step_idx == len(chain_steps) and _chain_end_target:
+                        merged_config['_chain_end_target'] = _chain_end_target
                     
                     # Virtual filename
                     virtual_file = f"{chain_prefix}_{step_idx:03d}.mp4"
@@ -173,6 +196,50 @@ class FlowParser:
                 # Chain expansion complete - prev_file now points to last chain step
                 continue
             
+            # ===== TALK =====
+            if isinstance(item, dict) and item.get('type') == 'talk':
+                # Prefer explicit prefix (avoids collisions when same mp3 is reused
+                # in multiple talk items throughout the flow)
+                explicit_prefix = (item.get('prefix') or '').strip()
+                if explicit_prefix:
+                    virtual_file = f"talk_{explicit_prefix}.mp4"
+                else:
+                    raw_audio = item.get('audio', '')
+                    if isinstance(raw_audio, list):
+                        first = raw_audio[0] if raw_audio else 'unknown'
+                    else:
+                        first = raw_audio
+                    # audio entry may be a dict {file, pos, neg} or a plain string
+                    if isinstance(first, dict):
+                        first = first.get('file', 'unknown')
+                    stem = Path(first).stem
+                    virtual_file = f"talk_{stem}.mp4"
+
+                # Store source image so batch pipeline can pass it to generation
+                talk_config = {**item, '_is_talk': True, '_source_image': prev_file}
+                current_segment.add_file(virtual_file, talk_config)
+                self.all_files.append(FlowFile(virtual_file, talk_config))
+
+                # Create a generation pair (source → talk) so that the talk
+                # clip becomes a first-class item in the batch retry loop.
+                # The pair uses _is_talk on to_config so the loop can dispatch
+                # it to the InfiniteTalk backend instead of ComfyUI.
+                if prev_file:
+                    pair = TransitionPair(
+                        from_file=prev_file,
+                        to_file=virtual_file,
+                        from_config=prev_config or {},
+                        to_config=talk_config,
+                    )
+                    current_segment.add_transition(pair)
+                    self.all_transitions.append(pair)
+
+                # Keep prev_file = talk clip so the next item (chain/image)
+                # gets a proper start-frame pair anchored to talk's end frame.
+                prev_file = virtual_file
+                prev_config = talk_config
+                continue
+
             # ===== FILE =====
             if isinstance(item, dict) and 'file' in item:
                 current_file = item['file']
@@ -182,19 +249,44 @@ class FlowParser:
                 current_segment.add_file(current_file, current_config)
                 self.all_files.append(FlowFile(current_file, current_config))
                 
-                # ✅ Add transition if prev exists
-                # This handles:
-                # - File → File (normal)
-                # - Chain_last → File (automatically, because prev_file is chain_last)
+                # Add transition pair only when appropriate:
+                # - File → File (normal bridge)
+                # - Chain_last → File only if transition_to_next is set on last step
+                # - Talk → File: NO bridge (talk clips cut to next scene by default)
+                #   (future: add bridge if talk has explicit 'transition:' config)
                 if prev_file:
-                    pair = TransitionPair(
-                        from_file=prev_file,
-                        to_file=current_file,
-                        from_config=prev_config,
-                        to_config=current_config
-                    )
-                    current_segment.add_transition(pair)
-                    self.all_transitions.append(pair)
+                    _prev_is_talk  = (prev_config or {}).get('_is_talk', False)
+                    _prev_is_chain = (prev_config or {}).get('_is_chain', False)
+
+                    _should_pair = True
+                    if _prev_is_talk:
+                        # talk → file: cut by default; bridge only if talk has 'transition:' key
+                        _should_pair = bool((prev_config or {}).get('transition'))
+                    elif _prev_is_chain:
+                        # chain → file: bridge only when explicitly requested
+                        _should_pair = bool((prev_config or {}).get('transition_to_next'))
+
+                    if _should_pair:
+                        # For talk→file bridge: overlay transition params from
+                        # talk's 'transition:' sub-dict so batch reads correct
+                        # duration/fps/steps/cfg/pos/neg for this bridge clip.
+                        _to_cfg = current_config
+                        if _prev_is_talk:
+                            _talk_trans = (prev_config or {}).get('transition') or {}
+                            if _talk_trans:
+                                _to_cfg = {**current_config}
+                                for _k in ('duration', 'fps', 'steps', 'cfg', 'pos', 'neg', 'backend'):
+                                    if _k in _talk_trans:
+                                        _to_cfg[_k] = _talk_trans[_k]
+
+                        pair = TransitionPair(
+                            from_file=prev_file,
+                            to_file=current_file,
+                            from_config=prev_config,
+                            to_config=_to_cfg
+                        )
+                        current_segment.add_transition(pair)
+                        self.all_transitions.append(pair)
                 
                 prev_file = current_file
                 prev_config = current_config
@@ -222,41 +314,50 @@ class FlowParser:
         """Get list of files for concat (with transitions)"""
         transitions_folder = project_folder / 'transitions'
         chains_folder = transitions_folder / 'chains'
+        talks_folder = transitions_folder / 'talks'
         concat_list = []
-        
+
         for segment in self.segments:
             prev_file = None
             prev_flow_file = None
-            
+
             for flow_file in segment.files:
                 current_file = flow_file.filename
                 current_is_chain = flow_file.config.get('_is_chain', False)
-                
+                current_is_talk  = flow_file.config.get('_is_talk',  False)
+
                 # ===== TRANSITION =====
                 if prev_file:
                     prev_is_chain = prev_flow_file.config.get('_is_chain', False)
-                    
+                    prev_is_talk  = prev_flow_file.config.get('_is_talk',  False)
+
                     # Determine if we should add transition
                     should_add_transition = False
-                    
-                    if not prev_is_chain and not current_is_chain:
+
+                    if not prev_is_chain and not prev_is_talk and not current_is_chain and not current_is_talk:
                         # Normal file → file
                         should_add_transition = True
                     elif prev_is_chain and not current_is_chain:
                         # Chain → file - check for transition_to_next
                         if prev_flow_file.config.get('transition_to_next'):
                             should_add_transition = True
-                    
+                    elif prev_is_talk:
+                        # Talk → next: bridge only if talk has explicit 'transition:' config
+                        if prev_flow_file.config.get('transition'):
+                            should_add_transition = True
+
                     if should_add_transition:
                         trans_name = f"{Path(prev_file).stem}_{Path(current_file).stem}_transition.mp4"
                         trans_path = transitions_folder / trans_name
-                        
+
                         if trans_path.exists():
                             concat_list.append(trans_path)
-                
+
                 # ===== SOURCE FILE =====
                 if current_is_chain:
                     current_path = chains_folder / current_file
+                elif current_is_talk:
+                    current_path = talks_folder / current_file
                 else:
                     current_path = project_folder / current_file
                 
@@ -281,47 +382,53 @@ class FlowParser:
         """Get list for numbered flow copying"""
         transitions_folder = project_folder / 'transitions'
         chains_folder = transitions_folder / 'chains'
+        talks_folder  = transitions_folder / 'talks'
         numbered_list = []
-        
+
         for segment in self.segments:
             prev_file = None
             prev_flow_file = None
-            
+
             for flow_file in segment.files:
                 current_file = flow_file.filename
                 current_is_chain = flow_file.config.get('_is_chain', False)
-                
-                # ===== TRANSITION ===== (FIXED!)
+                current_is_talk  = flow_file.config.get('_is_talk',  False)
+
+                # ===== TRANSITION =====
                 if prev_file:
                     prev_is_chain = prev_flow_file.config.get('_is_chain', False)
-                    
-                    # ========================================
-                    # FIX: Determine if we should add transition
-                    # ========================================
+                    prev_is_talk  = prev_flow_file.config.get('_is_talk',  False)
+
                     should_add_transition = False
-                    
-                    if not prev_is_chain and not current_is_chain:
+
+                    if not prev_is_chain and not prev_is_talk and not current_is_chain and not current_is_talk:
                         # Normal file → file
                         should_add_transition = True
                     elif prev_is_chain and not current_is_chain:
                         # Chain → file - check for transition_to_next
                         if prev_flow_file.config.get('transition_to_next'):
                             should_add_transition = True
-                    
+                    elif prev_is_talk:
+                        # Talk → next: bridge only if talk has explicit 'transition:' config
+                        if prev_flow_file.config.get('transition'):
+                            should_add_transition = True
+
                     if should_add_transition:
                         trans_name = f"{Path(prev_file).stem}_{Path(current_file).stem}_transition.mp4"
                         trans_path = transitions_folder / trans_name
-                        
+
                         numbered_list.append({
                             'type': 'transition',
                             'path': trans_path,
                             'name': trans_name,
                             'exists': trans_path.exists()
                         })
-                
+
                 # ===== SOURCE FILE =====
                 if current_is_chain:
                     current_path = chains_folder / current_file
+                elif current_is_talk:
+                    current_path = talks_folder / current_file
                 else:
                     current_path = project_folder / current_file
                 

@@ -1,0 +1,693 @@
+# i2i_prompts.yaml — Globalna biblioteka promptów Image-to-Image (Qwen Inpaint)
+# Edytuj z poziomu zakładki Pic w aplikacji lub bezpośrednio w tym pliku.
+
+categories:
+- id: repose
+  name: Repose Woman
+  icon: 🧍
+  order: 1
+- id: fotorealizm
+  name: Fotorealizm
+  icon: 📷
+  order: 2
+- id: character_insert
+  name: Wstawianie postaci
+  icon: 🧩
+  order: 3
+- id: usun_tlo
+  name: Usun_tlo
+  icon: 🗂
+  order: 4
+- id: system
+  name: System
+  icon: ⚙️
+  order: 99
+- id: zmiana_ubrania
+  name: zmiana ubrania
+  icon: 🤖
+  order: 100
+- id: body_shape
+  name: body shape
+  icon: 🐦
+  order: 101
+defaults:
+  steps: 30
+  cfg: 8
+  denoise: 1.0
+prompts:
+- id: p0000001
+  category: repose
+  name: glupia mina
+  note: ''
+  positive: hands up silly face
+  negative: cloth change, face change
+  params:
+    steps: 30
+    cfg: 8.0
+    denoise: 1.0
+- id: p0000002
+  category: repose
+  name: Ręce pod boki, rozstawione nogi
+  note: ''
+  positive: 'Repose the woman: Her full body is visible from feet to head. Full frontal view, standing confidently facing the camera. Left leg stepped forward, right leg straight behind, hips cocked to the side. Both hands resting on her hips with elbows out, strong power pose. She looks straight at the viewer with a bold, defiant, provocative and seductive expression, intense eye contact, slightly raised chin. Confident and challenging attitude, sharp detailed face, realistic hands and body proportions, cinematic lighting, high detail'
+  negative: different face, wrong identity, changed facial features, altered eye color, different nose shape, different lip shape, different skin tone, clothing change, background change, blurry face, distorted face, deformed face, asymmetrical face, multiple faces, extra limbs, artifacts, low quality, bad anatomy
+  params:
+    steps: 30
+    cfg: 8.0
+    denoise: 1.0
+- id: p0000003
+  category: repose
+  name: Baczność przodem
+  note: ''
+  positive: Repose the woman into a strict military 'attention' position. Her full body is visible from feet to head. Standing perfectly upright and rigid, facing directly to the camera. Feet joined together, legs straight, arms hanging naturally down at her sides with palms facing inward and fingers extended touching her thighs. Shoulders pulled back, spine straight, chin slightly up, direct neutral gaze into the camera. Disciplined, formal and powerful stance, highly detailed body proportions, realistic hands, sharp focus
+  negative: different face, wrong identity, changed facial features, altered skin tone, clothing change, background change, blurry face, distorted face, deformed anatomy, asymmetrical face, extra limbs, artifacts, low quality, bad anatomy, slouching
+  params:
+    steps: 30
+    cfg: 8.0
+    denoise: 1.0
+- id: p0000004
+  category: repose
+  name: Baczność tyłem
+  note: 'Uwaga: model może zmieniać strój na mundur'
+  positive: Change the woman's pose to a very formal, strict standing position from the back. Her full body is visible from feet to head. She stands perfectly straight and tall, back view, facing away from the camera. Feet joined together, legs straight, arms relaxed but formal at her sides with palms facing inward and fingers extended along her thighs. Shoulders back, excellent posture, head looking straight forward. Preserve her current outfit exactly as it is. Elegant and disciplined body alignment, realistic anatomy, high detail, photorealistic.
+  negative: different face, wrong identity, clothing change, outfit change, uniform added, background change, blurry, distorted anatomy, extra limbs, artifacts, low quality
+  params:
+    steps: 30
+    cfg: 8.0
+    denoise: 1.0
+- id: p0000005
+  category: repose
+  name: Rozchylone nogi, ręce w górze
+  note: ''
+  positive: 'Edit the woman''s pose: Her full body is visible from feet to head. Change her stance so she is standing with her legs spread wide apart (shoulder-width or wider) and both arms raised straight up above her head. Her hands can be either clasped together or apart, palms facing forward. Keep her exact body proportions, torso position, head orientation, facial expression, hair, clothing, and all other details unchanged. Only modify the position of her legs and arms. Maintain realistic anatomy, natural balance, correct shoulder and hip positioning. Photorealistic, seamless edit, high detail, perfect body proportions.'
+  negative: different face, wrong identity, changed facial features, clothing change, background change, blurry face, distorted anatomy, extra limbs, artifacts, low quality, bad anatomy
+  params:
+    steps: 30
+    cfg: 8.0
+    denoise: 1.0
+- id: p0000006
+  category: repose
+  name: Pochylona przodem, ręce na udach
+  note: ''
+  positive: 'Change the woman''s pose: Her full body is visible from feet to head. Her full body is visible from feet to head. She is now leaning forward at the waist, with her upper body tilted toward the camera. Both of her hands are resting on her thighs (palms on top of thighs or fingers gripping them). She is looking directly at the camera with a strong eye contact. Keep her exact facial expression, head angle (only slight adjustment for looking at camera), hair, clothing, body proportions, lighting, and background unchanged. Only modify the torso lean, arm position, and hand placement. Maintain realistic anatomy, natural spine curvature, balanced weight distribution, and correct shoulder positioning. Photorealistic, seamless edit, high detail, perfect proportions.'
+  negative: different face, wrong identity, changed facial features, clothing change, background change, blurry face, distorted anatomy, unnatural spine, extra limbs, artifacts, low quality
+  params:
+    steps: 30
+    cfg: 8.0
+    denoise: 1.0
+- id: p0000007
+  category: repose
+  name: Stoi przodem, ręce za głową
+  note: ''
+  positive: 'Change the woman''s pose: Her full body is visible from feet to head. She is now standing with her legs spread wide apart (feet significantly wider than shoulder width). Both hands are raised and placed behind her head, fingers interlocked or resting on the back of her head, elbows pointing outwards. Keep her exact torso position, upper body orientation, facial expression, head direction, hair, clothing, lighting, and background completely unchanged. Only modify the leg position (wide stance) and arm/hand position. Maintain realistic anatomy, natural balance, correct hip alignment, shoulder positioning and muscle tension. Photorealistic, seamless edit, high detail, perfect body proportions.'
+  negative: different face, wrong identity, changed facial features, clothing change, background change, blurry face, distorted anatomy, extra limbs, artifacts, low quality
+  params:
+    steps: 30
+    cfg: 8.0
+    denoise: 1.0
+- id: p0000008
+  category: repose
+  name: Bokiem, ręka na głowie i na tyłku
+  note: ''
+  positive: 'Change the woman''s pose to a side view (profile pose): Her full body is visible from feet to head. She is standing in profile, showing her body from the side. She is slightly leaning forward at the waist. One hand is placed on her buttock (grabbing or resting on her rear), the other hand is raised and resting behind her head with fingers in her hair or on the back of her head, elbow pointing up. Keep her exact facial features, expression (looking toward the side or slightly toward camera if possible), hair, clothing, body proportions, lighting, and background unchanged. Only modify the body rotation (to side view), torso lean, and arm/hand positions. Maintain realistic anatomy, natural spine curvature, correct shoulder and hip alignment. Photorealistic, seamless edit, high detail, perfect proportions.'
+  negative: different face, wrong identity, changed facial features, clothing change, background change, blurry face, distorted anatomy, extra limbs, front view, artifacts, low quality
+  params:
+    steps: 30
+    cfg: 8.0
+    denoise: 1.0
+- id: p0000009
+  category: repose
+  name: Taneczna poza (klub)
+  note: ''
+  positive: Repose the woman into a dynamic, energetic dance pose typical of a nightclub or disco party. Her full body is visible from feet to head. She is dancing freely and sensually — body slightly arched, hips tilted, one leg bent with weight on one foot, the other leg more extended. Arms raised and bent in a natural, expressive club dancing gesture, hands moving near her head or body. Give the model creative freedom for a sexy, fun, and confident club dance move. Energetic, rhythmic and seductive pose, not ballet or classical dance. Keep her exact clothing, hair, facial expression and overall style. Realistic anatomy, dynamic body movement, photorealistic, seamless edit, high detail. Solid white background.
+  negative: different face, wrong identity, changed facial features, clothing change, static pose, ballet pose, classical dance, blurry face, distorted anatomy, extra limbs, artifacts, low quality
+  params:
+    steps: 30
+    cfg: 8.0
+    denoise: 1.0
+- id: p0000010
+  category: repose
+  name: Klęczy tyłem
+  note: 'Uwaga: możliwy problem z rozmiarem postaci'
+  positive: Repose the woman into a strict kneeling position seen from behind. Her full body is visible from feet to head. Back view, kneeling upright on both knees with her back to the camera, spine straight, shoulders back, head facing forward. Arms relaxed downward with hands resting on her thighs or lightly touching the back of her legs. Weight resting on her heels, natural and graceful kneeling posture. Preserve the exact same clothing and outfit as in the original image — do not change or replace any clothes. Highly detailed body, realistic skin and fabric, cinematic lighting
+  negative: different face, wrong identity, clothing change, outfit change, front view, standing pose, background change, blurry, distorted anatomy, extra limbs, artifacts, low quality
+  params:
+    steps: 30
+    cfg: 8.0
+    denoise: 1.0
+- id: p0000011
+  category: repose
+  name: Siedzi na łóżku, nogi szeroko
+  note: ''
+  positive: Repose the woman so she is sitting on the bed facing the camera. Her full body is visible from feet to head. Front view, legs wide open. Both hands placed neatly on the bed, palms facing down. Straight posture, back upright, shoulders relaxed, direct eye contact with the viewer. Natural and graceful seated position, highly detailed body proportions, realistic fabric folds, soft cinematic lighting, sharp focus
+  negative: different face, wrong identity, changed facial features, clothing change, background change, standing pose, blurry face, distorted anatomy, crossed legs, extra limbs, artifacts, low quality
+  params:
+    steps: 30
+    cfg: 8.0
+    denoise: 1.0
+- id: p0000012
+  category: repose
+  name: Siedzi na łóżku, nogi złączone
+  note: ''
+  positive: Repose the woman so she is sitting on the bed facing the camera. Her full body is visible from feet to head. Front view, legs tightly closed and pressed together, knees touching. Both hands placed neatly on her knees, palms facing down. Straight posture, back upright, shoulders relaxed, direct eye contact with the viewer. Natural and graceful seated position, highly detailed body proportions, realistic fabric folds, soft cinematic lighting, sharp focus
+  negative: different face, wrong identity, changed facial features, clothing change, background change, standing pose, blurry face, distorted anatomy, spread legs, extra limbs, artifacts, low quality
+  params:
+    steps: 30
+    cfg: 8.0
+    denoise: 1.0
+- id: p0000013
+  category: repose
+  name: Leży — ręce wyciągnięte w górze
+  note: ''
+  positive: Edit the image so that the woman lying on the bed has both arms fully extended straight up above her head, stretched towards the ceiling/top of the frame, elbows straight, palms facing each other or inward. Do not change anything else — keep her exact lying pose, leg position, hips, torso, head tilt, facial expression, hair, lingerie/outfit, bedsheets, lighting, shadows, and camera framing identical. Only the arms should be moved. Perfect anatomy, no deformation, photorealistic, high detail.
+  negative: different face, wrong identity, changed facial features, clothing change, outfit change, changed leg position, sitting up, background change, changed bedsheets, blurry, distorted anatomy, extra limbs, artifacts, low quality
+  params:
+    steps: 30
+    cfg: 8
+    denoise: 1.0
+- id: p0000014
+  category: repose
+  name: Zmiana wyrazu — znudzony
+  note: ''
+  positive: Change the woman's facial expression to bored and disinterested. Heavy, half-lowered eyelids, tired and apathetic eyes looking slightly downward or to the side, relaxed eyebrows, mouth slightly parted with a subtle "whatever" expression, no smile. Make it look natural and realistic. Keep her exact face shape, skin details, hair, clothing, pose, lighting and background completely unchanged.
+  negative: different face, wrong identity, changed facial features, changed skin tone, changed face shape, clothing change, background change, pose change, smile, happy expression, blurry face, distorted features, artifacts, low quality
+  params:
+    steps: 30
+    cfg: 8
+    denoise: 1.0
+- id: p0000015
+  category: fotorealizm
+  name: Pełny fotorealizm
+  note: ''
+  positive: 'Enhance the overall photorealism of the entire image to the highest possible level while keeping the scene 100% unchanged. Dramatically improve skin texture, skin pores, micro skin details, realistic subsurface scattering, natural skin imperfections, realistic eye details, hair strands, fabric texture and material details. Add natural cinematic lighting, realistic shadows, subtle ambient occlusion and depth. Increase overall sharpness, clarity and photographic quality to look like a real high-end photo taken with a professional camera. Strictly preserve everything else: Do not change the scene, background, lighting direction or atmosphere. Do not change camera position, angle or perspective. Do not change any person''s pose, position or expression. Do not change any clothing, outfit, accessories or fabric. Do not add or remove any objects. Only enhance photorealism, texture quality and natural details. Make it look like an ultra-realistic photograph, 8k, extremely detailed, photorealistic, masterpiece, best quality'
+  negative: cartoon, illustration, painting, drawing, 3d render, cgi, plastic skin, waxy skin, doll face, anime, stylized, deformed, mutated, extra limbs, changed pose, moved camera, different angle, clothing change, outfit change, new objects, added elements, removed elements, different lighting, color grading change, overexposed, underexposed, artifacts, blur, low quality, bad anatomy
+  params:
+    steps: 30
+    cfg: 8
+    denoise: 1.0
+- id: p0000016
+  category: usun_tlo
+  name: usun_tlo_1
+  note: ''
+  positive: Remove the entire background and replace it with a perfectly solid pure white (#FFFFFF) background. Remove all shadows, cast shadows, drop shadows and reflections from the floor. Keep the subject completely intact with clean, sharp edges. The result must be a clean studio cutout on flat white — no gradients, no vignette, no ground plane, no texture.
+  negative: shadow, cast shadow, drop shadow, ground shadow, floor shadow, body shadow, reflection, gradient, gray background, off-white, texture, noise, vignette, background objects, floor, surface, dark corners
+  params:
+    steps: 30
+    cfg: 8.0
+    denoise: 1.0
+- id: p0000018
+  category: character_insert
+  name: wstaw 1 kobiete
+  note: ''
+  positive: "Place the woman from image 2 into the scene from image 1. \nPreserve her exact face, skin tone, hair, body proportions and clothing. \nMatch the pose and scale to fit naturally into the scene. \nSeamless integration, photorealistic, high detail."
+  negative: ''
+  params:
+    steps: 30
+    cfg: 8.0
+    denoise: 1.0
+- id: p0000019
+  category: character_insert
+  name: wstaw 2 kobiety
+  note: ''
+  positive: 'Place the woman from image 2 and the woman from image 3 into the scene from image 1.
+
+
+    The woman from image 2: preserve her exact face, skin tone, hair, body proportions, clothing and original pose exactly as she appears in image 2.
+
+    The woman from image 3: preserve her exact face, skin tone, hair, body proportions, clothing and original pose exactly as she appears in image 3.
+
+
+    Do not mix facial features or poses between the two women.
+
+    Position both women naturally within the scene, matching their scale to the environment.
+
+    Only modify the masked area, keep the rest of image 1 unchanged.
+
+    Seamless integration, photorealistic, high detail.'
+  negative: 'smooth skin, teenager, childlike, plastic skin, unnatural aging, deformed face, bad anatomy, different pose, changed body position, different clothing, different hair, cartoonish, low detail, overdone wrinkles, makeup change, different ethnicity
+
+    blurry, soft focus, out of focus, blur, motion blur, haze, foggy, low sharpness, low detail, low quality, noise, grain'
+  params:
+    steps: 30
+    cfg: 8.0
+    denoise: 1.0
+- id: p0000020
+  category: system
+  name: Blend — woman composite
+  note: ''
+  positive: 'Fix the compositing of the woman on the image. She was manually pasted and needs to be blended naturally into the scene. Specifically:
+
+
+    Remove all hard edges, halos and visible cutout borders around her body
+
+
+    Add realistic shadows beneath her feet and cast shadows on the ground matching the light source direction in the scene
+
+
+    Match her skin tone, color temperature and overall color grading to the rest of the image
+
+
+    Match her sharpness and depth of field to the other woman
+
+
+    Blend her hair edges naturally with the background
+
+
+    Make the final result look like a single unified photograph taken with one camera. Do not move her position. Do not change her pose. Do not modify the woman on the right.'
+  negative: hard edges, visible cutout, halo, color mismatch, skin tone mismatch, sharp border, unnatural lighting, flat lighting, moved position, changed pose, artifacts, overexposed, underexposed
+  params:
+    steps: 30
+    cfg: 8.0
+    denoise: 1.0
+- id: p0000021
+  category: system
+  name: Edge Blend — krawędzie postaci
+  note: Pass 1 — inpainting w strefie maski (15px wokół sylwetki). Używany z ci_1ref (scena+maska + ref postaci).
+  positive: 'You have two inputs: image 1 is the composited scene, image 2 is the original reference character. Using image 2 as reference, repair and improve the character in image 1. Fix all of the following:
+
+
+    1. EDGES: Remove all hard cutout edges, halos and white fringing around the character''s silhouette. Blend her edges naturally into the background — match local lighting, color temperature and depth of field.
+
+
+    2. BODY RECONSTRUCTION: Where parts of the character''s body are blurry, incomplete, distorted or missing (e.g. blurry fingers, cut-off limbs, broken anatomy) — reconstruct them correctly using image 2 as the reference. Restore sharp, realistic anatomy.
+
+
+    3. SKIN AND DETAIL: Match the character''s skin tone, sharpness and detail level to image 2. Remove any softness or blur on the character''s body.
+
+
+    Do not move the character. Do not change her pose or position. Do not modify the background outside the character area. Preserve the character''s face, clothing and identity.'
+  negative: changed pose, moved character, different face, different clothing, background change, artifacts, distorted anatomy, color shift on character body, overexposed, underexposed, blurry fingers, missing limbs, broken anatomy
+  params:
+    steps: 30
+    cfg: 8.0
+    denoise: 1.0
+- id: p0000022
+  category: system
+  name: Scene Blend — cienie i spójność sceny
+  note: Pass 2 — pełny obrazek, niski denoise. Dodaje cienie i wyrównuje całą scenę.
+  positive: 'Enhance the realism of the full composited scene. Add a natural cast shadow beneath the composited character''s feet and body — match the exact direction, length, softness and intensity of the shadows already cast by the other people in the scene. Use the existing shadows as a reference: if other figures cast long soft shadows to one side, the composited character must cast an identical shadow in the same direction with the same quality. Add subtle ambient occlusion where the character meets the floor or nearby surfaces. Match the character''s overall color grading, brightness and contrast to the other figures in the scene. Make the result look like a single unified photograph taken with one camera. Do not move or change the character''s position, pose, face or clothing. Do not alter the background structure or change the other people already in the scene.'
+  negative: changed pose, moved character, different face, different clothing, background restructured, artifacts, removed character, new people added, overexposed, underexposed, blurry, inconsistent shadow direction, shadow pointing wrong way, mismatched shadow length, no shadow under feet, floating character
+  params:
+    steps: 30
+    cfg: 8.0
+    denoise: 0.4
+- id: p0000023
+  category: ''
+  name: usuwa postać z plakatu
+  note: ''
+  positive: "Edit the image: Completely remove the woman/model from the poster on the wall. The poster itself must stay exactly where it is, with the same frame, edges, lighting and texture, but now it should be completely blank and empty — no person visible on it at all. \n\nDo not remove or change the poster paper, only erase the figure printed on it. Perfect seamless inpainting, natural blank poster appearance, consistent lighting and shadows with the rest of the room, photorealistic, high detail."
+  negative: changed room, altered background, modified walls, different lighting, changed shadows, removed furniture, altered objects, changed perspective, deformed poster, damaged poster, torn poster, wrinkled poster, extra objects, missing objects, new elements added, different composition, blurry, artifacts, low quality, poster moved, poster resized, woman still visible on poster, partial removal, ghosting, residue of person, text on poster, logo on poster, different poster style
+  params:
+    steps: 30
+    cfg: 8
+    denoise: 1
+- id: p0000024
+  category: ''
+  name: Pochylona przodem ręce na udach - cała postać
+  note: ''
+  positive: 'Change the woman''s pose: Her full body is visible from feet to head. She is now leaning forward at the waist, with her upper body tilted toward the camera. Both of her hands are resting on her thighs (palms on top of thighs or fingers gripping them). She is looking directly at the camera with a strong eye contact. Keep her exact facial expression, head angle (only slight adjustment for looking at camera), hair, clothing, body proportions, lighting, and background unchanged. Only modify the torso lean, arm position, and hand placement. Maintain realistic anatomy, natural spine curvature, balanced weight distribution, and correct shoulder positioning. Photorealistic, seamless edit, high detail, perfect proportions.'
+  negative: ''
+  params:
+    steps: 30
+    cfg: 8
+    denoise: 1
+- id: p0000025
+  category: ''
+  name: Zmiana pozy na pilce
+  note: ''
+  positive: "Change the woman's pose on the large exercise ball to a more dynamic and active position. She is now firmly gripping the sides of the ball with both hands — palms pressing against the left and right sides of the ball, fingers spread and engaged. \n\nHer arms are bent, shoulders slightly forward, upper body leaning a bit more dynamically over the ball. The pose looks energetic, controlled and stable. \n\nKeep her exact facial expression, head position, hair, clothing, leg position, lighting, shadows and background completely unchanged. Only modify the position of her arms and hands and make a slight adjustment to the torso lean for a more dynamic feel. \n\nRealistic hand grip and pressure on the ball, natural muscle tension, perfect anatomy, photorealistic, seamless edit, high detail."
+  negative: hands on knees, hands in lap, resting hands, static pose, arms straight, hands not touching ball, weak grip, floating hands, deformed hands, extra fingers, bad hand anatomy, stiff arms, hunched back, overly leaned forward, bad balance, unnatural posture, deformed ball, ball deformation, changed leg position, changed facial expression, different clothing, different hair, altered lighting, shadows changed, low quality, artifacts, blurry hands, rubbery arms, unrealistic grip, minimal movement, no dynamic pose
+  params:
+    steps: 30
+    cfg: 8
+    denoise: 1
+- id: p0000026
+  category: ''
+  name: Zmiana pozy na pilce
+  note: ''
+  positive: "Change the woman's pose on the large exercise ball to a more dynamic and active position. She is now firmly gripping the sides of the ball with both hands — palms pressing against the left and right sides of the ball, fingers spread and engaged. \n\nHer arms are bent, shoulders slightly forward, upper body leaning a bit more dynamically over the ball. The pose looks energetic, controlled and stable. \n\nKeep her exact facial expression, head position, hair, clothing, leg position, lighting, shadows and background completely unchanged. Only modify the position of her arms and hands and make a slight adjustment to the torso lean for a more dynamic feel. \n\nRealistic hand grip and pressure on the ball, natural muscle tension, perfect anatomy, photorealistic, seamless edit, high detail."
+  negative: hands on knees, hands in lap, resting hands, static pose, arms straight, hands not touching ball, weak grip, floating hands, deformed hands, extra fingers, bad hand anatomy, stiff arms, hunched back, overly leaned forward, bad balance, unnatural posture, deformed ball, ball deformation, changed leg position, changed facial expression, different clothing, different hair, altered lighting, shadows changed, low quality, artifacts, blurry hands, rubbery arms, unrealistic grip, minimal movement, no dynamic pose
+  params:
+    steps: 30
+    cfg: 8
+    denoise: 1
+- id: p0000027
+  category: ''
+  name: Zmiana pozy na pilce
+  note: ''
+  positive: "Change the woman's pose on the large exercise ball to a more dynamic and active position. She is now firmly gripping the sides of the ball with both hands — palms pressing against the left and right sides of the ball, fingers spread and engaged. \n\nHer arms are bent, shoulders slightly forward, upper body leaning a bit more dynamically over the ball. The pose looks energetic, controlled and stable. \n\nKeep her exact facial expression, head position, hair, clothing, leg position, lighting, shadows and background completely unchanged. Only modify the position of her arms and hands and make a slight adjustment to the torso lean for a more dynamic feel. \n\nRealistic hand grip and pressure on the ball, natural muscle tension, perfect anatomy, photorealistic, seamless edit, high detail."
+  negative: hands on knees, hands in lap, resting hands, static pose, arms straight, hands not touching ball, weak grip, floating hands, deformed hands, extra fingers, bad hand anatomy, stiff arms, hunched back, overly leaned forward, bad balance, unnatural posture, deformed ball, ball deformation, changed leg position, changed facial expression, different clothing, different hair, altered lighting, shadows changed, low quality, artifacts, blurry hands, rubbery arms, unrealistic grip, minimal movement, no dynamic pose
+  params:
+    steps: 30
+    cfg: 8
+    denoise: 1
+- id: p0000028
+  category: ''
+  name: Zmiana pozy na pilce
+  note: ''
+  positive: "Change the woman's pose on the large exercise ball to a more dynamic and active position. She is now firmly gripping the sides of the ball with both hands — palms pressing against the left and right sides of the ball, fingers spread and engaged. \n\nHer arms are bent, shoulders slightly forward, upper body leaning a bit more dynamically over the ball. The pose looks energetic, controlled and stable. \n\nKeep her exact facial expression, head position, hair, clothing, leg position, lighting, shadows and background completely unchanged. Only modify the position of her arms and hands and make a slight adjustment to the torso lean for a more dynamic feel. \n\nRealistic hand grip and pressure on the ball, natural muscle tension, perfect anatomy, photorealistic, seamless edit, high detail."
+  negative: hands on knees, hands in lap, resting hands, static pose, arms straight, hands not touching ball, weak grip, floating hands, deformed hands, extra fingers, bad hand anatomy, stiff arms, hunched back, overly leaned forward, bad balance, unnatural posture, deformed ball, ball deformation, changed leg position, changed facial expression, different clothing, different hair, altered lighting, shadows changed, low quality, artifacts, blurry hands, rubbery arms, unrealistic grip, minimal movement, no dynamic pose
+  params:
+    steps: 30
+    cfg: 8
+    denoise: 1
+- id: p0000029
+  category: ''
+  name: Zmiana pozy na pilce
+  note: ''
+  positive: "Change the woman's pose on the large exercise ball to a more dynamic and active position. She is now firmly gripping the sides of the ball with both hands — palms pressing against the left and right sides of the ball, fingers spread and engaged. \n\nHer arms are bent, shoulders slightly forward, upper body leaning a bit more dynamically over the ball. The pose looks energetic, controlled and stable. \n\nKeep her exact facial expression, head position, hair, clothing, leg position, lighting, shadows and background completely unchanged. Only modify the position of her arms and hands and make a slight adjustment to the torso lean for a more dynamic feel. \n\nRealistic hand grip and pressure on the ball, natural muscle tension, perfect anatomy, photorealistic, seamless edit, high detail."
+  negative: hands on knees, hands in lap, resting hands, static pose, arms straight, hands not touching ball, weak grip, floating hands, deformed hands, extra fingers, bad hand anatomy, stiff arms, hunched back, overly leaned forward, bad balance, unnatural posture, deformed ball, ball deformation, changed leg position, changed facial expression, different clothing, different hair, altered lighting, shadows changed, low quality, artifacts, blurry hands, rubbery arms, unrealistic grip, minimal movement, no dynamic pose
+  params:
+    steps: 30
+    cfg: 8
+    denoise: 1
+- id: p0000030
+  category: ''
+  name: Zmiana pozy na pilce
+  note: ''
+  positive: "Change the woman's pose on the large exercise ball to a more dynamic and active position. She is now firmly gripping the sides of the ball with both hands — palms pressing against the left and right sides of the ball, fingers spread and engaged. \n\nHer arms are bent, shoulders slightly forward, upper body leaning a bit more dynamically over the ball. The pose looks energetic, controlled and stable. \n\nKeep her exact facial expression, head position, hair, clothing, leg position, lighting, shadows and background completely unchanged. Only modify the position of her arms and hands and make a slight adjustment to the torso lean for a more dynamic feel. \n\nRealistic hand grip and pressure on the ball, natural muscle tension, perfect anatomy, photorealistic, seamless edit, high detail."
+  negative: hands on knees, hands in lap, resting hands, static pose, arms straight, hands not touching ball, weak grip, floating hands, deformed hands, extra fingers, bad hand anatomy, stiff arms, hunched back, overly leaned forward, bad balance, unnatural posture, deformed ball, ball deformation, changed leg position, changed facial expression, different clothing, different hair, altered lighting, shadows changed, low quality, artifacts, blurry hands, rubbery arms, unrealistic grip, minimal movement, no dynamic pose
+  params:
+    steps: 30
+    cfg: 8
+    denoise: 1
+- id: p0000031
+  category: ''
+  name: Zmiana pozy na pilce
+  note: ''
+  positive: "Change the woman's pose on the large exercise ball to a more dynamic and active position. She is now firmly gripping the sides of the ball with both hands — palms pressing against the left and right sides of the ball, fingers spread and engaged. \n\nHer arms are bent, shoulders slightly forward, upper body leaning a bit more dynamically over the ball. The pose looks energetic, controlled and stable. \n\nKeep her exact facial expression, head position, hair, clothing, leg position, lighting, shadows and background completely unchanged. Only modify the position of her arms and hands and make a slight adjustment to the torso lean for a more dynamic feel. \n\nRealistic hand grip and pressure on the ball, natural muscle tension, perfect anatomy, photorealistic, seamless edit, high detail."
+  negative: hands on knees, hands in lap, resting hands, static pose, arms straight, hands not touching ball, weak grip, floating hands, deformed hands, extra fingers, bad hand anatomy, stiff arms, hunched back, overly leaned forward, bad balance, unnatural posture, deformed ball, ball deformation, changed leg position, changed facial expression, different clothing, different hair, altered lighting, shadows changed, low quality, artifacts, blurry hands, rubbery arms, unrealistic grip, minimal movement, no dynamic pose
+  params:
+    steps: 30
+    cfg: 8
+    denoise: 1
+- id: p0000032
+  category: ''
+  name: Zmiana pozy na pilce
+  note: ''
+  positive: "Change the woman's pose on the large exercise ball to a more dynamic and active position. She is now firmly gripping the sides of the ball with both hands — palms pressing against the left and right sides of the ball, fingers spread and engaged. \n\nHer arms are bent, shoulders slightly forward, upper body leaning a bit more dynamically over the ball. The pose looks energetic, controlled and stable. \n\nKeep her exact facial expression, head position, hair, clothing, leg position, lighting, shadows and background completely unchanged. Only modify the position of her arms and hands and make a slight adjustment to the torso lean for a more dynamic feel. \n\nRealistic hand grip and pressure on the ball, natural muscle tension, perfect anatomy, photorealistic, seamless edit, high detail."
+  negative: hands on knees, hands in lap, resting hands, static pose, arms straight, hands not touching ball, weak grip, floating hands, deformed hands, extra fingers, bad hand anatomy, stiff arms, hunched back, overly leaned forward, bad balance, unnatural posture, deformed ball, ball deformation, changed leg position, changed facial expression, different clothing, different hair, altered lighting, shadows changed, low quality, artifacts, blurry hands, rubbery arms, unrealistic grip, minimal movement, no dynamic pose
+  params:
+    steps: 30
+    cfg: 8
+    denoise: 1
+- id: p0000033
+  category: ''
+  name: Zmiana pozy na pilce
+  note: ''
+  positive: "Change the woman's pose on the large exercise ball to a more dynamic and active position. She is now firmly gripping the sides of the ball with both hands — palms pressing against the left and right sides of the ball, fingers spread and engaged. \n\nHer arms are bent, shoulders slightly forward, upper body leaning a bit more dynamically over the ball. The pose looks energetic, controlled and stable. \n\nKeep her exact facial expression, head position, hair, clothing, leg position, lighting, shadows and background completely unchanged. Only modify the position of her arms and hands and make a slight adjustment to the torso lean for a more dynamic feel. \n\nRealistic hand grip and pressure on the ball, natural muscle tension, perfect anatomy, photorealistic, seamless edit, high detail."
+  negative: hands on knees, hands in lap, resting hands, static pose, arms straight, hands not touching ball, weak grip, floating hands, deformed hands, extra fingers, bad hand anatomy, stiff arms, hunched back, overly leaned forward, bad balance, unnatural posture, deformed ball, ball deformation, changed leg position, changed facial expression, different clothing, different hair, altered lighting, shadows changed, low quality, artifacts, blurry hands, rubbery arms, unrealistic grip, minimal movement, no dynamic pose
+  params:
+    steps: 30
+    cfg: 8
+    denoise: 1
+- id: p0000034
+  category: ''
+  name: Zmiana pozy na pilce
+  note: ''
+  positive: "Change the woman's pose on the large exercise ball to a more dynamic and active position. She is now firmly gripping the sides of the ball with both hands — palms pressing against the left and right sides of the ball, fingers spread and engaged. \n\nHer arms are bent, shoulders slightly forward, upper body leaning a bit more dynamically over the ball. The pose looks energetic, controlled and stable. \n\nKeep her exact facial expression, head position, hair, clothing, leg position, lighting, shadows and background completely unchanged. Only modify the position of her arms and hands and make a slight adjustment to the torso lean for a more dynamic feel. \n\nRealistic hand grip and pressure on the ball, natural muscle tension, perfect anatomy, photorealistic, seamless edit, high detail."
+  negative: hands on knees, hands in lap, resting hands, static pose, arms straight, hands not touching ball, weak grip, floating hands, deformed hands, extra fingers, bad hand anatomy, stiff arms, hunched back, overly leaned forward, bad balance, unnatural posture, deformed ball, ball deformation, changed leg position, changed facial expression, different clothing, different hair, altered lighting, shadows changed, low quality, artifacts, blurry hands, rubbery arms, unrealistic grip, minimal movement, no dynamic pose
+  params:
+    steps: 30
+    cfg: 8
+    denoise: 1
+- id: p0000035
+  category: ''
+  name: Zmiana pozy na pilce
+  note: ''
+  positive: "Change the woman's pose on the large exercise ball to a more dynamic and active position. She is now firmly gripping the sides of the ball with both hands — palms pressing against the left and right sides of the ball, fingers spread and engaged. \n\nHer arms are bent, shoulders slightly forward, upper body leaning a bit more dynamically over the ball. The pose looks energetic, controlled and stable. \n\nKeep her exact facial expression, head position, hair, clothing, leg position, lighting, shadows and background completely unchanged. Only modify the position of her arms and hands and make a slight adjustment to the torso lean for a more dynamic feel. \n\nRealistic hand grip and pressure on the ball, natural muscle tension, perfect anatomy, photorealistic, seamless edit, high detail."
+  negative: hands on knees, hands in lap, resting hands, static pose, arms straight, hands not touching ball, weak grip, floating hands, deformed hands, extra fingers, bad hand anatomy, stiff arms, hunched back, overly leaned forward, bad balance, unnatural posture, deformed ball, ball deformation, changed leg position, changed facial expression, different clothing, different hair, altered lighting, shadows changed, low quality, artifacts, blurry hands, rubbery arms, unrealistic grip, minimal movement, no dynamic pose
+  params:
+    steps: 30
+    cfg: 8
+    denoise: 1
+- id: p0000036
+  category: ''
+  name: Zmiana pozy na pilce
+  note: ''
+  positive: "Change the woman's pose on the large exercise ball to a more dynamic and active position. She is now firmly gripping the sides of the ball with both hands — palms pressing against the left and right sides of the ball, fingers spread and engaged. \n\nHer arms are bent, shoulders slightly forward, upper body leaning a bit more dynamically over the ball. The pose looks energetic, controlled and stable. \n\nKeep her exact facial expression, head position, hair, clothing, leg position, lighting, shadows and background completely unchanged. Only modify the position of her arms and hands and make a slight adjustment to the torso lean for a more dynamic feel. \n\nRealistic hand grip and pressure on the ball, natural muscle tension, perfect anatomy, photorealistic, seamless edit, high detail."
+  negative: hands on knees, hands in lap, resting hands, static pose, arms straight, hands not touching ball, weak grip, floating hands, deformed hands, extra fingers, bad hand anatomy, stiff arms, hunched back, overly leaned forward, bad balance, unnatural posture, deformed ball, ball deformation, changed leg position, changed facial expression, different clothing, different hair, altered lighting, shadows changed, low quality, artifacts, blurry hands, rubbery arms, unrealistic grip, minimal movement, no dynamic pose
+  params:
+    steps: 30
+    cfg: 8
+    denoise: 1
+- id: p0000037
+  category: usun_tlo
+  name: Zmiana pozy na pilce
+  note: ''
+  positive: "Change the woman's pose on the large exercise ball to a more dynamic and active position. She is now firmly gripping the sides of the ball with both hands — palms pressing against the left and right sides of the ball, fingers spread and engaged. \n\nHer arms are bent, shoulders slightly forward, upper body leaning a bit more dynamically over the ball. The pose looks energetic, controlled and stable. \n\nKeep her exact facial expression, head position, hair, clothing, leg position, lighting, shadows and background completely unchanged. Only modify the position of her arms and hands and make a slight adjustment to the torso lean for a more dynamic feel. \n\nRealistic hand grip and pressure on the ball, natural muscle tension, perfect anatomy, photorealistic, seamless edit, high detail."
+  negative: hands on knees, hands in lap, resting hands, static pose, arms straight, hands not touching ball, weak grip, floating hands, deformed hands, extra fingers, bad hand anatomy, stiff arms, hunched back, overly leaned forward, bad balance, unnatural posture, deformed ball, ball deformation, changed leg position, changed facial expression, different clothing, different hair, altered lighting, shadows changed, low quality, artifacts, blurry hands, rubbery arms, unrealistic grip, minimal movement, no dynamic pose
+  params:
+    steps: 30
+    cfg: 8
+    denoise: 1
+- id: p0000038
+  category: ''
+  name: Zmiana pozy na pilce
+  note: ''
+  positive: "Change the woman's pose on the large exercise ball to a more dynamic and active position. She is now firmly gripping the sides of the ball with both hands — palms pressing against the left and right sides of the ball, fingers spread and engaged. \n\nHer arms are bent, shoulders slightly forward, upper body leaning a bit more dynamically over the ball. The pose looks energetic, controlled and stable. \n\nKeep her exact facial expression, head position, hair, clothing, leg position, lighting, shadows and background completely unchanged. Only modify the position of her arms and hands and make a slight adjustment to the torso lean for a more dynamic feel. \n\nRealistic hand grip and pressure on the ball, natural muscle tension, perfect anatomy, photorealistic, seamless edit, high detail."
+  negative: hands on knees, hands in lap, resting hands, static pose, arms straight, hands not touching ball, weak grip, floating hands, deformed hands, extra fingers, bad hand anatomy, stiff arms, hunched back, overly leaned forward, bad balance, unnatural posture, deformed ball, ball deformation, changed leg position, changed facial expression, different clothing, different hair, altered lighting, shadows changed, low quality, artifacts, blurry hands, rubbery arms, unrealistic grip, minimal movement, no dynamic pose
+  params:
+    steps: 30
+    cfg: 8
+    denoise: 1
+- id: p0000039
+  category: ''
+  name: siedzi na pilce bardziej dynamiczna poza
+  note: ''
+  positive: c
+  negative: c
+  params:
+    steps: 30
+    cfg: 8
+    denoise: 1
+- id: p0000040
+  category: repose
+  name: Idzie przed siebie krok modelki
+  note: ''
+  positive: 'Change the woman''s pose to a confident, dynamic runway model walk, captured from the front. She is walking straight toward the camera mid-stride — one leg extended forward with pointed toe, the other leg behind, strong and elegant step. Pronounced hip sway, shoulders slightly back, chest forward, arms swinging naturally by her sides in a stylish model fashion.
+
+    Facing directly toward camera, front view, 0-degree angle, camera-facing walk, full frontal view
+
+    She looks directly at the camera with a confident, alluring and powerful expression. Elegant catwalk gait, fashionable and sensual movement.
+
+
+    Keep her exact facial features, hair, clothing, lighting, shadows and background completely unchanged. Only modify the body posture, leg position and arm swing to create a dynamic walking pose. Realistic anatomy, natural motion, photorealistic, seamless edit, high detail.'
+  negative: different face, wrong identity, changed facial features, clothing change, background change, blurry face, distorted anatomy, extra limbs, artifacts, low quality, bad anatomy, shadows, cast, shadows, side view, angled view, three-quarter view, turned body
+  params:
+    steps: 30
+    cfg: 8.0
+    denoise: 1.0
+- id: p0000041
+  category: zmiana_ubrania
+  name: Seksi biała bielizna
+  note: ''
+  positive: "Change the woman's outfit to sexy white lingerie. Elegant and seductive white bra with delicate lace details, matching white panties, garter belt with straps and sheer white stockings. Highly detailed lace texture, soft luxurious fabric, perfect fit on body. \n\nKeep her exact body pose, proportions, skin tone, hair, facial expression, lighting and background unchanged. Only replace the clothing. Photorealistic, ultra detailed, sensual, seamless edit."
+  negative: naked, fully nude, transparent clothing, bad anatomy, deformed body, extra limbs, mutated hands, blurry, low quality, artifacts, plastic skin, cartoonish, different pose, changed body proportions, wrong clothing style, modest clothing, casual clothes, t-shirt, jeans, sportswear, deformed lingerie, bad fabric texture, matte leather, dull colors, extra straps, poor blending, clothing fusion with skin, censorship, underwear malfunction
+  params:
+    steps: 30
+    cfg: 8.0
+    denoise: 1.0
+- id: p0000042
+  category: zmiana_ubrania
+  name: Seksi czerwona bielizna
+  note: ''
+  positive: "Change the woman's outfit to sexy red lingerie. Seductive bright red bra with intricate lace, matching red thong panties, red garter belt with straps and sheer black or red stockings. Glossy and luxurious red fabric, bold and provocative style. \n\nKeep her exact body pose, proportions, skin tone, hair, facial expression, lighting and background unchanged. Only replace the clothing. Photorealistic, ultra detailed, sensual, seamless edit."
+  negative: naked, fully nude, transparent clothing, bad anatomy, deformed body, extra limbs, mutated hands, blurry, low quality, artifacts, plastic skin, cartoonish, different pose, changed body proportions, wrong clothing style, modest clothing, casual clothes, t-shirt, jeans, sportswear, deformed lingerie, bad fabric texture, matte leather, dull colors, extra straps, poor blending, clothing fusion with skin, censorship, underwear malfunction
+  params:
+    steps: 30
+    cfg: 8.0
+    denoise: 1.0
+- id: p0000043
+  category: zmiana_ubrania
+  name: Czarny skąpy strój BDSM
+  note: ''
+  positive: "Change the woman's outfit to a revealing black leather BDSM-style outfit. Tight black leather harness, strappy bra that barely covers, very skimpy leather panties or thong with metal rings, leather straps across body, choker with metal studs or O-ring, armbands. Glossy black leather texture, dominant and provocative fetish style. \n\nKeep her exact body pose, proportions, skin tone, hair, facial expression, lighting and background unchanged. Only replace the clothing. Photorealistic, ultra detailed, seamless edit."
+  negative: naked, fully nude, transparent clothing, bad anatomy, deformed body, extra limbs, mutated hands, blurry, low quality, artifacts, plastic skin, cartoonish, different pose, changed body proportions, wrong clothing style, modest clothing, casual clothes, t-shirt, jeans, sportswear, deformed lingerie, bad fabric texture, matte leather, dull colors, extra straps, poor blending, clothing fusion with skin, censorship, underwear malfunction
+  params:
+    steps: 30
+    cfg: 8.0
+    denoise: 1.0
+- id: p0000044
+  category: zmiana_ubrania
+  name: Czarne majtki i stanik
+  note: ''
+  positive: "Change the woman's clothing to only a black lace bra and black string thong panties. \n\nShe wears a sexy, delicate black lace bra with transparent lace cups and thin straps. On the bottom she has extremely skimpy black string thong panties with very thin straps that barely cover anything. Nothing else — she is otherwise completely naked.\n\nHighly detailed realistic lace texture on the bra, thin glossy strings on the thong, perfect tight fit on her body, sensual appearance. \n\nKeep her exact body pose, proportions, skin tone, hair, facial expression, lighting, shadows and background completely unchanged. Only replace the clothing. Photorealistic, ultra detailed, seamless edit, high quality."
+  negative: fully nude, no bra, no panties, different color underwear, white lingerie, red lingerie, full coverage panties, modest clothing, t-shirt, pants, jeans, additional clothing, deformed clothing, bad lace texture, blurry fabric, extra straps, censorship, low detail, bad anatomy, plastic skin, changed pose
+  params:
+    steps: 30
+    cfg: 8.0
+    denoise: 1.0
+- id: p0000045
+  category: zmiana_ubrania
+  name: Casual
+  note: ''
+  positive: "Change the woman's outfit to a casual everyday look: high-waisted light blue jeans and a cropped white tank top. The outfit is stylish, comfortable and slightly sexy. Perfect fit, natural fabric texture. \n\nKeep her exact body pose, proportions, hair, facial expression, lighting and background unchanged. Only replace the clothing. Photorealistic, ultra detailed, seamless edit."
+  negative: Naked, fully nude, transparent clothing, bad anatomy, deformed body, extra limbs, mutated hands, blurry, low quality, artifacts, plastic skin, cartoonish, different pose, changed body proportions, wrong clothing style, modest clothing, casual clothes, t-shirt, jeans, sportswear, deformed lingerie, bad fabric texture, matte leather, dull colors, extra straps, poor blending, clothing fusion with skin, censorship, underwear malfunction
+  params:
+    steps: 30
+    cfg: 8.0
+    denoise: 1.0
+- id: p0000046
+  category: zmiana_ubrania
+  name: Smart Casual
+  note: ''
+  positive: "Change the woman's outfit to smart casual style: elegant black tailored trousers, silky cream blouse with subtle cleavage, and a fitted black blazer. Sophisticated and feminine urban look. \n\nKeep her exact body pose, proportions, hair, facial expression, lighting and background unchanged. Only replace the clothing. Photorealistic, ultra detailed, seamless edit."
+  negative: Naked, fully nude, transparent clothing, bad anatomy, deformed body, extra limbs, mutated hands, blurry, low quality, artifacts, plastic skin, cartoonish, different pose, changed body proportions, wrong clothing style, modest clothing, casual clothes, t-shirt, jeans, sportswear, deformed lingerie, bad fabric texture, matte leather, dull colors, extra straps, poor blending, clothing fusion with skin, censorship, underwear malfunction
+  params:
+    steps: 30
+    cfg: 8.0
+    denoise: 1.0
+- id: p0000047
+  category: zmiana_ubrania
+  name: Little Black Dress (Cocktail)
+  note: ''
+  positive: "Change the woman's outfit to a sexy little black dress. Short, tight black cocktail dress with deep V-neckline, thin straps and slight shimmer. Very elegant and seductive. \n\nKeep her exact body pose, proportions, hair, facial expression, lighting and background unchanged. Only replace the clothing. Photorealistic, ultra detailed, seamless edit."
+  negative: Naked, fully nude, transparent clothing, bad anatomy, deformed body, extra limbs, mutated hands, blurry, low quality, artifacts, plastic skin, cartoonish, different pose, changed body proportions, wrong clothing style, modest clothing, casual clothes, t-shirt, jeans, sportswear, deformed lingerie, bad fabric texture, matte leather, dull colors, extra straps, poor blending, clothing fusion with skin, censorship, underwear malfunction
+  params:
+    steps: 30
+    cfg: 8.0
+    denoise: 1.0
+- id: p0000048
+  category: zmiana_ubrania
+  name: Elegant Evening Gown
+  note: ''
+  positive: "Change the woman's outfit to an elegant long evening gown. Deep emerald green floor-length dress with a sophisticated slit on the leg, subtle sparkle, elegant neckline and flowing fabric. Luxurious and graceful look. \n\nKeep her exact body pose, proportions, hair, facial expression, lighting and background unchanged. Only replace the clothing. Photorealistic, ultra detailed, seamless edit."
+  negative: Naked, fully nude, transparent clothing, bad anatomy, deformed body, extra limbs, mutated hands, blurry, low quality, artifacts, plastic skin, cartoonish, different pose, changed body proportions, wrong clothing style, modest clothing, casual clothes, t-shirt, jeans, sportswear, deformed lingerie, bad fabric texture, matte leather, dull colors, extra straps, poor blending, clothing fusion with skin, censorship, underwear malfunction
+  params:
+    steps: 30
+    cfg: 8.0
+    denoise: 1.0
+- id: p0000049
+  category: zmiana_ubrania
+  name: Glamorous Red Carpet
+  note: ''
+  positive: "Change the woman's outfit to a glamorous red carpet evening gown. Striking deep red, very elegant and seductive long dress with a deep plunging neckline, high leg slit and sparkling details. Luxurious, dramatic and breathtaking look. \n\nKeep her exact body pose, proportions, hair, facial expression, lighting and background unchanged. Only replace the clothing. Photorealistic, ultra detailed, seamless edit."
+  negative: Naked, fully nude, transparent clothing, bad anatomy, deformed body, extra limbs, mutated hands, blurry, low quality, artifacts, plastic skin, cartoonish, different pose, changed body proportions, wrong clothing style, modest clothing, casual clothes, t-shirt, jeans, sportswear, deformed lingerie, bad fabric texture, matte leather, dull colors, extra straps, poor blending, clothing fusion with skin, censorship, underwear malfunction
+  params:
+    steps: 30
+    cfg: 8.0
+    denoise: 1.0
+- id: p0000050
+  category: zmiana_ubrania
+  name: Dodaj buty Little Black Dress (Cocktail)
+  note: ''
+  positive: "Add elegant black high heels to complete the little black dress look. Put on the woman sexy black stiletto pumps with thin high heels and pointed toes. Classic, sophisticated evening shoes that perfectly match the cocktail dress. \n\nGlossy black leather texture, beautiful heel shape, realistic fit on feet. Only modify the feet and shoes area. Keep exact leg pose, dress, body proportions, lighting and background unchanged. Photorealistic, seamless edit, high detail."
+  negative: ''
+  params:
+    steps: 30
+    cfg: 8
+    denoise: 1
+- id: p0000051
+  category: zmiana_ubrania
+  name: Dodaj buty do stroju casual
+  note: ''
+  positive: "Add stylish casual shoes to match the outfit. Put on the woman white clean sneakers with thick soles or light beige casual loafers. Modern, fashionable casual footwear that fits perfectly with jeans and crop top. \n\nNatural leather/suede texture, correct size and perspective, realistic shadows and lighting. Only modify the feet and shoes area. Keep exact leg pose, clothing, body proportions and everything else unchanged. Photorealistic, seamless integration, high detail."
+  negative: ''
+  params:
+    steps: 30
+    cfg: 8.0
+    denoise: 1.0
+- id: p0000052
+  category: ''
+  name: human look
+  note: ''
+  positive: Change into more human look, Remember it is logo
+  negative: ''
+  params:
+    steps: 30
+    cfg: 8
+    denoise: 1
+- id: p0000053
+  category: ''
+  name: korekta nosa
+  note: ''
+  positive: Correct nose for more realistic human nose vector
+  negative: photorealism
+  params:
+    steps: 30
+    cfg: 8
+    denoise: 1
+- id: p0000054
+  category: body_shape
+  name: transer body shape
+  note: ''
+  positive: "Transfer the exact body shape and proportions from the reference image to the woman in the main image. \n\nKeep the woman's head, face, hair, facial expression, skin tone on the face, and clothing from the main image. Change only her body: transfer the exact body type, breast size, waist, hips, legs length and thickness, overall silhouette and curves from the reference image. \n\nPerfectly match the body proportions, posture and physique while preserving the original head and outfit. Natural blending between head and new body, realistic skin texture matching, correct anatomy, photorealistic, seamless edit, high detail."
+  negative: wrong body proportions, deformed body, extra limbs, bad anatomy, head too big, head too small, distorted figure, changed face, different clothing, different hair, mismatched skin tone on body, visible seam, artifacts, low quality, cartoonish, plastic skin
+  params:
+    steps: 30
+    cfg: 8.0
+    denoise: 1.0
+- id: p0000055
+  category: zmiana_ubrania
+  name: strój plażowy kobiecy
+  note: ''
+  positive: "Change the woman's outfit to a sexy beach bikini. Replace all her current clothing with a revealing two-piece bikini consisting of a triangle bikini top with thin straps and matching skimpy bikini bottoms with side ties. \n\nThe bikini should be flattering, accentuating her curves, with good cleavage and minimal coverage. Choose an attractive color such as bright red, turquoise, black or white. Detailed fabric texture, realistic ties and strings, natural fit on the body.\n\nKeep her exact body pose, proportions, head, face, hair, facial expression, skin tone, lighting, shadows and background completely unchanged. Only replace the clothing with the beach bikini. Photorealistic, ultra detailed, seamless edit, high quality."
+  negative: one-piece swimsuit, full coverage bikini, sport bikini, tankini, shorts, t-shirt, dress, lingerie, clothed, modest clothing, bad fabric texture, deformed bikini, extra straps, censorship, blurry, low quality, artifacts, plastic skin, wrong proportions
+  params:
+    steps: 30
+    cfg: 8.0
+    denoise: 1.0
+- id: p0000056
+  category: body_shape
+  name: 40 letnia kobieta
+  note: ''
+  positive: "Change the woman's body to that of a fit, attractive 40-year-old woman. Make her body more mature and feminine: slightly softer curves, elegant waist, fuller hips and thighs, natural mature breast shape, toned but not overly athletic arms and legs, subtle natural signs of a well-maintained 40-year-old body (light skin texture, healthy glow).\n\nKeep her exact face, head, hair, facial features, expression, and current clothing unchanged. Only transform the body from the neck down. \n\nMaintain realistic proportions, elegant and sensual silhouette, natural skin texture for her age, photorealistic, seamless edit, high detail."
+  negative: young body, teenage body, 20 year old body, athletic six pack, too skinny, too muscular, deformed body, bad proportions, wrinkled skin, sagging skin excessively, changed face, different hair, plastic skin, cartoonish, low quality, artifacts
+  params:
+    steps: 30
+    cfg: 8.0
+    denoise: 1.0
+- id: p0000057
+  category: ''
+  name: obroża
+  note: ''
+  positive: Add silver collar on the neck
+  negative: ''
+  params:
+    steps: 30
+    cfg: 8
+    denoise: 1
+- id: p0000058
+  category: repose
+  name: Siedzi z szeroko rozchylonymi nogami
+  note: ''
+  positive: "Repose the woman so she is sitting with her legs spread wide apart. She sits with knees bent and thighs opened significantly, feet placed on the ground or slightly apart. The pose is confident, sensual and provocative with an open-legged sitting position.\n\nKeep her exact upper body posture, torso angle, head position, facial expression, hair, clothing, arms, lighting and background completely unchanged. Only modify the position of her legs and hips. \n\nMaintain realistic anatomy, natural hip rotation, correct perspective and proportions. Photorealistic, seamless edit, high detail."
+  negative: legs closed, knees together, modest pose, crossed legs, straight legs, bad anatomy, deformed legs, extra limbs, unnatural hip position, stiff pose, changed upper body, changed clothing, altered face, low quality, artifacts
+  params:
+    steps: 30
+    cfg: 8.0
+    denoise: 1.0
+- id: p0000059
+  category: ''
+  name: usun czarodziejke
+  note: ''
+  positive: Remove sorceress from image
+  negative: background change
+  params:
+    steps: 30
+    cfg: 8
+    denoise: 1
+- id: p0000060
+  category: fotorealizm
+  name: Poprawa anatomii
+  note: ''
+  positive: 'Preserve any existing skin details, tattoos, scars, or markings exactly as they appear. Do not alter or remove existing skin texture. Do not alter composition or crop. Full body visible, unchanged pose. Realistic detailed nipples, natural breast shape with realistic skin texture. Remove any flat or smooth areas on chest — add full anatomical detail.
+
+    Subtle, mild skin texture enhancement only. Natural smooth skin with minimal pores visible. Do not over-enhance or add excessive skin detail.'
+  negative: ''
+  params:
+    steps: 30
+    cfg: 8.0
+    denoise: 1.0
+- id: p0000061
+  category: character_insert
+  name: Usun postać ze zdjęcia
+  note: ''
+  positive: Remove person from picture
+  negative: background change, lighting change
+  params:
+    steps: 30
+    cfg: 8
+    denoise: 1
+last_id: 61

@@ -31,6 +31,7 @@ ANSI_ESCAPE = re.compile(r"\x1b\[[0-9;]*[mK]")
 PROMPT_PATTERNS = [
     "Proceed with generation? [Y/n]:",
     "Continue with postprocessing? (yes/no):",
+    "talk clip(s)? [Y/n]:",
 ]
 
 
@@ -41,6 +42,8 @@ class ProcessService:
         self._status:       str  = "idle"
         self._current_file: str | None = None
         self._log_queues:   set[asyncio.Queue] = set()
+        self._only_transitions: list[str] | None = None   # targeted re-gen filter
+        self._force_all:        bool = False               # force regenerate all
 
         # Thread-safe input synchronisation
         self._input_event:   threading.Event = threading.Event()
@@ -77,14 +80,41 @@ class ProcessService:
 
     # ── Public control API (called from async context) ───────────────
 
-    async def start(self, filename: str) -> dict:
+    async def start(
+        self, filename: str, only: list[str] | None = None, force_all: bool = False
+    ) -> dict:
         if self.is_running:
             return {"ok": False, "error": "Proces już działa — poczekaj lub zatrzymaj."}
+        self._only_transitions = only or None
+        self._force_all = force_all
 
-        run_path = PROJECT_ROOT / "RUNS" / filename
-        if not run_path.exists():
-            return {"ok": False, "error": f"Plik nie istnieje: {filename}"}
-        if not filename.startswith("RUN_") or not filename.endswith(".py"):
+        if not filename.startswith("RUN_"):
+            return {"ok": False, "error": f"Nieprawidłowa nazwa pliku: {filename}"}
+
+        suffix = Path(filename).suffix.lower()
+
+        if suffix == ".yaml":
+            # Auto-generate (or refresh) the .py from the YAML, then run the .py
+            yaml_path = PROJECT_ROOT / "RUNS" / filename
+            if not yaml_path.exists():
+                return {"ok": False, "error": f"Plik nie istnieje: {filename}"}
+            try:
+                from app.services.yaml_service import generate_py_from_yaml
+                from app.services.run_file_service import invalidate_run_info_cache
+                from app.services.media_service import invalidate_run_cache
+                run_path = generate_py_from_yaml(yaml_path)
+                # Invalidate caches so the freshly generated .py is picked up
+                invalidate_run_info_cache(run_path.name)
+                invalidate_run_cache(run_path.name)
+            except Exception as exc:
+                return {"ok": False, "error": f"Błąd generowania .py z YAML: {exc}"}
+            py_filename = run_path.name
+        elif suffix == ".py":
+            run_path = PROJECT_ROOT / "RUNS" / filename
+            if not run_path.exists():
+                return {"ok": False, "error": f"Plik nie istnieje: {filename}"}
+            py_filename = filename
+        else:
             return {"ok": False, "error": f"Nieprawidłowa nazwa pliku: {filename}"}
 
         self._status       = "running"
@@ -93,6 +123,9 @@ class ProcessService:
                     "file": filename, "awaiting_input": False})
         self._push({"type": "log", "stream": "sys",
                     "text": f"▶ Uruchamiam: {filename}"})
+        if suffix == ".yaml":
+            self._push({"type": "log", "stream": "sys",
+                        "text": f"  (.py: {py_filename} — wygenerowany z YAML)"})
         self._push({"type": "log", "stream": "sys",
                     "text": f"  Python: {PYTHON_EXE}"})
 
@@ -135,6 +168,10 @@ class ProcessService:
             "awaiting_input": self._awaiting,
         }
 
+    def log_sys(self, text: str) -> None:
+        """Push a system log message to all WebSocket subscribers (visible in log panel)."""
+        self._push({"type": "log", "stream": "sys", "text": text})
+
     # ── Internal: async wrapper ───────────────────────────────────────
 
     async def _run_in_thread(
@@ -154,9 +191,11 @@ class ProcessService:
         finally:
             self._push({"type": "status", "status": self._status,
                         "file": self._current_file, "awaiting_input": False})
-            self._proc    = None
-            self._task    = None
-            self._awaiting = False
+            self._proc              = None
+            self._task              = None
+            self._awaiting          = False
+            self._only_transitions  = None
+            self._force_all         = False
 
     # ── Internal: synchronous subprocess runner (runs in thread) ─────
 
@@ -164,6 +203,10 @@ class ProcessService:
         self, run_path: Path, loop: asyncio.AbstractEventLoop
     ) -> None:
         env = {**os.environ, "PYTHONUNBUFFERED": "1", "PYTHONUTF8": "1"}
+        if self._only_transitions:
+            env["ONLY_TRANSITIONS"] = ",".join(self._only_transitions)
+        if self._force_all:
+            env["FORCE_REGEN"] = "1"
 
         # CREATE_NEW_PROCESS_GROUP isolates the subprocess from uvicorn's
         # process group — so uvicorn --reload restarts don't send Ctrl+C/

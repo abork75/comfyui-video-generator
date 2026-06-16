@@ -208,7 +208,7 @@
       "keep_proportion": "crop",
       "pad_color": "0, 0, 0",
       "crop_position": "center",
-      "divisible_by": 32,
+      "divisible_by": 16,
       "device": "cpu",
       "image": [
         "67",

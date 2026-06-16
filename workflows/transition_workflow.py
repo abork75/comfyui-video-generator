@@ -23,10 +23,13 @@ class TransitionWorkflow(BaseWorkflow):
     
     def validate_item(self, item, config):
         """Validate transition-specific requirements"""
-        # Duration required
+        # Duration required and must be > 0
         if 'duration' not in item and 'default_duration' not in config:
             raise ValueError("Transition requires 'duration' parameter")
-        
+        duration = item.get('duration', config.get('default_duration', 4))
+        if float(duration) <= 0:
+            raise ValueError(f"Duration must be > 0 (got {duration}). Minimum ~0.3s generates 5 frames required by WAN+RIFE.")
+
         # File required (unless chain)
         if 'file' not in item and not item.get('chain', False):
             raise ValueError("Transition requires 'file' parameter")
@@ -45,9 +48,9 @@ class TransitionWorkflow(BaseWorkflow):
         pos_prompt = item.get('pos_prompt', config.get('default_positive_prompt', ''))
         neg_prompt = item.get('neg_prompt', config.get('default_negative_prompt', ''))
         
-        # Calculate frame count (WAN rule)
+        # Calculate frame count (WAN rule; minimum 5 so RIFE gets ≥ 2 frames)
         base_length = fps * duration
-        final_length = adjust_frame_count_for_wan(base_length)
+        final_length = max(adjust_frame_count_for_wan(base_length), 5)
         
         # Output path
         transitions_folder = Path(config['project_folder']) / "transitions"
