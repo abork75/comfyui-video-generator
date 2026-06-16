@@ -781,6 +781,58 @@ async def _run_talk(
         })
 
 
+async def _run_talk_atlascloud(
+    source_image:  Path,
+    audio_entries: list[dict],
+    dest_path:     Path,
+    talk_name:     str,
+    width:         int,
+    height:        int,
+    talk_item:     dict,
+) -> None:
+    """Async wrapper: runs AtlasCloud generate_talk_clip in a thread executor."""
+    import os
+    from backends.atlascloud_video_backend import AtlasCloudVideoBackend
+
+    loop = asyncio.get_running_loop()
+    _state["status"] = "running"
+    _state["segment"] = "1/1"
+
+    # Build minimal config from env + talk_item overrides
+    backend_cfg = {
+        "atlascloud_resolution":    talk_item.get("atlascloud_resolution") or "1080P",
+        "atlascloud_prompt_extend": talk_item.get("atlascloud_prompt_extend", True),
+        "frame_interpolation":      talk_item.get("frame_interpolation", True),
+    }
+    backend = AtlasCloudVideoBackend(backend_cfg)
+
+    try:
+        ok = await loop.run_in_executor(
+            None,
+            lambda: backend.generate_talk_clip(
+                source_image=source_image,
+                audio_entries=audio_entries,
+                dest_path=dest_path,
+                width=width,
+                height=height,
+                frame_interpolation=talk_item.get("frame_interpolation"),
+                atlascloud_resolution=talk_item.get("atlascloud_resolution") or None,
+                atlascloud_prompt_extend=talk_item.get("atlascloud_prompt_extend"),
+            ),
+        )
+        if not ok:
+            raise RuntimeError("AtlasCloud generate_talk_clip zwróciło False")
+
+        elapsed = round(time.time() - _state["started_at"], 1)
+        _state.update({
+            "status":      "done",
+            "output_name": talk_name,
+            "elapsed_s":   elapsed,
+        })
+    except Exception as exc:
+        _state.update({"status": "error", "error": str(exc)})
+
+
 # ── Public API ───────────────────────────────────────────────────────────────
 
 def start_talk(
@@ -908,10 +960,23 @@ def start_talk(
     })
 
     try:
-        _task = asyncio.create_task(
-            _run_talk(img_path, audio_entries, dest_path,
-                      run_filename, talk_name, width, height)
-        )
+        if talk_item.get("backend") == "atlascloud":
+            _task = asyncio.create_task(
+                _run_talk_atlascloud(
+                    source_image=img_path,
+                    audio_entries=audio_entries,
+                    dest_path=dest_path,
+                    talk_name=talk_name,
+                    width=width,
+                    height=height,
+                    talk_item=talk_item,
+                )
+            )
+        else:
+            _task = asyncio.create_task(
+                _run_talk(img_path, audio_entries, dest_path,
+                          run_filename, talk_name, width, height)
+            )
     except RuntimeError as e:
         _state.update({"status": "error", "error": str(e)})
         return {"ok": False, "error": str(e)}
