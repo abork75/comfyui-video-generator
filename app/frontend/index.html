@@ -2486,6 +2486,37 @@
             <template x-if="editModal.kind === 'talk'">
                 <div class="space-y-4">
 
+                    <!-- Backend -->
+                    <div>
+                        <label class="block text-xs text-gray-400 mb-1">Backend</label>
+                        <select :value="editModal.data.backend || 'linux'"
+                                @change="editModal.data.backend = $event.target.value"
+                                class="w-full bg-gray-800 border border-gray-600 rounded px-2 py-1.5 text-sm text-gray-200 focus:outline-none focus:border-teal-500">
+                            <option value="linux">linux (InfiniteTalk lokalny)</option>
+                            <option value="atlascloud">☁ atlascloud (WAN 2.7 lip-sync)</option>
+                        </select>
+                    </div>
+
+                    <!-- AtlasCloud params (shown only when backend = atlascloud) -->
+                    <div x-show="(editModal.data.backend || 'linux') === 'atlascloud'"
+                         class="flex gap-3 items-center flex-wrap p-2 bg-violet-950/30 border border-violet-800/40 rounded-lg">
+                        <span class="text-xs text-violet-400 font-semibold">☁ AtlasCloud WAN 2.7</span>
+                        <label class="text-xs text-gray-400">Rozdzielczość
+                            <select x-model="editModal.data.atlascloud_resolution"
+                                    class="ml-1 bg-gray-800 border border-gray-600 rounded px-1 py-0.5 text-xs text-white focus:outline-none focus:border-violet-500">
+                                <option value="">— domyślna —</option>
+                                <option value="720P">720P</option>
+                                <option value="1080P">1080P</option>
+                                <option value="1080P-SR">1080P-SR</option>
+                                <option value="1440P-SR">1440P-SR</option>
+                            </select>
+                        </label>
+                        <label class="flex items-center gap-1 text-xs text-gray-400 cursor-pointer">
+                            <input type="checkbox" x-model="editModal.data.atlascloud_prompt_extend" class="accent-violet-500">
+                            Prompt extend
+                        </label>
+                    </div>
+
                     <!-- Output prefix (unique identifier → prevents file collision) -->
                     <div>
                         <label class="block text-xs text-yellow-500 mb-1">
@@ -2563,8 +2594,8 @@
                         </template>
                     </div>
 
-                    <!-- Resolution -->
-                    <div>
+                    <!-- Resolution (pixel w/h — InfiniteTalk only) -->
+                    <div x-show="(editModal.data.backend || 'linux') !== 'atlascloud'">
                         <div class="flex items-center justify-between mb-1">
                             <label class="block text-xs text-gray-400">Rozdzielczość</label>
                             <button @click="editTalkAutoResolve()"
@@ -2601,17 +2632,6 @@
                                    class="w-20 bg-gray-800 border border-gray-600 rounded px-2 py-1.5 text-sm text-gray-200 text-center focus:outline-none focus:border-teal-500">
                         </div>
                         <p x-show="editModal.resHint" class="text-xs text-teal-600 mt-1" x-text="editModal.resHint"></p>
-                    </div>
-
-                    <!-- Backend -->
-                    <div>
-                        <label class="block text-xs text-gray-400 mb-1">Backend</label>
-                        <select :value="editModal.data.backend || 'linux'"
-                                @change="editModal.data.backend = $event.target.value"
-                                class="w-full bg-gray-800 border border-gray-600 rounded px-2 py-1.5 text-sm text-gray-200 focus:outline-none focus:border-teal-500">
-                            <option value="linux">linux (InfiniteTalk lokalny)</option>
-                            <option value="atlascloud">atlascloud (WAN 2.7 lip-sync ☁)</option>
-                        </select>
                     </div>
 
                     <!-- Transition (optional accordion) -->

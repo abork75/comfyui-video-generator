@@ -336,6 +336,8 @@ class AtlasCloudVideoBackend(BaseBackend):
         width: int = 480,
         height: int = 832,
         frame_interpolation=None,
+        atlascloud_resolution: str | None = None,
+        atlascloud_prompt_extend=None,
     ) -> bool:
         """
         AtlasCloud talk clip (lip-sync) via /generateVideo with 'audio' field.
@@ -345,8 +347,9 @@ class AtlasCloudVideoBackend(BaseBackend):
         """
         import subprocess
 
-        resolution    = self.config.get("atlascloud_resolution",    "1080P")
-        prompt_extend = self.config.get("atlascloud_prompt_extend", True)
+        resolution    = atlascloud_resolution    or self.config.get("atlascloud_resolution",    "1080P")
+        prompt_extend = atlascloud_prompt_extend if atlascloud_prompt_extend is not None \
+                        else self.config.get("atlascloud_prompt_extend", True)
 
         segments: list[Path] = []
         try:

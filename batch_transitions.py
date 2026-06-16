@@ -1013,6 +1013,8 @@ def run_batch_generation(config):
                         width=_tw,
                         height=_th,
                         frame_interpolation=to_config.get('frame_interpolation'),
+                        atlascloud_resolution=to_config.get('atlascloud_resolution') or None,
+                        atlascloud_prompt_extend=to_config.get('atlascloud_prompt_extend'),
                     )
                 else:
                     _t_success = _gen_fn(
