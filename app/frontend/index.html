@@ -2120,6 +2120,7 @@
                             <option value="">— brak —</option>
                             <option value="linux">linux</option>
                             <option value="local">local</option>
+                            <option value="atlascloud">☁ atlascloud (WAN 2.7)</option>
                         </select>
                     </div>
                     <div>
@@ -2253,6 +2254,7 @@
                                 <option value="">— domyślny —</option>
                                 <option value="linux">linux</option>
                                 <option value="local">local</option>
+                                <option value="atlascloud">☁ atlascloud (WAN 2.7)</option>
                             </select>
                         </div>
                         <div>
@@ -2300,6 +2302,25 @@
                                         : effectiveFI(null) ? 'domyślne (włączone)' : 'domyślne (wyłączone)'"></span>
                         </div>
                     </div>
+                    <!-- AtlasCloud params (shown only when backend = atlascloud) -->
+                    <div x-show="editModal.data.backend === 'atlascloud'"
+                         class="flex gap-3 items-center flex-wrap p-2 bg-violet-950/30 border border-violet-800/40 rounded-lg">
+                        <span class="text-xs text-violet-400 font-semibold">☁ AtlasCloud WAN 2.7</span>
+                        <label class="text-xs text-gray-400">Rozdzielczość
+                            <select x-model="editModal.data.atlascloud_resolution"
+                                    class="ml-1 bg-gray-800 border border-gray-600 rounded px-1 py-0.5 text-xs text-white focus:outline-none focus:border-violet-500">
+                                <option value="">— domyślna —</option>
+                                <option value="720P">720P</option>
+                                <option value="1080P">1080P</option>
+                                <option value="1080P-SR">1080P-SR</option>
+                                <option value="1440P-SR">1440P-SR</option>
+                            </select>
+                        </label>
+                        <label class="flex items-center gap-1 text-xs text-gray-400 cursor-pointer">
+                            <input type="checkbox" x-model="editModal.data.atlascloud_prompt_extend" class="accent-violet-500">
+                            Prompt extend
+                        </label>
+                    </div>
                     <div>
                         <label class="block text-xs text-green-400 mb-1">Prompt pozytywny (pos)</label>
                         <textarea x-model="editModal.data.pos" rows="5"
@@ -2342,6 +2363,7 @@
                                 <option value="">— domyślny —</option>
                                 <option value="linux">linux</option>
                                 <option value="local">local</option>
+                                <option value="atlascloud">☁ atlascloud (WAN 2.7)</option>
                             </select>
                         </div>
                         <div>
@@ -2383,6 +2405,25 @@
                                         : editModal.data.frame_interpolation === true  ? 'włączone'
                                         : effectiveFI(null) ? 'domyślne (włączone)' : 'domyślne (wyłączone)'"></span>
                         </div>
+                    </div>
+                    <!-- AtlasCloud params for chain (shown only when backend = atlascloud) -->
+                    <div x-show="editModal.data.backend === 'atlascloud'"
+                         class="flex gap-3 items-center flex-wrap p-2 bg-violet-950/30 border border-violet-800/40 rounded-lg">
+                        <span class="text-xs text-violet-400 font-semibold">☁ AtlasCloud WAN 2.7</span>
+                        <label class="text-xs text-gray-400">Rozdzielczość
+                            <select x-model="editModal.data.atlascloud_resolution"
+                                    class="ml-1 bg-gray-800 border border-gray-600 rounded px-1 py-0.5 text-xs text-white focus:outline-none focus:border-violet-500">
+                                <option value="">— domyślna —</option>
+                                <option value="720P">720P</option>
+                                <option value="1080P">1080P</option>
+                                <option value="1080P-SR">1080P-SR</option>
+                                <option value="1440P-SR">1440P-SR</option>
+                            </select>
+                        </label>
+                        <label class="flex items-center gap-1 text-xs text-gray-400 cursor-pointer">
+                            <input type="checkbox" x-model="editModal.data.atlascloud_prompt_extend" class="accent-violet-500">
+                            Prompt extend
+                        </label>
                     </div>
                     <div>
                         <label class="block text-xs text-red-400 mb-1">Domyślny neg (dla całego chain)</label>
