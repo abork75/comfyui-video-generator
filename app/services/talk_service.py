@@ -558,15 +558,20 @@ async def _generate_segment(
 
         _state["prompt_id"] = prompt_id
 
-        # Poll (max 20 min = 400 × 3 s)
+        # Poll (max 90 min = 1800 × 3 s)
+        # MultiTalk at 768×768 with InfiniteTalk can take 35–45 min per segment.
         out_video_path: Path | None = None
-        for _ in range(400):
+        history_unreachable_streak = 0
+        for _ in range(1800):
             await asyncio.sleep(3)
 
+            history_ok = False
             try:
                 def _check():
                     return _http_get(f"{comfyui_url}/history/{prompt_id}")
                 history = await loop.run_in_executor(None, _check)
+                history_ok = True
+                history_unreachable_streak = 0
 
                 if prompt_id in history:
                     job     = history[prompt_id]
@@ -594,22 +599,32 @@ async def _generate_segment(
             except RuntimeError:
                 raise
             except Exception:
-                pass
+                history_unreachable_streak += 1
 
-            # Directory fallback
-            new_file = _newest_mp4_added_after(output_dir, existing_mp4s)
-            if new_file is not None:
-                out_video_path = new_file
-                break
+            # Directory fallback only when history API is consistently unreachable
+            # (not during normal generation when intermediate mp4s appear in output)
+            if not history_ok and history_unreachable_streak >= 5:
+                new_file = _newest_mp4_added_after(output_dir, existing_mp4s)
+                if new_file is not None:
+                    out_video_path = new_file
+                    break
 
         else:
-            raise RuntimeError("Timeout: segment did not complete within 20 minutes")
+            raise RuntimeError("Timeout: segment did not complete within 90 minutes")
 
         if out_video_path is None or not out_video_path.exists():
             raise RuntimeError(f"Output file not found: {out_video_path}")
 
-        # Wait for ComfyUI to release the file handle (Linux NFS/CIFS delay)
+        # Wait for ComfyUI to finish writing the file (moov atom is last).
+        # Poll until file size stabilises — critical for large 768×768 files over WSL.
         await asyncio.sleep(3)
+        prev_size = -1
+        for _ in range(30):  # up to 90 extra seconds
+            cur_size = out_video_path.stat().st_size
+            if cur_size == prev_size and cur_size > 0:
+                break
+            prev_size = cur_size
+            await asyncio.sleep(3)
 
         # Re-mux with the original audio to guarantee an audio track.
         # VHS_VideoCombine may not embed audio correctly when it receives audio
@@ -781,58 +796,6 @@ async def _run_talk(
         })
 
 
-async def _run_talk_atlascloud(
-    source_image:  Path,
-    audio_entries: list[dict],
-    dest_path:     Path,
-    talk_name:     str,
-    width:         int,
-    height:        int,
-    talk_item:     dict,
-) -> None:
-    """Async wrapper: runs AtlasCloud generate_talk_clip in a thread executor."""
-    import os
-    from backends.atlascloud_video_backend import AtlasCloudVideoBackend
-
-    loop = asyncio.get_running_loop()
-    _state["status"] = "running"
-    _state["segment"] = "1/1"
-
-    # Build minimal config from env + talk_item overrides
-    backend_cfg = {
-        "atlascloud_resolution":    talk_item.get("atlascloud_resolution") or "1080P",
-        "atlascloud_prompt_extend": talk_item.get("atlascloud_prompt_extend", True),
-        "frame_interpolation":      talk_item.get("frame_interpolation", True),
-    }
-    backend = AtlasCloudVideoBackend(backend_cfg)
-
-    try:
-        ok = await loop.run_in_executor(
-            None,
-            lambda: backend.generate_talk_clip(
-                source_image=source_image,
-                audio_entries=audio_entries,
-                dest_path=dest_path,
-                width=width,
-                height=height,
-                frame_interpolation=talk_item.get("frame_interpolation"),
-                atlascloud_resolution=talk_item.get("atlascloud_resolution") or None,
-                atlascloud_prompt_extend=talk_item.get("atlascloud_prompt_extend"),
-            ),
-        )
-        if not ok:
-            raise RuntimeError("AtlasCloud generate_talk_clip zwróciło False")
-
-        elapsed = round(time.time() - _state["started_at"], 1)
-        _state.update({
-            "status":      "done",
-            "output_name": talk_name,
-            "elapsed_s":   elapsed,
-        })
-    except Exception as exc:
-        _state.update({"status": "error", "error": str(exc)})
-
-
 # ── Public API ───────────────────────────────────────────────────────────────
 
 def start_talk(
@@ -960,23 +923,10 @@ def start_talk(
     })
 
     try:
-        if talk_item.get("backend") == "atlascloud":
-            _task = asyncio.create_task(
-                _run_talk_atlascloud(
-                    source_image=img_path,
-                    audio_entries=audio_entries,
-                    dest_path=dest_path,
-                    talk_name=talk_name,
-                    width=width,
-                    height=height,
-                    talk_item=talk_item,
-                )
-            )
-        else:
-            _task = asyncio.create_task(
-                _run_talk(img_path, audio_entries, dest_path,
-                          run_filename, talk_name, width, height)
-            )
+        _task = asyncio.create_task(
+            _run_talk(img_path, audio_entries, dest_path,
+                      run_filename, talk_name, width, height)
+        )
     except RuntimeError as e:
         _state.update({"status": "error", "error": str(e)})
         return {"ok": False, "error": str(e)}

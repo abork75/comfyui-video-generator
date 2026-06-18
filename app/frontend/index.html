@@ -501,8 +501,9 @@
                                                 :class="!isRunning && segmentHasMissing(seg)
                                                         ? 'text-orange-400 border-orange-700 hover:text-orange-300 hover:border-orange-500'
                                                         : 'text-gray-500 border-gray-600 cursor-not-allowed'"
-                                                class="text-xs border rounded px-2 py-0.5 transition">
-                                            ↺ Regeneruj ujęcie
+                                                class="text-xs border rounded px-2 py-0.5 transition"
+                                                title="Znajdzie pierwszy brakujący plik w ujęciu, zarchiwizuje wszystko od niego do końca ujęcia i wygeneruje tylko te pliki. Istniejące pliki przed pierwszym brakującym są pomijane.">
+                                            ↺ Generuj brakujące
                                         </button>
                                     </div>
 
@@ -580,7 +581,15 @@
                                                         <span class="px-1.5 py-0.5 bg-yellow-900/60 border border-yellow-700 rounded text-xs text-yellow-400 font-semibold">⚠ duplikat nazwy</span>
                                                     </template>
                                                     <div class="flex flex-wrap gap-1.5 ml-1">
-                                                        <template x-if="entry.item.backend"><span class="px-1.5 py-0.5 bg-gray-700 rounded text-xs text-gray-300" x-text="entry.item.backend"></span></template>
+                                                        <select @click.stop @change.stop="setChainBackend(entry.idx, $event.target.value)"
+                                                                :value="entry.item.backend || ''"
+                                                                class="bg-gray-700 border border-gray-600 rounded px-1 py-0.5 text-xs text-gray-300 focus:outline-none focus:border-blue-500 cursor-pointer"
+                                                                title="Backend chain">
+                                                            <option value="">linux (domyślny)</option>
+                                                            <option value="linux">linux</option>
+                                                            <option value="local">local</option>
+                                                            <option value="atlascloud">☁ atlascloud</option>
+                                                        </select>
                                                         <template x-if="entry.item.fps"><span class="px-1.5 py-0.5 bg-gray-700 rounded text-xs text-gray-400" x-text="entry.item.fps + ' fps'"></span></template>
                                                         <template x-if="entry.item.steps"><span class="px-1.5 py-0.5 bg-gray-700 rounded text-xs text-gray-400" x-text="entry.item.steps + ' steps'"></span></template>
                                                         <template x-if="entry.item.cfg"><span class="px-1.5 py-0.5 bg-gray-700 rounded text-xs text-gray-400" x-text="'cfg ' + entry.item.cfg"></span></template>
@@ -664,8 +673,8 @@
                                                                         <div class="flex gap-1 items-center">
                                                                             <button @click="openVideoModal(fname)" class="text-green-500 hover:text-green-400 text-sm px-1" title="Odtwórz">▶</button>
                                                                             <button @click="regenChainFrom(entry.item.chain_prefix, si, entry.item.chain.length)"
-                                                                                    :disabled="isRunning"
-                                                                                    :class="isRunning ? 'opacity-30 cursor-not-allowed text-gray-600' : 'text-gray-500 hover:text-blue-400'"
+                                                                                    :disabled="isRunning || (chainJobStatus.chain_prefix === entry.item.chain_prefix && (chainJobStatus.status === 'running' || chainJobStatus.status === 'queued'))"
+                                                                                    :class="(isRunning || (chainJobStatus.chain_prefix === entry.item.chain_prefix && (chainJobStatus.status === 'running' || chainJobStatus.status === 'queued'))) ? 'opacity-30 cursor-not-allowed text-gray-600' : 'text-gray-500 hover:text-blue-400'"
                                                                                     class="text-sm px-1 transition"
                                                                                     :title="'Re-generuj od step '+(si+1)+' do '+entry.item.chain.length">↺</button>
                                                                             <button @click="archiveChainFrom(entry.item.chain_prefix, si, entry.item.chain.length)"
@@ -679,11 +688,23 @@
                                                                         </div>
                                                                     </template>
                                                                     <template x-if="!_si(entry.idx)?.steps?.[si]?.exists">
-                                                                        <div class="flex items-center gap-1">
-                                                                            <span class="text-red-700 text-xs">○</span>
+                                                                        <div class="flex items-center gap-1"
+                                                                             x-data="{ get _isChainActive() { return chainJobStatus.chain_prefix === entry.item.chain_prefix && (chainJobStatus.status === 'running' || chainJobStatus.status === 'queued'); }, get _isThisStep() { return chainJobStatus.step === si + 1; } }">
+                                                                            <!-- Spinner when this step is actively generating -->
+                                                                            <template x-if="_isChainActive && _isThisStep">
+                                                                                <span class="animate-spin inline-block text-teal-400 text-xs" title="Generowanie…">⟳</span>
+                                                                            </template>
+                                                                            <!-- Queued indicator for upcoming steps -->
+                                                                            <template x-if="_isChainActive && !_isThisStep && si + 1 > chainJobStatus.step">
+                                                                                <span class="text-gray-600 text-xs" title="Oczekuje w kolejce">◌</span>
+                                                                            </template>
+                                                                            <!-- Default missing indicator -->
+                                                                            <template x-if="!_isChainActive">
+                                                                                <span class="text-red-700 text-xs">○</span>
+                                                                            </template>
                                                                             <button @click="regenChainFrom(entry.item.chain_prefix, si, entry.item.chain.length)"
-                                                                                    :disabled="isRunning"
-                                                                                    :class="isRunning ? 'opacity-30 cursor-not-allowed text-gray-600' : 'text-red-600 hover:text-red-400'"
+                                                                                    :disabled="isRunning || _isChainActive"
+                                                                                    :class="(isRunning || _isChainActive) ? 'opacity-30 cursor-not-allowed text-gray-600' : 'text-red-600 hover:text-red-400'"
                                                                                     class="text-sm px-1 transition"
                                                                                     :title="'Generuj od step '+(si+1)+' do '+entry.item.chain.length">↺</button>
                                                                             <template x-if="chainStepHasVersions(entry.idx, si)">
@@ -900,10 +921,10 @@
                                                               x-text="(Array.isArray(entry.item.audio) ? entry.item.audio.length : 1) + ' step' + ((Array.isArray(entry.item.audio) ? entry.item.audio.length : 1) !== 1 ? 's' : '')"></span>
                                                         <!-- Generate / re-generate -->
                                                         <button @click.stop="startTalkGen(entry.idx)"
-                                                                :disabled="talkStatus.status === 'running' || talkStatus.status === 'queued' || (entry.item.backend === 'atlascloud' ? envStatus.atlascloud !== 'ready' : envStatus.linux !== 'ready')"
-                                                                :class="(talkStatus.status === 'running' || talkStatus.status === 'queued' || (entry.item.backend === 'atlascloud' ? envStatus.atlascloud !== 'ready' : envStatus.linux !== 'ready')) ? 'opacity-30 cursor-not-allowed text-gray-600' : (_si(entry.idx)?.status === 'green' ? 'text-gray-500 hover:text-blue-400' : 'text-teal-500 hover:text-teal-300')"
+                                                                :disabled="talkStatus.status === 'running' || talkStatus.status === 'queued' || envStatus.linux !== 'ready'"
+                                                                :class="(talkStatus.status === 'running' || talkStatus.status === 'queued' || envStatus.linux !== 'ready') ? 'opacity-30 cursor-not-allowed text-gray-600' : (_si(entry.idx)?.status === 'green' ? 'text-gray-500 hover:text-blue-400' : 'text-teal-500 hover:text-teal-300')"
                                                                 class="text-sm px-1 py-0.5 rounded transition"
-                                                                :title="(entry.item.backend === 'atlascloud' ? envStatus.atlascloud !== 'ready' : envStatus.linux !== 'ready') ? (entry.item.backend === 'atlascloud' ? '☁ AtlasCloud nieaktywny' : '🐧 Linux nieaktywny') : (_si(entry.idx)?.status === 'green' ? 'Re-generuj talk' : 'Generuj Talk')">
+                                                                :title="envStatus.linux !== 'ready' ? '🐧 Linux nieaktywny' : (_si(entry.idx)?.status === 'green' ? 'Re-generuj talk' : 'Generuj Talk')">
                                                             <span x-show="talkStatus.status === 'running' && talkStatus.talk_name === _si(entry.idx)?.name" class="animate-spin inline-block">⟳</span>
                                                             <span x-show="!(talkStatus.status === 'running' && talkStatus.talk_name === _si(entry.idx)?.name)">↺</span>
                                                         </button>
@@ -2496,37 +2517,6 @@
             <!-- TALK fields -->
             <template x-if="editModal.kind === 'talk'">
                 <div class="space-y-4">
-
-                    <!-- Backend -->
-                    <div>
-                        <label class="block text-xs text-gray-400 mb-1">Backend</label>
-                        <select :value="editModal.data.backend || 'linux'"
-                                @change="editModal.data.backend = $event.target.value"
-                                class="w-full bg-gray-800 border border-gray-600 rounded px-2 py-1.5 text-sm text-gray-200 focus:outline-none focus:border-teal-500">
-                            <option value="linux">linux (InfiniteTalk lokalny)</option>
-                            <option value="atlascloud">☁ atlascloud (WAN 2.7 lip-sync)</option>
-                        </select>
-                    </div>
-
-                    <!-- AtlasCloud params (shown only when backend = atlascloud) -->
-                    <div x-show="(editModal.data.backend || 'linux') === 'atlascloud'"
-                         class="flex gap-3 items-center flex-wrap p-2 bg-violet-950/30 border border-violet-800/40 rounded-lg">
-                        <span class="text-xs text-violet-400 font-semibold">☁ AtlasCloud WAN 2.7</span>
-                        <label class="text-xs text-gray-400">Rozdzielczość
-                            <select x-model="editModal.data.atlascloud_resolution"
-                                    class="ml-1 bg-gray-800 border border-gray-600 rounded px-1 py-0.5 text-xs text-white focus:outline-none focus:border-violet-500">
-                                <option value="">— domyślna —</option>
-                                <option value="720P">720P</option>
-                                <option value="1080P">1080P</option>
-                                <option value="1080P-SR">1080P-SR</option>
-                                <option value="1440P-SR">1440P-SR</option>
-                            </select>
-                        </label>
-                        <label class="flex items-center gap-1 text-xs text-gray-400 cursor-pointer">
-                            <input type="checkbox" x-model="editModal.data.atlascloud_prompt_extend" class="accent-violet-500">
-                            Prompt extend
-                        </label>
-                    </div>
 
                     <!-- Output prefix (unique identifier → prevents file collision) -->
                     <div>
@@ -6574,17 +6564,10 @@ function app() {
             const flow = this.flowData?.flow || [];
             const needsLinux = flow.some(item =>
                 item && !item.break && !item.header && item.type !== 'scene_break' &&
-                (!item.backend || item.backend === 'linux' || item.backend === 'local')
-            );
-            const needsAtlas = flow.some(item =>
-                item && item.backend === 'atlascloud'
+                (item.type === 'talk' || !item.backend || item.backend === 'linux' || item.backend === 'local')
             );
             if (needsLinux && this.envStatus.linux !== 'ready') {
                 this.logLine('sys', '❌ 🐧 Linux ComfyUI nie działa (port 8189) — uruchom środowisko Linux i spróbuj ponownie');
-                return;
-            }
-            if (needsAtlas && this.envStatus.atlascloud !== 'ready') {
-                this.logLine('sys', '❌ ☁ AtlasCloud nieaktywny — sprawdź klucz ATLAS_CLOUD_API_KEY');
                 return;
             }
 
@@ -7207,23 +7190,26 @@ function app() {
                         names.push(`${item.chain_prefix}_${String(step+1).padStart(3,'0')}.mp4`);
                     }
                 } else if (item.type === 'talk' && si?.name) {
-                    names.push(si.name);
+                    if (si.status !== 'partial') names.push(si.name); // skip clip if it already exists
+                    if (si.bridge_name) names.push(si.bridge_name);
                 }
             }
-            if (!names.length) return;
+            // Only mp4 output filenames — filter out source image names (e.g. .png after talk tile)
+            const mp4Names = names.filter(n => n.endsWith('.mp4'));
+            if (!mp4Names.length) return;
 
-            const label = names.length === 1
-                ? names[0]
-                : `${names.length} pliki (od: ${names[0]})`;
+            const label = mp4Names.length === 1
+                ? mp4Names[0]
+                : `${mp4Names.length} pliki (od: ${mp4Names[0]})`;
             if (!confirm(`Regenerować ujęcie ${segIdx+1} od pierwszego brakującego?\n\n${label}\n\nIstniejące pliki zostaną zarchiwizowane.`)) return;
 
             // Batch-archive all (non-existent files are silently skipped)
-            this.logLine('sys', `📦 Regen ujęcie ${segIdx+1}: archiwizuję ${names.length} pliki...`);
+            this.logLine('sys', `📦 Regen ujęcie ${segIdx+1}: archiwizuję ${mp4Names.length} pliki...`);
             try {
                 const res = await fetch('/api/media/batch-archive', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ run: this.selectedRun.filename, names }),
+                    body: JSON.stringify({ run: this.selectedRun.filename, names: mp4Names }),
                 });
                 const data = await res.json();
                 if (res.ok) {
@@ -7236,12 +7222,16 @@ function app() {
                 }
             } catch(e) { this.logLine('sys', `❌ batch-archive: ${e.message}`); return; }
 
-            this.logLine('sys', `▶ Regen ujęcie ${segIdx+1}: ${names.length} pliki`);
-            await this._startOnly(names);
+            this.logLine('sys', `▶ Regen ujęcie ${segIdx+1}: ${mp4Names.length} pliki`);
+            await this._startOnly(mp4Names);
         },
 
         async regenChainFrom(chainPrefix, fromSi, totalSteps) {
-            if (!chainPrefix || !this.selectedRun || this.isRunning) return;
+            if (!chainPrefix || !this.selectedRun) return;
+            if (this.isRunning || this.chainJobStatus.status === 'running' || this.chainJobStatus.status === 'queued') {
+                this.logLine('sys', '❌ Generacja już trwa — poczekaj lub anuluj');
+                return;
+            }
 
             // Build filenames for step fromSi … totalSteps-1
             const names = [];
@@ -7249,7 +7239,7 @@ function app() {
                 names.push(`${chainPrefix}_${String(i+1).padStart(3,'0')}.mp4`);
             }
 
-            const stepLabel = `step ${fromSi + 1}`;
+            const stepLabel  = `step ${fromSi + 1}`;
             const rangeLabel = names.length === 1
                 ? names[0]
                 : `${names[0]} … ${names[names.length-1]} (${names.length} pliki)`;
@@ -7267,18 +7257,51 @@ function app() {
                 if (res.ok) {
                     for (const r of data.results) {
                         if (r.ok) this.logLine('sys', `📦 Backup [${data.ts}]: ${r.new_name}`);
-                        // silently skip files that didn't exist
                     }
                 } else {
                     this.logLine('sys', `❌ batch-archive: ${data.detail || res.status}`);
                 }
             } catch(e) { this.logLine('sys', `❌ batch-archive: ${e.message}`); }
 
+            // Refresh UI so archived steps show as missing
+            this.statusData = null;
+            await this.refreshStatus();
+
             const stepRange = names.length === 1
                 ? names[0]
                 : `${names.length} kroki (step ${fromSi+1}–${totalSteps})`;
-            this.logLine('sys', `▶ Re-gen chain: ${stepRange}`);
-            await this._startOnly(names);
+            this.logLine('sys', `▶ Generuję chain '${chainPrefix}' od ${stepRange}`);
+
+            // Set optimistic state so spinners appear immediately
+            this.chainJobStatus = {
+                status: 'queued', chain_prefix: chainPrefix,
+                step: fromSi + 1, total_steps: totalSteps,
+                from_step: fromSi + 1, error: null, elapsed_s: null,
+            };
+
+            try {
+                const res = await fetch('/api/chain/start', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        run_filename: this.selectedRun.filename,
+                        chain_prefix: chainPrefix,
+                        from_step:    fromSi,
+                    }),
+                });
+                if (!res.ok) {
+                    const e = await res.json();
+                    this.chainJobStatus = { ...this.chainJobStatus, status: 'error', error: e.detail };
+                    this.logLine('sys', `❌ Chain start: ${e.detail}`);
+                    return;
+                }
+                // Start polling
+                if (this._chainPollTimer) clearInterval(this._chainPollTimer);
+                this._chainPollTimer = setInterval(() => this._pollChainStatus(), 4000);
+            } catch(e) {
+                this.chainJobStatus = { ...this.chainJobStatus, status: 'error', error: e.message };
+                this.logLine('sys', `❌ Chain start: ${e.message}`);
+            }
         },
 
         async _startOnly(names) {
@@ -7537,6 +7560,10 @@ function app() {
         talkStatus: { status: 'idle', talk_name: null, segment: null, total_segs: null, error: null, elapsed_s: null },
         _talkPollTimer: null,
 
+        // ─ Chain generation ───────────────────────────────────
+        chainJobStatus: { status: 'idle', chain_prefix: null, step: null, total_steps: null, from_step: null, error: null, elapsed_s: null },
+        _chainPollTimer: null,
+
         // ─ Upscale modal ──────────────────────────────────────
         upscaleModal: {
             open:      false,
@@ -7652,17 +7679,9 @@ function app() {
             if (!this.selectedRun) return;
             const item = this.flowData?.flow?.[flowIdx];
             if (!item || item.type !== 'talk') return;
-            const talkBackend = item.backend || 'linux';
-            if (talkBackend === 'atlascloud') {
-                if (this.envStatus.atlascloud !== 'ready') {
-                    this.logLine('sys', '❌ ☁ AtlasCloud nieaktywny — sprawdź klucz ATLAS_CLOUD_API_KEY');
-                    return;
-                }
-            } else {
-                if (this.envStatus.linux !== 'ready') {
-                    this.logLine('sys', '❌ 🐧 Linux ComfyUI nie działa (port 8189) — uruchom środowisko Linux i spróbuj ponownie');
-                    return;
-                }
+            if (this.envStatus.linux !== 'ready') {
+                this.logLine('sys', '❌ 🐧 Linux ComfyUI nie działa (port 8189) — uruchom środowisko Linux i spróbuj ponownie');
+                return;
             }
 
             // Find the start frame: previous file item in flow
@@ -7733,6 +7752,31 @@ function app() {
                     if (data.segment !== prevSegment) {
                         this.logLine('sys', `🎙️ Talk: segment ${data.segment}…`);
                     }
+                }
+            } catch(e) { /* network hiccup — ignore */ }
+        },
+
+        // ─ Chain polling ─────────────────────────────────────────────────
+
+        async _pollChainStatus() {
+            try {
+                const res  = await fetch('/api/chain/status');
+                const data = await res.json();
+                const prevStep = this.chainJobStatus.step;
+                this.chainJobStatus = { ...data };
+                if (data.status === 'done') {
+                    clearInterval(this._chainPollTimer);
+                    this._chainPollTimer = null;
+                    this.logLine('sys', `✅ Chain '${data.chain_prefix}' gotowy (${data.elapsed_s}s)`);
+                    this.statusData = null;
+                    await this.refreshStatus();
+                } else if (data.status === 'error') {
+                    clearInterval(this._chainPollTimer);
+                    this._chainPollTimer = null;
+                    this.logLine('sys', `❌ Chain błąd: ${data.error}`);
+                    await this.refreshStatus();
+                } else if (data.status === 'running' && data.step !== prevStep) {
+                    this.logLine('sys', `⛓ Chain '${data.chain_prefix}': step ${data.step}/${data.total_steps}…`);
                 }
             } catch(e) { /* network hiccup — ignore */ }
         },
@@ -8539,6 +8583,17 @@ function app() {
             const ni = si + dir;
             if (ni < 0 || ni >= steps.length) return;
             [steps[si], steps[ni]] = [steps[ni], steps[si]];
+        },
+
+        async setChainBackend(idx, value) {
+            const newFlow = JSON.parse(JSON.stringify(this.flowData.flow));
+            if (value) {
+                newFlow[idx].backend = value;
+            } else {
+                delete newFlow[idx].backend;
+            }
+            const ok = await this._saveFlow(newFlow);
+            if (ok) this.flowData.flow = newFlow;
         },
 
         async _saveFlow(newFlow) {

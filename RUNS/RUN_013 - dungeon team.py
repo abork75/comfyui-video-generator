@@ -4,7 +4,7 @@
 # Edit RUN_013 - dungeon team.yaml and regenerate with:
 #     from app.services.yaml_service import generate_py_from_yaml
 #     generate_py_from_yaml(Path("RUNS/RUN_013 - dungeon team.yaml"))
-# Generated: 2026-06-16 15:07:27
+# Generated: 2026-06-18 01:35:49
 # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 import sys
@@ -1191,70 +1191,57 @@ Smooth, highly provocative and feminine dance, intense sensuality, cinematic vol
     {
         'file': 'taniec_zlej_krolowej_5.png',
         'backend': 'linux',
-        'duration': 0,
+        'duration': 3,
         'pos': 'NONE',
         'neg': 'NONE',
     },
-    {"break": True},
-
     {
-        'file': 'taniec_zlej_krolowej_1_ultra.png',
+        'file': 'taniec_zlej_krolowej_6.png',
         'backend': 'linux',
-        'duration': 5,
-        'pos': """5-second erotic I2V2I: Naked woman dances seductively in a dark dungeon.
-
-Start: back view.
-She performs slow, sensual body rolls and hip movements, then gracefully turns to face the camera.
-
-End: front view, standing with both hands raised high above her head, body fully exposed, intense seductive gaze.
-
-Very sensual and provocative dance, smooth transitions, dramatic volumetric lighting, photorealistic, high detail.""",
-        'neg': 'static scene, no movement, throne stays golden, throne not changing, environment not changing, corridor remains, no cell transformation, queen moving or standing up, changed pose, sudden jump, no particles, weak transition, bad blending, deformed throne, unrealistic stone texture, bright lighting, no dream haze, sharp realistic scene, low detail transition, artifacts, blurry environment, inconsistent lighting',
+        'duration': 2,
+        'pos': 'NONE',
+        'neg': 'NONE',
     },
     {
-        'file': 'taniec_zlej_krolowej_2_ultra.png',
-        'backend': 'linux',
-        'duration': 3,
-        'pos': """3-second erotic I2V2I: Naked woman dances seductively in a dark dungeon. She starts on the left side of the frame and slowly moves to the right while dancing. Her movements are very sensual — deep hip rolls, body waves, back arching, caressing her skin.
-
-She ends on the right side with both hands behind her head, posing provocatively. Slow, hypnotic and highly erotic dance, intense eye contact with camera, cinematic volumetric lighting, photorealistic.""",
-        'neg': 'static pose, minimal movement, stiff dance, awkward motion, bad anatomy, deformed body, extra limbs, blurry, low quality, clothing on body, censored, jerky movement, rubbery motion, changed pose too fast, no hip movement, looking away, modest dance, poor lighting',
-    },
-    {
-        'file': 'taniec_zlej_krolowej_3_ultra.png',
-        'backend': 'linux',
-        'duration': 3,
-        'pos': """4-second erotic I2V2I: Naked woman dances seductively in a dark dungeon.
-
-Start: hands behind head, provocative pose on the left side.
-She slowly moves closer to the camera while dancing with intense hip movements, back arching and sensual body waves.
-
-End: Close medium shot (visible from knees up), standing with hands on hips, powerful and teasing stance, looking straight into the camera.
-
-Slow, hypnotic and very erotic dance, cinematic volumetric lighting, photorealistic, high detail.""",
-        'neg': 'static pose, minimal movement, stiff dance, bad anatomy, deformed body, extra limbs, blurry motion, low quality, jerky movement, rubbery motion, changed pose too fast, clothing, censored, looking away, modest pose, poor hip movement, bad framing, full body shot at the end, too far from camera',
-    },
-    {
-        'file': 'taniec_zlej_krolowej_4_ultra.png',
-        'backend': 'linux',
-        'duration': 4,
-        'pos': """4-second erotic I2V2I: Naked woman dances seductively in a dark dungeon.
-
-Start: standing frontally with hands on hips.
-She performs slow, teasing hip movements and body waves, then gracefully turns and moves deeper into the dungeon while dancing.
-
-End: kneeling in the background, back to the camera, in a sensual arched pose.
-
-Smooth, highly provocative and feminine dance, intense sensuality, cinematic volumetric lighting, photorealistic.""",
-        'neg': 'static pose, minimal movement, stiff dance, bad anatomy, deformed body, extra limbs, blurry motion, jerky movement, rubbery motion, clothing, censored, sudden turn, bad transition, changed pose too fast, low quality, artifacts, poor hip movement, looking at camera in end frame, wrong position',
-    },
-    {
-        'file': 'taniec_zlej_krolowej_5_ultra.png',
+        'file': 'taniec_zlej_krolowej_7.png',
         'backend': 'linux',
         'duration': 0,
         'pos': 'NONE',
         'neg': 'NONE',
     },
+    {
+        'type': 'talk',
+        'audio': 'Bede tanczyc_Clara - Relaxing.mp3',
+        'width': 768,
+        'height': 768,
+        'transition': {
+            'pos': 'Smooth transition',
+        },
+    },
+
+    {
+        'file': 'taniec_zlej_krolowej_8.png',
+        'backend': 'linux',
+        'duration': 2,
+        'pos': 'NONE',
+        'neg': 'NONE',
+    },
+    {
+        "chain": [
+            {
+                'duration': 3,
+                'pos': 'Woman is bowing to the ground, hands lying on the floor',
+                'neg': '',
+            },
+        ],
+        "chain_prefix": 'pochyla się jeszcze bardziej',
+        'backend': 'linux',
+        'fps': 16,
+        'steps': 6,
+        'cfg': 2,
+        'neg': 'static, frozen, no movement',
+    },
+
     {"break": True},
 
 ]

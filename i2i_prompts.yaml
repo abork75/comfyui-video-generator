@@ -690,4 +690,24 @@ prompts:
     steps: 30
     cfg: 8
     denoise: 1
-last_id: 61
+- id: p0000062
+  category: fotorealizm
+  name: napraw kolor skóry twarzy
+  note: do wan 2.7
+  positive: Blend the color of face with rest of body do not remove tattoes or do not change  strictly preservg the hair, eye color,  nose structure and overall face shape. Match the skin color on face with rest of body only.
+  negative: ''
+  params:
+    steps: 30
+    cfg: 8.0
+    denoise: 1.0
+- id: p0000063
+  category: fotorealizm
+  name: Poprawa postaci na pierwszym planie
+  note: ''
+  positive: "Highly improve the photorealism of the entire image, with special focus on the foreground character. \n\nSharpen and enhance the woman's face significantly — make eyes, skin texture, pores, eyelashes, lips and facial details extremely crisp, realistic and lifelike. Increase micro-detail and natural skin rendering on the face.\n\nBetter blend the foreground character with the background and environment: improve realistic lighting interaction, soft shadows, ambient occlusion and edge integration so she looks naturally placed in the scene. Remove any artificial look or hard cutouts.\n\nOverall image enhancement: higher realism, better depth, material accuracy and cinematic quality. Professional photorealistic retouching, ultra sharp focus on the main subject, seamless blending, 8K quality."
+  negative: blurry face, soft face, low detail face, plastic skin, doll face, artificial look, hard edges, visible seams, floating character, bad lighting, inconsistent shadows, low quality, artifacts, over-sharpened, cartoonish, deformed face, unnatural skin texture, flat lighting
+  params:
+    steps: 30
+    cfg: 8.0
+    denoise: 1.0
+last_id: 63

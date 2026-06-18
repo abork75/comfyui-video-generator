@@ -181,10 +181,10 @@ def run_batch_generation(config):
     logger.success(f"Found {len(parser.get_all_files())} files")
     logger.info(f"Breaks: {len(parser.segments) - 1}")
     
-    # Build pairs for processing (with metadata)
+    # Build pairs for processing (with metadata), tagged by segment index
     pairs = []
-#########################    
-    for pair in transition_pairs:
+    for seg_idx, segment in enumerate(parser.segments):
+      for pair in segment.transitions:
         from_file = pair.from_file
         to_file = pair.to_file
         from_config = pair.from_config
@@ -330,8 +330,8 @@ def run_batch_generation(config):
                 print(f"   Using prompt: {trans_config['positive_prompt'][:60]}...")        
         
         
+        trans_config['_segment_idx'] = seg_idx
         pairs.append(trans_config)
-#############################
     
     if not pairs:
         logger.warning("No transitions to generate (check for breaks or single file)")
@@ -823,59 +823,59 @@ def run_batch_generation(config):
     if linux_transitions:
         backends['linux'] = LinuxBackend(config)
 
-    _atlascloud_talk_tiles = [
-        t for t in to_generate
-        if t.get('to_config', {}).get('_is_talk')
-        and (t.get('to_config', {}).get('backend') == 'atlascloud')
-    ]
-    if atlascloud_transitions or _atlascloud_talk_tiles:
+    if atlascloud_transitions:
         backends['atlascloud'] = AtlasCloudVideoBackend(config)
     
     # ============================================================
-    # GENERATE TRANSITIONS — retry loop
-    # Each pass generates what it can; items whose dependencies are
-    # not yet satisfied (soft-fail) are retried in the next pass.
-    # Two consecutive passes with the same set of failures → deadlock.
+    # GENERATE TRANSITIONS — segment-level isolation
+    # Failure in a segment skips remaining transitions in that segment
+    # but continues with the next segment (ujęcie) independently.
     # ============================================================
 
     results = []
-    pending_transitions   = list(to_generate)
-    chain_frame_cache     = {}   # {filename: last_frame_path} – persists across passes
-    _last_soft_failed_names: set | None = None
-    _pass_num = 0
+    chain_frame_cache = {}   # {filename: last_frame_path}
 
-    while pending_transitions:
-        _pass_num += 1
-        if _pass_num > 1:
+    # ── Resolve chain dependencies (once, before generation) ─────────
+    chains_info: dict = {}
+    for trans in to_generate:
+        to_config_pre = trans['config'].get('to_config', {})
+        if chain_handler.is_chain_file(to_config_pre):
+            chain_prefix_pre = to_config_pre['_chain_prefix']
+            if chain_prefix_pre not in chains_info:
+                total_steps_pre = to_config_pre['_chain_total']
+                tasks_pre = chain_handler.resolve_dependencies(
+                    chain_prefix_pre, total_steps_pre
+                )
+                chains_info[chain_prefix_pre] = {
+                    'total': total_steps_pre,
+                    'tasks': tasks_pre,
+                }
+                if tasks_pre:
+                    logger.info(
+                        f"Chain '{chain_prefix_pre}': "
+                        f"{len(tasks_pre)} step(s) need generation"
+                    )
+
+    # ── Group to_generate by segment ─────────────────────────────────
+    seg_groups: dict[int, list] = {}
+    for trans in to_generate:
+        sidx = trans['config'].get('_segment_idx', 0)
+        seg_groups.setdefault(sidx, []).append(trans)
+
+    total_segs = len(parser.segments)
+
+    for seg_idx in sorted(seg_groups.keys()):
+        seg_items = seg_groups[seg_idx]
+
+        if total_segs > 1:
             logger.section(
-                f"🔄 Retry pass {_pass_num} "
-                f"— {len(pending_transitions)} transition(s) still pending"
+                f"Ujęcie {seg_idx + 1}/{total_segs} "
+                f"({len(seg_items)} tranzycji)"
             )
 
-        # ── Resolve chain dependencies for THIS pass ─────────────────
-        chains_info: dict = {}
-        for trans in pending_transitions:
-            to_config_pre = trans['config'].get('to_config', {})
-            if chain_handler.is_chain_file(to_config_pre):
-                chain_prefix_pre = to_config_pre['_chain_prefix']
-                if chain_prefix_pre not in chains_info:
-                    total_steps_pre = to_config_pre['_chain_total']
-                    tasks_pre = chain_handler.resolve_dependencies(
-                        chain_prefix_pre, total_steps_pre
-                    )
-                    chains_info[chain_prefix_pre] = {
-                        'total': total_steps_pre,
-                        'tasks': tasks_pre,
-                    }
-                    if tasks_pre:
-                        logger.info(
-                            f"Chain '{chain_prefix_pre}': "
-                            f"{len(tasks_pre)} step(s) need generation"
-                        )
+        _segment_done = False  # set True after first failure → skip rest
 
-        _soft_failed_this_pass: list = []
-
-        for i, trans in enumerate(pending_transitions, 1):
+        for i, trans in enumerate(seg_items, 1):
             trans_config = trans['config']
             backend_type = trans_config['backend']
 
@@ -884,24 +884,28 @@ def run_batch_generation(config):
             from_config = trans_config.get('from_config', {})
             to_config   = trans_config.get('to_config', {})
 
+            # ── Segment already failed — skip remaining items ─────────
+            if _segment_done:
+                logger.info(f"  ⏭ {trans['name']}: pomijam (ujęcie przerwane)")
+                results.append({'name': trans['name'], 'backend': backend_type,
+                                'success': False, 'is_chain': chain_handler.is_chain_file(to_config),
+                                'skipped': True})
+                continue
+
             # ── Talk clip generation ──────────────────────────────────
             if to_config.get('_is_talk'):
-                # Talk clip backend is always determined by the talk tile itself
-                # (to_config), not the pair's combined backend which inherits from
-                # the preceding image (from_config) and would override the talk tile.
-                talk_backend_type = to_config.get('backend') or backend_type
                 talk_dest = talks_folder / to_file
 
                 if talk_dest.exists() and config.get('skip_existed', True):
                     _rel = str(Path('transitions') / 'talks' / to_file)
                     extractor.extract_end_frame(_rel, target_width, target_height)
-                    results.append({'name': to_file, 'backend': talk_backend_type,
+                    results.append({'name': to_file, 'backend': backend_type,
                                     'success': True, 'is_chain': False})
                     continue
 
-                if not _gen_fn and talk_backend_type != 'atlascloud':
+                if not _gen_fn:
                     logger.error(f"  🎙️  {to_file}: talk service unavailable")
-                    results.append({'name': to_file, 'backend': talk_backend_type,
+                    results.append({'name': to_file, 'backend': backend_type,
                                     'success': False, 'is_chain': False})
                     continue
 
@@ -967,8 +971,10 @@ def run_batch_generation(config):
                         _talk_src = _real
 
                 if not _talk_src or not Path(_talk_src).exists():
-                    logger.warning(f"  ⏳ {to_file}: source frame not ready — will retry")
-                    _soft_failed_this_pass.append(trans)
+                    logger.error(f"  ❌ {to_file}: brak source frame — pomijam")
+                    results.append({'name': to_file, 'backend': backend_type,
+                                    'success': False, 'is_chain': False})
+                    _segment_done = True
                     continue
 
                 # Build audio entries
@@ -996,53 +1002,38 @@ def run_batch_generation(config):
                     _audio_entries.append({'path': _apath, 'pos': _ap2, 'neg': _an2})
 
                 if not _audio_ok or not _audio_entries:
-                    results.append({'name': to_file, 'backend': talk_backend_type,
+                    results.append({'name': to_file, 'backend': backend_type,
                                     'success': False, 'is_chain': False})
+                    _segment_done = True
                     continue
 
                 _tw = int(_talk_cfg.get('width',  480))
                 _th = int(_talk_cfg.get('height', 832))
                 logger.section(
-                    f"🎙️  Talk {i}/{len(pending_transitions)}: {to_file}")
+                    f"🎙️  Talk {i}/{len(seg_items)}: {to_file}")
                 logger.info(f"  source : {Path(_talk_src).name}")
                 logger.info(f"  audio  : {[e['path'].name for e in _audio_entries]}")
                 logger.info(f"  size   : {_tw}x{_th}")
 
-                if talk_backend_type == 'atlascloud':
-                    _ac_talk_backend = backends.get('atlascloud')
-                    if not _ac_talk_backend:
-                        logger.error(f"  🎙️  {to_file}: AtlasCloud backend unavailable")
-                        results.append({'name': to_file, 'backend': talk_backend_type,
-                                        'success': False, 'is_chain': False})
-                        continue
-                    _t_success = _ac_talk_backend.generate_talk_clip(
-                        source_image=Path(_talk_src),
-                        audio_entries=_audio_entries,
-                        dest_path=talk_dest,
-                        width=_tw,
-                        height=_th,
-                        frame_interpolation=to_config.get('frame_interpolation'),
-                        atlascloud_resolution=to_config.get('atlascloud_resolution') or None,
-                        atlascloud_prompt_extend=to_config.get('atlascloud_prompt_extend'),
-                    )
-                else:
-                    _t_success = _gen_fn(
-                        comfyui_url=_talk_url,
-                        linux_input_dir=_linux_input,
-                        linux_output_dir=_linux_output,
-                        source_image=Path(_talk_src),
-                        audio_entries=_audio_entries,
-                        dest_path=talk_dest,
-                        width=_tw,
-                        height=_th,
-                        log_fn=lambda msg: logger.info(f"  {msg}"),
-                    )
+                _t_success = _gen_fn(
+                    comfyui_url=_talk_url,
+                    linux_input_dir=_linux_input,
+                    linux_output_dir=_linux_output,
+                    source_image=Path(_talk_src),
+                    audio_entries=_audio_entries,
+                    dest_path=talk_dest,
+                    width=_tw,
+                    height=_th,
+                    log_fn=lambda msg: logger.info(f"  {msg}"),
+                )
 
                 if not _t_success:
                     # Backend failure (OOM, timeout, etc.) → soft-fail so retry
                     # loop tries again after other items (model may be freed)
-                    logger.warning(f"  ⏳ {to_file}: backend failed — will retry next pass")
-                    _soft_failed_this_pass.append(trans)
+                    logger.error(f"  ❌ {to_file}: backend failed — pomijam")
+                    results.append({'name': to_file, 'backend': backend_type,
+                                    'success': False, 'is_chain': False})
+                    _segment_done = True
                     continue
 
                 if _t_success:
@@ -1067,7 +1058,7 @@ def run_batch_generation(config):
                 else:
                     logger.error(f"  {to_file}: generation failed")
 
-                results.append({'name': to_file, 'backend': talk_backend_type,
+                results.append({'name': to_file, 'backend': backend_type,
                                 'success': _t_success, 'is_chain': False})
                 continue
 
@@ -1100,11 +1091,12 @@ def run_batch_generation(config):
                     dep_file = f"{chain_prefix}_{dep_step:03d}.mp4"
 
                     if dep_file not in chain_frame_cache:
-                        logger.warning(
-                            f"⏳ Chain dep {dep_file} not ready "
-                            f"— will retry after other transitions"
+                        logger.error(
+                            f"❌ Chain dep {dep_file} nie wygenerowany — pomijam {to_file}"
                         )
-                        _soft_failed_this_pass.append(trans)
+                        results.append({'name': trans['name'], 'backend': backend_type,
+                                        'success': False, 'is_chain': True})
+                        _segment_done = True
                         continue
 
             # ── Determine start frame ─────────────────────────────────
@@ -1123,11 +1115,12 @@ def run_batch_generation(config):
                             chain_frame_cache[from_file] = start_frame
 
                 if not start_frame:
-                    logger.warning(
-                        f"⏳ Start frame from chain {from_file} not ready "
-                        f"— will retry"
+                    logger.error(
+                        f"❌ {trans['name']}: brak start frame z chain {from_file} — pomijam"
                     )
-                    _soft_failed_this_pass.append(trans)
+                    results.append({'name': trans['name'], 'backend': backend_type,
+                                    'success': False, 'is_chain': is_chain_step})
+                    _segment_done = True
                     continue
             else:
                 # Normal file (image or video incl. talk clip).
@@ -1151,11 +1144,12 @@ def run_batch_generation(config):
                     else:
                         logger.info(f"  ℹ️  {Path(from_file).stem}: no _real.png — using static end frame")
                 if not start_frame.exists():
-                    logger.warning(
-                        f"⏳ Start frame missing for {trans['name']} "
-                        f"(source: {from_file}) — will retry"
+                    logger.error(
+                        f"❌ {trans['name']}: brak start frame ({from_file}) — pomijam"
                     )
-                    _soft_failed_this_pass.append(trans)
+                    results.append({'name': trans['name'], 'backend': backend_type,
+                                    'success': False, 'is_chain': is_chain_step})
+                    _segment_done = True
                     continue
 
             # ── Determine end frame ───────────────────────────────────
@@ -1175,10 +1169,12 @@ def run_batch_generation(config):
                     )
 
                     if not end_frame:
-                        logger.warning(
-                            f"⏳ Gap-fill source {next_file} not ready — will retry"
+                        logger.error(
+                            f"❌ {trans['name']}: brak gap-fill source {next_file} — pomijam"
                         )
-                        _soft_failed_this_pass.append(trans)
+                        results.append({'name': trans['name'], 'backend': backend_type,
+                                        'success': False, 'is_chain': True})
+                        _segment_done = True
                         continue
                 else:
                     # I2V mode — but check if flow marked an end-target image
@@ -1215,7 +1211,7 @@ def run_batch_generation(config):
                 )
             else:
                 logger.section(
-                    f"Transition {i}/{len(pending_transitions)}: "
+                    f"Transition {i}/{len(seg_items)}: "
                     f"{trans['name']} ({backend_type.upper()})"
                 )
 
@@ -1239,6 +1235,17 @@ def run_batch_generation(config):
             logger.info(f"  size  : {_pw}x{_ph}")
 
             backend = backends[backend_type]
+
+            # Guard: duration=0 would produce 1 frame and waste ~5min of GPU time.
+            # Fail immediately with a clear error so the user can fix the YAML.
+            if not trans_config['duration']:
+                logger.error(
+                    f"  ❌ {trans['name']}: duration=0 — ustaw duration > 0 "
+                    f"dla pliku '{from_file}' w YAML i uruchom ponownie."
+                )
+                results.append({'name': trans['name'], 'backend': backend_type,
+                                'success': False, 'is_chain': is_chain_step})
+                continue
 
             _gt_kwargs = dict(
                 start_frame=start_frame,
@@ -1320,33 +1327,20 @@ def run_batch_generation(config):
                     'is_chain': is_chain_step,
                 })
             else:
-                # Backend failure (OOM, timeout, etc.) → soft-fail → retry
-                logger.warning(
-                    f"  ⏳ {trans['name']}: backend failed — will retry next pass"
+                logger.error(
+                    f"  ❌ {trans['name']}: backend failed — pomijam"
                 )
-                _soft_failed_this_pass.append(trans)
+                results.append({'name': trans['name'], 'backend': backend_type,
+                                'success': False, 'is_chain': is_chain_step})
+                _segment_done = True
 
-        # ── Deadlock detection ────────────────────────────────────────
-        _current_soft_names = {t['name'] for t in _soft_failed_this_pass}
-        if _current_soft_names and _current_soft_names == _last_soft_failed_names:
-            logger.error(
-                f"\n❌ Deadlock: {len(_soft_failed_this_pass)} transition(s) "
-                f"blocked by missing dependencies after {_pass_num} passes:"
-            )
-            for _t in _soft_failed_this_pass:
-                logger.error(f"    • {_t['name']}")
-                results.append({
-                    'name':     _t['name'],
-                    'backend':  _t['config']['backend'],
-                    'success':  False,
-                    'is_chain': chain_handler.is_chain_file(
-                        _t['config'].get('to_config', {})
-                    ),
-                })
-            break
-
-        _last_soft_failed_names = _current_soft_names
-        pending_transitions = _soft_failed_this_pass
+        if _segment_done:
+            seg_failed_count = sum(1 for r in results if not r['success'] and not r.get('skipped'))
+            seg_skip_count   = sum(1 for r in results[-len(seg_items):] if r.get('skipped'))
+            if seg_skip_count:
+                logger.warning(
+                    f"  ⏭ Ujęcie {seg_idx + 1}: {seg_skip_count} tranzycji pominiętych po błędzie"
+                )
     
     # ============================================================
     # SUMMARY
