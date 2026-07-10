@@ -331,6 +331,15 @@
                     :class="selectedRun && !isRunning ? 'text-gray-400 hover:text-white cursor-pointer' : 'text-gray-700 cursor-not-allowed'"
                     class="text-sm px-2 py-1.5 rounded transition" title="Odśwież status plików">↻ Status</button>
 
+            <!-- MMAudio toggle -->
+            <button type="button" @click="mmAudio = !mmAudio" :disabled="isRunning"
+                    :class="mmAudio ? 'bg-violet-700 text-white' : 'text-gray-400 border border-gray-600 hover:border-gray-400 hover:text-gray-300'"
+                    class="flex items-center gap-1.5 text-xs px-2.5 py-1.5 rounded-lg transition select-none"
+                    title="Generuj podkład audio (MMAudio) po każdym wideo">
+                <span>🔊</span>
+                <span x-text="mmAudio ? 'Audio ON' : 'Audio'"></span>
+            </button>
+
             <div class="h-4 w-px bg-gray-700"></div>
             <!-- Edit flow button — only for yaml runs -->
             <template x-if="selectedRun?.compatibility === 'yaml' && !isRunning">
@@ -1452,6 +1461,9 @@
                                             <template x-if="clip.status === 'ok' && clip.width !== null">
                                                 <span :class="preBelowTarget(clip) ? 'text-orange-400' : 'text-green-600'"
                                                       x-text="`${clip.width}×${clip.height}`"></span>
+                                            </template>
+                                            <template x-if="clip.status === 'ok' && clip.fps !== null && clip.fps !== undefined">
+                                                <span class="text-gray-500" x-text="`${clip.fps}fps`"></span>
                                             </template>
                                             <template x-if="clip.status === 'ok' && clip.width !== null && preBelowTarget(clip)">
                                                 <span class="text-gray-700">→</span>
@@ -6834,6 +6846,7 @@ function app() {
 
         // ─ Global app defaults (fetched once on init) ─────
         globalDefaults: { frame_interpolation: true },
+        mmAudio: false,
 
         // Resolve effective frame_interpolation for a clip item:
         // per-clip → per-project → global app_config → hard-coded true
@@ -7108,7 +7121,7 @@ function app() {
             }
 
             try {
-                const body = this._forceAll ? { force_all: true } : {};
+                const body = { ...(this._forceAll ? { force_all: true } : {}), ...(this.mmAudio ? { mmaudio: true } : {}) };
                 const res = await fetch(`/api/generate/${encodeURIComponent(this.selectedRun.filename)}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },

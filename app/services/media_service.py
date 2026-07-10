@@ -354,10 +354,10 @@ def get_transition_status(run_filename: str) -> dict | None:
 
 def _get_clip_meta(path: Path) -> dict:
     """
-    Return {duration_s, width, height} for a video/image file via ffprobe.
+    Return {duration_s, width, height, fps} for a video/image file via ffprobe.
     Falls back to None values on any error (ffprobe not found, corrupt file, etc.).
     """
-    meta = {"duration_s": None, "width": None, "height": None}
+    meta = {"duration_s": None, "width": None, "height": None, "fps": None}
     if not path.exists():
         return meta
     try:
@@ -365,7 +365,7 @@ def _get_clip_meta(path: Path) -> dict:
             [
                 "ffprobe", "-v", "error",
                 "-select_streams", "v:0",
-                "-show_entries", "stream=width,height:format=duration",
+                "-show_entries", "stream=width,height,r_frame_rate:format=duration",
                 "-of", "default=noprint_wrappers=1",
                 str(path),
             ],
@@ -389,6 +389,13 @@ def _get_clip_meta(path: Path) -> dict:
                 try:
                     meta["height"] = int(v)
                 except ValueError:
+                    pass
+            elif k == "r_frame_rate":
+                try:
+                    num, den = v.split("/")
+                    if int(den) > 0:
+                        meta["fps"] = round(int(num) / int(den), 2)
+                except Exception:
                     pass
     except Exception:
         pass

@@ -6,12 +6,15 @@ Obsługuje oba tryby:
 - I2V2I (start_frame + end_frame - interpolacja tranzycji)
 """
 
+import os
 import time
 import shutil
 from pathlib import Path
 
 from .base_backend import BaseBackend
 from workflow_base import WorkflowRunner, Logger
+from utils.video_utils import ensure_24fps
+from utils.mmaudio_utils import add_audio as _mmaudio_add_audio
 
 
 class LinuxBackend(BaseBackend):
@@ -218,9 +221,13 @@ class LinuxBackend(BaseBackend):
             if target_path:
                 shutil.move(str(output_video), str(target_path))
                 self.logger.success(f"  Zapisano: {target_path.name}")
+                ensure_24fps(target_path, self.logger)
+                self._maybe_add_audio(target_path, params)
                 return target_path
             else:
                 self.logger.success(f"  Wideo: {output_video}")
+                ensure_24fps(output_video, self.logger)
+                self._maybe_add_audio(output_video, params)
                 return output_video
 
         except Exception as e:
@@ -361,6 +368,32 @@ class LinuxBackend(BaseBackend):
         newest = max(recent, key=lambda f: f.stat().st_mtime)
         self.logger.info(f"  Znaleziono: {newest.name}")
         return newest
+
+    def _maybe_add_audio(self, video_path: Path, params: dict) -> None:
+        """If MMAUDIO_ENABLED env var is set, generate audio and merge into video."""
+        if not os.environ.get("MMAUDIO_ENABLED"):
+            return
+        prompt = params.get("pos_prompt", "")
+        if not prompt:
+            self.logger.warning("  MMAudio: brak promptu, pomijam")
+            return
+        # Estimate video duration for MMAudio (default 10s max)
+        try:
+            from utils.video_utils import get_video_info
+            info = get_video_info(video_path)
+            duration = info["duration"] if info["duration"] and info["duration"] > 0 else 10.0
+        except Exception:
+            duration = 10.0
+        _mmaudio_add_audio(
+            video_path=video_path,
+            prompt=prompt,
+            api_url=self.api_url,
+            duration=duration,
+            steps=int(os.environ.get("MMAUDIO_STEPS", "25")),
+            cfg=float(os.environ.get("MMAUDIO_CFG", "4.5")),
+            seed=-1,
+            logger=self.logger,
+        )
 
     def cleanup(self, inputs):
         pass
