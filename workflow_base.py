@@ -189,7 +189,7 @@ class WorkflowRunner:
             with open(image_path, 'rb') as f:
                 files = {'image': (filename, f)}
                 data = {'overwrite': 'true'}
-                response = requests.post(url, files=files, data=data, timeout=30)
+                response = requests.post(url, files=files, data=data, timeout=120)
             
             if response.status_code == 200:
                 result = response.json()

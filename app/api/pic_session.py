@@ -67,6 +67,7 @@ class CharacterEntry(BaseModel):
     x_center_pct:       float = 50.0
     erode_px:           int   = 3
     blur_px:            int   = 2
+    preserve_alpha:     bool  = False  # skip all alpha processing, paste PNG as-is
     edge_blend_enabled: bool  = True   # per-character toggle
 
 

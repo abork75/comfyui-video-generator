@@ -4,7 +4,7 @@
 # Edit RUN_013 - dungeon team.yaml and regenerate with:
 #     from app.services.yaml_service import generate_py_from_yaml
 #     generate_py_from_yaml(Path("RUNS/RUN_013 - dungeon team.yaml"))
-# Generated: 2026-06-18 01:35:49
+# Generated: 2026-06-20 19:08:54
 # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 import sys
@@ -1242,6 +1242,442 @@ Smooth, highly provocative and feminine dance, intense sensuality, cinematic vol
         'neg': 'static, frozen, no movement',
     },
 
+    {"break": True},
+
+    {
+        'type': 'scene_break',
+        'name': 'CHŁOSTA',
+    },
+    {
+        'file': 'whip1.png',
+        'backend': 'linux',
+        'duration': 3,
+        'pos': """Dynamic 3-second video: A sorceress on the left aggressively and repeatedly whipping a naked woman tied to a wooden pole in the center. Multiple fast, powerful whip strikes hitting her buttocks and thighs, visible red welts, the bound woman flinching, jerking and writhing in pain with each impact.
+
+In the background: animated medieval crowd with subtle natural movement - people shifting weight, turning heads, slightly raising hands, murmuring, small movements, cheering crowd with gentle motion, not too many people.
+
+Realistic whip motion with motion blur, dynamic action, cinematic side view, dramatic lighting, dark fantasy atmosphere, highly detailed main subjects, subtle background animation, 3 seconds video""",
+        'neg': 'static scene, slow motion, few strikes, single whip hit, blurry motion, deformed body, bad anatomy, low quality, artifacts, text, watermark, censored, calm scene, no movement, smiling, peaceful, static camera, weak hits',
+        'lora_strength': None,
+        'frame_interpolation': False,
+    },
+    {
+        'file': 'whip1_p2.png',
+        'backend': 'linux',
+        'duration': 5,
+        'pos': """Dynamic 5-second video: A sorceress on the left aggressively and repeatedly whipping a naked woman tied to a wooden pole in the center. Multiple fast, powerful whip strikes hitting her buttocks and thighs, the bound woman flinching, jerking and writhing in pain with each impact.
+
+In the background: animated medieval crowd with subtle natural movement - people shifting weight, turning heads, slightly raising hands, murmuring, small movements, cheering crowd with gentle motion, not too many people.
+
+Realistic whip motion with motion blur, dynamic action, cinematic side view, dramatic lighting, dark fantasy atmosphere, highly detailed main subjects, subtle background animation, 5 seconds video""",
+        'neg': 'static scene, slow motion, few strikes, single whip hit, blurry motion, deformed body, bad anatomy, low quality, artifacts, text, watermark, censored, calm scene, no movement, smiling, peaceful, static camera, weak hits',
+        'frame_interpolation': False,
+        'generate_count': 3,
+    },
+    {"break": True},
+
+    {
+        'file': 'whip1_p3.png',
+        'backend': 'linux',
+        'duration': 3,
+        'pos': """Dynamic 5-second video: A sorceress on the left aggressively and repeatedly whipping a naked woman tied to a wooden pole in the center. Multiple fast, powerful whip strikes hitting her buttocks and thighs, visible red welts, the bound woman flinching, jerking and writhing in pain with each impact.
+
+In the background: animated medieval crowd with subtle natural movement - people shifting weight, turning heads, slightly raising hands, murmuring, small movements, cheering crowd with gentle motion, not too many people.
+
+Realistic whip motion with motion blur, dynamic action, cinematic side view, dramatic lighting, dark fantasy atmosphere, highly detailed main subjects, subtle background animation, 5 seconds video""",
+        'neg': 'static scene, slow motion, few strikes, single whip hit, blurry motion, deformed body, bad anatomy, low quality, artifacts, text, watermark, censored, calm scene, no movement, smiling, peaceful, static camera, weak hits',
+        'frame_interpolation': False,
+    },
+    {
+        'file': 'whip1_p4.png',
+        'backend': 'linux',
+        'duration': 2,
+        'pos': '',
+        'neg': '',
+    },
+    {"break": True},
+
+    {
+        'file': 'whip1_p5.png',
+        'backend': 'linux',
+        'duration': 2,
+        'pos': """Dynamic 5-second video: A sorceress on the left aggressively and repeatedly whipping a naked woman tied to a wooden pole in the center. Multiple fast, powerful whip strikes hitting her buttocks and thighs, visible red welts, the bound woman flinching, jerking and writhing in pain with each impact.
+
+In the background: animated medieval crowd with subtle natural movement - people shifting weight, turning heads, slightly raising hands, murmuring, small movements, cheering crowd with gentle motion, not too many people.
+
+Realistic whip motion with motion blur, dynamic action, cinematic side view, dramatic lighting, dark fantasy atmosphere, highly detailed main subjects, subtle background animation, 5 seconds video""",
+        'neg': 'static scene, slow motion, few strikes, single whip hit, blurry motion, deformed body, bad anatomy, low quality, artifacts, text, watermark, censored, calm scene, no movement, smiling, peaceful, static camera, weak hits',
+        'frame_interpolation': False,
+    },
+    {
+        'file': 'whip1_p6.png',
+        'backend': 'linux',
+        'duration': 2,
+        'pos': 'NONE',
+        'neg': 'NONE',
+    },
+    {"break": True},
+
+    {
+        'file': 'whip1_p7.png',
+        'backend': 'linux',
+        'duration': 3,
+        'pos': """Dynamic 3-second video: A sorceress on the left aggressively and repeatedly whipping a naked woman tied to a wooden pole in the center. Multiple fast, powerful whip strikes hitting her buttocks and thighs, visible red welts, the bound woman flinching, jerking and writhing in pain with each impact.
+
+In the background: animated medieval crowd with subtle natural movement - people shifting weight, turning heads, slightly raising hands, murmuring, small movements, cheering crowd with gentle motion, not too many people.
+
+Realistic whip motion with motion blur, dynamic action, cinematic side view, dramatic lighting, dark fantasy atmosphere, highly detailed main subjects, subtle background animation, 3 seconds video""",
+        'neg': 'static scene, slow motion, few strikes, single whip hit, blurry motion, deformed body, bad anatomy, low quality, artifacts, text, watermark, censored, calm scene, no movement, smiling, peaceful, static camera, weak hits',
+        'frame_interpolation': False,
+    },
+    {
+        'file': 'whip1_p8.png',
+        'backend': 'linux',
+        'duration': 0,
+        'pos': 'NONE',
+        'neg': 'NONE',
+    },
+    {"break": True},
+
+    {
+        'file': 'whip1_p9.png',
+        'backend': 'linux',
+        'duration': 2,
+        'pos': """Dynamic 3-second video: A sorceress on the left aggressively and repeatedly whipping a naked woman tied to a wooden pole in the center. Multiple fast, powerful whip strikes hitting her buttocks and thighs, visible red welts, the bound woman flinching, jerking and writhing in pain with each impact.
+
+In the background: animated medieval crowd with subtle natural movement - people shifting weight, turning heads, slightly raising hands, murmuring, small movements, cheering crowd with gentle motion, not too many people.
+
+Realistic whip motion with motion blur, dynamic action, cinematic side view, dramatic lighting, dark fantasy atmosphere, highly detailed main subjects, subtle background animation, 3 seconds video""",
+        'neg': 'static scene, slow motion, few strikes, single whip hit, blurry motion, deformed body, bad anatomy, low quality, artifacts, text, watermark, censored, calm scene, no movement, smiling, peaceful, static camera, weak hits',
+        'frame_interpolation': False,
+    },
+    {
+        'file': 'whip1_p10.png',
+        'backend': 'linux',
+        'duration': 0,
+        'pos': 'NONE',
+        'neg': 'NONE',
+    },
+    {"break": True},
+
+    {
+        'file': 'whip1_p11.png',
+        'backend': 'linux',
+        'duration': 2,
+        'pos': """Dynamic 3-second video: A sorceress on the left aggressively and repeatedly whipping a naked woman tied to a wooden pole in the center. Multiple fast, powerful whip strikes hitting her directly at legs, visible red welts, the bound woman flinching, jerking and writhing in pain with each impact.
+
+In the background: animated medieval crowd with subtle natural movement - people shifting weight, turning heads, slightly raising hands, murmuring, small movements, cheering crowd with gentle motion, not too many people.
+
+Realistic whip motion with motion blur, dynamic action, cinematic side view, dramatic lighting, dark fantasy atmosphere, highly detailed main subjects, subtle background animation, 3 seconds video""",
+        'neg': 'static scene, slow motion, few strikes, single whip hit, blurry motion, deformed body, bad anatomy, low quality, artifacts, text, watermark, censored, calm scene, no movement, smiling, peaceful, static camera, weak hits',
+        'frame_interpolation': False,
+    },
+    {
+        'file': 'whip1_p12.png',
+        'backend': 'linux',
+        'duration': 0,
+        'pos': 'NONE',
+        'neg': 'NONE',
+    },
+    {"break": True},
+
+    {
+        'file': 'whip1_p13.png',
+        'backend': 'linux',
+        'duration': 2,
+        'pos': """Dynamic 3-second video: A sorceress on the left aggressively and repeatedly whipping a naked woman tied to a wooden pole in the center. Multiple fast, powerful whip strikes hitting her directly at legs, visible red welts, the bound woman flinching, jerking and writhing in pain with each impact.
+
+In the background: animated medieval crowd with subtle natural movement - people shifting weight, turning heads, slightly raising hands, murmuring, small movements, cheering crowd with gentle motion, not too many people.
+
+Realistic whip motion with motion blur, dynamic action, cinematic side view, dramatic lighting, dark fantasy atmosphere, highly detailed main subjects, subtle background animation, 3 seconds video""",
+        'neg': 'static scene, slow motion, few strikes, single whip hit, blurry motion, deformed body, bad anatomy, low quality, artifacts, text, watermark, censored, calm scene, no movement, smiling, peaceful, static camera, weak hits',
+        'frame_interpolation': False,
+    },
+    {
+        'file': 'whip1_p14.png',
+        'backend': 'linux',
+        'duration': 0,
+        'pos': 'NONE',
+        'neg': 'NONE',
+    },
+    {"break": True},
+
+    {
+        'file': 'whip1_p15.png',
+        'backend': 'linux',
+        'duration': 2,
+        'pos': """Dynamic 3-second video: A sorceress on the left aggressively and repeatedly whipping a naked woman tied to a wooden pole in the center. Multiple fast, powerful whip strikes hitting her directly at legs, visible red welts, the bound woman flinching, jerking and writhing in pain with each impact.
+
+In the background: animated medieval crowd with subtle natural movement - people shifting weight, turning heads, slightly raising hands, murmuring, small movements, cheering crowd with gentle motion, not too many people.
+
+Realistic whip motion with motion blur, dynamic action, cinematic side view, dramatic lighting, dark fantasy atmosphere, highly detailed main subjects, subtle background animation, 3 seconds video""",
+        'neg': 'static scene, slow motion, few strikes, single whip hit, blurry motion, deformed body, bad anatomy, low quality, artifacts, text, watermark, censored, calm scene, no movement, smiling, peaceful, static camera, weak hits',
+        'frame_interpolation': False,
+    },
+    {
+        'file': 'whip1_p16.png',
+        'backend': 'linux',
+        'duration': 0,
+        'pos': 'NONE',
+        'neg': 'NONE',
+    },
+    {"break": True},
+
+    {
+        'file': 'whip1_p17.png',
+        'backend': 'linux',
+        'duration': 2,
+        'pos': """Dynamic 3-second video: A sorceress on the left aggressively and repeatedly whipping a naked woman tied to a wooden pole in the center. Multiple fast, powerful whip strikes hitting her directly at legs, visible red welts, the bound woman flinching, jerking and writhing in pain with each impact.
+
+In the background: animated medieval crowd with subtle natural movement - people shifting weight, turning heads, slightly raising hands, murmuring, small movements, cheering crowd with gentle motion, not too many people.
+
+Realistic whip motion with motion blur, dynamic action, cinematic side view, dramatic lighting, dark fantasy atmosphere, highly detailed main subjects, subtle background animation, 3 seconds video""",
+        'neg': 'static scene, slow motion, few strikes, single whip hit, blurry motion, deformed body, bad anatomy, low quality, artifacts, text, watermark, censored, calm scene, no movement, smiling, peaceful, static camera, weak hits',
+        'frame_interpolation': False,
+    },
+    {
+        'file': 'whip1_p18.png',
+        'backend': 'linux',
+        'duration': 0,
+        'pos': 'NONE',
+        'neg': 'NONE',
+    },
+    {"break": True},
+
+    {
+        'file': 'whip1_p19.png',
+        'backend': 'linux',
+        'duration': 2,
+        'pos': """Dynamic 3-second video: A sorceress on the left aggressively and repeatedly whipping a naked woman tied to a wooden pole in the center. Multiple fast, powerful whip strikes hitting her directly at legs, visible red welts, the bound woman flinching, jerking and writhing in pain with each impact.
+
+In the background: animated medieval crowd with subtle natural movement - people shifting weight, turning heads, slightly raising hands, murmuring, small movements, cheering crowd with gentle motion, not too many people.
+
+Realistic whip motion with motion blur, dynamic action, cinematic side view, dramatic lighting, dark fantasy atmosphere, highly detailed main subjects, subtle background animation, 3 seconds video""",
+        'neg': 'static scene, slow motion, few strikes, single whip hit, blurry motion, deformed body, bad anatomy, low quality, artifacts, text, watermark, censored, calm scene, no movement, smiling, peaceful, static camera, weak hits',
+        'frame_interpolation': False,
+    },
+    {
+        'file': 'whip1_p20.png',
+        'backend': 'linux',
+        'duration': 0,
+        'pos': 'NONE',
+        'neg': 'NONE',
+    },
+    {"break": True},
+
+    {
+        'file': 'whip1_p21.png',
+        'backend': 'linux',
+        'duration': 2,
+        'pos': """Dynamic 3-second video: A sorceress on the left aggressively and repeatedly whipping a naked woman tied to a wooden pole in the center. Multiple fast, powerful whip strikes hitting her directly at legs, visible red welts, the bound woman flinching, jerking and writhing in pain with each impact.
+
+In the background: animated medieval crowd with subtle natural movement - people shifting weight, turning heads, slightly raising hands, murmuring, small movements, cheering crowd with gentle motion, not too many people.
+
+Realistic whip motion with motion blur, dynamic action, cinematic side view, dramatic lighting, dark fantasy atmosphere, highly detailed main subjects, subtle background animation, 3 seconds video""",
+        'neg': 'static scene, slow motion, few strikes, single whip hit, blurry motion, deformed body, bad anatomy, low quality, artifacts, text, watermark, censored, calm scene, no movement, smiling, peaceful, static camera, weak hits',
+        'frame_interpolation': False,
+    },
+    {
+        'file': 'whip1_p22.png',
+        'backend': 'linux',
+        'duration': 0,
+        'pos': 'NONE',
+        'neg': 'NONE',
+    },
+    {"break": True},
+
+    {
+        'file': 'whip1_p23.png',
+        'backend': 'linux',
+        'duration': 2,
+        'pos': """Dynamic 3-second video: A sorceress on the left aggressively and repeatedly whipping a naked woman tied to a wooden pole in the center. Multiple fast, powerful whip strikes hitting her directly at legs, visible red welts, the bound woman flinching, jerking and writhing in pain with each impact.
+
+In the background: animated medieval crowd with subtle natural movement - people shifting weight, turning heads, slightly raising hands, murmuring, small movements, cheering crowd with gentle motion, not too many people.
+
+Realistic whip motion with motion blur, dynamic action, cinematic side view, dramatic lighting, dark fantasy atmosphere, highly detailed main subjects, subtle background animation, 3 seconds video""",
+        'neg': 'static scene, slow motion, few strikes, single whip hit, blurry motion, deformed body, bad anatomy, low quality, artifacts, text, watermark, censored, calm scene, no movement, smiling, peaceful, static camera, weak hits',
+        'frame_interpolation': False,
+    },
+    {
+        'file': 'whip1_p24.png',
+        'backend': 'linux',
+        'duration': 0,
+        'pos': 'NONE',
+        'neg': 'NONE',
+    },
+    {"break": True},
+
+    {
+        'file': 'whip1_p25.png',
+        'backend': 'linux',
+        'duration': 2,
+        'pos': """Dynamic 3-second video: A sorceress on the left aggressively and repeatedly whipping a naked woman tied to a wooden pole in the center. Multiple fast, powerful whip strikes hitting her directly at legs, visible red welts, the bound woman flinching, jerking and writhing in pain with each impact.
+
+In the background: animated medieval crowd with subtle natural movement - people shifting weight, turning heads, slightly raising hands, murmuring, small movements, cheering crowd with gentle motion, not too many people.
+
+Realistic whip motion with motion blur, dynamic action, cinematic side view, dramatic lighting, dark fantasy atmosphere, highly detailed main subjects, subtle background animation, 3 seconds video""",
+        'neg': 'static scene, slow motion, few strikes, single whip hit, blurry motion, deformed body, bad anatomy, low quality, artifacts, text, watermark, censored, calm scene, no movement, smiling, peaceful, static camera, weak hits',
+        'frame_interpolation': False,
+    },
+    {
+        'file': 'whip1_p26.png',
+        'backend': 'linux',
+        'duration': 0,
+        'pos': 'NONE',
+        'neg': 'NONE',
+    },
+    {"break": True},
+
+    {
+        'file': 'whip1_p27.png',
+        'backend': 'linux',
+        'duration': 2,
+        'pos': """Dynamic 3-second video: A sorceress on the left aggressively and repeatedly whipping a naked woman tied to a wooden pole in the center. Multiple fast, powerful whip strikes hitting her directly at legs, visible red welts, the bound woman flinching, jerking and writhing in pain with each impact.
+
+In the background: animated medieval crowd with subtle natural movement - people shifting weight, turning heads, slightly raising hands, murmuring, small movements, cheering crowd with gentle motion, not too many people.
+
+Realistic whip motion with motion blur, dynamic action, cinematic side view, dramatic lighting, dark fantasy atmosphere, highly detailed main subjects, subtle background animation, 3 seconds video""",
+        'neg': 'static scene, slow motion, few strikes, single whip hit, blurry motion, deformed body, bad anatomy, low quality, artifacts, text, watermark, censored, calm scene, no movement, smiling, peaceful, static camera, weak hits',
+        'frame_interpolation': False,
+    },
+    {
+        'file': 'whip1_p28.png',
+        'backend': 'linux',
+        'duration': 0,
+        'pos': 'NONE',
+        'neg': 'NONE',
+    },
+    {"break": True},
+
+    {
+        'file': 'whip1_p29.png',
+        'backend': 'linux',
+        'duration': 2,
+        'pos': """Dynamic 3-second video: A sorceress on the left aggressively and repeatedly whipping a naked woman tied to a wooden pole in the center. Multiple fast, powerful whip strikes hitting her directly at legs, visible red welts, the bound woman flinching, jerking and writhing in pain with each impact.
+
+In the background: animated medieval crowd with subtle natural movement - people shifting weight, turning heads, slightly raising hands, murmuring, small movements, cheering crowd with gentle motion, not too many people.
+
+Realistic whip motion with motion blur, dynamic action, cinematic side view, dramatic lighting, dark fantasy atmosphere, highly detailed main subjects, subtle background animation, 3 seconds video""",
+        'neg': 'static scene, slow motion, few strikes, single whip hit, blurry motion, deformed body, bad anatomy, low quality, artifacts, text, watermark, censored, calm scene, no movement, smiling, peaceful, static camera, weak hits',
+        'frame_interpolation': False,
+        'generate_count': 3,
+    },
+    {
+        'file': 'whip1_p30.png',
+        'backend': 'linux',
+        'duration': 0,
+        'pos': 'NONE',
+        'neg': 'NONE',
+    },
+    {"break": True},
+
+    {
+        'file': 'whip1_p31.png',
+        'backend': 'linux',
+        'duration': 2,
+        'pos': """Dynamic 3-second video: A sorceress on the left aggressively and repeatedly whipping a naked woman tied to a wooden pole in the center. Multiple fast, powerful whip strikes hitting her directly at legs, visible red welts, the bound woman flinching, jerking and writhing in pain with each impact.
+
+In the background: animated medieval crowd with subtle natural movement - people shifting weight, turning heads, slightly raising hands, murmuring, small movements, cheering crowd with gentle motion, not too many people.
+
+Realistic whip motion with motion blur, dynamic action, cinematic side view, dramatic lighting, dark fantasy atmosphere, highly detailed main subjects, subtle background animation, 3 seconds video""",
+        'neg': 'static scene, slow motion, few strikes, single whip hit, blurry motion, deformed body, bad anatomy, low quality, artifacts, text, watermark, censored, calm scene, no movement, smiling, peaceful, static camera, weak hits',
+        'frame_interpolation': False,
+    },
+    {
+        'file': 'whip1_p32.png',
+        'backend': 'linux',
+        'duration': 0,
+        'pos': 'NONE',
+        'neg': 'NONE',
+    },
+    {"break": True},
+
+    {
+        'file': 'whip1_p33.png',
+        'backend': 'linux',
+        'duration': 2,
+        'pos': """Dynamic 3-second video: A sorceress on the left aggressively and repeatedly whipping a naked woman tied to a wooden pole in the center. Multiple fast, powerful whip strikes hitting her directly at legs, visible red welts, the bound woman flinching, jerking and writhing in pain with each impact.
+
+In the background: animated medieval crowd with subtle natural movement - people shifting weight, turning heads, slightly raising hands, murmuring, small movements, cheering crowd with gentle motion, not too many people.
+
+Realistic whip motion with motion blur, dynamic action, cinematic side view, dramatic lighting, dark fantasy atmosphere, highly detailed main subjects, subtle background animation, 3 seconds video""",
+        'neg': 'static scene, slow motion, few strikes, single whip hit, blurry motion, deformed body, bad anatomy, low quality, artifacts, text, watermark, censored, calm scene, no movement, smiling, peaceful, static camera, weak hits',
+        'frame_interpolation': False,
+        'generate_count': 3,
+    },
+    {
+        'file': 'whip1_p34.png',
+        'backend': 'linux',
+        'duration': 0,
+        'pos': 'NONE',
+        'neg': 'NONE',
+    },
+    {"break": True},
+
+    {
+        'file': 'whip1_p35.png',
+        'backend': 'linux',
+        'duration': 2,
+        'pos': """Dynamic 3-second video: A sorceress on the left aggressively and repeatedly whipping a naked woman tied to a wooden pole in the center. Multiple fast, powerful whip strikes hitting her directly at legs, visible red welts, the bound woman flinching, jerking and writhing in pain with each impact.
+
+In the background: animated medieval crowd with subtle natural movement - people shifting weight, turning heads, slightly raising hands, murmuring, small movements, cheering crowd with gentle motion, not too many people.
+
+Realistic whip motion with motion blur, dynamic action, cinematic side view, dramatic lighting, dark fantasy atmosphere, highly detailed main subjects, subtle background animation, 3 seconds video""",
+        'neg': 'static scene, slow motion, few strikes, single whip hit, blurry motion, deformed body, bad anatomy, low quality, artifacts, text, watermark, censored, calm scene, no movement, smiling, peaceful, static camera, weak hits',
+        'frame_interpolation': False,
+        'generate_count': 3,
+    },
+    {
+        'file': 'whip1_p36.png',
+        'backend': 'linux',
+        'duration': 0,
+        'pos': 'NONE',
+        'neg': 'NONE',
+    },
+    {"break": True},
+
+    {
+        'file': 'whip1_p37.png',
+        'backend': 'linux',
+        'duration': 2,
+        'pos': """Dynamic 3-second video: A sorceress on the left aggressively and repeatedly whipping a naked woman tied to a wooden pole in the center. Multiple fast, powerful whip strikes hitting her directly at legs, visible red welts, the bound woman flinching, jerking and writhing in pain with each impact.
+
+In the background: animated medieval crowd with subtle natural movement - people shifting weight, turning heads, slightly raising hands, murmuring, small movements, cheering crowd with gentle motion, not too many people.
+
+Realistic whip motion with motion blur, dynamic action, cinematic side view, dramatic lighting, dark fantasy atmosphere, highly detailed main subjects, subtle background animation, 3 seconds video""",
+        'neg': 'static scene, slow motion, few strikes, single whip hit, blurry motion, deformed body, bad anatomy, low quality, artifacts, text, watermark, censored, calm scene, no movement, smiling, peaceful, static camera, weak hits',
+        'frame_interpolation': False,
+        'generate_count': 3,
+    },
+    {
+        'file': 'whip1_p38.png',
+        'backend': 'linux',
+        'duration': 0,
+        'pos': 'NONE',
+        'neg': 'NONE',
+    },
+    {"break": True},
+
+    {
+        'file': 'whip1_p39.png',
+        'backend': 'linux',
+        'duration': 2,
+        'pos': """Dynamic 3-second video: A sorceress on the left aggressively and repeatedly whipping a naked woman tied to a wooden pole in the center. Multiple fast, powerful whip strikes hitting her directly at legs, visible red welts, the bound woman flinching, jerking and writhing in pain with each impact.
+
+In the background: animated medieval crowd with subtle natural movement - people shifting weight, turning heads, slightly raising hands, murmuring, small movements, cheering crowd with gentle motion, not too many people.
+
+Realistic whip motion with motion blur, dynamic action, cinematic side view, dramatic lighting, dark fantasy atmosphere, highly detailed main subjects, subtle background animation, 3 seconds video""",
+        'neg': 'static scene, slow motion, few strikes, single whip hit, blurry motion, deformed body, bad anatomy, low quality, artifacts, text, watermark, censored, calm scene, no movement, smiling, peaceful, static camera, weak hits',
+        'frame_interpolation': False,
+        'generate_count': 3,
+    },
+    {
+        'file': 'whip1_p40.png',
+        'backend': 'linux',
+        'duration': 0,
+        'pos': 'NONE',
+        'neg': 'NONE',
+    },
     {"break": True},
 
 ]

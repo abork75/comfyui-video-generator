@@ -2010,8 +2010,9 @@ async def _run_paste_character_async(
                     top_pct      = float(char.get("top_pct",      10)) / 100.0
                     bottom_pct   = float(char.get("bottom_pct",   85)) / 100.0
                     x_center_pct = float(char.get("x_center_pct", 50)) / 100.0
-                    erode_px     = int(char.get("erode_px", 3))
-                    blur_px      = int(char.get("blur_px",  2))
+                    erode_px       = int(char.get("erode_px", 3))
+                    blur_px        = int(char.get("blur_px",  2))
+                    preserve_alpha = bool(char.get("preserve_alpha", False))
 
                     if bottom_pct <= top_pct:
                         _log(f"  ⚠ [{idx}] {char_label}: bottom_pct <= top_pct — pomijam")
@@ -2020,35 +2021,38 @@ async def _run_paste_character_async(
                     _raw       = Image.open(model_path)
                     model      = _raw.convert("RGBA")
                     _orig_size = model.size
-                    # _has_alpha: True only if the alpha channel has *real* transparency
-                    # (min alpha < 255). A flat-255 alpha channel means the image was
-                    # saved as RGBA but has an opaque white background → treat as RGB.
-                    _has_alpha = (
-                        _raw.mode in ("RGBA", "LA", "PA")
-                        and model.split()[3].getextrema()[0] < 255
-                    )
-                    if not _has_alpha:
-                        model = _white_to_alpha(model)
-                    bbox = _density_bbox(model.split()[3])
-                    if bbox:
-                        _mw, _mh = model.size
-                        _pad_x = max(15, int(_mw * 0.10))
-                        _pad_y = max(15, int(_mh * 0.02))
-                        _bl, _bt, _br, _bb = bbox
-                        model = model.crop((
-                            max(0,   _bl - _pad_x), max(0,   _bt - _pad_y),
-                            min(_mw, _br + _pad_x), min(_mh, _bb + _pad_y),
-                        ))
-                    _log(f"  \U0001f50d [{idx}] {char_label}: model {'RGBA' if _has_alpha else 'RGB->a'} "
-                         f"{_orig_size[0]}x{_orig_size[1]} -> bbox+pad {model.width}x{model.height}")
-                    if erode_px > 0 or blur_px > 0:
-                        model = _feather_alpha(model, erode_px=erode_px, blur_px=blur_px)
+
+                    if preserve_alpha:
+                        # Paste the PNG as-is: trust the alpha channel completely,
+                        # no white-to-alpha conversion, no bbox crop, no feathering.
+                        _log(f"  \U0001f50d [{idx}] {char_label}: preserve_alpha — raw RGBA {_orig_size[0]}x{_orig_size[1]}")
+                    else:
+                        _has_alpha = (
+                            _raw.mode in ("RGBA", "LA", "PA")
+                            and model.split()[3].getextrema()[0] < 255
+                        )
+                        if not _has_alpha:
+                            model = _white_to_alpha(model)
+                        bbox = _density_bbox(model.split()[3])
+                        if bbox:
+                            _mw, _mh = model.size
+                            _pad_x = max(15, int(_mw * 0.10))
+                            _pad_y = max(15, int(_mh * 0.02))
+                            _bl, _bt, _br, _bb = bbox
+                            model = model.crop((
+                                max(0,   _bl - _pad_x), max(0,   _bt - _pad_y),
+                                min(_mw, _br + _pad_x), min(_mh, _bb + _pad_y),
+                            ))
+                        _log(f"  \U0001f50d [{idx}] {char_label}: model {'RGBA' if _has_alpha else 'RGB->a'} "
+                             f"{_orig_size[0]}x{_orig_size[1]} -> bbox+pad {model.width}x{model.height}")
+                        if erode_px > 0 or blur_px > 0:
+                            model = _feather_alpha(model, erode_px=erode_px, blur_px=blur_px)
 
                     target_h = max(1, int((bottom_pct - top_pct) * H))
                     target_w = max(1, int(model.width * (target_h / model.height)))
                     model_s  = model.resize((target_w, target_h), Image.LANCZOS)
-                    x = max(0, min(int(x_center_pct * W) - target_w // 2, W - target_w))
-                    y = int(top_pct * H)  # no clamp — allows character to overflow above/below scene bounds
+                    x = int(x_center_pct * W) - target_w // 2  # no clamp — allows overflow left/right
+                    y = int(top_pct * H)                        # no clamp — allows overflow top/bottom
                     _log(f"  \U0001f4d0 [{idx}] {char_label}: top={top_pct*100:.0f}% bot={bottom_pct*100:.0f}%"
                          f" -> {target_w}x{target_h}px at ({x},{y}) na {W}x{H}")
 
@@ -2104,32 +2108,34 @@ async def _run_paste_character_async(
                             with Image.open(current_path) as _img:
                                 W, H = _img.size
 
-                        top_pct      = float(char.get("top_pct",      10)) / 100.0
-                        bottom_pct   = float(char.get("bottom_pct",   85)) / 100.0
-                        x_center_pct = float(char.get("x_center_pct", 50)) / 100.0
+                        top_pct        = float(char.get("top_pct",      10)) / 100.0
+                        bottom_pct     = float(char.get("bottom_pct",   85)) / 100.0
+                        x_center_pct   = float(char.get("x_center_pct", 50)) / 100.0
+                        preserve_alpha = bool(char.get("preserve_alpha", False))
                         if bottom_pct > top_pct:
                             _raw       = Image.open(model_path)
                             model      = _raw.convert("RGBA")
-                            _has_alpha = (
-                                _raw.mode in ("RGBA", "LA", "PA")
-                                and model.split()[3].getextrema()[0] < 255
-                            )
-                            if not _has_alpha:
-                                model = _white_to_alpha(model)
-                            bbox = _density_bbox(model.split()[3])
-                            if bbox:
-                                _mw, _mh = model.size
-                                _pad_x = max(15, int(_mw * 0.10))
-                                _pad_y = max(15, int(_mh * 0.02))
-                                _bl, _bt, _br, _bb = bbox
-                                model = model.crop((
-                                    max(0,   _bl - _pad_x), max(0,   _bt - _pad_y),
-                                    min(_mw, _br + _pad_x), min(_mh, _bb + _pad_y),
-                                ))
+                            if not preserve_alpha:
+                                _has_alpha = (
+                                    _raw.mode in ("RGBA", "LA", "PA")
+                                    and model.split()[3].getextrema()[0] < 255
+                                )
+                                if not _has_alpha:
+                                    model = _white_to_alpha(model)
+                                bbox = _density_bbox(model.split()[3])
+                                if bbox:
+                                    _mw, _mh = model.size
+                                    _pad_x = max(15, int(_mw * 0.10))
+                                    _pad_y = max(15, int(_mh * 0.02))
+                                    _bl, _bt, _br, _bb = bbox
+                                    model = model.crop((
+                                        max(0,   _bl - _pad_x), max(0,   _bt - _pad_y),
+                                        min(_mw, _br + _pad_x), min(_mh, _bb + _pad_y),
+                                    ))
                             target_h   = max(1, int((bottom_pct - top_pct) * H))
                             target_w   = max(1, int(model.width * (target_h / model.height)))
-                            x = max(0, min(int(x_center_pct * W) - target_w // 2, W - target_w))
-                            y = int(top_pct * H)  # no clamp — allows character to overflow above/below scene bounds
+                            x = int(x_center_pct * W) - target_w // 2  # no clamp — allows overflow left/right
+                            y = int(top_pct * H)                        # no clamp
 
                             edge_mask  = _make_edge_mask(model, W, H, x, y, target_w, target_h, eb_px)
                             scene_rgba = Image.open(current_path).convert("RGBA")

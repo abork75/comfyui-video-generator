@@ -1,58 +1,39 @@
-﻿# app_config.yaml — Globalne ustawienia aplikacji
+# app_config.yaml — Globalne ustawienia aplikacji
 # Edytuj ten plik aby zmienić modele i domyślne parametry.
 # Ustawienia per-projekt (defaults w RUN_*.yaml) nadpisują wartości z sekcji defaults.
 #
-
-# ── Backendy ─────────────────────────────────────────────────────────────────
-
 backends:
-
-  linux:                            # WSL2 / Linux ComfyUI (port 8189)
+  linux:
     api_url: http://127.0.0.1:8189
     workflows_path: D:\streamlit_project\comfyui_integration\workflows
     comfyui_output_folder: D:\ComfyUI\output\Wan22_I2V
     models:
-      video_gen:                    # I2V i I2V2I — end_frame kontrolowany per-klip
+      video_gen:
         config_path: D:\streamlit_project\comfyui_integration\workflow_configs\wan_i2v.yaml
-      talk:                         # InfiniteTalk
+      talk:
         workflow_json: D:\streamlit_project\comfyui_integration\workflow_configs\talk_workflow_api.json
-      # multitalk:
-      #   workflow_json: D:\streamlit_project\comfyui_integration\multitalk_workflow_api.json
-
-  windows:                          # Windows ComfyUI standalone (port 8000)
-    api_url: http://127.0.0.1:8000
+  windows:
+    api_url: http://127.0.0.1:8190
     input_dir: D:\ComfyUI\input
     output_dir: D:\ComfyUI\output
     models:
-      upscale_video:                # RealESRGAN video — upscale_service ładuje z pliku lub fallback na wbudowany template
-        workflow_json: 'D:\streamlit_project\comfyui_integration\workflow_configs\upscaler_video.json'
-      upscale_image:                # RealESRGAN image — do przyszłego wykorzystania (np. upscale outputów Pic Studio)
-        workflow_json: 'D:\streamlit_project\comfyui_integration\workflow_configs\upscaler_image.json'
-      i2i:                          # Pic Studio — Qwen Image Edit / Inpaint (one_image_many_prompts)
-        workflow_json: 'D:\streamlit_project\comfyui_integration\workflow_configs\i2i_qwen_inpaint.json'
-      ci_1ref:                      # Pic Studio — Character Insert z 1 obrazkiem referencyjnym
-        workflow_json: 'D:\streamlit_project\comfyui_integration\workflow_configs\ci_1ref_qwen.json'
-      ci_2ref:                      # Pic Studio — Character Insert z 2 obrazkami referencyjnymi
-        workflow_json: 'D:\streamlit_project\comfyui_integration\workflow_configs\ci_2ref_qwen.json'
-
-  # external:                       # Przyszłość — np. RunPod, Replicate
-  #   provider: runpod
-  #   api_key: ""
-  #   endpoint: https://...
-  #   models:
-  #     video_gen:
-  #       model_id: ""
-
-# ── Domyślne parametry generacji ─────────────────────────────────────────────
-# Per-projekt YAML może nadpisać dowolne z tych wartości w sekcji defaults:
-
+      upscale_video:
+        workflow_json: D:\streamlit_project\comfyui_integration\workflow_configs\upscaler_video.json
+      upscale_image:
+        workflow_json: D:\streamlit_project\comfyui_integration\workflow_configs\upscaler_image.json
+      i2i:
+        workflow_json: D:\streamlit_project\comfyui_integration\workflow_configs\i2i_qwen_inpaint.json
+      ci_1ref:
+        workflow_json: D:\streamlit_project\comfyui_integration\workflow_configs\ci_1ref_qwen.json
+      ci_2ref:
+        workflow_json: D:\streamlit_project\comfyui_integration\workflow_configs\ci_2ref_qwen.json
 defaults:
-  resolution: [1024, 1024]
+  resolution:
+  - 960
+  - 1248
   fps: 16
   steps: 6
-  cfg: 2.0
+  cfg: 2
   duration: 2
   blocks_to_swap: 35
-  frame_interpolation: true   # RIFE VFI 2x — false = wyłącz interpolację
-
-
+  frame_interpolation: true

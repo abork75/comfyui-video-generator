@@ -209,7 +209,7 @@ def _last_active_stage(tile: dict) -> int:
 def _get_tile_type(run_id: str, tile_id: str) -> str:
     """Return the type string of a tile ('one_image_many_prompts' by default)."""
     data = _load(run_id)
-    tile = next((t for t in data.get("pic_flow", []) if t["id"] == tile_id), None)
+    tile = next((t for t in data.get("pic_flow") or [] if t["id"] == tile_id), None)
     return tile.get("type", "one_image_many_prompts") if tile else "one_image_many_prompts"
 
 
@@ -432,7 +432,7 @@ def _save(run_id: str, data: dict) -> None:
 
 def get_tiles(run_id: str) -> list[dict]:
     data  = _load(run_id)
-    tiles = data.get("pic_flow", [])
+    tiles = data.get("pic_flow") or []
     # Migrate old-format tiles transparently; persist only if something changed
     import copy as _copy
     changed = False
@@ -451,7 +451,7 @@ def get_tiles(run_id: str) -> list[dict]:
 
 def create_tile(run_id: str, tile_data: dict) -> dict:
     data = _load(run_id)
-    tiles: list[dict] = data.get("pic_flow", [])
+    tiles: list[dict] = data.get("pic_flow") or []
     existing_ids = [t["id"] for t in tiles]
     tile = dict(tile_data)
     _migrate_tile(tile)          # normalise in case caller sends old format
@@ -465,7 +465,7 @@ def create_tile(run_id: str, tile_data: dict) -> dict:
 
 def update_tile(run_id: str, tile_id: str, updates: dict) -> dict:
     data = _load(run_id)
-    for tile in data.get("pic_flow", []):
+    for tile in (data.get("pic_flow") or []):
         if tile["id"] == tile_id:
             _migrate_tile(tile)
             for k, v in updates.items():
@@ -493,7 +493,7 @@ def update_tile(run_id: str, tile_id: str, updates: dict) -> dict:
 
 def delete_tile(run_id: str, tile_id: str) -> None:
     data = _load(run_id)
-    data["pic_flow"] = [t for t in data.get("pic_flow", []) if t["id"] != tile_id]
+    data["pic_flow"] = [t for t in data.get("pic_flow") or [] if t["id"] != tile_id]
     _save(run_id, data)
 
 
@@ -501,7 +501,7 @@ def reorder_tiles(run_id: str, ids: list[str]) -> list[dict]:
     """Reorder pic_flow tiles to match the given id order.
     Tiles not present in *ids* are appended at the end unchanged."""
     data  = _load(run_id)
-    tiles = data.get("pic_flow", [])
+    tiles = data.get("pic_flow") or []
     by_id = {t["id"]: t for t in tiles}
     ordered   = [by_id[i] for i in ids if i in by_id]
     leftover  = [t for t in tiles if t["id"] not in set(ids)]
@@ -534,7 +534,7 @@ def add_prompt_to_slot(
     Returns the updated tile dict.
     """
     data = _load(run_id)
-    for tile in data.get("pic_flow", []):
+    for tile in data.get("pic_flow") or []:
         if tile["id"] == tile_id:
             _migrate_tile(tile)
             slots: list[dict] = tile.get("image_slots", [])
@@ -561,7 +561,7 @@ def add_prompt_to_all_slots(run_id: str, tile_id: str, prompt: dict) -> dict:
     Returns the updated tile dict.
     """
     data = _load(run_id)
-    for tile in data.get("pic_flow", []):
+    for tile in data.get("pic_flow") or []:
         if tile["id"] == tile_id:
             _migrate_tile(tile)
             for slot in tile.get("image_slots", []):
@@ -583,7 +583,7 @@ def add_prompt_to_all_scene_slots(run_id: str, tile_id: str, prompt: dict) -> di
     Returns the updated tile dict.
     """
     data = _load(run_id)
-    for tile in data.get("pic_flow", []):
+    for tile in data.get("pic_flow") or []:
         if tile["id"] == tile_id:
             _migrate_tile(tile)
             changed = False
@@ -602,7 +602,7 @@ def add_prompt_to_all_scene_slots(run_id: str, tile_id: str, prompt: dict) -> di
 
 def copy_tile(run_id: str, tile_id: str) -> dict:
     data = _load(run_id)
-    tiles: list[dict] = data.get("pic_flow", [])
+    tiles: list[dict] = data.get("pic_flow") or []
     original = next((t for t in tiles if t["id"] == tile_id), None)
     if not original:
         raise KeyError(f"Tile not found: {tile_id}")
@@ -647,7 +647,7 @@ def get_tile_status(run_id: str, tile_id: str) -> dict:
     """
     data = _load(run_id)
     tile = next(
-        (t for t in data.get("pic_flow", []) if t["id"] == tile_id), None
+        (t for t in data.get("pic_flow") or [] if t["id"] == tile_id), None
     )
     if not tile:
         raise KeyError(f"Tile not found: {tile_id}")

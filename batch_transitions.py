@@ -6,6 +6,8 @@ Unified system supporting multiple backends and workflow types
 
 import os
 import sys
+import shutil
+from datetime import datetime
 from pathlib import Path
 
 # Add project root to path
@@ -244,6 +246,9 @@ def run_batch_generation(config):
                 'height': transition_to_next.get('height', chain_config.get('height', None)),
                 'blocks_to_swap': transition_to_next.get('blocks_to_swap', chain_config.get('blocks_to_swap', default_blocks_to_swap)),
                 'frame_interpolation': transition_to_next.get('frame_interpolation', chain_config.get('frame_interpolation', default_frame_interpolation)),
+                'lora_name':     transition_to_next.get('lora_name',     chain_config.get('lora_name')),
+                'lora_strength': transition_to_next.get('lora_strength', chain_config.get('lora_strength')),
+                'generate_count': transition_to_next.get('generate_count', chain_config.get('generate_count', 1)),
 
                 # Mark as normal I2V2I (not chain I2V)
                 'is_i2v_mode': False,
@@ -286,6 +291,9 @@ def run_batch_generation(config):
                     'height': to_config.get('height') or (None if is_from_talk else from_config.get('height')),
                     'blocks_to_swap': to_config.get('blocks_to_swap', from_config.get('blocks_to_swap', default_blocks_to_swap)),
                     'frame_interpolation': to_config.get('frame_interpolation', from_config.get('frame_interpolation', default_frame_interpolation)),
+                    'lora_name':     to_config.get('lora_name',     from_config.get('lora_name')),
+                    'lora_strength': to_config.get('lora_strength', from_config.get('lora_strength')),
+                    'generate_count': to_config.get('generate_count', from_config.get('generate_count', 1)),
                     'is_i2v_mode': True,  # Chain is always I2V
                     'atlascloud_resolution':    to_config.get('atlascloud_resolution',    from_config.get('atlascloud_resolution')),
                     'atlascloud_prompt_extend': to_config.get('atlascloud_prompt_extend', from_config.get('atlascloud_prompt_extend')),
@@ -312,6 +320,9 @@ def run_batch_generation(config):
                     'height': (None if is_from_talk else from_config.get('height', None)) or to_config.get('height', None),
                     'blocks_to_swap': from_config.get('blocks_to_swap', to_config.get('blocks_to_swap', default_blocks_to_swap)),
                     'frame_interpolation': from_config.get('frame_interpolation', to_config.get('frame_interpolation', default_frame_interpolation)),
+                    'lora_name':     from_config.get('lora_name',     to_config.get('lora_name')),
+                    'lora_strength': from_config.get('lora_strength', to_config.get('lora_strength')),
+                    'generate_count': from_config.get('generate_count', to_config.get('generate_count', 1)),
                     'is_i2v_mode': False,
                     'atlascloud_resolution':    from_config.get('atlascloud_resolution',    to_config.get('atlascloud_resolution')),
                     'atlascloud_prompt_extend': from_config.get('atlascloud_prompt_extend', to_config.get('atlascloud_prompt_extend')),
@@ -340,11 +351,22 @@ def run_batch_generation(config):
     # ============================================================
     # VERIFY FILES
     # ============================================================
-    
+
+    # Peek at only_transitions early — when targeting specific files,
+    # missing source files outside that subset should warn but not block.
+    _early_only_filter = config.get('only_transitions') or os.environ.get('ONLY_TRANSITIONS', '').strip()
+    if _early_only_filter:
+        if isinstance(_early_only_filter, str):
+            _early_only_names = {n.strip() for n in _early_only_filter.split(',') if n.strip()}
+        else:
+            _early_only_names = {str(n).strip() for n in _early_only_filter if str(n).strip()}
+    else:
+        _early_only_names = set()
+
     logger.section(f"Verifying {len(parser.get_all_files())} files")
-    
+
     all_files_ok = True
-    
+
     for i, flow_file in enumerate(parser.get_all_files()):
         # Skip chain files (they don't exist yet)
         if flow_file.config.get('_is_chain'):
@@ -358,25 +380,30 @@ def run_batch_generation(config):
             status = "✓ exists" if talk_dest.exists() else "⏳ pending generation"
             logger.info(f"[{i:02d}] 🎙️  {flow_file.filename} ({status})")
             continue
-        
+
         file_path = project_folder / flow_file.filename
-        
+
         if not file_path.exists():
-            logger.error(f"[{i:02d}] Missing: {flow_file.filename}")
-            all_files_ok = False
+            if _early_only_names:
+                # Targeted re-gen: warn but don't block — the missing file
+                # may not be needed for the specific transition requested.
+                logger.warning(f"[{i:02d}] ⚠ Missing (not needed for target): {flow_file.filename}")
+            else:
+                logger.error(f"[{i:02d}] Missing: {flow_file.filename}")
+                all_files_ok = False
         else:
             file_type = "📷" if flow_file.is_image() else "🎬"
             backend_marker = "💻"  # Default local
-            
+
             if flow_file.config.get('backend') == 'cloud':
                 backend_marker = "☁️"
-            
+
             logger.info(f"[{i:02d}] {file_type} {backend_marker} {flow_file.filename}")
-    
+
     if not all_files_ok:
         logger.error("Some files are missing!")
         return
-    
+
     logger.success(f"Files OK! ({len(parser.get_all_files())} found)")
     
     # ============================================================
@@ -745,19 +772,29 @@ def run_batch_generation(config):
     # GENERATE TRANSITIONS (by backend)
     # ============================================================
     
-    logger.header(f"GENERATING {len(to_generate)} TRANSITIONS")
-    
+    # Helper: generate_count per transition (default 1)
+    def _gc(t):
+        return max(1, int(t['config'].get('generate_count') or 1))
+
+    total_runs = sum(_gc(t) for t in to_generate)
+    multi_suffix = f" (×{total_runs} runs)" if total_runs != len(to_generate) else ""
+    logger.header(f"GENERATING {len(to_generate)} TRANSITIONS{multi_suffix}")
+
     # Group by backend
     cloud_transitions      = [t for t in to_generate if t['config']['backend'] == 'cloud']
     local_transitions      = [t for t in to_generate if t['config']['backend'] == 'local']
     linux_transitions      = [t for t in to_generate if t['config']['backend'] == 'linux']
     atlascloud_transitions = [t for t in to_generate if t['config']['backend'] == 'atlascloud']
 
+    def _runs_str(lst):
+        runs = sum(_gc(t) for t in lst)
+        return f" ×{runs} runs" if runs != len(lst) else ""
+
     logger.section("Backend Distribution")
-    logger.info(f"  Cloud:       {len(cloud_transitions)}")
-    logger.info(f"  Local:       {len(local_transitions)}")
-    logger.info(f"  Linux:       {len(linux_transitions)}")
-    logger.info(f"  AtlasCloud:  {len(atlascloud_transitions)}")
+    logger.info(f"  Cloud:       {len(cloud_transitions)}{_runs_str(cloud_transitions)}")
+    logger.info(f"  Local:       {len(local_transitions)}{_runs_str(local_transitions)}")
+    logger.info(f"  Linux:       {len(linux_transitions)}{_runs_str(linux_transitions)}")
+    logger.info(f"  AtlasCloud:  {len(atlascloud_transitions)}{_runs_str(atlascloud_transitions)}")
     print()
 
     # ============================================================
@@ -766,27 +803,35 @@ def run_batch_generation(config):
 
     logger.section("Ready to Generate")
 
-    # Calculate estimates
-    cloud_cost = len(cloud_transitions) * 0.10
-    cloud_time = len(cloud_transitions) * 1.5
-    local_time = len(local_transitions) * 4.0
-    linux_time = len(linux_transitions) * 4.0
+    # Calculate estimates (multiply by generate_count per transition)
+    cloud_runs      = sum(_gc(t) for t in cloud_transitions)
+    local_runs      = sum(_gc(t) for t in local_transitions)
+    linux_runs      = sum(_gc(t) for t in linux_transitions)
+    atlascloud_runs = sum(_gc(t) for t in atlascloud_transitions)
+
+    cloud_cost = cloud_runs * 0.10
+    cloud_time = cloud_runs * 1.5
+    local_time = local_runs * 4.0
+    linux_time = linux_runs * 4.0
     # AtlasCloud WAN 2.7: ~$0.15/s, default 5s → ~$0.75/clip, ~3min generation
     _ac_default_dur = config.get('duration', 5)
-    ac_cost = len(atlascloud_transitions) * _ac_default_dur * 0.15
-    ac_time = len(atlascloud_transitions) * 3.0
+    ac_cost = atlascloud_runs * _ac_default_dur * 0.15
+    ac_time = atlascloud_runs * 3.0
     total_time = cloud_time + local_time + linux_time + ac_time
     total_cost = cloud_cost + ac_cost
 
-    logger.info(f"  Transitions: {len(to_generate)}")
+    def _runs_label(lst, runs):
+        return f" (×{runs} runs)" if runs != len(lst) else ""
+
+    logger.info(f"  Transitions: {len(to_generate)}{' (' + str(total_runs) + ' runs total)' if total_runs != len(to_generate) else ''}")
     if cloud_transitions:
-        logger.info(f"  Cloud:      {len(cloud_transitions)} (est. ${cloud_cost:.2f}, ~{cloud_time:.0f}min)")
+        logger.info(f"  Cloud:      {len(cloud_transitions)}{_runs_label(cloud_transitions, cloud_runs)} (est. ${cloud_cost:.2f}, ~{cloud_time:.0f}min)")
     if local_transitions:
-        logger.info(f"  Local:      {len(local_transitions)} (FREE, ~{local_time:.0f}min)")
+        logger.info(f"  Local:      {len(local_transitions)}{_runs_label(local_transitions, local_runs)} (FREE, ~{local_time:.0f}min)")
     if linux_transitions:
-        logger.info(f"  Linux:      {len(linux_transitions)} (FREE, ~{linux_time:.0f}min)")
+        logger.info(f"  Linux:      {len(linux_transitions)}{_runs_label(linux_transitions, linux_runs)} (FREE, ~{linux_time:.0f}min)")
     if atlascloud_transitions:
-        logger.info(f"  AtlasCloud: {len(atlascloud_transitions)} (est. ${ac_cost:.2f}, ~{ac_time:.0f}min) ⚠ ~${ac_cost/max(len(atlascloud_transitions),1):.2f}/klip")
+        logger.info(f"  AtlasCloud: {len(atlascloud_transitions)}{_runs_label(atlascloud_transitions, atlascloud_runs)} (est. ${ac_cost:.2f}, ~{ac_time:.0f}min) ⚠ ~${ac_cost/max(atlascloud_runs,1):.2f}/run")
     logger.info(f"  Total estimate: ${total_cost:.2f}, ~{total_time:.0f}min")
     print()
     
@@ -1210,9 +1255,10 @@ def run_batch_generation(config):
                     f"{to_file} ({mode_str}, {backend_type.upper()})"
                 )
             else:
+                _gc_label = f" ×{_gc(trans)}" if _gc(trans) > 1 else ""
                 logger.section(
                     f"Transition {i}/{len(seg_items)}: "
-                    f"{trans['name']} ({backend_type.upper()})"
+                    f"{trans['name']} ({backend_type.upper()}{_gc_label})"
                 )
 
             # ── Generation summary ────────────────────────────────────
@@ -1262,6 +1308,8 @@ def run_batch_generation(config):
                 height=trans_config.get('height') or target_height,
                 blocks_to_swap=trans_config.get('blocks_to_swap'),
                 frame_interpolation=trans_config.get('frame_interpolation'),
+                lora_name=trans_config.get('lora_name'),
+                lora_strength=trans_config.get('lora_strength'),
             )
             # Pass AtlasCloud-specific per-item overrides (ignored by other backends)
             if backend_type == 'atlascloud':
@@ -1272,7 +1320,25 @@ def run_batch_generation(config):
                 if _ac_pe is not None:
                     backend.config['atlascloud_prompt_extend'] = _ac_pe
 
-            success = backend.generate_transition(**_gt_kwargs)
+            gen_count = max(1, int(trans_config.get('generate_count') or 1))
+            success = False
+            for _gen_i in range(gen_count):
+                if gen_count > 1:
+                    logger.info(f"  🎲 Generacja {_gen_i + 1}/{gen_count}")
+                # Archive the previous result before each re-run (not before the first)
+                if _gen_i > 0 and output_path.exists():
+                    _ts   = datetime.now().strftime('%y%m%d%H%M%S')
+                    _arch = output_path.with_name(
+                        f"{output_path.stem}_ver{_ts}{output_path.suffix}"
+                    )
+                    shutil.move(str(output_path), str(_arch))
+                    logger.info(f"  📦 {output_path.name} → {_arch.name}")
+                success = backend.generate_transition(**_gt_kwargs)
+                if not success:
+                    logger.error(f"  ❌ generacja {_gen_i + 1}/{gen_count} nie powiodła się")
+                    break
+            if gen_count > 1 and success:
+                print(f"[VERSIONS_READY]{trans['name']}", flush=True)
 
             # ── Post-generation: cache chain end-frame ────────────────
             if success and is_chain_step:

@@ -275,6 +275,20 @@ class LinuxBackend(BaseBackend):
                 multiplier = 2 if fi else 1
                 runner.set_parameter('frame_interpolation', multiplier)
 
+        if 'lora_name' in params and params['lora_name']:
+            runner.set_parameter('lora_name', params['lora_name'])
+            if '97' in runner.workflow:
+                runner.workflow['97']['inputs']['lora'] = params['lora_name']
+                self.logger.info(f"  LoRA pass2 (node 97) lora = {params['lora_name']}")
+
+        if 'lora_strength' in params and params['lora_strength'] is not None:
+            s = float(params['lora_strength'])
+            runner.set_parameter('lora_strength', s)
+            if '97' in runner.workflow:
+                s2 = round(s / 3, 3)
+                runner.workflow['97']['inputs']['strength'] = s2
+                self.logger.info(f"  LoRA pass2 (node 97) strength = {s2} (={s}/3)")
+
     def _set_seed(self, seed=None):
         """Ustawia unikalny seed (zapobiega cache ComfyUI)"""
         import random

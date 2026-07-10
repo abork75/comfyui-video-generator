@@ -30,6 +30,10 @@ categories:
   name: body shape
   icon: 🐦
   order: 101
+- id: ch_osta
+  name: chłosta
+  icon: 💫
+  order: 102
 defaults:
   steps: 30
   cfg: 8
@@ -710,4 +714,44 @@ prompts:
     steps: 30
     cfg: 8.0
     denoise: 1.0
-last_id: 63
+- id: p0000064
+  category: ch_osta
+  name: Chłosta 5s dynamic
+  note: ''
+  positive: "Dynamic 5-second video: A powerful sorceress standing on the left side of the frame, aggressively whipping a naked woman who is tightly tied to a thick wooden pole in the center. The sorceress swings a long leather whip with strong motion, repeatedly striking the woman's bare buttocks and thighs with powerful, stinging lashes. \n\nVisible impact, the bound woman flinching and writhing in pain with each strike, her body tensing and shaking. Dynamic camera movement, slight slow-motion on whip impacts, detailed motion, flying hair, fabric movement, intense action, dramatic cinematic lighting, dark fantasy atmosphere, highly detailed, realistic physics, emotional intensity, 5 seconds video"
+  negative: 'Cinematic 5-second sequence: From the left side, a sorceress in dark robes violently whipping a fully naked woman bound to a wooden post. Fast, powerful whip strikes landing on her ass and upper thighs, visible red welts forming, the woman screaming and struggling against the ropes, body jerking with each hit. Dynamic whip movement with motion blur on the whip, realistic pain reaction, dramatic side angle, intense action, dark medieval atmosphere, high detail, realistic skin and physics, 5 seconds video'
+  params:
+    steps: 30
+    cfg: 8.0
+    denoise: 1.0
+- id: p0000065
+  category: ch_osta
+  name: Chłosta 5s kilka razow
+  note: ''
+  positive: "Dynamic and intense 5-second video: A sorceress standing on the left side of the frame aggressively whipping a completely naked woman who is tightly bound to a thick wooden pole in the center. The sorceress swings her long leather whip rapidly and repeatedly, delivering many fast, powerful strikes across the woman's bare buttocks and thighs. \n\nMultiple visible whip impacts in quick succession, red welts and marks appearing on the skin with each strike, the bound woman violently flinching, jerking and writhing in pain, her body tensing and shaking with every lash. Realistic whip motion with motion blur, dynamic camera with slight movement, dramatic cinematic lighting, intense action sequence, dark fantasy atmosphere, highly detailed, realistic skin physics and pain reactions, 5 seconds video"
+  negative: static scene, slow motion, few strikes, single whip hit, blurry motion, deformed body, bad anatomy, low quality, artifacts, text, watermark, censored, calm scene, no movement, smiling, peaceful, static camera, weak hits
+  params:
+    steps: 30
+    cfg: 8.0
+    denoise: 1.0
+- id: p0000066
+  category: ch_osta
+  name: 5s chłosta lekki ruch tlumu
+  note: ''
+  positive: "Dynamic 5-second video: A sorceress on the left aggressively and repeatedly whipping a naked woman tied to a wooden pole in the center. Multiple fast, powerful whip strikes hitting her buttocks and thighs, visible red welts, the bound woman flinching, jerking and writhing in pain with each impact.\n\nIn the background: animated medieval crowd with subtle natural movement - people shifting weight, turning heads, slightly raising hands, murmuring, small movements, cheering crowd with gentle motion, not too many people. \n\nRealistic whip motion with motion blur, dynamic action, cinematic side view, dramatic lighting, dark fantasy atmosphere, highly detailed main subjects, subtle background animation, 5 seconds video"
+  negative: 'inematic 5-second sequence: From the left side, a sorceress in dark robes violently whipping a fully naked woman bound to a wooden post. Fast, powerful whip strikes landing on her ass and upper thighs, visible red welts forming, the woman screaming and struggling against the ropes, body jerking with each hit. Dynamic whip movement with motion blur on the whip, realistic pain reaction, dramatic side angle, intense action, dark medieval atmosphere, high detail, realistic skin and physics, 5 seconds video'
+  params:
+    steps: 30
+    cfg: 8.0
+    denoise: 1.0
+- id: p0000067
+  category: fotorealizm
+  name: Pełny fotorealizm 2
+  note: Z poprawką na nieusuwanie śladów na skórze
+  positive: "Enhance the overall photorealism of the entire image to the highest possible level while keeping the scene 100% unchanged. Dramatically improve skin texture, skin pores, micro skin details, realistic subsurface scattering, natural skin imperfections, realistic eye details, hair strands, fabric texture and material details. \n\nImportant: Strictly preserve all red whip marks, lash welts, flogging scars and traces of whipping on the naked woman's body. Do not remove, fade, reduce or alter any of the red marks and skin damage in any way.\n\nAdd natural cinematic lighting, realistic shadows, subtle ambient occlusion and depth. Increase overall sharpness, clarity and photographic quality to look like a real high-end photo taken with a professional camera. \n\nStrictly preserve everything else: Do not change the scene, background, lighting direction or atmosphere. Do not change camera position, angle or perspective. Do not change any person's pose, position or expression. Do not change any clothing, outfit, accessories or fabric. Do not add or remove any objects. Only enhance photorealism, texture quality and natural details. Make it look like an ultra-realistic photograph, 8k, extremely detailed, photorealistic, masterpiece, best quality"
+  negative: artoon, illustration, painting, drawing, 3d render, cgi, plastic skin, waxy skin, doll face, anime, stylized, deformed, mutated, extra limbs, changed pose, moved camera, different angle, clothing change, outfit change, new objects, added elements, removed elements, different lighting, color grading change, overexposed, underexposed, artifacts, blur, low quality, bad anatomy
+  params:
+    steps: 30
+    cfg: 8.0
+    denoise: 1.0
+last_id: 67

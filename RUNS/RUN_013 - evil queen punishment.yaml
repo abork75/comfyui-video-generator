@@ -1,0 +1,2558 @@
+# RUN_013 - evil queen punishment.yaml
+# Edited: 2026-06-30 02:29:00
+# Edit this file freely — regenerate .py with generate_py_from_yaml()
+#
+defaults:
+  fps: 16
+  steps: 6
+  cfg: 2
+  duration: 2
+  blocks_to_swap: 35
+  backend: linux
+  resolution:
+  - 1024
+  - 1024
+
+linux_backend:
+  config_path: D:\streamlit_project\comfyui_integration\workflow_configs\wan_i2v.yaml
+  workflows_path: D:\streamlit_project\comfyui_integration\workflows
+  comfyui_output_folder: D:\ComfyUI\output\Wan22_I2V
+  api_url: http://127.0.0.1:8189
+
+use_test_flow: false
+
+# ──────────────────────────────────────────────────────────
+# FLOW — lista generacji
+# ──────────────────────────────────────────────────────────
+flow:
+- type: scene_break
+  name: NOC W LOCHU
+
+- file: Crossed_3.png
+  backend: linux
+  duration: 5
+  pos: |-
+    cinematic 5-second video sequence, woman chained to stone wall with arms and legs spread wide in X position, heavy metal chains, dynamically and decisively struggling and yanking against restraints with forceful body movements, intense determined expression, start frame full body view, end frame extreme close-up on lower body and legs with camera zoom-in, dramatic lighting, high detail, anatomical correctness
+  neg: |-
+    static pose, no movement, blurry, low quality, deformed hands, extra limbs, bad anatomy, text, watermark, cartoon, overexposed, underexposed, unnatural clothing movement, jittery fabric, erratic cloth shaking
+
+- file: Crossed_1.png
+  backend: linux
+  duration: 5
+  pos: |-
+    cinematic 5-second video sequence, woman chained to stone wall with arms and legs spread wide in X position, heavy metal chains, dynamically and decisively struggling and yanking against restraints with forceful body movements, intense determined expression, start frame close-up from mid-breasts downward showing lower torso hips and spread legs, end frame showing full breasts and face with smooth upward camera movement from lower body to upper body, dramatic lighting, high detail, anatomical correctness
+  neg: |-
+    NONE
+
+- file: Crossed_2.png
+  backend: linux
+  duration: 5
+  pos: ""
+  neg: |-
+    NONE
+
+- type: talk
+  audio:
+    file: Punishment_all_night_long.mp3
+    pos: |-
+      A close-up of a woman speaking with intense pain on her face, mouth moving as she talks, furrowed brows, squinted eyes, tense jaw, subtle grimacing, emotional distress, realistic facial expressions and lip movements, cinematic lighting, high detail, 5-second video clip
+    neg: |-
+      static image, no movement, smiling, relaxed face, blurry, deformed, low quality
+  width: 768
+  height: 768
+  backend: linux
+
+- chain:
+    prefix: Bowing head
+    transitions:
+    - duration: 3
+      pos: |-
+        Woman is bowing her head
+      neg: ""
+    backend: linux
+    fps: 16
+    steps: 6
+    cfg: 2
+    neg: |-
+      static, frozen, no movement
+
+- type: scene_break
+  name: PODRÓŻ PRZEZ MIASTO
+
+- break: true
+
+- file: prezentacja_krolowej_na_dziedzincu.mp4
+  backend: linux
+  duration: 2
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- break: true
+
+- file: prezentacja_krolowej_wyjazd_z_dziedzinca.mp4
+  backend: linux
+  duration: 2
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- break: true
+
+- file: prezentacja_krolowej_pod_katedra.mp4
+  backend: linux
+  duration: 2
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- break: true
+
+- file: prezentacja_krolowej_jazda_przez_miasto.mp4
+  backend: linux
+  duration: 2
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- break: true
+
+- file: prezentacja_krolowej_jazda_przez_miasto2.mp4
+  backend: linux
+  duration: 2
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- break: true
+
+- break: true
+  label: Dziedziniec
+
+- type: scene_break
+  name: CHŁOSTA
+
+- file: She Came at last.mp4
+  backend: linux
+  duration: 2
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- break: true
+
+- file: chlosta_start.mp4
+  backend: linux
+  duration: 2
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- break: true
+
+- file: Rip apart.mp4
+  backend: linux
+  duration: 2
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- break: true
+
+- file: rozprucie_start.png
+  backend: linux
+  duration: 3
+  pos: |-
+    Queen's elegant green dress made of luxurious expensive fabric with intricate golden embroidery patterns, high-quality material in perfect condition at start and end frames, lower part of the dress magically tearing and ripping open to reveal buttocks and legs, woman standing under pillory, magical tearing effect with bright flash, detailed fabric texture, realistic cloth dynamics
+  neg: |-
+    deformed, bad anatomy, blurry, low quality, extra limbs, mutated hands, poorly drawn face, text, watermark, overexposed, underexposed, torn dress at start, damaged fabric, cheap material
+  frame_interpolation: false
+
+- file: rozprucie_end.png
+  backend: linux
+  duration: 2
+  pos: |-
+    Queen's elegant green dress made of luxurious expensive fabric with intricate golden embroidery patterns, high-quality material in perfect condition at start and end frames, lower part of the dress magically tearing and ripping open to reveal buttocks and legs, woman standing under pillory with wrists bound, magical bonds disappearing from wrists while camera performs smooth zoom out, beautiful sorceress entering the frame holding a whip in her hand during the zoom out, same dramatic lighting, detailed fabric texture, realistic cloth dynamics, cinematic camera movement
+  neg: |-
+    deformed, bad anatomy, blurry, low quality, extra limbs, mutated hands, poorly drawn face, text, watermark, overexposed, underexposed, torn dress at start, damaged fabric, cheap material
+
+- file: wiezy_znikaja.png
+  backend: linux
+  duration: 2
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- break: true
+
+- file: Pleas have mercy.mp4
+  backend: linux
+  duration: 2
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- break: true
+
+- file: showed_no_mercy.mp4
+  backend: linux
+  duration: 2
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- break: true
+
+- file: whip1.png
+  backend: linux
+  duration: 3
+  pos: "Dynamic 3-second video: A sorceress on the left aggressively and repeatedly whipping a naked woman tied to a wooden pole in the center. Multiple fast, powerful whip strikes hitting her buttocks and thighs, visible red welts, the bound woman flinching, jerking and writhing in pain with each impact.\n\nIn the background: animated medieval crowd with subtle natural movement - people shifting weight, turning heads, slightly raising hands, murmuring, small movements, cheering crowd with gentle motion, not too many people. \n\nRealistic whip motion with motion blur, dynamic action, cinematic side view, dramatic lighting, dark fantasy atmosphere, highly detailed main subjects, subtle background animation, 3 seconds video"
+  neg: |-
+    static scene, slow motion, few strikes, single whip hit, blurry motion, deformed body, bad anatomy, low quality, artifacts, text, watermark, censored, calm scene, no movement, smiling, peaceful, static camera, weak hits
+  lora_strength: null
+  frame_interpolation: false
+
+- file: whip1_p2.png
+  backend: linux
+  duration: 5
+  pos: "Dynamic 5-second video: A sorceress on the left aggressively and repeatedly whipping a naked woman tied to a wooden pole in the center. Multiple fast, powerful whip strikes hitting her buttocks and thighs, the bound woman flinching, jerking and writhing in pain with each impact.\n\nIn the background: animated medieval crowd with subtle natural movement - people shifting weight, turning heads, slightly raising hands, murmuring, small movements, cheering crowd with gentle motion, not too many people. \n\nRealistic whip motion with motion blur, dynamic action, cinematic side view, dramatic lighting, dark fantasy atmosphere, highly detailed main subjects, subtle background animation, 5 seconds video"
+  neg: |-
+    static scene, slow motion, few strikes, single whip hit, blurry motion, deformed body, bad anatomy, low quality, artifacts, text, watermark, censored, calm scene, no movement, smiling, peaceful, static camera, weak hits
+  frame_interpolation: false
+  generate_count: 3
+
+- break: true
+  label: Stroke 1
+
+- file: whip1_p3.png
+  backend: linux
+  duration: 3
+  pos: "Dynamic 5-second video: A sorceress on the left aggressively and repeatedly whipping a naked woman tied to a wooden pole in the center. Multiple fast, powerful whip strikes hitting her buttocks and thighs, visible red welts, the bound woman flinching, jerking and writhing in pain with each impact.\n\nIn the background: animated medieval crowd with subtle natural movement - people shifting weight, turning heads, slightly raising hands, murmuring, small movements, cheering crowd with gentle motion, not too many people. \n\nRealistic whip motion with motion blur, dynamic action, cinematic side view, dramatic lighting, dark fantasy atmosphere, highly detailed main subjects, subtle background animation, 5 seconds video"
+  neg: |-
+    static scene, slow motion, few strikes, single whip hit, blurry motion, deformed body, bad anatomy, low quality, artifacts, text, watermark, censored, calm scene, no movement, smiling, peaceful, static camera, weak hits
+  frame_interpolation: false
+
+- file: whip1_p4.png
+  backend: linux
+  duration: 2
+  pos: ""
+  neg: ""
+
+- break: true
+  label: Stroke 2
+
+- file: whip1_p5.png
+  backend: linux
+  duration: 2
+  pos: "Dynamic 5-second video: A sorceress on the left aggressively and repeatedly whipping a naked woman tied to a wooden pole in the center. Multiple fast, powerful whip strikes hitting her buttocks and thighs, visible red welts, the bound woman flinching, jerking and writhing in pain with each impact.\n\nIn the background: animated medieval crowd with subtle natural movement - people shifting weight, turning heads, slightly raising hands, murmuring, small movements, cheering crowd with gentle motion, not too many people. \n\nRealistic whip motion with motion blur, dynamic action, cinematic side view, dramatic lighting, dark fantasy atmosphere, highly detailed main subjects, subtle background animation, 5 seconds video"
+  neg: |-
+    static scene, slow motion, few strikes, single whip hit, blurry motion, deformed body, bad anatomy, low quality, artifacts, text, watermark, censored, calm scene, no movement, smiling, peaceful, static camera, weak hits
+  frame_interpolation: false
+
+- file: whip1_p6.png
+  backend: linux
+  duration: 2
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- break: true
+  label: Stroke 3
+
+- file: whip1_p7.png
+  backend: linux
+  duration: 3
+  pos: "Dynamic 3-second video: A sorceress on the left aggressively and repeatedly whipping a naked woman tied to a wooden pole in the center. Multiple fast, powerful whip strikes hitting her buttocks and thighs, visible red welts, the bound woman flinching, jerking and writhing in pain with each impact.\n\nIn the background: animated medieval crowd with subtle natural movement - people shifting weight, turning heads, slightly raising hands, murmuring, small movements, cheering crowd with gentle motion, not too many people. \n\nRealistic whip motion with motion blur, dynamic action, cinematic side view, dramatic lighting, dark fantasy atmosphere, highly detailed main subjects, subtle background animation, 3 seconds video"
+  neg: |-
+    static scene, slow motion, few strikes, single whip hit, blurry motion, deformed body, bad anatomy, low quality, artifacts, text, watermark, censored, calm scene, no movement, smiling, peaceful, static camera, weak hits
+  frame_interpolation: false
+
+- file: whip1_p8.png
+  backend: linux
+  duration: 0
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- break: true
+  label: Stroke 4
+
+- file: whip1_p9.png
+  backend: linux
+  duration: 2
+  pos: "Dynamic 3-second video: A sorceress on the left aggressively and repeatedly whipping a naked woman tied to a wooden pole in the center. Multiple fast, powerful whip strikes hitting her buttocks and thighs, visible red welts, the bound woman flinching, jerking and writhing in pain with each impact.\n\nIn the background: animated medieval crowd with subtle natural movement - people shifting weight, turning heads, slightly raising hands, murmuring, small movements, cheering crowd with gentle motion, not too many people. \n\nRealistic whip motion with motion blur, dynamic action, cinematic side view, dramatic lighting, dark fantasy atmosphere, highly detailed main subjects, subtle background animation, 3 seconds video"
+  neg: |-
+    static scene, slow motion, few strikes, single whip hit, blurry motion, deformed body, bad anatomy, low quality, artifacts, text, watermark, censored, calm scene, no movement, smiling, peaceful, static camera, weak hits
+  frame_interpolation: false
+
+- file: whip1_p10.png
+  backend: linux
+  duration: 0
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- break: true
+  label: Stroke 5
+
+- file: whip1_p11.png
+  backend: linux
+  duration: 2
+  pos: "Dynamic 3-second video: A sorceress on the left aggressively and repeatedly whipping a naked woman tied to a wooden pole in the center. Multiple fast, powerful whip strikes hitting her directly at legs, visible red welts, the bound woman flinching, jerking and writhing in pain with each impact.\n\nIn the background: animated medieval crowd with subtle natural movement - people shifting weight, turning heads, slightly raising hands, murmuring, small movements, cheering crowd with gentle motion, not too many people. \n\nRealistic whip motion with motion blur, dynamic action, cinematic side view, dramatic lighting, dark fantasy atmosphere, highly detailed main subjects, subtle background animation, 3 seconds video"
+  neg: |-
+    static scene, slow motion, few strikes, single whip hit, blurry motion, deformed body, bad anatomy, low quality, artifacts, text, watermark, censored, calm scene, no movement, smiling, peaceful, static camera, weak hits
+  frame_interpolation: false
+
+- file: whip1_p12.png
+  backend: linux
+  duration: 0
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- break: true
+  label: Stroke 6
+
+- file: whip1_p13.png
+  backend: linux
+  duration: 2
+  pos: "Dynamic 3-second video: A sorceress on the left aggressively and repeatedly whipping a naked woman tied to a wooden pole in the center. Multiple fast, powerful whip strikes hitting her directly at legs, visible red welts, the bound woman flinching, jerking and writhing in pain with each impact.\n\nIn the background: animated medieval crowd with subtle natural movement - people shifting weight, turning heads, slightly raising hands, murmuring, small movements, cheering crowd with gentle motion, not too many people. \n\nRealistic whip motion with motion blur, dynamic action, cinematic side view, dramatic lighting, dark fantasy atmosphere, highly detailed main subjects, subtle background animation, 3 seconds video"
+  neg: |-
+    static scene, slow motion, few strikes, single whip hit, blurry motion, deformed body, bad anatomy, low quality, artifacts, text, watermark, censored, calm scene, no movement, smiling, peaceful, static camera, weak hits
+  frame_interpolation: false
+
+- file: whip1_p14.png
+  backend: linux
+  duration: 0
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- break: true
+  label: Stroke 7
+
+- file: whip1_p15.png
+  backend: linux
+  duration: 2
+  pos: "Dynamic 3-second video: A sorceress on the left aggressively and repeatedly whipping a naked woman tied to a wooden pole in the center. Multiple fast, powerful whip strikes hitting her directly at legs, visible red welts, the bound woman flinching, jerking and writhing in pain with each impact.\n\nIn the background: animated medieval crowd with subtle natural movement - people shifting weight, turning heads, slightly raising hands, murmuring, small movements, cheering crowd with gentle motion, not too many people. \n\nRealistic whip motion with motion blur, dynamic action, cinematic side view, dramatic lighting, dark fantasy atmosphere, highly detailed main subjects, subtle background animation, 3 seconds video"
+  neg: |-
+    static scene, slow motion, few strikes, single whip hit, blurry motion, deformed body, bad anatomy, low quality, artifacts, text, watermark, censored, calm scene, no movement, smiling, peaceful, static camera, weak hits
+  frame_interpolation: false
+
+- file: whip1_p16.png
+  backend: linux
+  duration: 0
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- break: true
+  label: stroke 8
+
+- file: whip1_p17.png
+  backend: linux
+  duration: 2
+  pos: "Dynamic 3-second video: A sorceress on the left aggressively and repeatedly whipping a naked woman tied to a wooden pole in the center. Multiple fast, powerful whip strikes hitting her directly at legs, visible red welts, the bound woman flinching, jerking and writhing in pain with each impact.\n\nIn the background: animated medieval crowd with subtle natural movement - people shifting weight, turning heads, slightly raising hands, murmuring, small movements, cheering crowd with gentle motion, not too many people. \n\nRealistic whip motion with motion blur, dynamic action, cinematic side view, dramatic lighting, dark fantasy atmosphere, highly detailed main subjects, subtle background animation, 3 seconds video"
+  neg: |-
+    static scene, slow motion, few strikes, single whip hit, blurry motion, deformed body, bad anatomy, low quality, artifacts, text, watermark, censored, calm scene, no movement, smiling, peaceful, static camera, weak hits
+  frame_interpolation: false
+
+- file: whip1_p18.png
+  backend: linux
+  duration: 0
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- break: true
+  label: stroke 9
+
+- file: whip1_p19.png
+  backend: linux
+  duration: 2
+  pos: "Dynamic 3-second video: A sorceress on the left aggressively and repeatedly whipping a naked woman tied to a wooden pole in the center. Multiple fast, powerful whip strikes hitting her directly at legs, visible red welts, the bound woman flinching, jerking and writhing in pain with each impact.\n\nIn the background: animated medieval crowd with subtle natural movement - people shifting weight, turning heads, slightly raising hands, murmuring, small movements, cheering crowd with gentle motion, not too many people. \n\nRealistic whip motion with motion blur, dynamic action, cinematic side view, dramatic lighting, dark fantasy atmosphere, highly detailed main subjects, subtle background animation, 3 seconds video"
+  neg: |-
+    static scene, slow motion, few strikes, single whip hit, blurry motion, deformed body, bad anatomy, low quality, artifacts, text, watermark, censored, calm scene, no movement, smiling, peaceful, static camera, weak hits
+  frame_interpolation: false
+
+- file: whip1_p20.png
+  backend: linux
+  duration: 0
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- chain:
+    prefix: Cierpienie krolowej0
+    transitions:
+    - duration: 5
+      pos: |-
+        Woman bound to the cross is moving her butt, shaking head
+      neg: ""
+    - duration: 5
+      pos: |-
+        The woman beneath the cross lets go of the ropes she is holding, kneeling at the cross - face to cross, and putting hands behind her back
+      neg: ""
+    backend: linux
+    fps: 16
+    steps: 6
+    cfg: 2
+    neg: |-
+      static, frozen, no movement
+
+- break: true
+  label: stroke 10
+
+- file: TenStrokesNotEnough.mp4
+  backend: linux
+  duration: 2
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- break: true
+
+- file: PeoplesWill.mp4
+  backend: linux
+  duration: 2
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- break: true
+
+- file: whip1_p21.png
+  backend: linux
+  duration: 2
+  pos: "Dynamic 3-second video: A sorceress on the left aggressively and repeatedly whipping a naked woman tied to a wooden pole in the center. Multiple fast, powerful whip strikes hitting her directly at legs, visible red welts, the bound woman flinching, jerking and writhing in pain with each impact.\n\nIn the background: animated medieval crowd with subtle natural movement - people shifting weight, turning heads, slightly raising hands, murmuring, small movements, cheering crowd with gentle motion, not too many people. \n\nRealistic whip motion with motion blur, dynamic action, cinematic side view, dramatic lighting, dark fantasy atmosphere, highly detailed main subjects, subtle background animation, 3 seconds video"
+  neg: |-
+    static scene, slow motion, few strikes, single whip hit, blurry motion, deformed body, bad anatomy, low quality, artifacts, text, watermark, censored, calm scene, no movement, smiling, peaceful, static camera, weak hits
+  frame_interpolation: false
+
+- file: whip1_p22.png
+  backend: linux
+  duration: 0
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- break: true
+  label: stroke 11
+
+- file: whip1_p23.png
+  backend: linux
+  duration: 2
+  pos: "Dynamic 3-second video: A sorceress on the left aggressively and repeatedly whipping a naked woman tied to a wooden pole in the center. Multiple fast, powerful whip strikes hitting her directly at legs, visible red welts, the bound woman flinching, jerking and writhing in pain with each impact.\n\nIn the background: animated medieval crowd with subtle natural movement - people shifting weight, turning heads, slightly raising hands, murmuring, small movements, cheering crowd with gentle motion, not too many people. \n\nRealistic whip motion with motion blur, dynamic action, cinematic side view, dramatic lighting, dark fantasy atmosphere, highly detailed main subjects, subtle background animation, 3 seconds video"
+  neg: |-
+    static scene, slow motion, few strikes, single whip hit, blurry motion, deformed body, bad anatomy, low quality, artifacts, text, watermark, censored, calm scene, no movement, smiling, peaceful, static camera, weak hits
+  frame_interpolation: false
+
+- file: whip1_p24.png
+  backend: linux
+  duration: 0
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- break: true
+  label: stroke 12
+
+- file: whip1_p25.png
+  backend: linux
+  duration: 2
+  pos: "Dynamic 3-second video: A sorceress on the left aggressively and repeatedly whipping a naked woman tied to a wooden pole in the center. Multiple fast, powerful whip strikes hitting her directly at legs, visible red welts, the bound woman flinching, jerking and writhing in pain with each impact.\n\nIn the background: animated medieval crowd with subtle natural movement - people shifting weight, turning heads, slightly raising hands, murmuring, small movements, cheering crowd with gentle motion, not too many people. \n\nRealistic whip motion with motion blur, dynamic action, cinematic side view, dramatic lighting, dark fantasy atmosphere, highly detailed main subjects, subtle background animation, 3 seconds video"
+  neg: |-
+    static scene, slow motion, few strikes, single whip hit, blurry motion, deformed body, bad anatomy, low quality, artifacts, text, watermark, censored, calm scene, no movement, smiling, peaceful, static camera, weak hits
+  frame_interpolation: false
+
+- file: whip1_p26.png
+  backend: linux
+  duration: 0
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- break: true
+  label: stroke 13
+
+- file: whip1_p27.png
+  backend: linux
+  duration: 2
+  pos: "Dynamic 3-second video: A sorceress on the left aggressively and repeatedly whipping a naked woman tied to a wooden pole in the center. Multiple fast, powerful whip strikes hitting her directly at legs, visible red welts, the bound woman flinching, jerking and writhing in pain with each impact.\n\nIn the background: animated medieval crowd with subtle natural movement - people shifting weight, turning heads, slightly raising hands, murmuring, small movements, cheering crowd with gentle motion, not too many people. \n\nRealistic whip motion with motion blur, dynamic action, cinematic side view, dramatic lighting, dark fantasy atmosphere, highly detailed main subjects, subtle background animation, 3 seconds video"
+  neg: |-
+    static scene, slow motion, few strikes, single whip hit, blurry motion, deformed body, bad anatomy, low quality, artifacts, text, watermark, censored, calm scene, no movement, smiling, peaceful, static camera, weak hits
+  frame_interpolation: false
+
+- file: whip1_p28.png
+  backend: linux
+  duration: 0
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- break: true
+  label: stroke 14
+
+- file: whip1_p29.png
+  backend: linux
+  duration: 2
+  pos: "Dynamic 3-second video: A sorceress on the left aggressively and repeatedly whipping a naked woman tied to a wooden pole in the center. Multiple fast, powerful whip strikes hitting her directly at legs, visible red welts, the bound woman flinching, jerking and writhing in pain with each impact.\n\nIn the background: animated medieval crowd with subtle natural movement - people shifting weight, turning heads, slightly raising hands, murmuring, small movements, cheering crowd with gentle motion, not too many people. \n\nRealistic whip motion with motion blur, dynamic action, cinematic side view, dramatic lighting, dark fantasy atmosphere, highly detailed main subjects, subtle background animation, 3 seconds video"
+  neg: |-
+    static scene, slow motion, few strikes, single whip hit, blurry motion, deformed body, bad anatomy, low quality, artifacts, text, watermark, censored, calm scene, no movement, smiling, peaceful, static camera, weak hits
+  frame_interpolation: false
+  generate_count: 3
+
+- file: whip1_p30.png
+  backend: linux
+  duration: 0
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- break: true
+  label: stroke 15
+
+- file: whip1_p31.png
+  backend: linux
+  duration: 2
+  pos: "Dynamic 3-second video: A sorceress on the left aggressively and repeatedly whipping a naked woman tied to a wooden pole in the center. Multiple fast, powerful whip strikes hitting her directly at legs, visible red welts, the bound woman flinching, jerking and writhing in pain with each impact.\n\nIn the background: animated medieval crowd with subtle natural movement - people shifting weight, turning heads, slightly raising hands, murmuring, small movements, cheering crowd with gentle motion, not too many people. \n\nRealistic whip motion with motion blur, dynamic action, cinematic side view, dramatic lighting, dark fantasy atmosphere, highly detailed main subjects, subtle background animation, 3 seconds video"
+  neg: |-
+    static scene, slow motion, few strikes, single whip hit, blurry motion, deformed body, bad anatomy, low quality, artifacts, text, watermark, censored, calm scene, no movement, smiling, peaceful, static camera, weak hits
+  frame_interpolation: false
+
+- file: whip1_p32.png
+  backend: linux
+  duration: 0
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- break: true
+  label: Stroke 16
+
+- file: whip1_p33.png
+  backend: linux
+  duration: 2
+  pos: "Dynamic 3-second video: A sorceress on the left aggressively and repeatedly whipping a naked woman tied to a wooden pole in the center. Multiple fast, powerful whip strikes hitting her directly at legs, visible red welts, the bound woman flinching, jerking and writhing in pain with each impact.\n\nIn the background: animated medieval crowd with subtle natural movement - people shifting weight, turning heads, slightly raising hands, murmuring, small movements, cheering crowd with gentle motion, not too many people. \n\nRealistic whip motion with motion blur, dynamic action, cinematic side view, dramatic lighting, dark fantasy atmosphere, highly detailed main subjects, subtle background animation, 3 seconds video"
+  neg: |-
+    static scene, slow motion, few strikes, single whip hit, blurry motion, deformed body, bad anatomy, low quality, artifacts, text, watermark, censored, calm scene, no movement, smiling, peaceful, static camera, weak hits
+  frame_interpolation: false
+  generate_count: 3
+
+- file: whip1_p34.png
+  backend: linux
+  duration: 0
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- break: true
+  label: Stroke 17
+
+- file: whip1_p35.png
+  backend: linux
+  duration: 2
+  pos: "Dynamic 3-second video: A sorceress on the left aggressively and repeatedly whipping a naked woman tied to a wooden pole in the center. Multiple fast, powerful whip strikes hitting her directly at legs, visible red welts, the bound woman flinching, jerking and writhing in pain with each impact.\n\nIn the background: animated medieval crowd with subtle natural movement - people shifting weight, turning heads, slightly raising hands, murmuring, small movements, cheering crowd with gentle motion, not too many people. \n\nRealistic whip motion with motion blur, dynamic action, cinematic side view, dramatic lighting, dark fantasy atmosphere, highly detailed main subjects, subtle background animation, 3 seconds video"
+  neg: |-
+    static scene, slow motion, few strikes, single whip hit, blurry motion, deformed body, bad anatomy, low quality, artifacts, text, watermark, censored, calm scene, no movement, smiling, peaceful, static camera, weak hits
+  frame_interpolation: false
+  generate_count: 3
+
+- file: whip1_p36.png
+  backend: linux
+  duration: 0
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- break: true
+  label: Stroke 18
+
+- file: whip1_p37.png
+  backend: linux
+  duration: 2
+  pos: "Dynamic 3-second video: A sorceress on the left aggressively and repeatedly whipping a naked woman tied to a wooden pole in the center. Multiple fast, powerful whip strikes hitting her directly at legs, visible red welts, the bound woman flinching, jerking and writhing in pain with each impact.\n\nIn the background: animated medieval crowd with subtle natural movement - people shifting weight, turning heads, slightly raising hands, murmuring, small movements, cheering crowd with gentle motion, not too many people. \n\nRealistic whip motion with motion blur, dynamic action, cinematic side view, dramatic lighting, dark fantasy atmosphere, highly detailed main subjects, subtle background animation, 3 seconds video"
+  neg: |-
+    static scene, slow motion, few strikes, single whip hit, blurry motion, deformed body, bad anatomy, low quality, artifacts, text, watermark, censored, calm scene, no movement, smiling, peaceful, static camera, weak hits
+  frame_interpolation: false
+  generate_count: 3
+
+- file: whip1_p38.png
+  backend: linux
+  duration: 0
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- break: true
+  label: Stroke 19
+
+- file: whip1_p39.png
+  backend: linux
+  duration: 2
+  pos: "Dynamic 3-second video: A sorceress on the left aggressively and repeatedly whipping a naked woman tied to a wooden pole in the center. Multiple fast, powerful whip strikes hitting her directly at legs, visible red welts, the bound woman flinching, jerking and writhing in pain with each impact.\n\nIn the background: animated medieval crowd with subtle natural movement - people shifting weight, turning heads, slightly raising hands, murmuring, small movements, cheering crowd with gentle motion, not too many people. \n\nRealistic whip motion with motion blur, dynamic action, cinematic side view, dramatic lighting, dark fantasy atmosphere, highly detailed main subjects, subtle background animation, 3 seconds video"
+  neg: |-
+    static scene, slow motion, few strikes, single whip hit, blurry motion, deformed body, bad anatomy, low quality, artifacts, text, watermark, censored, calm scene, no movement, smiling, peaceful, static camera, weak hits
+  frame_interpolation: false
+  generate_count: 3
+
+- file: whip1_p40.png
+  backend: linux
+  duration: 0
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- chain:
+    prefix: Cierpienie krolowej
+    transitions:
+    - duration: 5
+      pos: |-
+        Woman bound to the cross is moving her butt, shaking head
+      neg: ""
+    - duration: 5
+      pos: |-
+        The woman beneath the cross lets go of the ropes she is holding, turns toward the camera, and grabs them again. , woman with whip throws away whip out of scene to the left side
+      neg: ""
+    backend: linux
+    fps: 16
+    steps: 6
+    cfg: 2
+    neg: |-
+      static, frozen, no movement
+
+- file: whip1_p41FIN.jpg
+  backend: linux
+  duration: 2
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- break: true
+  label: Stroke 20
+
+- type: scene_break
+  name: GNIEW TŁUMU
+
+- file: Gniew_tlumu_01.mp4
+  backend: linux
+  duration: 2
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- break: true
+
+- file: Gniew_tlumu_02.mp4
+  backend: linux
+  duration: 2
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- break: true
+
+- file: Gniew_tlumu_03.mp4
+  backend: linux
+  duration: 2
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- break: true
+
+- file: Gniew_tlumu_04.mp4
+  backend: linux
+  duration: 2
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- break: true
+
+- file: Gniew_tlumu_05.mp4
+  backend: linux
+  duration: 2
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- break: true
+
+- file: Gniew_tlumu_06.mp4
+  backend: linux
+  duration: 2
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- break: true
+
+- type: scene_break
+  name: ZDZIERANIE UBRANIA
+
+- file: Nothing is yours.mp4
+  backend: linux
+  duration: 2
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- break: true
+
+- file: 01_removing_clothes.png
+  backend: linux
+  duration: 4
+  pos: |-
+    A powerful sorceress on the right side of the frame, leaning forward over a woman bound to a wooden pole, dynamically tearing individual pieces of clothing from the bound woman's right breast with her hand, actively pulling and throwing the fabric away, intense focused gaze directed exactly at the tearing point, body angled toward the action, wand in her other hand, dramatic motion, precise hand contact with fabric, weight shifted forward, anatomically correct hands and fingers gripping cloth, highly detailed fabric tearing, dynamic pose, cinematic lighting, photorealistic, sharp details, 8k
+  neg: |-
+    static pose, standing still, frozen motion, no action, hands not touching fabric, not tearing clothes, blurry hands, deformed fingers, bad anatomy, extra limbs, wrong hand position, fabric intact, motionless sorceress, low quality, blurry
+  frame_interpolation: true
+
+- file: 02_removing_clothes.png
+  backend: linux
+  duration: 4
+  pos: |-
+    A powerful sorceress on the right side of the frame, leaning forward over a woman bound to a wooden pole, dynamically tearing individual pieces of clothing from the bound woman's hand with her hand, actively pulling and throwing the fabric away, intense focused gaze directed exactly at the tearing point, body angled toward the action, wand in her other hand, dramatic motion, precise hand contact with fabric, weight shifted forward, anatomically correct hands and fingers gripping cloth, highly detailed fabric tearing, dynamic pose, cinematic lighting, photorealistic, sharp details, 8k
+  neg: |-
+    static pose, standing still, frozen motion, no action, hands not touching fabric, not tearing clothes, blurry hands, deformed fingers, bad anatomy, extra limbs, wrong hand position, fabric intact, motionless sorceress, low quality, blurry
+
+- file: 02a_removing_clothes.png
+  backend: linux
+  duration: 4
+  pos: |-
+    A powerful sorceress on the right side of the frame, leaning forward over a woman bound to a wooden pole, dynamically tearing individual pieces of clothing from the bound woman's right breast with her hand, actively pulling and throwing the fabric away, intense focused gaze directed exactly at the tearing point, body angled toward the action, wand in her other hand, dramatic motion, precise hand contact with fabric, weight shifted forward, anatomically correct hands and fingers gripping cloth, highly detailed fabric tearing, dynamic pose, cinematic lighting, photorealistic, sharp details, 8k
+  neg: |-
+    static pose, standing still, frozen motion, no action, hands not touching fabric, not tearing clothes, blurry hands, deformed fingers, bad anatomy, extra limbs, wrong hand position, fabric intact, motionless sorceress, low quality, blurry
+
+- file: 02b_removing_clothes.png
+  backend: linux
+  duration: 4
+  pos: |
+    A powerful sorceress on the right side of the frame, leaning forward over a woman bound to a wooden pole, dynamically tearing individual pieces of clothing from the bound woman's - bottom part of torn robes with her right empty hand, actively pulling and throwing the fabric away, intense focused gaze directed exactly at the tearing point, body angled toward the action, wand in her other hand, dramatic motion, precise hand contact with fabric, weight shifted forward, anatomically correct hands and fingers gripping cloth, highly detailed fabric tearing, dynamic pose, cinematic lighting, photorealistic, sharp details, 8k
+  neg: |-
+    static pose, standing still, frozen motion, no action, hands not touching fabric, not tearing clothes, blurry hands, deformed fingers, bad anatomy, extra limbs, wrong hand position, fabric intact, motionless sorceress, low quality, blurry
+
+- file: 03_removing_clothes.png
+  backend: linux
+  duration: 5
+  pos: |-
+    A powerful sorceress on the right side of the frame, leaning forward over a queen bound to a wooden pole with arms raised and tied above her head, using her right empty hand to reach up and tear rags from the bound queen's wrists — first tearing the fabric from one wrist, then the other — actively pulling and throwing the pieces away, intense focused gaze directed exactly at the wrists, body angled toward the action, wand held in her left hand, dramatic motion, precise hand contact with fabric at the wrists, weight shifted forward, anatomically correct hands and fingers gripping cloth, highly detailed fabric tearing from wrists, dynamic pose, cinematic lighting, photorealistic, sharp details, 8k
+  neg: |-
+    reaching low, hands at breast level or below, reaching down, arms lowered, hands near torso or hips, static pose, standing still, frozen motion, not reaching up, hands not at wrists, blurry hands, deformed fingers, bad anatomy, extra limbs, wrong hand position, fabric intact, motionless sorceress, low quality, blurry
+
+- file: 04_removing_clothes.png
+  backend: linux
+  duration: 4.5
+  pos: |-
+    Static camera, same framing as start and end frames. A sorceress walks with smooth, dignified movement, passing behind a queen who is tightly bound to a wooden pole with ropes. The queen looks around anxiously with worried expression. The sorceress moves from one side of the pole to the other in a fluid, elegant motion. Detailed anatomy, realistic fabric movement, cinematic lighting, high quality
+  neg: |-
+    static pose, standing still, frozen motion, no action, hands not touching fabric, not tearing clothes, blurry hands, deformed fingers, bad anatomy, extra limbs, wrong hand position, fabric intact, motionless sorceress, low quality, blurry
+
+- file: 05b_removing_clothes.png
+  backend: linux
+  duration: 4
+  pos: |-
+    A powerful sorceress on the left side of the frame, leaning forward over a woman bound to a wooden pole, dynamically tearing individual pieces of clothing from the bound woman's belly with her hand, actively pulling and throwing the fabric away, intense focused gaze directed exactly at the tearing point, body angled toward the action, wand in her other hand, dramatic motion, precise hand contact with fabric, weight shifted forward, anatomically correct hands and fingers gripping cloth, highly detailed fabric tearing, dynamic pose, cinematic lighting, photorealistic, sharp details, 8k
+  neg: |-
+    static pose, standing still, frozen motion, no action, hands not touching fabric, not tearing clothes, blurry hands, deformed fingers, bad anatomy, extra limbs, wrong hand position, fabric intact, motionless sorceress, low quality, blurry
+
+- file: 06_removing_clothes.png
+  backend: linux
+  duration: 4.5
+  pos: |-
+    A powerful sorceress on the left side of the frame, leaning forward over a woman bound to a wooden pole, dynamically tearing individual pieces of clothing from the bound woman's hips with her hand, actively pulling and throwing the fabric away, intense focused gaze directed exactly at the tearing point, body angled toward the action, wand in her other hand, dramatic motion, precise hand contact with fabric, weight shifted forward, anatomically correct hands and fingers gripping cloth, highly detailed fabric tearing, dynamic pose, cinematic lighting, photorealistic, sharp details, 8k
+  neg: |-
+    static pose, standing still, frozen motion, no action, hands not touching fabric, not tearing clothes, blurry hands, deformed fingers, bad anatomy, extra limbs, wrong hand position, fabric intact, motionless sorceress, low quality, blurry
+
+- file: 07_removing_clothes.png
+  backend: linux
+  duration: 4.5
+  pos: |-
+    A powerful sorceress on the right side of the frame, leaning forward over a woman bound to a wooden pole, dynamically tearing individual pieces of clothing from the bound woman's hand with her hand, actively pulling and throwing the fabric away, intense focused gaze directed exactly at the tearing point, body angled toward the action, wand in her other hand, dramatic motion, precise hand contact with fabric, weight shifted forward, anatomically correct hands and fingers gripping cloth, highly detailed fabric tearing, dynamic pose, cinematic lighting, photorealistic, sharp details, 8k
+  neg: |-
+    static pose, standing still, frozen motion, no action, hands not touching fabric, not tearing clothes, blurry hands, deformed fingers, bad anatomy, extra limbs, wrong hand position, fabric intact, motionless sorceress, low quality, blurry
+
+- break: true
+
+- file: ItIsSoHumilating.png
+  backend: linux
+  duration: 2
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- type: talk
+  audio:
+    file: ItIsSoHumilating.MP3
+    pos: |-
+      Person is talking hands up in still position
+  width: 768
+  height: 768
+  backend: linux
+
+- break: true
+
+- type: scene_break
+  name: NOCNE CZUWANIE
+
+- file: AllNightLong.mp4
+  backend: linux
+  duration: 2
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- break: true
+
+- file: Warriors_3.png
+  backend: linux
+  duration: 6
+  pos: |-
+    Night scene in a medieval town square, several fierce female warriors in armor standing guard around a naked woman tied to a wooden stake, dramatic moonlight, time-lapse effect with very fast accelerated movements, crowd of people rapidly disappearing from the square, moon moving across the sky from right side of frame to left side, dynamic motion blur, fast time passage, cinematic, highly detailed, photorealistic
+  neg: |-
+    slow motion, gradual movements, slow actions, static poses, slow time lapse, relaxed pacing, no slow movements
+
+- file: Warriors_4.png
+  backend: linux
+  duration: 2
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- break: true
+
+- file: Warriors_1.png
+  backend: linux
+  duration: 2
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- chain:
+    prefix: poranna chłosta
+    transitions:
+    - duration: 3
+      pos: |-
+        At dawn in a medieval town square, a naked woman is tightly bound by her wrists high above her head to a tall wooden pole in the center. Two fierce female warriors stand on either side of her, dynamically swinging whips to flog her already marked body. The bound woman thrashes violently and screams in pain, her body twisting helplessly while her arms remain firmly secured. A large crowd of onlookers surrounds the scene watching the public spectacle. Dramatic early morning light, misty atmosphere, realistic anatomy, dynamic motion, detailed skin textures, cinematic composition
+      neg: |-
+        blurry, deformed hands, extra limbs, poor anatomy, text, watermark, cartoon, low quality
+    - duration: 5
+      pos: |-
+        At dawn in a medieval town square, a naked woman is tightly bound by her wrists high above her head to a tall wooden pole in the center. Two fierce female warriors stand on either side of her, dynamically swinging whips to flog her already marked body. The bound woman thrashes violently and screams in pain, her body twisting helplessly while her arms remain firmly secured. A large crowd of onlookers surrounds the scene watching the public spectacle. Dramatic early morning light, misty atmosphere, realistic anatomy, dynamic motion, detailed skin textures, cinematic composition
+      neg: |-
+        blurry, deformed hands, extra limbs, poor anatomy, text, watermark, cartoon, low quality
+    backend: linux
+    fps: 16
+    steps: 6
+    cfg: 2
+    neg: |-
+      static, frozen, no movement
+
+- file: Warriors_2.png
+  backend: linux
+  duration: 2
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- break: true
+
+- file: Warrior_5.png
+  backend: linux
+  duration: 2
+  pos: |-
+    Naked woman exhausted is falling on the ground
+  neg: |-
+    NONE
+
+- file: Warrior_6.png
+  backend: linux
+  duration: 2
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- break: true
+
+- file: koniec_kary.mp4
+  backend: linux
+  duration: 2
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- break: true
+
+- file: Warrior_7.png
+  backend: linux
+  duration: 2
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- chain:
+    prefix: Wyprowadzenie złej królowej
+    transitions:
+    - duration: 4
+      pos: |
+        Two female warriors stand beside a naked, extremely exhausted queen, firmly grabbing her arms and dragging her out of the frame, her body slumping limply with exhaustion, head hanging forward, feet barely touching the ground, dragged motion, cinematic movement, highly detailed anatomy, realistic skin texture, dynamic action
+      neg: |
+        clothed, clothing, dress, text, watermark, deformed, bad anatomy, extra limbs, blurry, low quality, cartoon, anime, overexposed, underexposed, motion blur, artifacts"
+    - duration: 1
+      pos: |-
+        Women moving forward leaving the scene
+      neg: |-
+        anybody on scene
+    backend: linux
+    fps: 16
+    steps: 6
+    cfg: 2
+    neg: |-
+      static, frozen, no movement
+
+project_folder: C:\Users\abork\AppData\Local\CapCut\Videos\dungeon_team\film
+
+pic_flow:
+- type: paste_character
+  name: Wstawianie wozu do miasta
+  paste_slots:
+  - id: 63cdecb3-be05-4466-84fd-64c24fdfa9bb
+    output_id: ff46b0f2-c1e9-4d5f-b06a-ac6e0d1e74f4
+    scene_image: C:\Users\abork\AppData\Local\CapCut\Videos\dungeon_team\droga przez miasto setup\miasto\grok-image-0297fd3d-8db1-493d-9f39-59a750fd23fe.jpg
+    characters:
+    - model_image: C:\Users\abork\AppData\Local\CapCut\Videos\dungeon_team\models\evil_queen\grok-image-5bec8ebe-a156-42b5-b16d-aae0cda256e6.png
+      top_pct: 28.0
+      bottom_pct: 93.0
+      x_center_pct: 50.0
+      erode_px: 3
+      blur_px: 2
+      preserve_alpha: false
+      edge_blend_enabled: false
+    scene_blend_enabled: true
+    sb_override: null
+    custom_passes: []
+  - id: 3ff0a4c1-9aa0-43d3-ba28-2876accd690c
+    output_id: 3538e1dd-a735-43bd-b4b9-9689c198969e
+    scene_image: C:\Users\abork\AppData\Local\CapCut\Videos\dungeon_team\droga przez miasto setup\miasto\grok-image-1ce3999f-2113-42cd-acae-45c1264abbed.jpg
+    characters:
+    - model_image: C:\Users\abork\AppData\Local\CapCut\Videos\dungeon_team\models\evil_queen\grok-image-5bec8ebe-a156-42b5-b16d-aae0cda256e6.jpg
+      top_pct: 58.0
+      bottom_pct: 77.0
+      x_center_pct: 48.0
+      erode_px: 3
+      blur_px: 2
+      preserve_alpha: false
+      edge_blend_enabled: true
+    scene_blend_enabled: true
+    sb_override: null
+    custom_passes: []
+  - id: 1aab05fa-2654-46b7-8c26-2ede1de74bfb
+    output_id: 55293ba1-288b-412a-8543-97adb1b69122
+    scene_image: C:\Users\abork\AppData\Local\CapCut\Videos\dungeon_team\Scenes\grok-image-b8a33056-bcbe-40aa-baed-903dda2ca2d4.jpg
+    characters:
+    - model_image: C:\Users\abork\AppData\Local\CapCut\Videos\dungeon_team\models\evil_queen\grok-image-4edff7ae-b39b-4e4a-84f2-94a2c8a0641e.png
+      top_pct: 28.0
+      bottom_pct: 61.0
+      x_center_pct: 54.0
+      erode_px: 3
+      blur_px: 2
+      preserve_alpha: false
+      edge_blend_enabled: false
+    scene_blend_enabled: false
+    sb_override: null
+    custom_passes: []
+  - id: 21a7eb23-28e9-476f-b834-1d05a63c3989
+    output_id: ad0c723a-e5fe-415f-bf21-ea883749d3ae
+    scene_image: C:\Users\abork\AppData\Local\CapCut\Videos\dungeon_team\Scenes\grok-image-489949cd-1a6d-4cd4-9d1a-dc1377a88366.jpg
+    characters:
+    - model_image: C:\Users\abork\AppData\Local\CapCut\Videos\dungeon_team\models\evil_queen\grok-image-4edff7ae-b39b-4e4a-84f2-94a2c8a0641e.png
+      top_pct: 45.0
+      bottom_pct: 66.0
+      x_center_pct: 53.0
+      erode_px: 3
+      blur_px: 2
+      preserve_alpha: false
+      edge_blend_enabled: false
+    scene_blend_enabled: true
+    sb_override: null
+    custom_passes: []
+  edge_blend_enabled: false
+  edge_blend_px: 15
+  edge_blend_cfg: null
+  edge_blend_denoise: null
+  edge_blend_prompts: []
+  scene_blend_enabled: true
+  scene_blend_cfg: null
+  scene_blend_denoise: null
+  scene_blend_prompts:
+  - id: p0000022
+    category: system
+    name: Scene Blend — cienie i spójność sceny
+    note: Pass 2 — pełny obrazek, niski denoise. Dodaje cienie i wyrównuje całą scenę.
+    positive: 'Enhance the realism of the full composited scene. Add a natural cast shadow beneath the composited character''s feet and body — match the exact direction, length, softness and intensity of the shadows already cast by the other people in the scene. Use the existing shadows as a reference: if other figures cast long soft shadows to one side, the composited character must cast an identical shadow in the same direction with the same quality. Add subtle ambient occlusion where the character meets the floor or nearby surfaces. Match the character''s overall color grading, brightness and contrast to the other figures in the scene. Make the result look like a single unified photograph taken with one camera. Do not move or change the character''s position, pose, face or clothing. Do not alter the background structure or change the other people already in the scene.'
+    negative: changed pose, moved character, different face, different clothing, background restructured, artifacts, removed character, new people added, overexposed, underexposed, blurry, inconsistent shadow direction, shadow pointing wrong way, mismatched shadow length, no shadow under feet, floating character
+    params:
+      steps: 30
+      cfg: 8
+      denoise: 0.4
+      atlascloud_model: qwen/qwen-image-2.0-pro/edit
+      seed: -1
+      thinking_mode: false
+      wan_size: 2K
+    enabled: true
+    mode: i2i
+  output_dir: C:\Users\abork\AppData\Local\CapCut\Videos\dungeon_team\scene with models
+  global_suffix: ''
+  crop_to_subject: false
+  pad_input_to_ratio: false
+  id: wstawianie_wozu_do_miasta
+
+- id: generator_prompt_w_pg
+  type: prompt_generator
+  name: Generator promptów
+  output_format: sdxl
+  n_images: 6
+  steps: 28
+  resolution: 1024
+  image_slots: []
+  sessions:
+  - id: s_9z4sv9t5
+    name: zmiana kątu test
+    created_at: '2026-06-21T17:46:46.349683+00:00'
+    updated_at: '2026-06-21T18:19:23.302985+00:00'
+    conversation:
+    - role: user
+      content: chcę zmienić kąt kamery z frontalnego na bramę tak był z lewej pod kątem
+    - role: assistant
+      content: "• Typ kadru: extreme close-up, close-up (twarz), medium (tors), full body, wide shot?  \n• Kąt pionowy: poziomo (eye-level), z góry (bird-eye / high angle), z dołu (worm-eye / low angle)?  \n• Kąt poziomy: z lewej strony pod kątem 45° (3/4), czy bliżej 90° (bok)?  \n• Styl obiektywu: portretowy (85mm, płytka głębia), szerokokątny (distorsja), fisheye?"
+    - role: user
+      content: typ kadru na cały obszar tak jak dotyczhca ten sam kąt co był dotychczas czyli frontalny płytka głębia
+    - role: assistant
+      content: |-
+        {
+          "clip_l": "full body shot, frontal view, eye-level, 85mm portrait lens, shallow depth of field, sharp focus on subject, bokeh background",
+          "t5xxl": "A full body frontal view of the character standing upright, camera positioned at eye level directly in front, using an 85mm lens with shallow depth of field keeping the subject in sharp focus while softly blurring the background, natural weight distribution with feet shoulder-width apart, arms relaxed at sides, head facing straight toward the viewer."
+        }
+    prompt_fields:
+      clip_l: ''
+      t5xxl: ''
+    cost_log:
+    - ts: '2026-06-21T17:32:42.612202+00:00'
+      model: grok-4.3
+      prompt_tokens: 425
+      completion_tokens: 44
+      cost_usd: 0.001935
+    - ts: '2026-06-21T17:34:09.788184+00:00'
+      model: grok-4.3
+      prompt_tokens: 506
+      completion_tokens: 31
+      cost_usd: 0.001983
+    - ts: '2026-06-21T17:34:52.472777+00:00'
+      model: grok-4.3
+      prompt_tokens: 559
+      completion_tokens: 187
+      cost_usd: 0.004482
+    - ts: '2026-06-21T17:48:24.233494+00:00'
+      model: grok-4.3
+      prompt_tokens: 423
+      completion_tokens: 41
+      cost_usd: 0.001884
+    - ts: '2026-06-21T17:48:58.452598+00:00'
+      model: grok-4.3
+      prompt_tokens: 480
+      completion_tokens: 40
+      cost_usd: 0.00204
+    - ts: '2026-06-21T17:49:21.369650+00:00'
+      model: grok-4.3
+      prompt_tokens: 534
+      completion_tokens: 24
+      cost_usd: 0.001962
+    - ts: '2026-06-21T17:50:18.587203+00:00'
+      model: grok-4.3
+      prompt_tokens: 596
+      completion_tokens: 18
+      cost_usd: 0.002058
+    - ts: '2026-06-21T17:50:41.409638+00:00'
+      model: grok-4.3
+      prompt_tokens: 631
+      completion_tokens: 145
+      cost_usd: 0.004068
+    - ts: '2026-06-21T17:57:58.226600+00:00'
+      model: grok-4.3
+      prompt_tokens: 822
+      completion_tokens: 122
+      cost_usd: 0.004296
+    - ts: '2026-06-21T18:15:24.113820+00:00'
+      model: grok-4.3
+      prompt_tokens: 1770
+      completion_tokens: 121
+      cost_usd: 0.007125
+    - ts: '2026-06-21T18:16:39.106228+00:00'
+      model: grok-4.3
+      prompt_tokens: 1926
+      completion_tokens: 110
+      cost_usd: 0.007428
+  - id: s_r2nor2vz
+    name: Niewolnica na targu
+    created_at: '2026-06-21T18:22:13.418263+00:00'
+    updated_at: '2026-06-21T18:45:48.241290+00:00'
+    conversation:
+    - role: user
+      content: Zrób mi prompta młoda blond niewolnica na targu naga stoi pod pręgierzem tłum na nią patrzy
+    - role: assistant
+      content: |-
+        {
+          "clip_l": "photorealistic, young blonde woman, naked slave, pillory, medieval market, crowd watching, public humiliation, detailed skin, natural lighting, high detail, 8k",
+          "t5xxl": "A young blonde woman stands naked under a wooden pillory in the middle of a bustling medieval market square. Her wrists and neck are locked in the pillory, leaving her fully exposed. A crowd of townspeople gathers around her, staring intently with expressions of curiosity and judgment. The scene is set during daylight with natural sunlight illuminating the dusty cobblestones and wooden market stalls in the background. The woman has fair skin, long blonde hair falling over her shoulders, and a slender athletic build. Anatomically correct proportions and realistic skin texture."
+        }
+    - role: user
+      content: zrób mi negative prompt do tego prompta
+    - role: assistant
+      content: |-
+        {
+          "positive": "photorealistic, young blonde woman, naked slave, pillory, medieval market, crowd watching, public humiliation, detailed skin, natural lighting, high detail, 8k",
+          "negative": "clothing, underwear, modern elements, deformed hands, extra limbs, blurry face, low quality, text, watermark, cartoon, 3d render, overexposed, underexposed, bad anatomy, mutated fingers, extra fingers, poorly drawn face, artifacts"
+        }
+    prompt_fields:
+      positive: ''
+      clip_l: photorealistic, young blonde woman, naked slave, pillory, medieval market, crowd watching, public humiliation, detailed skin, natural lighting, high detail, 8k
+      t5xxl: '"A young blonde woman stands naked under a wooden pillory in the middle of a bustling medieval market square. Her wrists and neck are locked in the pillory, leaving her fully exposed. A crowd of townspeople gathers around her, staring intently with expressions of curiosity and judgment. The scene is set during daylight with natural sunlight illuminating the dusty cobblestones and wooden market stalls in the background. The woman has fair skin, long blonde hair falling over her shoulders, and a slender athletic build. Anatomically correct proportions and realistic skin texture'
+    cost_log:
+    - ts: '2026-06-21T18:23:14.546413+00:00'
+      model: grok-4.3
+      prompt_tokens: 1776
+      completion_tokens: 159
+      cost_usd: 0.007713
+    - ts: '2026-06-21T18:35:46.333590+00:00'
+      model: grok-4.3
+      prompt_tokens: 1914
+      completion_tokens: 101
+      cost_usd: 0.007257
+  - id: s_ggajjy22
+    name: Schłostana królowa w lochu
+    created_at: '2026-06-21T18:45:48.159366+00:00'
+    updated_at: '2026-06-24T18:45:30.741662+00:00'
+    conversation:
+    - role: user
+      content: Królowa w podarym ubraniu w lochu z kamienia stoi przykuta do ściany łańcuchami schłostane ciało oswietlenie pochodnią
+    - role: assistant
+      content: Co chcesz osiągnąć? Zmiana pozy, nowa scena, opis postaci, strój, korekta w masce, dodanie postaci, kąt kamery, czy styl?
+    - role: user
+      content: nowa scena
+    - role: assistant
+      content: |-
+        • Jaka lokacja? (las, ulica, pokój, loch, plener, wnętrze itd.)
+        • Pora dnia i źródło oświetlenia? (dzień, noc, pochodnia, neon, świece itd.)
+        • Nastrój i atmosfera — mroczny, romantyczny, industrialny, epicki, intymny?
+        • Czy postać jest obecna w scenie — jeśli tak, gdzie i w jakiej pozie?
+    - role: user
+      content: loch ciemno oświetlenie pochodnią mroczny dark fantazy, stoi z rozciągniętymi nogami i rekami przykuta do ściany
+    - role: assistant
+      content: |-
+        {
+          "positive": "A queen with a whipped and bruised body, wearing tattered torn clothing, standing with arms and legs spread wide, chained to a rough stone dungeon wall by heavy iron shackles, dark fantasy atmosphere, dimly lit by flickering torchlight casting dramatic shadows, cold stone walls and floor, chains and restraints, mroczny and oppressive mood, highly detailed, cinematic lighting, photorealistic, dark color palette, intricate textures on skin and fabric, anatomical correctness"
+        }
+    - role: user
+      content: dodaj jeszcze że ma być bez korony
+    - role: assistant
+      content: |-
+        {
+          "positive": "A queen without a crown, with a whipped and bruised body, wearing tattered torn clothing, standing with arms and legs spread wide, chained to a rough stone dungeon wall by heavy iron shackles, dark fantasy atmosphere, dimly lit by flickering torchlight casting dramatic shadows, cold stone walls and floor, chains and restraints, mroczny and oppressive mood, highly detailed, cinematic lighting, photorealistic, dark color palette, intricate textures on skin and fabric, anatomical correctness"
+        }
+    - role: user
+      content: zmień trochę opis usuń z niego królową, i zastąp szalchcianką i napisz żej jest w podartych szlacheckich szatach
+    - role: assistant
+      content: |-
+        {
+          "positive": "A noblewoman, with a whipped and bruised body, wearing tattered noble aristocratic garments, standing with arms and legs spread wide, chained to a rough stone dungeon wall by heavy iron shackles, dark fantasy atmosphere, dimly lit by flickering torchlight casting dramatic shadows, cold stone walls and floor, chains and restraints, mroczny and oppressive mood, highly detailed, cinematic lighting, photorealistic, dark color palette, intricate textures on skin and fabric, anatomical correctness"
+        }
+    - role: user
+      content: uzupełnij powyższego prompta że szalchcianka ma szatę rozdartą na piersiach i widać nagie schłostane piersi
+    - role: assistant
+      content: |-
+        {
+          "positive": "A noblewoman, with a whipped and bruised body, wearing tattered noble aristocratic garments torn open at the chest exposing her whipped naked breasts, standing with arms and legs spread wide, chained to a rough stone dungeon wall by heavy iron shackles, dark fantasy atmosphere, dimly lit by flickering torchlight casting dramatic shadows, cold stone walls and floor, chains and restraints, mroczny and oppressive mood, highly detailed, cinematic lighting, photorealistic, dark color palette, intricate textures on skin and fabric, anatomical correctness"
+        }
+    - role: user
+      content: uzupełnij ten prompt że suknia z przodu od pasa w dół odsłania schłostane wewnętrzne części ud i podbrzusze
+    - role: assistant
+      content: |-
+        {
+          "positive": "A noblewoman, with a whipped and bruised body, wearing tattered noble aristocratic garments torn open at the chest exposing her whipped naked breasts and ripped open from the waist down revealing her whipped inner thighs and lower abdomen, standing with arms and legs spread wide, chained to a rough stone dungeon wall by heavy iron shackles, dark fantasy atmosphere, dimly lit by flickering torchlight casting dramatic shadows, cold stone walls and floor, chains and restraints, mroczny and oppressive mood, highly detailed, cinematic lighting, photorealistic, dark color palette, intricate textures on skin and fabric, anatomical correctness"
+        }
+    - role: user
+      content: uzupełnij że rozdarcie odsłania także waginę
+    - role: assistant
+      content: |-
+        {
+          "positive": "A noblewoman, with a whipped and bruised body, wearing tattered noble aristocratic garments torn open at the chest exposing her whipped naked breasts and ripped open from the waist down revealing her whipped inner thighs, lower abdomen, and vagina, standing with arms and legs spread wide, chained to a rough stone dungeon wall by heavy iron shackles, dark fantasy atmosphere, dimly lit by flickering torchlight casting dramatic shadows, cold stone walls and floor, chains and restraints, mroczny and oppressive mood, highly detailed, cinematic lighting, photorealistic, dark color palette, intricate textures on skin and fabric, anatomical correctness"
+        }
+    prompt_fields:
+      positive: A noblewoman, with a whipped and bruised body, wearing tattered noble aristocratic garments torn open at the chest exposing her whipped naked breasts and ripped open from the waist down revealing her whipped inner thighs, lower abdomen, and vagina, standing with arms and legs spread wide, chained to a rough stone dungeon wall by heavy iron shackles, dark fantasy atmosphere, dimly lit by flickering torchlight casting dramatic shadows, cold stone walls and floor, chains and restraints, mroczny and oppressive mood, highly detailed, cinematic lighting, photorealistic, dark color palette, intricate textures on skin and fabric, anatomical correctness
+      negative: ''
+    cost_log:
+    - ts: '2026-06-21T18:47:00.178562+00:00'
+      model: grok-4.3
+      prompt_tokens: 1739
+      completion_tokens: 37
+      cost_usd: 0.005772
+    - ts: '2026-06-21T18:47:19.889583+00:00'
+      model: grok-4.3
+      prompt_tokens: 1787
+      completion_tokens: 94
+      cost_usd: 0.006771
+    - ts: '2026-06-21T18:48:06.823637+00:00'
+      model: grok-4.3
+      prompt_tokens: 1920
+      completion_tokens: 98
+      cost_usd: 0.00723
+    - ts: '2026-06-22T12:51:39.205372+00:00'
+      model: grok-4.3
+      prompt_tokens: 2035
+      completion_tokens: 102
+      cost_usd: 0.007635
+    - ts: '2026-06-22T13:08:51.170867+00:00'
+      model: grok-4.3
+      prompt_tokens: 2181
+      completion_tokens: 101
+      cost_usd: 0.008058
+    - ts: '2026-06-22T13:47:07.967886+00:00'
+      model: grok-4.3
+      prompt_tokens: 2322
+      completion_tokens: 111
+      cost_usd: 0.008631
+    - ts: '2026-06-22T14:14:28.265002+00:00'
+      model: grok-4.3
+      prompt_tokens: 2474
+      completion_tokens: 126
+      cost_usd: 0.009312
+    - ts: '2026-06-22T14:26:13.485698+00:00'
+      model: grok-4.3
+      prompt_tokens: 2621
+      completion_tokens: 129
+      cost_usd: 0.009798
+  - id: s_ehiv96i1
+    name: Pokaz gora i dol
+    created_at: '2026-06-21T18:50:28.803503+00:00'
+    updated_at: '2026-06-21T21:39:29.695132+00:00'
+    conversation:
+    - role: user
+      content: |-
+        A queen with a whipped and bruised body, wearing tattered torn clothing, standing with arms and legs spread wide, chained to a rough stone dungeon wall by heavy iron shackles, dark fantasy atmosphere, dimly lit by flickering torchlight casting dramatic shadows, cold stone walls and floor, chains and restraints, mroczny and oppressive mood, highly detailed, cinematic lighting, photorealistic, dark color palette, intricate textures on skin and fabric, anatomical correctness
+        na podstawie powyższego prompta napisz prompta do zmiany obrazka żeby usunął ubrania z piersi i waginy odsłaniając je
+    - role: assistant
+      content: |-
+        Co dokładnie ma zostać zmienione w obszarze maski (np. ubrania na piersiach i waginie)?
+        Jak ma wyglądać po poprawce — pełne odsłonięcie, naturalny wygląd skóry?
+        Co absolutnie nie może się zmienić wokół maski (łańcuchy, poza, tło, oświetlenie)?
+        Intensywność zmiany: subtelna czy wyraźna?
+    - role: user
+      content: pełne odsłonięcie schłostana skóra nie może zmienić się nic poza tymi miejscami gdzie usunięte zostanie ubranie
+    - role: assistant
+      content: |-
+        {
+          "positive": "exposed bare breasts and vagina fully visible, whipped and bruised bare skin texture, detailed anatomical correctness on chest and crotch, no clothing covering nipples or genitals, intricate skin details and wounds"
+        }
+    - role: user
+      content: dopisz do tego prompta jeszcze zakaz zmiany gdziekolwiek indziej
+    - role: assistant
+      content: |-
+        {
+          "positive": "exposed bare breasts and vagina fully visible, whipped and bruised bare skin texture, detailed anatomical correctness on chest and crotch, no clothing covering nipples or genitals, intricate skin details and wounds, only modify the clothing area on breasts and vagina, everything else remains completely unchanged"
+        }
+    - role: user
+      content: dopisz jeszcze żeby miała knebel w ustach
+    - role: assistant
+      content: |-
+        {
+          "positive": "exposed bare breasts and vagina fully visible, whipped and bruised bare skin texture, detailed anatomical correctness on chest and crotch, no clothing covering nipples or genitals, intricate skin details and wounds, ball gag in mouth, only modify the clothing area on breasts and vagina, everything else remains completely unchanged"
+        }
+    - role: user
+      content: zmodyfikuj tego prompta tak by wynikało ze expose breast i vagina wynika z rozdarcia sukni
+    - role: assistant
+      content: |-
+        {
+          "positive": "bare breasts and vagina exposed through torn and ripped dress fabric, dress torn open at chest and crotch revealing whipped and bruised skin, detailed anatomical correctness on chest and crotch, intricate skin details and wounds, ball gag in mouth, only modify the clothing area on breasts and vagina, everything else remains completely unchanged"
+        }
+    prompt_fields:
+      positive: bare breasts and vagina exposed through torn and ripped dress fabric, dress torn open at chest and crotch revealing whipped and bruised skin, detailed anatomical correctness on chest and crotch, intricate skin details and wounds, ball gag in mouth, only modify the clothing area on breasts and vagina, everything else remains completely unchanged
+    cost_log:
+    - ts: '2026-06-21T18:51:54.151375+00:00'
+      model: grok-4.3
+      prompt_tokens: 1819
+      completion_tokens: 79
+      cost_usd: 0.006642
+    - ts: '2026-06-21T18:52:33.653366+00:00'
+      model: grok-4.3
+      prompt_tokens: 1935
+      completion_tokens: 43
+      cost_usd: 0.00645
+    - ts: '2026-06-21T18:53:25.754266+00:00'
+      model: grok-4.3
+      prompt_tokens: 2001
+      completion_tokens: 59
+      cost_usd: 0.006888
+    - ts: '2026-06-21T18:57:28.012046+00:00'
+      model: grok-4.3
+      prompt_tokens: 2079
+      completion_tokens: 64
+      cost_usd: 0.007197
+    - ts: '2026-06-21T21:36:03.909953+00:00'
+      model: grok-4.3
+      prompt_tokens: 2174
+      completion_tokens: 67
+      cost_usd: 0.007527
+  - id: s_9m4xzrr8
+    name: Napisz prompta do korekcji obrazu żeby popraw…
+    created_at: '2026-06-21T21:39:29.603314+00:00'
+    updated_at: '2026-06-21T21:56:40.783321+00:00'
+    conversation:
+    - role: user
+      content: Napisz prompta do korekcji obrazu żeby poprawił kolor skóry piersi, dopasowując je do reszty ciała dodał anatomiczne sutki
+    - role: assistant
+      content: "Co dokładnie ma zostać zmienione lub poprawione w obszarze maski?  \nJak ma wyglądać po poprawce — opisz cel?  \nCo absolutnie nie może się zmienić wokół obszaru maski?  \nIntensywność: subtelna korekta czy wyraźna zmiana?"
+    - role: user
+      content: tu nie mamy maski trzeba napisać prompta tak jak pisawłem wyżej ale słusznie nic ma nie zmieniać poza dopasowańiem koloru skóry piersi dookoła ciała i dodać anatomiczne sutki
+    - role: assistant
+      content: |-
+        {
+          "positive": "correct skin tone of breasts to perfectly match surrounding body skin color and texture, add realistic anatomical nipples with natural shape, color and subtle texture, no other changes to body, pose, lighting, clothing or background"
+        }
+    prompt_fields:
+      positive: correct skin tone of breasts to perfectly match surrounding body skin color and texture, add realistic anatomical nipples with natural shape, color and subtle texture, no other changes to body, pose, lighting, clothing or background
+    cost_log:
+    - ts: '2026-06-21T21:40:19.452794+00:00'
+      model: grok-4.3
+      prompt_tokens: 1728
+      completion_tokens: 59
+      cost_usd: 0.006069
+    - ts: '2026-06-21T21:41:21.503034+00:00'
+      model: grok-4.3
+      prompt_tokens: 1838
+      completion_tokens: 49
+      cost_usd: 0.006249
+  - id: s_qpzonfq5
+    name: Anatomiczna wagina
+    created_at: '2026-06-22T15:20:27.616942+00:00'
+    updated_at: '2026-06-24T19:26:08.961117+00:00'
+    conversation:
+    - role: user
+      content: zrób mi prompta opisującego naturalnie wyglądającą waginę
+    - role: assistant
+      content: |-
+        {
+          "positive": "photorealistic close-up of a naturally appearing human vagina, realistic anatomy with soft pink labia minora and majora, natural skin texture and subtle variations in tone, fine pubic hair, soft natural lighting, highly detailed, anatomical accuracy, sharp focus, 8k resolution"
+        }
+    prompt_fields:
+      positive: photorealistic close-up of a naturally appearing human vagina, realistic anatomy with soft pink labia minora and majora, natural skin texture and subtle variations in tone, fine pubic hair, soft natural lighting, highly detailed, anatomical accuracy, sharp focus, 8k resolution
+      negative: ''
+    cost_log:
+    - ts: '2026-06-22T15:26:20.037882+00:00'
+      model: grok-4.3
+      prompt_tokens: 1713
+      completion_tokens: 63
+      cost_usd: 0.006084
+  - id: s_b67npq4g
+    name: Do Lora vag
+    created_at: '2026-06-22T16:07:33.030537+00:00'
+    updated_at: '2026-06-22T16:47:44.352287+00:00'
+    conversation:
+    - role: user
+      content: Zdjęcie nagiej kobiety z wyraźnie widoczną waginą - zbliżenie na waginę
+    - role: assistant
+      content: Co chcesz osiągnąć? Zmiana pozy, nowa scena, opis postaci, strój, korekta w masce, dodanie postaci, kąt kamery, czy styl?
+    - role: user
+      content: nowy obrazek kluczowe to dobrze widoczna wagina
+    - role: assistant
+      content: |-
+        {
+          "clip_l": "photorealistic, explicit close-up, detailed vagina, nude woman, anatomical detail, sharp focus, high resolution, realistic skin texture",
+          "t5xxl": "A highly detailed photorealistic close-up photograph of a naked adult woman, focusing directly on her exposed vagina which is clearly visible and detailed. The framing is an extreme close-up centered on the genital area, showing realistic anatomy, natural skin tones and textures, with soft even lighting highlighting the details. The rest of the body is not visible in the frame."
+        }
+    - role: user
+      content: a teraz zrób tak żeby modelka była tyłem i wagina był widocza
+    - role: assistant
+      content: |-
+        {
+          "clip_l": "photorealistic, explicit rear close-up, detailed vagina from behind, nude woman bent over, spread legs, anatomical detail, sharp focus, realistic skin texture",
+          "t5xxl": "A highly detailed photorealistic close-up photograph of a naked adult woman viewed from directly behind, bent forward with legs spread apart so her vagina is fully exposed and clearly visible between her thighs. The framing is an extreme close-up centered on the genital area from the rear angle, showing realistic anatomy, natural skin tones and textures, with soft even lighting highlighting the details."
+        }
+    - role: user
+      content: teraz widać vagine modelka tyłem rozchylone nogi
+    - role: assistant
+      content: |-
+        {
+          "clip_l": "photorealistic, explicit rear view close-up, detailed vagina visible from behind, nude woman bent over, legs spread wide, anatomical detail, sharp focus, realistic skin texture",
+          "t5xxl": "A highly detailed photorealistic close-up photograph of a naked adult woman seen from directly behind in a bent-over position with her legs spread wide apart, making her vagina fully exposed and clearly visible between her thighs. The extreme close-up framing centers on the genital area from the rear, showing realistic anatomy, natural skin tones and textures under soft even lighting."
+        }
+    - role: user
+      content: Skoryguj tego prompta żeby było widać całą sylwetkę
+    - role: assistant
+      content: |-
+        {
+          "clip_l": "photorealistic, full body rear view, nude woman bent over, legs spread wide, detailed vagina visible from behind, anatomical detail, sharp focus, realistic skin texture",
+          "t5xxl": "A highly detailed photorealistic full-body photograph of a naked adult woman seen from directly behind, standing bent forward with legs spread wide apart, making her vagina fully exposed and clearly visible between her thighs. The entire silhouette of her body is visible from head to toe in the frame, showing realistic anatomy, natural skin tones and textures under soft even lighting."
+        }
+    - role: user
+      content: jakie inne pozycje z widoczną vaigną? potrzebuję do trenowania lory
+    - role: assistant
+      content: |-
+        Oto kilka innych pozycji z wyraźną widocznością waginy (dobre do trenowania LoRA):
+
+        - Leży na plecach, nogi szeroko rozłożone i uniesione (missionary / spread eagle)
+        - Siedzi na krześle lub podłodze z szeroko rozłożonymi nogami
+        - Kucająca pozycja (squatting), pochylona lekko do przodu
+        - Na czworaka (all fours / doggy), ale z większym rozstawem nóg i lekkim wygięciem pleców
+        - Leży na boku, jedna noga uniesiona wysoko
+        - Stoi z jedną nogą opartą wysoko (np. o stół lub ścianę)
+        - Leży na brzuchu z biodrami uniesionymi (prone bone z rozchylonymi nogami)
+
+        Chcesz, żebym przygotował gotowe prompty (clip_l + t5xxl) dla którejś z tych pozycji? Podaj którą.
+    - role: user
+      content: 'To po kolei: Leży na plecach, nogi szeroko rozłożone i uniesione (missionary / spread eagle)'
+    - role: assistant
+      content: |-
+        {
+          "clip_l": "photorealistic, full body, nude woman lying on back, legs spread wide and raised, spread eagle pose, detailed vagina visible, missionary angle, anatomical detail, sharp focus, realistic skin texture",
+          "t5xxl": "A highly detailed photorealistic full-body photograph of a naked adult woman lying on her back in a spread eagle pose with legs raised high and spread wide apart, making her vagina fully exposed and clearly visible. The entire silhouette of her body is visible from head to toe in the frame, showing realistic anatomy, natural skin tones and textures under soft even lighting."
+        }
+    - role: user
+      content: 'to tteraz:  Siedzi na krześle lub podłodze z szeroko rozłożonymi nogami'
+    - role: assistant
+      content: |-
+        {
+          "clip_l": "photorealistic, full body, nude woman sitting on chair, legs spread wide apart, detailed vagina visible, front view, anatomical detail, sharp focus, realistic skin texture",
+          "t5xxl": "A highly detailed photorealistic full-body photograph of a naked adult woman sitting on a simple chair facing the viewer, with her legs spread wide apart and knees bent, making her vagina fully exposed and clearly visible. The entire silhouette of her body is visible from head to toe in the frame, showing realistic anatomy, natural skin tones and textures under soft even lighting."
+        }
+    - role: user
+      content: 'to teraz: Kucająca pozycja (squatting), pochylona lekko do przodu'
+    - role: assistant
+      content: |-
+        {
+          "clip_l": "photorealistic, full body, nude woman squatting, leaning forward, legs spread, detailed vagina visible, front view, anatomical detail, sharp focus, realistic skin texture",
+          "t5xxl": "A highly detailed photorealistic full-body photograph of a naked adult woman in a squatting position, leaning slightly forward with knees bent and spread wide apart, making her vagina fully exposed and clearly visible from the front. The entire silhouette of her body is visible from head to toe in the frame, showing realistic anatomy, natural skin tones and textures under soft even lighting."
+        }
+    - role: user
+      content: Na czworaka (all fours / doggy), ale z większym rozstawem nóg i lekkim wygięciem pleców
+    - role: assistant
+      content: |-
+        {
+          "clip_l": "photorealistic, full body, nude woman on all fours, doggy style pose, legs spread wide, back arched, detailed vagina visible from behind, anatomical detail, sharp focus, realistic skin texture",
+          "t5xxl": "A highly detailed photorealistic full-body photograph of a naked adult woman on all fours in a doggy style position, with knees spread wide apart and her back slightly arched downward, making her vagina fully exposed and clearly visible from behind. The entire silhouette of her body is visible from head to toe in the frame, showing realistic anatomy, natural skin tones and textures under soft even lighting."
+        }
+    - role: user
+      content: Leży na boku, jedna noga uniesiona wysoko
+    - role: assistant
+      content: |-
+        {
+          "clip_l": "photorealistic, full body, nude woman lying on side, one leg raised high, detailed vagina visible, side view, anatomical detail, sharp focus, realistic skin texture",
+          "t5xxl": "A highly detailed photorealistic full-body photograph of a naked adult woman lying on her side, with one leg raised high and bent, exposing her vagina clearly. The entire silhouette of her body is visible from head to toe in the frame, showing realistic anatomy, natural skin tones and textures under soft even lighting."
+        }
+    - role: user
+      content: zrób to jako zbliżenie
+    - role: assistant
+      content: |-
+        {
+          "clip_l": "photorealistic, extreme close-up, nude woman lying on side, one leg raised high, detailed vagina visible, side view, anatomical detail, sharp focus, realistic skin texture",
+          "t5xxl": "A highly detailed photorealistic extreme close-up photograph of a naked adult woman lying on her side with one leg raised high, focusing directly on her exposed vagina which is clearly visible. The frame is tightly cropped on the genital area, showing realistic anatomy, natural skin tones and textures under soft even lighting."
+        }
+    - role: user
+      content: Stoi z jedną nogą opartą wysoko (np. o stół lub ścianę) - ale zbliżenie na vaigne
+    - role: assistant
+      content: |-
+        {
+          "clip_l": "photorealistic, extreme close-up, nude woman standing, one leg raised high on wall, detailed vagina visible, front angle, anatomical detail, sharp focus, realistic skin texture",
+          "t5xxl": "A highly detailed photorealistic extreme close-up photograph of a naked adult woman standing with one leg raised high and resting on a surface, her body angled toward the viewer so her vagina is fully exposed and clearly visible. The frame is tightly cropped on the genital area, showing realistic anatomy, natural skin tones and textures under soft even lighting."
+        }
+    - role: user
+      content: Leży na brzuchu z biodrami uniesionymi (prone bone z rozchylonymi nogami) też zbliżenie na wagine
+    - role: assistant
+      content: |-
+        {
+          "clip_l": "photorealistic, extreme close-up, nude woman lying prone, hips raised, legs spread wide, prone bone pose, detailed vagina visible from behind, anatomical detail, sharp focus, realistic skin texture",
+          "t5xxl": "A highly detailed photorealistic extreme close-up photograph of a naked adult woman lying on her stomach in a prone bone position with hips raised high and legs spread wide apart, making her vagina fully exposed and clearly visible from behind. The frame is tightly cropped on the genital area, showing realistic anatomy, natural skin tones and textures under soft even lighting."
+        }
+    - role: user
+      content: teraz prompt jak stoi na baczność przodem zbliżenie na vaigne
+    - role: assistant
+      content: |-
+        {
+          "clip_l": "photorealistic, extreme close-up, nude woman standing at attention, facing front, feet together, detailed vagina visible, front view, anatomical detail, sharp focus, realistic skin texture",
+          "t5xxl": "A highly detailed photorealistic extreme close-up photograph of a naked adult woman standing upright at attention facing directly toward the viewer, with legs straight and feet close together, the frame tightly cropped on her exposed vagina which is clearly visible from the front. Realistic anatomy, natural skin tones and textures under soft even lighting."
+        }
+    prompt_fields:
+      positive: ''
+    cost_log:
+    - ts: '2026-06-22T16:08:07.036358+00:00'
+      model: grok-4.3
+      prompt_tokens: 1769
+      completion_tokens: 37
+      cost_usd: 0.005862
+    - ts: '2026-06-22T16:08:31.916517+00:00'
+      model: grok-4.3
+      prompt_tokens: 1826
+      completion_tokens: 114
+      cost_usd: 0.007188
+    - ts: '2026-06-22T16:11:27.475708+00:00'
+      model: grok-4.3
+      prompt_tokens: 1966
+      completion_tokens: 121
+      cost_usd: 0.007713
+    - ts: '2026-06-22T16:17:54.115572+00:00'
+      model: grok-4.3
+      prompt_tokens: 2110
+      completion_tokens: 121
+      cost_usd: 0.008145
+    - ts: '2026-06-22T16:20:26.371082+00:00'
+      model: grok-4.3
+      prompt_tokens: 2253
+      completion_tokens: 120
+      cost_usd: 0.008559
+    - ts: '2026-06-22T16:25:38.609444+00:00'
+      model: grok-4.3
+      prompt_tokens: 2401
+      completion_tokens: 210
+      cost_usd: 0.010353
+    - ts: '2026-06-22T16:26:20.186144+00:00'
+      model: grok-4.3
+      prompt_tokens: 2647
+      completion_tokens: 127
+      cost_usd: 0.009846
+    - ts: '2026-06-22T16:28:40.167717+00:00'
+      model: grok-4.3
+      prompt_tokens: 2806
+      completion_tokens: 123
+      cost_usd: 0.010263
+    - ts: '2026-06-22T16:31:10.310172+00:00'
+      model: grok-4.3
+      prompt_tokens: 2956
+      completion_tokens: 124
+      cost_usd: 0.010728
+    - ts: '2026-06-22T16:33:54.017885+00:00'
+      model: grok-4.3
+      prompt_tokens: 3117
+      completion_tokens: 134
+      cost_usd: 0.011361
+    - ts: '2026-06-22T16:37:00.711952+00:00'
+      model: grok-4.3
+      prompt_tokens: 3273
+      completion_tokens: 113
+      cost_usd: 0.011514
+    - ts: '2026-06-22T16:39:37.360835+00:00'
+      model: grok-4.3
+      prompt_tokens: 3400
+      completion_tokens: 112
+      cost_usd: 0.01188
+    - ts: '2026-06-22T16:43:08.250280+00:00'
+      model: grok-4.3
+      prompt_tokens: 3548
+      completion_tokens: 119
+      cost_usd: 0.012429
+    - ts: '2026-06-22T16:44:44.281488+00:00'
+      model: grok-4.3
+      prompt_tokens: 3705
+      completion_tokens: 125
+      cost_usd: 0.01299
+    - ts: '2026-06-22T16:47:44.352272+00:00'
+      model: grok-4.3
+      prompt_tokens: 3854
+      completion_tokens: 115
+      cost_usd: 0.013287
+  - id: s_hfeza36n
+    name: anatomiczne piersi
+    created_at: '2026-06-24T18:35:55.546161+00:00'
+    updated_at: '2026-06-28T10:29:10.862860+00:00'
+    conversation:
+    - role: user
+      content: napisz prompta opisującego anatomiczne piersi
+    - role: assistant
+      content: |-
+        {
+          "positive": "anatomically correct female breasts, natural teardrop shape, realistic soft tissue and subtle asymmetry, detailed skin texture with visible pores and fine veins, natural nipple and areola anatomy with correct proportions and subtle texture, accurate breast anatomy, gravity and weight distribution, high anatomical accuracy, detailed realistic rendering"
+        }
+    - role: user
+      content: i jeszcze negative
+    - role: assistant
+      content: |-
+        {
+          "negative": "deformed breasts, unnatural shape, plastic implants, exaggerated proportions, perfectly symmetrical breasts, cartoonish anatomy, blurry details, low resolution, artifacts, extra nipples, missing anatomy, oversexualized, fake breasts"
+        }
+    prompt_fields:
+      positive: anatomically correct female breasts, natural teardrop shape, realistic soft tissue and subtle asymmetry, detailed skin texture with visible pores and fine veins, natural nipple and areola anatomy with correct proportions and subtle texture, accurate breast anatomy, gravity and weight distribution, high anatomical accuracy, detailed realistic rendering
+      negative: deformed breasts, unnatural shape, plastic implants, exaggerated proportions, perfectly symmetrical breasts, cartoonish anatomy, blurry details, low resolution, artifacts, extra nipples, missing anatomy, oversexualized, fake breasts
+      clip_l: ''
+      t5xxl: ''
+    cost_log:
+    - ts: '2026-06-24T18:36:29.155881+00:00'
+      model: grok-4.3
+      prompt_tokens: 1756
+      completion_tokens: 67
+      cost_usd: 0.006273
+    - ts: '2026-06-24T18:36:59.359864+00:00'
+      model: grok-4.3
+      prompt_tokens: 1834
+      completion_tokens: 49
+      cost_usd: 0.006237
+  - id: s_xht5vogr
+    name: Królowa w lochu
+    created_at: '2026-06-24T18:44:06.808644+00:00'
+    updated_at: '2026-06-24T19:16:41.384704+00:00'
+    conversation:
+    - role: user
+      content: "Przerób poniższego prompta tak żeby nie było nic o schłostanej skórze ale żeby rozdarcia sukni pokazywały nagie piersi i wewnętrzną cześć ud i waginę \nA noblewoman, with a whipped and bruised body, wearing tattered noble aristocratic garments torn open at the chest exposing her whipped naked breasts and ripped open from the waist down revealing her whipped inner thighs, lower abdomen, and vagina, standing with arms and legs spread wide, chained to a rough stone dungeon wall by heavy iron shackles, dark fantasy atmosphere, dimly lit by flickering torchlight casting dramatic shadows, cold stone walls and floor, chains and restraints, mroczny and oppressive mood, highly detailed, cinematic lighting, photorealistic, dark color palette, intricate textures on skin and fabric, anatomical correctness"
+    - role: assistant
+      content: |-
+        {
+          "positive": "A noblewoman, wearing tattered noble aristocratic garments torn open at the chest exposing her naked breasts and ripped open from the waist down revealing her inner thighs, lower abdomen, and vagina, standing with arms and legs spread wide, chained to a rough stone dungeon wall by heavy iron shackles, dark fantasy atmosphere, dimly lit by flickering torchlight casting dramatic shadows, cold stone walls and floor, chains and restraints, dark and oppressive mood, highly detailed, cinematic lighting, photorealistic, dark color palette, intricate textures on skin and fabric, anatomical correctness"
+        }
+    - role: user
+      content: dodaj jeszcze negative prompta
+    - role: assistant
+      content: |-
+        {
+          "positive": "A noblewoman, wearing tattered noble aristocratic garments torn open at the chest exposing her naked breasts and ripped open from the waist down revealing her inner thighs, lower abdomen, and vagina, standing with arms and legs spread wide, chained to a rough stone dungeon wall by heavy iron shackles, dark fantasy atmosphere, dimly lit by flickering torchlight casting dramatic shadows, cold stone walls and floor, chains and restraints, dark and oppressive mood, highly detailed, cinematic lighting, photorealistic, dark color palette, intricate textures on skin and fabric, anatomical correctness",
+          "negative": "whipped skin, bruises, welts, lash marks, injuries, scars, blood, cuts, deformed anatomy, extra limbs, bad proportions, text, watermark, low quality"
+        }
+    prompt_fields:
+      positive: A noblewoman, wearing tattered noble aristocratic garments torn open at the chest exposing her naked breasts and ripped open from the waist down revealing her inner thighs, lower abdomen, and vagina, standing with arms and legs spread wide, chained to a rough stone dungeon wall by heavy iron shackles, dark fantasy atmosphere, dimly lit by flickering torchlight casting dramatic shadows, cold stone walls and floor, chains and restraints, dark and oppressive mood, highly detailed, cinematic lighting, photorealistic, dark color palette, intricate textures on skin and fabric, anatomical correctness
+      negative: whipped skin, bruises, welts, lash marks, injuries, scars, blood, cuts, deformed anatomy, extra limbs, bad proportions, text, watermark, low quality
+    cost_log:
+    - ts: '2026-06-24T18:45:51.831485+00:00'
+      model: grok-4.3
+      prompt_tokens: 1913
+      completion_tokens: 118
+      cost_usd: 0.007509
+    - ts: '2026-06-24T18:46:09.237564+00:00'
+      model: grok-4.3
+      prompt_tokens: 2045
+      completion_tokens: 159
+      cost_usd: 0.00852
+  - id: s_yqx6gt1l
+    name: Kobieta mówi z bólem na twar…
+    created_at: '2026-06-24T23:13:51.898245+00:00'
+    updated_at: '2026-06-24T23:16:56.052711+00:00'
+    conversation:
+    - role: user
+      content: Opis do filmu 5s kobieta mówi z bólem na twarzy
+    - role: assistant
+      content: "Wiek (szacunkowy) i ogólny typ sylwetki?  \nWłosy — kolor, długość, fryzura, tekstura?  \nRysy twarzy, wyraz, emocje, kierunek spojrzenia?  \nUbranie, jego brak, lub co przykuwa uwagę w wyglądzie?"
+    - role: user
+      content: to nieistotne ,to I2V
+    - role: assistant
+      content: |-
+        {
+          "positive": "A close-up of a woman speaking with intense pain on her face, mouth moving as she talks, furrowed brows, squinted eyes, tense jaw, subtle grimacing, emotional distress, realistic facial expressions and lip movements, cinematic lighting, high detail, 5-second video clip",
+          "negative": "static image, no movement, smiling, relaxed face, blurry, deformed, low quality"
+        }
+    prompt_fields:
+      positive: A close-up of a woman speaking with intense pain on her face, mouth moving as she talks, furrowed brows, squinted eyes, tense jaw, subtle grimacing, emotional distress, realistic facial expressions and lip movements, cinematic lighting, high detail, 5-second video clip
+      negative: static image, no movement, smiling, relaxed face, blurry, deformed, low quality
+    cost_log:
+    - ts: '2026-06-24T23:14:43.820654+00:00'
+      model: grok-4.3
+      prompt_tokens: 1761
+      completion_tokens: 67
+      cost_usd: 0.006288
+    - ts: '2026-06-24T23:15:12.364819+00:00'
+      model: grok-4.3
+      prompt_tokens: 1846
+      completion_tokens: 85
+      cost_usd: 0.006813
+  - id: s_uf4arp0a
+    name: napisz prompta do 5s filmu że kobieta dynamic…
+    created_at: '2026-06-25T00:23:00.162820+00:00'
+    updated_at: '2026-06-25T00:36:20.946361+00:00'
+    conversation:
+    - role: user
+      content: napisz prompta do 5s filmu że kobieta dynamicznie i zdecydowanie szarpie się w łańcuchach film ma start frame i end frame na end frame jest zbliżenie na postać. Kobieta z rozkrzyżowanymi nogami i rękami przykuta do ściany.
+    - role: assistant
+      content: |-
+        {
+          "positive": "cinematic 5-second video sequence, woman chained to stone wall with arms and legs spread wide in X position, heavy metal chains, dynamically and decisively struggling and yanking against restraints with forceful body movements, intense determined expression, start frame full body view, end frame extreme close-up on her face and upper torso, dramatic lighting, high detail, anatomical correctness"
+        }
+    - role: user
+      content: dopisz negative prompt
+    - role: assistant
+      content: |-
+        {
+          "positive": "cinematic 5-second video sequence, woman chained to stone wall with arms and legs spread wide in X position, heavy metal chains, dynamically and decisively struggling and yanking against restraints with forceful body movements, intense determined expression, start frame full body view, end frame extreme close-up on her face and upper torso, dramatic lighting, high detail, anatomical correctness",
+          "negative": "static pose, no movement, blurry, low quality, deformed hands, extra limbs, bad anatomy, text, watermark, cartoon, overexposed, underexposed"
+        }
+    - role: user
+      content: popraw tego prompta w end frame kamera najeżdża na dolne partie ciała
+    - role: assistant
+      content: |-
+        {
+          "positive": "cinematic 5-second video sequence, woman chained to stone wall with arms and legs spread wide in X position, heavy metal chains, dynamically and decisively struggling and yanking against restraints with forceful body movements, intense determined expression, start frame full body view, end frame extreme close-up on lower body and legs with camera zoom-in, dramatic lighting, high detail, anatomical correctness"
+        }
+    - role: user
+      content: dopisz do negative prompt nienaturalne drganie ubrania
+    - role: assistant
+      content: |-
+        {
+          "negative": "static pose, no movement, blurry, low quality, deformed hands, extra limbs, bad anatomy, text, watermark, cartoon, overexposed, underexposed, unnatural clothing movement, jittery fabric, erratic cloth shaking"
+        }
+    - role: user
+      content: a teraz napisz takiego samego prompta tylo kamera jedzie w górę do zbliżenia na twarz
+    - role: assistant
+      content: |-
+        {
+          "positive": "cinematic 5-second video sequence, woman chained to stone wall with arms and legs spread wide in X position, heavy metal chains, dynamically and decisively struggling and yanking against restraints with forceful body movements, intense determined expression, start frame full body view, end frame extreme close-up on face with smooth upward camera movement from body to face, dramatic lighting, high detail, anatomical correctness",
+          "negative": "static pose, no movement, blurry, low quality, deformed hands, extra limbs, bad anatomy, text, watermark, cartoon, overexposed, underexposed, unnatural clothing movement, jittery fabric, erratic cloth shaking"
+        }
+    - role: user
+      content: nie do kończ tak, pierwsza klatka to zbliżenie od połowy piersi w dół a end frame full breast i twarz
+    - role: assistant
+      content: |-
+        {
+          "positive": "cinematic 5-second video sequence, woman chained to stone wall with arms and legs spread wide in X position, heavy metal chains, dynamically and decisively struggling and yanking against restraints with forceful body movements, intense determined expression, start frame close-up from mid-breasts downward showing lower torso hips and spread legs, end frame showing full breasts and face with smooth upward camera movement from lower body to upper body, dramatic lighting, high detail, anatomical correctness"
+        }
+    prompt_fields:
+      positive: cinematic 5-second video sequence, woman chained to stone wall with arms and legs spread wide in X position, heavy metal chains, dynamically and decisively struggling and yanking against restraints with forceful body movements, intense determined expression, start frame close-up from mid-breasts downward showing lower torso hips and spread legs, end frame showing full breasts and face with smooth upward camera movement from lower body to upper body, dramatic lighting, high detail, anatomical correctness
+      negative: static pose, no movement, blurry, low quality, deformed hands, extra limbs, bad anatomy, text, watermark, cartoon, overexposed, underexposed, unnatural clothing movement, jittery fabric, erratic cloth shaking
+    cost_log:
+    - ts: '2026-06-25T00:24:21.786486+00:00'
+      model: grok-4.3
+      prompt_tokens: 1807
+      completion_tokens: 79
+      cost_usd: 0.006606
+    - ts: '2026-06-25T00:24:46.347152+00:00'
+      model: grok-4.3
+      prompt_tokens: 1899
+      completion_tokens: 117
+      cost_usd: 0.007452
+    - ts: '2026-06-25T00:29:00.541892+00:00'
+      model: grok-4.3
+      prompt_tokens: 2042
+      completion_tokens: 82
+      cost_usd: 0.007356
+    - ts: '2026-06-25T00:29:59.533486+00:00'
+      model: grok-4.3
+      prompt_tokens: 2146
+      completion_tokens: 52
+      cost_usd: 0.007218
+    - ts: '2026-06-25T00:34:59.516443+00:00'
+      model: grok-4.3
+      prompt_tokens: 2227
+      completion_tokens: 134
+      cost_usd: 0.008691
+    - ts: '2026-06-25T00:36:07.069404+00:00'
+      model: grok-4.3
+      prompt_tokens: 2396
+      completion_tokens: 97
+      cost_usd: 0.008643
+  - id: s_1m010vc6
+    name: Para studentów w czułym uścisku przed wejście…
+    created_at: '2026-06-25T00:53:13.877114+00:00'
+    updated_at: '2026-06-25T01:05:44.650058+00:00'
+    conversation:
+    - role: user
+      content: Para studentów w czułym uścisku przed wejściem do campusu, świat realny, ale kobieta jest wampirzycą tylko widać to po bladej skórze odcinającej się od kruczo-czarnych włosów. Ma ciemno brązowe oczy i palce u rąk zakończone długimi czerwonymi paznokciami
+    - role: assistant
+      content: Co chcesz osiągnąć? Zmiana pozy, nowa scena, opis postaci, strój, korekta w masce, dodanie postaci, kąt kamery, czy styl?
+    - role: user
+      content: to ma być T2I
+    - role: assistant
+      content: |-
+        {
+          "positive": "A young couple of students in a tender embrace in front of a university campus entrance, realistic world, photorealistic, the woman is a vampire visible only through her strikingly pale skin contrasting with long raven-black hair, dark brown eyes, long sharp red fingernails, natural daylight, detailed faces, realistic skin texture, high detail, sharp focus, cinematic lighting, 8k"
+        }
+    - role: user
+      content: niech wejście do campusu będzie w stylu XIX wiecznej kamienicy secesyjnej
+    - role: assistant
+      content: |-
+        {
+          "positive": "A young couple of students in a tender embrace in front of a university campus entrance designed as a grand 19th-century Art Nouveau tenement house facade with ornate stone carvings, decorative ironwork, arched windows and elegant architectural details, realistic world, photorealistic, the woman is a vampire visible only through her strikingly pale skin contrasting with long raven-black hair, dark brown eyes, long sharp red fingernails, natural daylight, detailed faces, realistic skin texture, high detail, sharp focus, cinematic lighting, 8k"
+        }
+    prompt_fields:
+      positive: A young couple of students in a tender embrace in front of a university campus entrance designed as a grand 19th-century Art Nouveau tenement house facade with ornate stone carvings, decorative ironwork, arched windows and elegant architectural details, realistic world, photorealistic, the woman is a vampire visible only through her strikingly pale skin contrasting with long raven-black hair, dark brown eyes, long sharp red fingernails, natural daylight, detailed faces, realistic skin texture, high detail, sharp focus, cinematic lighting, 8k
+    cost_log:
+    - ts: '2026-06-25T00:54:51.384681+00:00'
+      model: grok-4.3
+      prompt_tokens: 1775
+      completion_tokens: 37
+      cost_usd: 0.00588
+    - ts: '2026-06-25T00:55:10.826669+00:00'
+      model: grok-4.3
+      prompt_tokens: 1826
+      completion_tokens: 82
+      cost_usd: 0.006708
+    - ts: '2026-06-25T00:56:04.537430+00:00'
+      model: grok-4.3
+      prompt_tokens: 1935
+      completion_tokens: 111
+      cost_usd: 0.00747
+  - id: s_2dcxfb89
+    name: Kobieta finalnie bez ubioru
+    created_at: '2026-06-25T06:51:08.226473+00:00'
+    updated_at: '2026-06-25T10:03:37.782193+00:00'
+    conversation:
+    - role: user
+      content: repose woman usuń pasek z obrazka  oraz niech szaty po usunięciu pask wiszą naturalnie odsłaniajac  całe ciało kobiety. Loch przykuta do ściany ręce szeroko, nogi szeroko
+    - role: assistant
+      content: |-
+        • Jaka ma być nowa poza? (stoi, siedzi, leży, klęczy, zgięta, oparta itd.)
+        • Kąt kamery względem postaci: z przodu, z boku, 3/4, z tyłu?
+        • Co absolutnie ma zostać bez zmian? (twarz, tło, ubranie, oświetlenie)
+        • Wyraz twarzy i kierunek spojrzenia?
+    - role: user
+      content: poza zostaje ta sama bo nadal jest przykuta do ściany zmieniamy tylko ułożenie ubioru, kadr lekko pod kątem - teraz był frontalny - minimalna zmiana. Nie zmieniamy stroju oświetlenia wyglądu  ubrania. Twarz lekko zawstydzona
+    - role: assistant
+      content: '{ "positive": "woman chained to dungeon wall, arms spread wide, legs spread wide, wrists and ankles shackled, same pose, robes hanging naturally after belt removal revealing entire naked body, slight angled camera view instead of frontal, face slightly embarrassed, keep identical outfit appearance, lighting and clothing details unchanged, realistic anatomy, detailed skin texture, dungeon stone background, cinematic lighting" }'
+    - role: user
+      content: napisz wyraźnie że nie ma paska na sobie szaty naturlanie rozycholene
+    - role: assistant
+      content: |-
+        {
+          "positive": "woman chained to dungeon wall, arms spread wide, legs spread wide, wrists and ankles shackled, same pose, no belt on the robes, robes naturally parted and open, hanging loosely to fully reveal entire naked body, slight angled camera view instead of frontal, face slightly embarrassed, keep identical outfit appearance, lighting and clothing details unchanged, realistic anatomy, detailed skin texture, dungeon stone background, cinematic lighting"
+        }
+    - role: user
+      content: napisz takiego prompta żeby skupił sie na tym że bez spinającego paska szaty wiszą naturalnie na kobiecie nie zawijając się wokół bioder
+    - role: assistant
+      content: |-
+        {
+          "positive": "woman chained to dungeon wall, arms spread wide, legs spread wide, wrists and ankles shackled, same pose, no belt, robes hanging naturally and loosely from shoulders, fabric draping straight down under gravity without wrapping or clinging around hips, fully open to reveal entire naked body, slight angled camera view, face slightly embarrassed, keep identical outfit appearance, lighting and clothing details unchanged, realistic anatomy, detailed skin texture, dungeon stone background, cinematic lighting"
+        }
+    prompt_fields:
+      positive: ''
+    cost_log:
+    - ts: '2026-06-25T06:52:27.738337+00:00'
+      model: grok-4.3
+      prompt_tokens: 1748
+      completion_tokens: 89
+      cost_usd: 0.006579
+    - ts: '2026-06-25T06:55:38.707399+00:00'
+      model: grok-4.3
+      prompt_tokens: 1904
+      completion_tokens: 77
+      cost_usd: 0.006867
+    - ts: '2026-06-25T07:04:27.275263+00:00'
+      model: grok-4.3
+      prompt_tokens: 2007
+      completion_tokens: 88
+      cost_usd: 0.007341
+    - ts: '2026-06-25T07:20:34.121464+00:00'
+      model: grok-4.3
+      prompt_tokens: 2137
+      completion_tokens: 97
+      cost_usd: 0.007866
+  - id: s_gdn8zkv8
+    name: leży na sienniku
+    created_at: '2026-06-25T10:03:39.725998+00:00'
+    updated_at: '2026-06-26T07:35:50.998762+00:00'
+    conversation:
+    - role: user
+      content: Zrób repose kobiety stojącej przy ścianie przykutej do ściany za ręce i nogi szeroko rozłożone, na leżacą na ziemi na sienniku pod tą ścianą na boku twarzą do kamery - nie zmieniaj wyglądu kobiety scenerii - dodaj tylko siennik i zmień pozę. Łańcuchy swobodnie wiszą ze ściany
+    - role: assistant
+      content: "• Jaka ma być nowa poza? (stoi, siedzi, leży, klęczy, zgięta, oparta itd.)  \n• Kąt kamery względem postaci: z przodu, z boku, 3/4, z tyłu?  \n• Co absolutnie ma zostać bez zmian? (twarz, tło, ubranie, oświetlenie)  \n• Wyraz twarzy i kierunek spojrzenia?"
+    - role: user
+      content: |-
+        leży na sienniku na boku ręka pod głową, kąt kamery pod kątem z góry 3/4 z góry, zostaje twarz tło oświetlenie ubranie łańcuchy na ścianach
+        Twarz zwrócona w kierunku kamery
+    - role: assistant
+      content: |-
+        {
+          "positive": "Woman lying on her side on a thin mattress on the floor, one hand resting under her head, body relaxed, facing towards the camera, high angle three-quarter view from above, same unchanged face, same clothing, same lighting, same background wall with metal chains hanging freely down the wall, anatomically correct body proportions, detailed skin texture, realistic rendering, high quality, sharp focus"
+        }
+    - role: user
+      content: negative jeszcze
+    - role: assistant
+      content: |-
+        {
+          "negative": "deformed hands, extra limbs, bad anatomy, blurry, low resolution, distorted face, extra chains, text, watermark, overexposed, underexposed, cartoon, painting, illustration"
+        }
+    - role: user
+      content: zamień mattres na dokładniejszy opis ma to nie być materac tylko coś w rodzaju słomy z której zrobione jest miejsce do spania
+    - role: assistant
+      content: |-
+        {
+          "positive": "Woman lying on her side on a bed of loose straw scattered across the floor, one hand resting under her head, body relaxed, facing towards the camera, high angle three-quarter view from above, same unchanged face, same clothing, same lighting, same background wall with metal chains hanging freely down the wall, anatomically correct body proportions, detailed skin texture, realistic rendering, high quality, sharp focus"
+        }
+    prompt_fields:
+      positive: Woman lying on her side on a bed of loose straw scattered across the floor, one hand resting under her head, body relaxed, facing towards the camera, high angle three-quarter view from above, same unchanged face, same clothing, same lighting, same background wall with metal chains hanging freely down the wall, anatomically correct body proportions, detailed skin texture, realistic rendering, high quality, sharp focus
+      negative: ''
+    cost_log:
+    - ts: '2026-06-25T10:05:19.871118+00:00'
+      model: grok-4.3
+      prompt_tokens: 1832
+      completion_tokens: 92
+      cost_usd: 0.006876
+    - ts: '2026-06-25T10:06:52.622978+00:00'
+      model: grok-4.3
+      prompt_tokens: 1988
+      completion_tokens: 84
+      cost_usd: 0.007224
+    - ts: '2026-06-25T10:07:06.838581+00:00'
+      model: grok-4.3
+      prompt_tokens: 2082
+      completion_tokens: 45
+      cost_usd: 0.006921
+    - ts: '2026-06-26T06:48:13.830159+00:00'
+      model: grok-4.3
+      prompt_tokens: 2164
+      completion_tokens: 87
+      cost_usd: 0.007797
+  - id: s_cyd4e458
+    name: UNDRESSER_testy
+    created_at: '2026-06-28T10:29:10.695324+00:00'
+    updated_at: '2026-06-28T11:00:05.716138+00:00'
+    conversation:
+    - role: user
+      content: Napisz mi prompta żeby kobieta na zdjęciu była całkiem naga anatomiczne części ciała widoczne jeżeli pozycja na to pozwala - brak zmiany pozy
+    - role: assistant
+      content: "• Jaki rodzaj stroju lub jego brak — co dokładnie? (np. całkowicie naga)  \n• Materiał i tekstura? (skóra, jedwab, bawełna, lateks, metal, tkanina itd.)  \n• Kolor, wzór, zdobienia?  \n• Stan stroju — nowy, zniszczony, rozdarty, brudny, zamoczony?"
+    - role: user
+      content: całkowicie naga, tylko czerwona obroża na szyi
+    - role: assistant
+      content: '{ "positive": "completely naked woman, fully nude, visible detailed breasts, nipples, vagina, anatomical correctness, pubic area visible, wearing only a red collar around her neck, same exact pose and position, no pose change, intricate skin texture, realistic anatomy, sharp focus, high detail, photorealistic" }'
+    - role: user
+      content: napisz tego prompta tak żeby skupił się na nie zmieniani pozy żeby było fully naked i czerwona obroża
+    - role: assistant
+      content: |-
+        {
+          "positive": "exact same pose and body position as original image, no pose change whatsoever, limbs and posture completely unchanged, woman fully naked, completely nude, no clothing except a red collar around her neck, visible detailed breasts, nipples, vagina, anatomical correctness, pubic area visible, intricate skin texture, realistic anatomy, sharp focus, high detail, photorealistic"
+        }
+    - role: user
+      content: dopisz do prompta że postać stoi tyłem z lewą reką uniesioną w górę
+    - role: assistant
+      content: |-
+        {
+          "positive": "exact same pose and body position, woman standing with her back to the viewer, left arm raised up, fully naked, completely nude, no clothing except a red collar around her neck, visible detailed breasts, nipples, vagina, anatomical correctness, pubic area visible, intricate skin texture, realistic anatomy, sharp focus, high detail, photorealistic"
+        }
+    prompt_fields:
+      positive: ''
+      negative: ''
+    cost_log:
+    - ts: '2026-06-28T10:30:12.600783+00:00'
+      model: grok-4.3
+      prompt_tokens: 1732
+      completion_tokens: 82
+      cost_usd: 0.006426
+    - ts: '2026-06-28T10:30:53.118250+00:00'
+      model: grok-4.3
+      prompt_tokens: 1837
+      completion_tokens: 64
+      cost_usd: 0.006471
+    - ts: '2026-06-28T10:45:34.612768+00:00'
+      model: grok-4.3
+      prompt_tokens: 1933
+      completion_tokens: 77
+      cost_usd: 0.006954
+    - ts: '2026-06-28T10:59:50.418057+00:00'
+      model: grok-4.3
+      prompt_tokens: 2040
+      completion_tokens: 76
+      cost_usd: 0.00726
+  - id: s_sv9ks9dv
+    name: tlum zrywa ubranie
+    created_at: '2026-06-28T22:58:44.613351+00:00'
+    updated_at: '2026-06-29T01:29:49.430706+00:00'
+    conversation:
+    - role: user
+      content: napisz prompta do I2V gdzie na start  frame mamy krolową stojącą pod pręgierzem przodem do kamery i czarodziejkę obserwującą ja z lewej strony. Do królowej podchodzą kolejne osoby z tłumu szydzą z niej, zrywają części ubrania uderzają ją trzymanymi rózgami, witkami pokrzyw, otwartymi dłońmi w twarz
+    - role: assistant
+      content: |-
+        {
+          "positive": "I2V video starting from a fixed image: a medieval queen standing bound under a wooden pillory, facing directly toward the camera with a defiant yet humiliated expression, wearing a torn elegant gown. To the left side of the frame, a mysterious sorceress in dark robes stands observing silently. A hostile crowd gathers; one by one, villagers approach the queen, mock and spit at her, tear off pieces of her clothing, and strike her repeatedly with wooden rods, stinging nettle switches, and open-handed slaps to the face. Dynamic crowd movement, multiple aggressors taking turns, fabric ripping, physical impacts, humiliated queen reacting, dramatic medieval public punishment atmosphere, cinematic lighting, realistic motion, detailed faces and clothing destruction"
+        }
+    - role: user
+      content: użył w filmiei kija baseballowego - popraw tego prompta tak żeby uderzali cienkimi rózgami bez żadnych ciężkich przedmiotów mogących generować duże obrażenia, raczej rózgi z cienkich gałęzi drzew
+    - role: assistant
+      content: |-
+        {
+          "positive": "I2V video starting from a fixed image: a medieval queen standing bound under a wooden pillory, facing directly toward the camera with a defiant yet humiliated expression, wearing a torn elegant gown. To the left side of the frame, a mysterious sorceress in dark robes stands observing silently. A hostile crowd gathers; one by one, villagers approach the queen, mock and spit at her, tear off pieces of her clothing, and strike her repeatedly with thin flexible rods made from thin tree branches, stinging nettle switches, and open-handed slaps to the face. Dynamic crowd movement, multiple aggressors taking turns, fabric ripping, light whipping impacts, humiliated queen reacting, dramatic medieval public punishment atmosphere, cinematic lighting, realistic motion, detailed faces and clothing destruction"
+        }
+    - role: user
+      content: dopisz do prompta, że tłum nie odbiega od królowej tylko cały czas ja szarpie
+    - role: assistant
+      content: |-
+        {
+          "positive": "I2V video starting from a fixed image: a medieval queen standing bound under a wooden pillory, facing directly toward the camera with a defiant yet humiliated expression, wearing a torn elegant gown. To the left side of the frame, a mysterious sorceress in dark robes stands observing silently. A hostile crowd gathers tightly around the queen and never backs away; villagers continuously grab, yank, and pull at her body and remaining clothes while mocking and spitting at her, tearing fabric, and striking her repeatedly with thin flexible rods made from thin tree branches, stinging nettle switches, and open-handed slaps to the face. Persistent close physical contact, multiple aggressors constantly tugging and harassing her, fabric ripping, light whipping impacts, humiliated queen reacting, dramatic medieval public punishment atmosphere, cinematic lighting, realistic motion, detailed faces and clothing destruction"
+        }
+    - role: user
+      content: napisz teraz prompta że tłum stoi bliżej chaotycznie rozmieszczony , niekórzy mężczyżni trzymają rózne narzędzia takie jak opiasne w prompcie, nic ciężkiego witki cienkie kijki
+    - role: assistant
+      content: |-
+        {
+          "positive": "I2V video starting from a fixed image: a medieval queen standing bound under a wooden pillory, facing directly toward the camera with a defiant yet humiliated expression, wearing a torn elegant gown. To the left side of the frame, a mysterious sorceress in dark robes stands observing silently. A hostile crowd stands much closer and chaotically arranged around the queen, never backing away; some men hold thin flexible rods made from thin tree branches, stinging nettle switches and light sticks. Villagers continuously grab, yank and pull at her body and remaining clothes while mocking and spitting, tearing fabric, and striking her repeatedly with the thin rods and switches, plus open-handed slaps to the face. Persistent close physical contact, chaotic crowd positioning, multiple aggressors constantly tugging and harassing her, fabric ripping, light whipping impacts, humiliated queen reacting, dramatic medieval public punishment atmosphere, cinematic lighting, realistic motion, detailed faces and clothing destruction"
+        }
+    - role: user
+      content: to do I2I napisz że stoi w takiej pozycji jak na image 1 i skoryguj resztę pod I2I
+    - role: assistant
+      content: |-
+        {
+          "positive": "A medieval queen standing in the exact same pose and position as in the reference image, bound under a wooden pillory, facing directly toward the camera with a defiant yet humiliated expression, wearing a torn elegant gown. To the left side of the frame, a mysterious sorceress in dark robes stands observing silently. A hostile crowd stands much closer and chaotically arranged around the queen; some men hold thin flexible rods made from thin tree branches, stinging nettle switches and light sticks. Villagers tightly surround her, grabbing, yanking and pulling at her body and remaining clothes while mocking and spitting, tearing fabric, and striking her with the thin rods and switches plus open-handed slaps to the face. Persistent close physical contact, chaotic crowd positioning, multiple aggressors constantly harassing her, fabric ripping, dramatic medieval public punishment atmosphere, cinematic lighting, highly detailed faces and clothing, realistic textures"
+        }
+    - role: user
+      content: to teraz zrób prompta pod I2V że tłum zrywa ubranie uderza etc. tak jak w poprzednim prompcie tylko nie pisz co jest na start frame
+    - role: assistant
+      content: |-
+        {
+          "positive": "I2V video: hostile crowd stands much closer and chaotically arranged around the queen, never backing away; some men hold thin flexible rods made from thin tree branches, stinging nettle switches and light sticks. Villagers continuously grab, yank and pull at her body and remaining clothes while mocking and spitting, tearing fabric, and striking her repeatedly with the thin rods and switches plus open-handed slaps to the face. Persistent close physical contact, chaotic crowd positioning, multiple aggressors constantly tugging and harassing her, fabric ripping, light whipping impacts, humiliated queen reacting, dramatic medieval public punishment atmosphere, cinematic lighting, realistic motion, detailed faces and clothing destruction"
+        }
+    - role: user
+      content: dopisz do prompta że kobieta stoi pod krzyżem nie odchodząc od niego
+    - role: assistant
+      content: |-
+        {
+          "positive": "I2V video: hostile crowd stands much closer and chaotically arranged around the queen who stands under the cross without moving away from it; some men hold thin flexible rods made from thin tree branches, stinging nettle switches and light sticks. Villagers continuously grab, yank and pull at her body and remaining clothes while mocking and spitting, tearing fabric, and striking her repeatedly with the thin rods and switches plus open-handed slaps to the face. Persistent close physical contact, chaotic crowd positioning, multiple aggressors constantly tugging and harassing her, fabric ripping, light whipping impacts, humiliated queen reacting, dramatic medieval public punishment atmosphere, cinematic lighting, realistic motion, detailed faces and clothing destruction"
+        }
+    - role: user
+      content: dopisz jeszcze do prompta że czarodziejka stojąca po lewej obserwuje wszystko bez ruchu
+    - role: assistant
+      content: |-
+        {
+          "positive": "I2V video: hostile crowd stands much closer and chaotically arranged around the queen who stands under the cross without moving away from it; some men hold thin flexible rods made from thin tree branches, stinging nettle switches and light sticks. To the left, a mysterious sorceress in dark robes stands completely motionless, silently observing everything. Villagers continuously grab, yank and pull at her body and remaining clothes while mocking and spitting, tearing fabric, and striking her repeatedly with the thin rods and switches plus open-handed slaps to the face. Persistent close physical contact, chaotic crowd positioning, multiple aggressors constantly tugging and harassing her, fabric ripping, light whipping impacts, humiliated queen reacting, dramatic medieval public punishment atmosphere, cinematic lighting, realistic motion, detailed faces and clothing destruction"
+        }
+    prompt_fields:
+      positive: 'I2V video: hostile crowd stands much closer and chaotically arranged around the queen who stands under the cross without moving away from it; some men hold thin flexible rods made from thin tree branches, stinging nettle switches and light sticks. To the left, a mysterious sorceress in dark robes stands completely motionless, silently observing everything. Villagers continuously grab, yank and pull at her body and remaining clothes while mocking and spitting, tearing fabric, and striking her repeatedly with the thin rods and switches plus open-handed slaps to the face. Persistent close physical contact, chaotic crowd positioning, multiple aggressors constantly tugging and harassing her, fabric ripping, light whipping impacts, humiliated queen reacting, dramatic medieval public punishment atmosphere, cinematic lighting, realistic motion, detailed faces and clothing destruction'
+    cost_log:
+    - ts: '2026-06-28T23:01:58.155643+00:00'
+      model: grok-4.3
+      prompt_tokens: 1792
+      completion_tokens: 152
+      cost_usd: 0.007656
+    - ts: '2026-06-28T23:08:58.922626+00:00'
+      model: grok-4.3
+      prompt_tokens: 2002
+      completion_tokens: 159
+      cost_usd: 0.008391
+    - ts: '2026-06-28T23:27:00.746472+00:00'
+      model: grok-4.3
+      prompt_tokens: 2193
+      completion_tokens: 173
+      cost_usd: 0.009174
+    - ts: '2026-06-28T23:44:11.916040+00:00'
+      model: grok-4.3
+      prompt_tokens: 2421
+      completion_tokens: 192
+      cost_usd: 0.010143
+    - ts: '2026-06-28T23:44:58.107109+00:00'
+      model: grok-4.3
+      prompt_tokens: 2650
+      completion_tokens: 183
+      cost_usd: 0.010695
+    - ts: '2026-06-28T23:51:01.899244+00:00'
+      model: grok-4.3
+      prompt_tokens: 2880
+      completion_tokens: 137
+      cost_usd: 0.010695
+    - ts: '2026-06-28T23:52:41.240111+00:00'
+      model: grok-4.3
+      prompt_tokens: 3044
+      completion_tokens: 143
+      cost_usd: 0.011277
+    - ts: '2026-06-28T23:53:50.125313+00:00'
+      model: grok-4.3
+      prompt_tokens: 3218
+      completion_tokens: 162
+      cost_usd: 0.012084
+  - id: s_kls2mvf8
+    name: Czarodziejka zrywa ubranie
+    created_at: '2026-06-29T01:29:49.233234+00:00'
+    updated_at: '2026-06-29T18:44:06.289852+00:00'
+    conversation:
+    - role: user
+      content: |-
+        Woman with wand standing on right side tearing down clothes from right breast of bounded woman and throw it away.
+        Popraw ten prompt tak żeby wymusić na modelu żeby to czarodziejka stojąca po prawej zrywała ubranie z przywiązanej do słupa kobiety. Na razie I2V działa tak, że postać po prawej (czarodziejka) stoi w bez ruchu)
+    - role: assistant
+      content: "Jaka ma być nowa poza czarodziejki? (np. pochylona do przodu, wyciągnięta ręka zrywająca materiał, dynamiczny ruch ramion i tułowia)  \nCo absolutnie ma zostać bez zmian? (twarz, tło, oświetlenie, druga postać, słup)  \nWyraz twarzy czarodziejki i kierunek jej spojrzenia?  \nCzy akcja ma być uchwycona w momencie zrywania i odrzucania ubrania?"
+    - role: user
+      content: czarodziejka ma ręką zrywać poszczególne częsci ubrania nachylając sie nad kaźnioną kobietą przywiązaną do słupa
+    - role: assistant
+      content: "Co absolutnie ma zostać bez zmian? (twarz, tło, oświetlenie, słup, przywiązana kobieta)  \nWyraz twarzy czarodziejki i kierunek jej spojrzenia?"
+    - role: user
+      content: bez zmian tło otoczenie, jeżeli chodzi o przywiązaną  kobietę to zmienia się tylko zrywane ubranie
+    - role: assistant
+      content: Wyraz twarzy czarodziejki i kierunek jej spojrzenia?
+    - role: user
+      content: spogląda na miejsce z którego zrywa ubranie
+    - role: assistant
+      content: |-
+        {
+          "positive": "A powerful sorceress on the right side of the frame, leaning forward over a woman bound to a wooden pole, dynamically tearing individual pieces of clothing from the bound woman's right breast with her hand, actively pulling and throwing the fabric away, intense focused gaze directed exactly at the tearing point, body angled toward the action, wand in her other hand, dramatic motion, precise hand contact with fabric, weight shifted forward, anatomically correct hands and fingers gripping cloth, highly detailed fabric tearing, dynamic pose, cinematic lighting, photorealistic, sharp details, 8k"
+        }
+    - role: user
+      content: dodaj negative prompt
+    - role: assistant
+      content: |-
+        {
+          "positive": "A powerful sorceress on the right side of the frame, leaning forward over a woman bound to a wooden pole, dynamically tearing individual pieces of clothing from the bound woman's right breast with her hand, actively pulling and throwing the fabric away, intense focused gaze directed exactly at the tearing point, body angled toward the action, wand in her other hand, dramatic motion, precise hand contact with fabric, weight shifted forward, anatomically correct hands and fingers gripping cloth, highly detailed fabric tearing, dynamic pose, cinematic lighting, photorealistic, sharp details, 8k",
+          "negative": "static pose, standing still, frozen motion, no action, hands not touching fabric, not tearing clothes, blurry hands, deformed fingers, bad anatomy, extra limbs, wrong hand position, fabric intact, motionless sorceress, low quality, blurry"
+        }
+    - role: user
+      content: |-
+        A powerful sorceress on the right side of the frame, leaning forward over a woman bound to a wooden pole, dynamically tearing individual pieces of clothing from the bound woman's - first rags from one wirst next from another with her right empty hand, actively pulling and throwing the fabric away, intense focused gaze directed exactly at the tearing point, body angled toward the action, wand in her other hand, dramatic motion, precise hand contact with fabric, weight shifted forward, anatomically correct hands and fingers gripping cloth, highly detailed fabric tearing, dynamic pose, cinematic lighting, photorealistic, sharp details, 8k
+        popraw powyższy żeby wyraźnie wskazywał że czarodziejka ma sięgnąć do wzniesionych rąk przywiązanej do słupa królowej i zerwać jej szmaty z nadgarstków najpierw z jednego potem z drugiego
+    - role: assistant
+      content: |-
+        {
+          "positive": "A powerful sorceress on the right side of the frame, leaning forward over a queen bound to a wooden pole with arms raised and tied above her head, using her right empty hand to reach up and tear rags from the bound queen's wrists — first tearing the fabric from one wrist, then the other — actively pulling and throwing the pieces away, intense focused gaze directed exactly at the wrists, body angled toward the action, wand held in her left hand, dramatic motion, precise hand contact with fabric at the wrists, weight shifted forward, anatomically correct hands and fingers gripping cloth, highly detailed fabric tearing from wrists, dynamic pose, cinematic lighting, photorealistic, sharp details, 8k"
+        }
+    - role: user
+      content: dopisz negatywa żeby nie sięgała nisko
+    - role: assistant
+      content: |-
+        {
+          "negative": "reaching low, hands at breast level or below, reaching down, arms lowered, hands near torso or hips, static pose, standing still, frozen motion, not reaching up, hands not at wrists, blurry hands, deformed fingers, bad anatomy, extra limbs, wrong hand position, fabric intact, motionless sorceress, low quality, blurry"
+        }
+    prompt_fields:
+      positive: A powerful sorceress on the right side of the frame, leaning forward over a queen bound to a wooden pole with arms raised and tied above her head, using her right empty hand to reach up and tear rags from the bound queen's wrists — first tearing the fabric from one wrist, then the other — actively pulling and throwing the pieces away, intense focused gaze directed exactly at the wrists, body angled toward the action, wand held in her left hand, dramatic motion, precise hand contact with fabric at the wrists, weight shifted forward, anatomically correct hands and fingers gripping cloth, highly detailed fabric tearing from wrists, dynamic pose, cinematic lighting, photorealistic, sharp details, 8k
+      negative: reaching low, hands at breast level or below, reaching down, arms lowered, hands near torso or hips, static pose, standing still, frozen motion, not reaching up, hands not at wrists, blurry hands, deformed fingers, bad anatomy, extra limbs, wrong hand position, fabric intact, motionless sorceress, low quality, blurry
+    cost_log:
+    - ts: '2026-06-29T01:32:27.306694+00:00'
+      model: grok-4.3
+      prompt_tokens: 1830
+      completion_tokens: 103
+      cost_usd: 0.007035
+    - ts: '2026-06-29T01:33:41.583426+00:00'
+      model: grok-4.3
+      prompt_tokens: 1974
+      completion_tokens: 41
+      cost_usd: 0.006537
+    - ts: '2026-06-29T01:34:37.397732+00:00'
+      model: grok-4.3
+      prompt_tokens: 2049
+      completion_tokens: 14
+      cost_usd: 0.006357
+    - ts: '2026-06-29T01:34:57.208661+00:00'
+      model: grok-4.3
+      prompt_tokens: 2084
+      completion_tokens: 120
+      cost_usd: 0.008052
+    - ts: '2026-06-29T01:35:14.295899+00:00'
+      model: grok-4.3
+      prompt_tokens: 2216
+      completion_tokens: 174
+      cost_usd: 0.009258
+    - ts: '2026-06-29T16:46:43.217573+00:00'
+      model: grok-4.3
+      prompt_tokens: 2571
+      completion_tokens: 147
+      cost_usd: 0.009918
+    - ts: '2026-06-29T16:48:21.562081+00:00'
+      model: grok-4.3
+      prompt_tokens: 2739
+      completion_tokens: 76
+      cost_usd: 0.009357
+  - id: s_7frwhbhm
+    name: blendowanie
+    created_at: '2026-06-29T07:44:52.149957+00:00'
+    updated_at: '2026-06-29T08:32:28.107205+00:00'
+    conversation:
+    - role: user
+      content: chodzi o to żeby poprawić artefakty niedokładności po manualnym wklejaniu. Na pewno trzeba dopisać "Same scene same pose of women same body marks" bo działa bezbłędnie
+    - role: assistant
+      content: |-
+        {
+          "positive": "fix artifacts and inaccuracies from manual pasting, seamless blending, natural integration, Same scene same pose of women same body marks"
+        }
+    prompt_fields:
+      positive: fix artifacts and inaccuracies from manual pasting, seamless blending, natural integration, Same scene same pose of women same body marks
+      negative: ''
+    cost_log:
+    - ts: '2026-06-29T07:45:49.410022+00:00'
+      model: grok-4.3
+      prompt_tokens: 1791
+      completion_tokens: 31
+      cost_usd: 0.005838
+  - id: s_ukd9bdy1
+    name: Prompt do I2V2I , czarodziejka przechodzi za …
+    created_at: '2026-06-29T08:32:27.894639+00:00'
+    updated_at: '2026-06-29T18:43:45.552072+00:00'
+    conversation:
+    - role: user
+      content: Prompt do I2V2I , czarodziejka przechodzi za plecami przywiązanej do słupa schłostanej królwej i staje po drugiej stronie słupa
+    - role: assistant
+      content: Co chcesz osiągnąć? Zmiana pozy, nowa scena, opis postaci, strój, korekta w masce, dodanie postaci, kąt kamery, czy styl?
+    - role: user
+      content: płynne dystyngowane przejście czarodziejki z miejsc w miejsce. Przywiązana do słupa królowa rozgląda się z niepokojem
+    - role: assistant
+      content: "Jaki kąt kamery względem postaci (z przodu, z boku, 3/4)?  \nCo ma pozostać absolutnie bez zmian (twarz, ubranie, oświetlenie, tło)?"
+    - role: user
+      content: taki sam jak na end frame i start frame kamera statyczna
+    - role: assistant
+      content: |-
+        {
+          "positive": "Static camera, same framing as start and end frames. A sorceress walks with smooth, dignified movement, passing behind a queen who is tightly bound to a wooden pole with ropes. The queen looks around anxiously with worried expression. The sorceress moves from one side of the pole to the other in a fluid, elegant motion. Detailed anatomy, realistic fabric movement, cinematic lighting, high quality"
+        }
+    - role: user
+      content: negative
+    - role: assistant
+      content: |-
+        {
+          "negative": "blurry, deformed, extra limbs, bad anatomy, distorted face, jerky movement, sudden pose changes, text, watermark, low quality, overexposed, underexposed, artifacts, glitch, camera shake, multiple characters, extra people"
+        }
+    prompt_fields:
+      positive: Static camera, same framing as start and end frames. A sorceress walks with smooth, dignified movement, passing behind a queen who is tightly bound to a wooden pole with ropes. The queen looks around anxiously with worried expression. The sorceress moves from one side of the pole to the other in a fluid, elegant motion. Detailed anatomy, realistic fabric movement, cinematic lighting, high quality
+      negative: blurry, deformed, extra limbs, bad anatomy, distorted face, jerky movement, sudden pose changes, text, watermark, low quality, overexposed, underexposed, artifacts, glitch, camera shake, multiple characters, extra people
+    cost_log:
+    - ts: '2026-06-29T08:33:25.836925+00:00'
+      model: grok-4.3
+      prompt_tokens: 1784
+      completion_tokens: 37
+      cost_usd: 0.005907
+    - ts: '2026-06-29T08:34:24.828191+00:00'
+      model: grok-4.3
+      prompt_tokens: 1864
+      completion_tokens: 45
+      cost_usd: 0.006267
+    - ts: '2026-06-29T08:34:48.591420+00:00'
+      model: grok-4.3
+      prompt_tokens: 1930
+      completion_tokens: 85
+      cost_usd: 0.007065
+    - ts: '2026-06-29T08:35:32.273651+00:00'
+      model: grok-4.3
+      prompt_tokens: 2024
+      completion_tokens: 56
+      cost_usd: 0.006912
+  - id: s_qt1qjdeo
+    name: Suknia rozdziera się magaicznie widać błysk d…
+    created_at: '2026-06-29T15:23:38.048501+00:00'
+    updated_at: '2026-06-29T18:43:52.299036+00:00'
+    conversation:
+    - role: user
+      content: Suknia rozdziera się magaicznie widać błysk do I2V2I. Kobieta stoi pod pregierzem rozdziera się dolna część sukni odsłaniając buttocks i nogi
+    - role: assistant
+      content: |-
+        • Jaki rodzaj stroju lub jego brak — co dokładnie?
+        • Materiał i tekstura? (skóra, jedwab, bawełna, lateks, metal, tkanina itd.)
+        • Kolor, wzór, zdobienia?
+        • Stan stroju — nowy, zniszczony, rozdarty, brudny, zamoczony?
+    - role: user
+      content: suknia królowej wzorzysta droga ale to widać na start frame end frame strój w dobrym stanie
+    - role: assistant
+      content: |-
+        • Jaki kolor sukni i jaki konkretny wzór (np. złote hafty, koronkowe detale, brokat)?
+        • Materiał i faktura tkaniny? (jedwab, aksamit, koronka, satyna?)
+    - role: user
+      content: złote hafty na zielonej suknie drogi materiał
+    - role: assistant
+      content: |-
+        {
+          "positive": "Queen's elegant green dress made of luxurious expensive fabric with intricate golden embroidery patterns, high-quality material in perfect condition at start and end frames, lower part of the dress magically tearing and ripping open to reveal buttocks and legs, woman standing under pillory, magical tearing effect with bright flash, detailed fabric texture, realistic cloth dynamics"
+        }
+    - role: user
+      content: negative
+    - role: assistant
+      content: |-
+        {
+          "negative": "deformed, bad anatomy, blurry, low quality, extra limbs, mutated hands, poorly drawn face, text, watermark, overexposed, underexposed, torn dress at start, damaged fabric, cheap material"
+        }
+    - role: user
+      content: teraz magicznie znikają więzy z nadgarstków ta sama scena, kamera odjeżdża na scenę wchodzi czarodziejka z whip w ręce
+    - role: assistant
+      content: |-
+        {
+          "positive": "Queen's elegant green dress made of luxurious expensive fabric with intricate golden embroidery patterns, high-quality material in perfect condition at start and end frames, lower part of the dress magically tearing and ripping open to reveal buttocks and legs, woman standing under pillory with wrists bound, magical bonds disappearing from wrists, camera slowly pulling back to reveal wider scene, beautiful sorceress entering the frame holding a whip in her hand, same dramatic lighting, detailed fabric texture, realistic cloth dynamics, cinematic camera movement"
+        }
+    - role: user
+      content: uzupełnij jeszczcze że  w trakcie jak znikaja i czarodziejka w chodzi kamera robi zoom out
+    - role: assistant
+      content: |-
+        {
+          "positive": "Queen's elegant green dress made of luxurious expensive fabric with intricate golden embroidery patterns, high-quality material in perfect condition at start and end frames, lower part of the dress magically tearing and ripping open to reveal buttocks and legs, woman standing under pillory with wrists bound, magical bonds disappearing from wrists while camera performs smooth zoom out, beautiful sorceress entering the frame holding a whip in her hand during the zoom out, same dramatic lighting, detailed fabric texture, realistic cloth dynamics, cinematic camera movement"
+        }
+    prompt_fields:
+      positive: Queen's elegant green dress made of luxurious expensive fabric with intricate golden embroidery patterns, high-quality material in perfect condition at start and end frames, lower part of the dress magically tearing and ripping open to reveal buttocks and legs, woman standing under pillory with wrists bound, magical bonds disappearing from wrists while camera performs smooth zoom out, beautiful sorceress entering the frame holding a whip in her hand during the zoom out, same dramatic lighting, detailed fabric texture, realistic cloth dynamics, cinematic camera movement
+      negative: deformed, bad anatomy, blurry, low quality, extra limbs, mutated hands, poorly drawn face, text, watermark, overexposed, underexposed, torn dress at start, damaged fabric, cheap material
+    cost_log:
+    - ts: '2026-06-29T15:24:44.760734+00:00'
+      model: grok-4.3
+      prompt_tokens: 1789
+      completion_tokens: 72
+      cost_usd: 0.006447
+    - ts: '2026-06-29T15:25:27.750454+00:00'
+      model: grok-4.3
+      prompt_tokens: 1892
+      completion_tokens: 52
+      cost_usd: 0.006456
+    - ts: '2026-06-29T15:26:05.215456+00:00'
+      model: grok-4.3
+      prompt_tokens: 1963
+      completion_tokens: 72
+      cost_usd: 0.006969
+    - ts: '2026-06-29T15:26:16.171149+00:00'
+      model: grok-4.3
+      prompt_tokens: 2044
+      completion_tokens: 50
+      cost_usd: 0.006882
+    - ts: '2026-06-29T15:43:19.471889+00:00'
+      model: grok-4.3
+      prompt_tokens: 2136
+      completion_tokens: 104
+      cost_usd: 0.007968
+    - ts: '2026-06-29T15:44:41.956642+00:00'
+      model: grok-4.3
+      prompt_tokens: 2274
+      completion_tokens: 105
+      cost_usd: 0.008397
+  - id: s_iqy80h6t
+    name: repose woman wszystko niezmienone tylko kobie…
+    created_at: '2026-06-29T21:29:57.772993+00:00'
+    updated_at: '2026-06-29T23:48:02.497090+00:00'
+    conversation:
+    - role: user
+      content: repose woman wszystko niezmienone tylko kobieta przywiązana do pręgierza za ręce w górze nadal przywiazana jest całkiem naga i pochyla głowę jakby zasypiała w tej niewygodnej pozycji nogi jej sie uginają a ręce prostują, wojownicy jej pilnujący poza bez zmian
+    - role: assistant
+      content: |-
+        • Jaka ma być nowa poza? (szczegóły: ręce w górze przywiązane do pręgierza, głowa pochylona, nogi uginają się, ręce prostują)
+        • Kąt kamery względem postaci: z przodu, z boku, 3/4, z tyłu?
+        • Co absolutnie ma zostać bez zmian? (twarz, tło, wojownicy, oświetlenie)
+        • Wyraz twarzy i kierunek spojrzenia?
+    - role: user
+      content: tak jak napisałem poza  -kąt kamery bez zmian przodem zmieniamy tylko pozę nagiej kobiety w środku kadru
+    - role: assistant
+      content: |-
+        {
+          "positive": "front view, naked woman tied to pillory with hands raised and bound above her head, completely nude, head bowed forward as if falling asleep in the uncomfortable position, legs buckling and giving way, arms straightening from the weight, exhausted expression, warriors guarding her unchanged in background, same lighting and scene"
+        }
+    - role: user
+      content: mocniej opisz zmianę pozy bo nic nie zmienił
+    - role: assistant
+      content: |-
+        {
+          "positive": "front view, naked woman heavily sagging against pillory, wrists tightly bound high above her head to the wooden frame, full body weight pulling downward, knees buckling and legs collapsing, arms fully extended and straightening taut from exhaustion, head deeply bowed forward with chin resting on chest as if drifting into sleep, torso slumped and hips pushed back, completely nude, exhausted defeated expression, same unchanged warriors standing guard in background, identical lighting and scene composition"
+        }
+    prompt_fields:
+      positive: front view, naked woman heavily sagging against pillory, wrists tightly bound high above her head to the wooden frame, full body weight pulling downward, knees buckling and legs collapsing, arms fully extended and straightening taut from exhaustion, head deeply bowed forward with chin resting on chest as if drifting into sleep, torso slumped and hips pushed back, completely nude, exhausted defeated expression, same unchanged warriors standing guard in background, identical lighting and scene composition
+      negative: ''
+    cost_log:
+    - ts: '2026-06-29T21:32:22.063033+00:00'
+      model: grok-4.3
+      prompt_tokens: 1813
+      completion_tokens: 99
+      cost_usd: 0.006924
+    - ts: '2026-06-29T21:33:27.514267+00:00'
+      model: grok-4.3
+      prompt_tokens: 1948
+      completion_tokens: 67
+      cost_usd: 0.006849
+    - ts: '2026-06-29T21:34:42.214347+00:00'
+      model: grok-4.3
+      prompt_tokens: 2035
+      completion_tokens: 95
+      cost_usd: 0.00753
+  - id: s_g4b6ea0d
+    name: Wojowniczki chłoszczą kro
+    created_at: '2026-06-29T21:57:49.710056+00:00'
+    updated_at: '2026-06-29T22:01:56.807864+00:00'
+    conversation:
+    - role: user
+      content: Opis do I2V jak dwie wojowniczki stojące z dwóch stron nagiej już schłostanej kobiety dynamicznie zaczynają ja chłostać. Kobieta jest naga i przywiązana za ręce w górze do słupa w trakcie chłosty miota się i krzyczy ale ręce są mocno przytwierdzone więc tylko szarpie sie bezsilnie
+    - role: assistant
+      content: |-
+        • Jaka lokacja? (loch, arena, opuszczony zamek, las nocą itd.)
+        • Pora dnia i źródło oświetlenia? (pochodnie, świece, blade światło dzienne, mrok?)
+        • Nastrój i atmosfera — mroczny, brutalny, dramatyczny, intymny?
+        • Dodatkowe detale otoczenia lub rekwizytów?
+    - role: user
+      content: słup na srodku placu tłum dookoła
+    - role: assistant
+      content: |-
+        • Pora dnia i źródło oświetlenia? (dzień, zmierzch, noc z pochodniami?)
+        • Nastrój i atmosfera — mroczny, brutalny, publiczny spektakl?
+    - role: user
+      content: nad ranem publiczny spektakl
+    - role: assistant
+      content: |-
+        {
+          "positive": "At dawn in a medieval town square, a naked woman is tightly bound by her wrists high above her head to a tall wooden pole in the center. Two fierce female warriors stand on either side of her, dynamically swinging whips to flog her already marked body. The bound woman thrashes violently and screams in pain, her body twisting helplessly while her arms remain firmly secured. A large crowd of onlookers surrounds the scene watching the public spectacle. Dramatic early morning light, misty atmosphere, realistic anatomy, dynamic motion, detailed skin textures, cinematic composition",
+          "negative": "blurry, deformed hands, extra limbs, poor anatomy, text, watermark, cartoon, low quality"
+        }
+    prompt_fields:
+      positive: At dawn in a medieval town square, a naked woman is tightly bound by her wrists high above her head to a tall wooden pole in the center. Two fierce female warriors stand on either side of her, dynamically swinging whips to flog her already marked body. The bound woman thrashes violently and screams in pain, her body twisting helplessly while her arms remain firmly secured. A large crowd of onlookers surrounds the scene watching the public spectacle. Dramatic early morning light, misty atmosphere, realistic anatomy, dynamic motion, detailed skin textures, cinematic composition
+      negative: blurry, deformed hands, extra limbs, poor anatomy, text, watermark, cartoon, low quality
+    cost_log:
+    - ts: '2026-06-29T22:00:01.153725+00:00'
+      model: grok-4.3
+      prompt_tokens: 1827
+      completion_tokens: 85
+      cost_usd: 0.006756
+    - ts: '2026-06-29T22:00:27.076523+00:00'
+      model: grok-4.3
+      prompt_tokens: 1933
+      completion_tokens: 43
+      cost_usd: 0.006444
+    - ts: '2026-06-29T22:00:54.883922+00:00'
+      model: grok-4.3
+      prompt_tokens: 1991
+      completion_tokens: 142
+      cost_usd: 0.008103
+  - id: s_lryythsm
+    name: Napisz prompta do zmiany obrazka że wojownicz…
+    created_at: '2026-06-29T23:23:47.298025+00:00'
+    updated_at: '2026-06-29T23:32:09.399271+00:00'
+    conversation:
+    - role: user
+      content: Napisz prompta do zmiany obrazka że wojowniczki podtrzymują za ręce nagą kobietę by ją poprowadzić w kierunku kamery. kobieta jest już odwiązana od słupa.
+    - role: assistant
+      content: "• Jaka ma być nowa poza? (trzymana za ręce, prowadzona do przodu, kroki, pochylenie ciała itd.)  \n• Kąt kamery względem postaci: z przodu, 3/4, z boku?  \n• Co absolutnie ma zostać bez zmian? (twarz, tło, wojowniczki, oświetlenie)  \n• Wyraz twarzy i kierunek spojrzenia nagiej kobiety?"
+    - role: user
+      content: kobieta słania sie na nogach wojowniczki praktycznie ją ciągną ujęcie frontalnie z przodu, bez zmian twarze postaci otoczenie oświetlenie naga kobieta ma wymęczoną twarz
+    - role: assistant
+      content: ''
+    - role: user
+      content: halo
+    - role: assistant
+      content: |-
+        {
+          "positive": "naked exhausted woman with tired face being dragged forward by two female warriors holding her hands, woman staggering weakly on her legs, warriors practically pulling her towards the camera, frontal view straight from the front, unchanged faces, same environment and lighting, cinematic composition"
+        }
+    prompt_fields:
+      positive: naked exhausted woman with tired face being dragged forward by two female warriors holding her hands, woman staggering weakly on her legs, warriors practically pulling her towards the camera, frontal view straight from the front, unchanged faces, same environment and lighting, cinematic composition
+      negative: ''
+    cost_log:
+    - ts: '2026-06-29T23:25:34.319774+00:00'
+      model: grok-4.3
+      prompt_tokens: 1789
+      completion_tokens: 90
+      cost_usd: 0.006717
+    - ts: '2026-06-29T23:26:49.800253+00:00'
+      model: grok-4.3
+      prompt_tokens: 1930
+      completion_tokens: 0
+      cost_usd: 0.00579
+    - ts: '2026-06-29T23:31:55.425936+00:00'
+      model: grok-4.3
+      prompt_tokens: 1934
+      completion_tokens: 58
+      cost_usd: 0.006672
+  - id: s_h0ds245i
+    name: Napisz prompta do I2V2I wojowniczki pilnują n…
+    created_at: '2026-06-29T23:36:50.396158+00:00'
+    updated_at: '2026-06-29T23:39:44.448345+00:00'
+    conversation:
+    - role: user
+      content: Napisz prompta do I2V2I wojowniczki pilnują nocą nagiej kobiety przywiązanej do słupa bardzo szybkie ruchy jakby czas płynął w przyspieszonym tempie tłum znika z placu księżyc się przesuwa z prawej strony kadru na lewą
+    - role: assistant
+      content: |-
+        {
+          "positive": "Night scene in a medieval town square, several fierce female warriors in armor standing guard around a naked woman tied to a wooden stake, dramatic moonlight, time-lapse effect with very fast accelerated movements, crowd of people rapidly disappearing from the square, moon moving across the sky from right side of frame to left side, dynamic motion blur, fast time passage, cinematic, highly detailed, photorealistic"
+        }
+    - role: user
+      content: negative skupienie na braku powolnych ruchów
+    - role: assistant
+      content: |-
+        {
+          "negative": "slow motion, gradual movements, slow actions, static poses, slow time lapse, relaxed pacing, no slow movements"
+        }
+    prompt_fields:
+      positive: Night scene in a medieval town square, several fierce female warriors in armor standing guard around a naked woman tied to a wooden stake, dramatic moonlight, time-lapse effect with very fast accelerated movements, crowd of people rapidly disappearing from the square, moon moving across the sky from right side of frame to left side, dynamic motion blur, fast time passage, cinematic, highly detailed, photorealistic
+      negative: slow motion, gradual movements, slow actions, static poses, slow time lapse, relaxed pacing, no slow movements
+    cost_log:
+    - ts: '2026-06-29T23:38:44.519968+00:00'
+      model: grok-4.3
+      prompt_tokens: 1811
+      completion_tokens: 86
+      cost_usd: 0.006723
+    - ts: '2026-06-29T23:39:38.342224+00:00'
+      model: grok-4.3
+      prompt_tokens: 1915
+      completion_tokens: 30
+      cost_usd: 0.006195
+  - id: s_vaqizi9u
+    name: Wyprowadzenie królowej
+    created_at: '2026-06-29T23:48:02.197960+00:00'
+    updated_at: '2026-06-29T23:50:43.674977+00:00'
+    conversation:
+    - role: user
+      content: Wojowniczki łapią pod ręce królową i wyprowadzają ją z kadru
+    - role: assistant
+      content: Co chcesz osiągnąć? Zmiana pozy, nowa scena, opis postaci, strój, korekta w masce, dodanie postaci, kąt kamery, czy styl?
+    - role: user
+      content: I2V stoją obok niej ona się słania łapią ją za ręcę i wręcz ciągna poza kadr. Naga kobieta jest skrajnie wyczerpana
+    - role: assistant
+      content: |-
+        • Jaka ma być nowa poza? (stoi, siedzi, leży, klęczy, zgięta, oparta itd.)
+        • Kąt kamery względem postaci: z przodu, z boku, 3/4, z tyłu?
+        • Co absolutnie ma zostać bez zmian? (twarz, tło, ubranie, oświetlenie)
+        • Wyraz twarzy i kierunek spojrzenia?
+    - role: user
+      content: mają ją wyciągnąć poza kadr to prompt do I2V
+    - role: assistant
+      content: |-
+        {
+          "positive": "Two female warriors stand beside a naked, extremely exhausted queen, firmly grabbing her arms and dragging her out of the frame, her body slumping limply with exhaustion, head hanging forward, feet barely touching the ground, dragged motion, cinematic movement, highly detailed anatomy, realistic skin texture, dynamic action"
+        }
+    - role: user
+      content: negative
+    - role: assistant
+      content: |-
+        {
+          "negative": "clothed, clothing, dress, text, watermark, deformed, bad anatomy, extra limbs, blurry, low quality, cartoon, anime, overexposed, underexposed, motion blur, artifacts"
+        }
+    prompt_fields:
+      positive: Two female warriors stand beside a naked, extremely exhausted queen, firmly grabbing her arms and dragging her out of the frame, her body slumping limply with exhaustion, head hanging forward, feet barely touching the ground, dragged motion, cinematic movement, highly detailed anatomy, realistic skin texture, dynamic action
+      negative: clothed, clothing, dress, text, watermark, deformed, bad anatomy, extra limbs, blurry, low quality, cartoon, anime, overexposed, underexposed, motion blur, artifacts
+    cost_log:
+    - ts: '2026-06-29T23:48:51.572852+00:00'
+      model: grok-4.3
+      prompt_tokens: 1768
+      completion_tokens: 37
+      cost_usd: 0.005859
+    - ts: '2026-06-29T23:49:44.225628+00:00'
+      model: grok-4.3
+      prompt_tokens: 1849
+      completion_tokens: 89
+      cost_usd: 0.006882
+    - ts: '2026-06-29T23:50:11.974923+00:00'
+      model: grok-4.3
+      prompt_tokens: 1960
+      completion_tokens: 67
+      cost_usd: 0.006885
+    - ts: '2026-06-29T23:50:32.528359+00:00'
+      model: grok-4.3
+      prompt_tokens: 2036
+      completion_tokens: 47
+      cost_usd: 0.006813

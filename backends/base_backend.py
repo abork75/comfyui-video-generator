@@ -134,7 +134,7 @@ class BaseBackend(ABC):
                       duration, fps, steps, cfg, seed,
                       positive_prompt, negative_prompt,
                       width, height, blocks_to_swap=None,
-                      frame_interpolation=None):
+                      frame_interpolation=None, lora_name=None, lora_strength=None):
         """
         High-level wrapper for transition generation
 
@@ -197,6 +197,10 @@ class BaseBackend(ABC):
                 params['blocks_to_swap'] = blocks_to_swap
             if frame_interpolation is not None:
                 params['frame_interpolation'] = frame_interpolation
+            if lora_name is not None:
+                params['lora_name'] = lora_name
+            if lora_strength is not None:
+                params['lora_strength'] = lora_strength
             
             # Use existing interface (implemented by subclasses)
             inputs = self.prepare_inputs(pair, workflow=None)

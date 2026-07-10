@@ -7,6 +7,19 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
+    <script>
+        // Redirect to /login on any 401 (session expired / idle logout)
+        (function () {
+            const _origFetch = window.fetch;
+            window.fetch = async function (...args) {
+                const res = await _origFetch(...args);
+                if (res.status === 401) {
+                    window.location.href = '/login';
+                }
+                return res;
+            };
+        })();
+    </script>
     <style>
         [x-cloak] { display: none !important; }
         ::-webkit-scrollbar { width: 6px; height: 6px; }
@@ -672,6 +685,13 @@
                                                                     <template x-if="_si(entry.idx)?.steps?.[si]?.exists">
                                                                         <div class="flex gap-1 items-center">
                                                                             <button @click="openVideoModal(fname)" class="text-green-500 hover:text-green-400 text-sm px-1" title="Odtwórz">▶</button>
+                                                                            <button @click.stop="openCGModal(
+                                                                                    fname,
+                                                                                    si===0 ? _cgOuterPrev(entry,seg) : entry.item.chain_prefix+'_'+String(si).padStart(3,'0')+'.mp4',
+                                                                                    si===(_si(entry.idx)?.steps?.length-1) ? _cgOuterNext(entry,seg) : entry.item.chain_prefix+'_'+String(si+2).padStart(3,'0')+'.mp4'
+                                                                                )"
+                                                                                    class="text-gray-600 hover:text-purple-400 text-sm px-1 transition"
+                                                                                    title="Korekcja koloru (MKL)">🎨</button>
                                                                             <button @click="regenChainFrom(entry.item.chain_prefix, si, entry.item.chain.length)"
                                                                                     :disabled="isRunning || (chainJobStatus.chain_prefix === entry.item.chain_prefix && (chainJobStatus.status === 'running' || chainJobStatus.status === 'queued'))"
                                                                                     :class="(isRunning || (chainJobStatus.chain_prefix === entry.item.chain_prefix && (chainJobStatus.status === 'running' || chainJobStatus.status === 'queued'))) ? 'opacity-30 cursor-not-allowed text-gray-600' : 'text-gray-500 hover:text-blue-400'"
@@ -811,6 +831,9 @@
                                                                         :class="isRunning ? 'opacity-30 cursor-not-allowed text-gray-600' : 'text-gray-500 hover:text-blue-400'"
                                                                         class="text-sm px-1 py-0.5 rounded transition"
                                                                         title="Re-generuj (zarchiwizuj i uruchom ponownie)">↺</button>
+                                                                <button @click="openColorGradeModal(entry, seg)"
+                                                                        class="text-gray-600 hover:text-purple-400 text-sm px-1 py-0.5 rounded transition"
+                                                                        title="Korekcja koloru z fade (MKL)">🎨</button>
                                                                 <button @click="archiveFile(fileItemName(entry.idx))"
                                                                         class="text-gray-600 hover:text-red-400 text-sm px-1 py-0.5 rounded"
                                                                         title="Archiwizuj bez re-generowania">🗑</button>
@@ -890,6 +913,14 @@
                                                                 <button @click.stop="openVideoModal(_si(entry.idx).name)"
                                                                         class="text-green-500 hover:text-green-400 text-sm px-1"
                                                                         title="Odtwórz">▶</button>
+                                                                <button @click.stop="openCGModal(_si(entry.idx).name, _cgOuterPrev(entry,seg), _si(entry.idx).bridge_name||_cgOuterNext(entry,seg))"
+                                                                        class="text-gray-600 hover:text-purple-400 text-sm px-1 transition"
+                                                                        title="Korekcja koloru talk clip (MKL)">🎨</button>
+                                                                <template x-if="_si(entry.idx)?.bridge_name">
+                                                                    <button @click.stop="openCGModal(_si(entry.idx).bridge_name, _si(entry.idx).name, _cgOuterNext(entry,seg))"
+                                                                            class="text-gray-600 hover:text-purple-400 text-sm px-1 transition"
+                                                                            title="Korekcja koloru bridge (MKL)">🎬🎨</button>
+                                                                </template>
                                                                 <button @click.stop="archiveFile(_si(entry.idx).name)"
                                                                         class="text-gray-600 hover:text-red-400 text-sm px-1"
                                                                         title="Archiwizuj talk clip">🗑</button>
@@ -899,6 +930,9 @@
                                                         <template x-if="_si(entry.idx)?.status === 'partial'">
                                                             <div class="flex items-center gap-1">
                                                                 <span class="text-xs text-yellow-600" title="Talk clip gotowy, brak tranzycji do następnej sceny">🎬○</span>
+                                                                <button @click.stop="openCGModal(_si(entry.idx).name, _cgOuterPrev(entry,seg), _cgOuterNext(entry,seg))"
+                                                                        class="text-gray-600 hover:text-purple-400 text-sm px-1 transition"
+                                                                        title="Korekcja koloru talk clip (MKL)">🎨</button>
                                                                 <button @click.stop="_startOnly([_si(entry.idx).bridge_name])"
                                                                         :disabled="isRunning"
                                                                         :class="isRunning ? 'opacity-30 cursor-not-allowed text-gray-600' : 'text-yellow-500 hover:text-yellow-300'"
@@ -1204,12 +1238,15 @@
                                                                                     <template x-if="tile.type === 'character_insert'"><span class="text-purple-500">🎭</span></template>
                                                                                     <template x-if="tile.type === 'paste_character'"><span class="text-green-500">📌</span></template>
                                                                                     <template x-if="tile.type === 'fine_tune'"><span class="text-orange-400">🎨</span></template>
+                                                                                    <template x-if="tile.type === 'prompt_generator'"><span class="text-cyan-400">✨</span></template>
                                                                                     <span x-text="tile.type === 'character_insert'
                                                                                         ? ((tile.scene_slots?.length||0)+' slotów')
                                                                                         : tile.type === 'paste_character'
                                                                                         ? ((tile.paste_slots?.length||0)+' slotów')
                                                                                         : tile.type === 'fine_tune'
                                                                                         ? ((tile.ft_slots?.length||0)+' sl × '+(tile.ft_slots?.[0]?.custom_passes?.length||0)+' pass')
+                                                                                        : tile.type === 'prompt_generator'
+                                                                                        ? (tile.output_format || 'flux')
                                                                                         : ((tile.image_slots?.length||0)+' '+ ((tile.image_slots?.length||0)===1?'obraz':'obrazów'))"></span>
                                                                                     <span class="text-gray-700">·</span>
                                                                                     <span class="font-mono truncate text-gray-600" x-text="tile.output_dir || '—'"></span>
@@ -1296,12 +1333,15 @@
                                                                                 <template x-if="tile.type === 'character_insert'"><span class="text-purple-500">🎭</span></template>
                                                                                 <template x-if="tile.type === 'paste_character'"><span class="text-green-500">📌</span></template>
                                                                                 <template x-if="tile.type === 'fine_tune'"><span class="text-orange-400">🎨</span></template>
+                                                                                <template x-if="tile.type === 'prompt_generator'"><span class="text-cyan-400">✨</span></template>
                                                                                 <span x-text="tile.type === 'character_insert'
                                                                                     ? ((tile.scene_slots?.length||0)+' slotów')
                                                                                     : tile.type === 'paste_character'
                                                                                     ? ((tile.paste_slots?.length||0)+' slotów')
                                                                                     : tile.type === 'fine_tune'
                                                                                     ? ((tile.ft_slots?.length||0)+' sl × '+(tile.ft_slots?.[0]?.custom_passes?.length||0)+' pass')
+                                                                                    : tile.type === 'prompt_generator'
+                                                                                    ? (tile.output_format || 'flux')
                                                                                     : ((tile.image_slots?.length||0)+' '+((tile.image_slots?.length||0)===1?'obraz':'obrazów'))"></span>
                                                                                 <span class="text-gray-700">·</span>
                                                                                 <span class="font-mono truncate text-gray-600" x-text="tile.output_dir || '—'"></span>
@@ -2051,6 +2091,208 @@
     </div>
 </div>
 
+<!-- ═══ COLOR GRADE MODAL ════════════════════════════════════════ -->
+<div x-show="cgModal.open" x-cloak
+     class="fixed inset-0 bg-black/90 flex items-center justify-center z-50 p-4"
+     @click.self="cgModal.open = false"
+     @keydown.escape.window="cgModal.open = false">
+    <div class="bg-gray-900 rounded-xl border border-gray-700 w-full max-w-3xl flex flex-col" style="max-height:90vh">
+
+        <!-- Header -->
+        <div class="flex items-center justify-between px-5 py-3 border-b border-gray-700 flex-shrink-0">
+            <div>
+                <h3 class="text-sm font-semibold text-purple-300">🎨 Korekcja koloru</h3>
+                <p class="text-xs text-gray-500 font-mono mt-0.5" x-text="cgModal.clip"></p>
+            </div>
+            <button @click="cgModal.open = false" class="text-gray-500 hover:text-white text-xl leading-none">×</button>
+        </div>
+
+        <div class="overflow-y-auto flex-1 p-5 space-y-5">
+
+            <!-- 4 frames in 2 clickable pairs -->
+            <div>
+                <p class="text-xs text-gray-400 mb-2">Klatki kontekstu — kliknij parę aby powiększyć</p>
+                <div class="grid grid-cols-2 gap-3">
+                    <!-- Pair A: do przodu -->
+                    <div class="cursor-zoom-in rounded border border-gray-700 hover:border-gray-500 transition overflow-hidden"
+                         @click="cgModal.zoom = {a: cgModal.frames.end_prev,   labelA:'koniec poprzedniego',
+                                                  b: cgModal.frames.start_clip, labelB:'start bieżącego'}">
+                        <div class="grid grid-cols-2">
+                            <div class="aspect-square bg-gray-800 overflow-hidden flex items-center justify-center">
+                                <template x-if="cgModal.frames.end_prev">
+                                    <img :src="'data:image/jpeg;base64,'+cgModal.frames.end_prev" class="w-full h-full object-cover"/>
+                                </template>
+                                <template x-if="!cgModal.frames.end_prev">
+                                    <span class="text-gray-600 text-xs" x-text="cgModal.framesLoading ? '⟳' : 'brak'"></span>
+                                </template>
+                            </div>
+                            <div class="aspect-square bg-gray-800 overflow-hidden flex items-center justify-center">
+                                <template x-if="cgModal.frames.start_clip">
+                                    <img :src="'data:image/jpeg;base64,'+cgModal.frames.start_clip" class="w-full h-full object-cover"/>
+                                </template>
+                                <template x-if="!cgModal.frames.start_clip">
+                                    <span class="text-gray-600 text-xs" x-text="cgModal.framesLoading ? '⟳' : 'brak'"></span>
+                                </template>
+                            </div>
+                        </div>
+                        <div class="flex justify-around px-1 py-1 bg-gray-800/50">
+                            <span class="text-xs text-gray-500">koniec poprzedniego</span>
+                            <span class="text-xs text-gray-600">→</span>
+                            <span class="text-xs text-gray-500">start bieżącego</span>
+                        </div>
+                    </div>
+
+                    <!-- Pair B: do tyłu -->
+                    <div class="cursor-zoom-in rounded border border-gray-700 hover:border-gray-500 transition overflow-hidden"
+                         @click="cgModal.zoom = {a: cgModal.frames.end_clip,   labelA:'koniec bieżącego',
+                                                  b: cgModal.frames.start_next, labelB:'start następnego'}">
+                        <div class="grid grid-cols-2">
+                            <div class="aspect-square bg-gray-800 overflow-hidden flex items-center justify-center">
+                                <template x-if="cgModal.frames.end_clip">
+                                    <img :src="'data:image/jpeg;base64,'+cgModal.frames.end_clip" class="w-full h-full object-cover"/>
+                                </template>
+                                <template x-if="!cgModal.frames.end_clip">
+                                    <span class="text-gray-600 text-xs" x-text="cgModal.framesLoading ? '⟳' : 'brak'"></span>
+                                </template>
+                            </div>
+                            <div class="aspect-square bg-gray-800 overflow-hidden flex items-center justify-center">
+                                <template x-if="cgModal.frames.start_next">
+                                    <img :src="'data:image/jpeg;base64,'+cgModal.frames.start_next" class="w-full h-full object-cover"/>
+                                </template>
+                                <template x-if="!cgModal.frames.start_next">
+                                    <span class="text-gray-600 text-xs" x-text="cgModal.framesLoading ? '⟳' : 'brak'"></span>
+                                </template>
+                            </div>
+                        </div>
+                        <div class="flex justify-around px-1 py-1 bg-gray-800/50">
+                            <span class="text-xs text-gray-500">koniec bieżącego</span>
+                            <span class="text-xs text-gray-600">→</span>
+                            <span class="text-xs text-gray-500">start następnego</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Zoom overlay — pair side by side -->
+            <div x-show="cgModal.zoom" x-cloak
+                 class="fixed inset-0 bg-black/95 flex flex-col items-center justify-center z-[60] p-6 gap-4"
+                 @click="cgModal.zoom = null" style="cursor:zoom-out">
+                <div class="grid grid-cols-2 gap-4 w-full max-w-3xl">
+                    <div class="flex flex-col items-center gap-2">
+                        <img :src="cgModal.zoom?.a ? 'data:image/jpeg;base64,'+cgModal.zoom.a : ''"
+                             class="rounded max-h-[70vh] w-auto object-contain"/>
+                        <span class="text-xs text-gray-400" x-text="cgModal.zoom?.labelA"></span>
+                    </div>
+                    <div class="flex flex-col items-center gap-2">
+                        <img :src="cgModal.zoom?.b ? 'data:image/jpeg;base64,'+cgModal.zoom.b : ''"
+                             class="rounded max-h-[70vh] w-auto object-contain"/>
+                        <span class="text-xs text-gray-400" x-text="cgModal.zoom?.labelB"></span>
+                    </div>
+                </div>
+                <p class="text-xs text-gray-600">kliknij aby zamknąć</p>
+            </div>
+
+            <!-- Direction -->
+            <div>
+                <p class="text-xs text-gray-400 mb-2">Kierunek korekcji</p>
+                <div class="flex gap-4">
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        <input type="radio" x-model="cgModal.direction" value="forward" class="accent-purple-500">
+                        <span class="text-sm text-gray-300">Do przodu</span>
+                        <span class="text-xs text-gray-500">(korekcja początku klipu → kolor końca poprzedniego)</span>
+                    </label>
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        <input type="radio" x-model="cgModal.direction" value="backward" class="accent-purple-500">
+                        <span class="text-sm text-gray-300">Do tyłu</span>
+                        <span class="text-xs text-gray-500">(korekcja końca klipu → kolor początku następnego)</span>
+                    </label>
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        <input type="radio" x-model="cgModal.direction" value="both" class="accent-purple-500">
+                        <span class="text-sm text-gray-300">Oba kierunki</span>
+                        <span class="text-xs text-gray-500">(szwy — środek nienaruszony)</span>
+                    </label>
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        <input type="radio" x-model="cgModal.direction" value="bridge" class="accent-purple-500">
+                        <span class="text-sm text-gray-300">Most</span>
+                        <span class="text-xs text-gray-500">(liniowy crossfade prev→next przez cały klip)</span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Advanced params -->
+            <details class="group">
+                <summary class="text-xs text-gray-500 cursor-pointer hover:text-gray-300 transition">
+                    ▶ Zaawansowane parametry
+                </summary>
+                <div class="mt-3 space-y-3 pl-2">
+                    <!-- fade inputs — hidden for 'bridge', split for 'both' -->
+                    <template x-if="cgModal.direction !== 'bridge'">
+                        <div class="space-y-2">
+                            <div class="flex items-center gap-4">
+                                <label class="text-xs text-gray-400 w-32"
+                                       x-text="cgModal.direction === 'both' ? 'Fade do przodu' : 'Fade klatek'"></label>
+                                <input type="number" x-model.number="cgModal.fadeFrames" min="0" max="999"
+                                       class="bg-gray-800 border border-gray-600 rounded px-2 py-1 text-xs text-gray-300 w-20">
+                                <span class="text-xs text-gray-500">0 = auto (połowa klipu)</span>
+                            </div>
+                            <template x-if="cgModal.direction === 'both'">
+                                <div class="flex items-center gap-4">
+                                    <label class="text-xs text-gray-400 w-32">Fade do tyłu</label>
+                                    <input type="number" x-model.number="cgModal.fadeFramesBwd" min="0" max="999"
+                                           class="bg-gray-800 border border-gray-600 rounded px-2 py-1 text-xs text-gray-300 w-20">
+                                    <span class="text-xs text-gray-500">0 = jak "do przodu"</span>
+                                </div>
+                            </template>
+                        </div>
+                    </template>
+                    <template x-if="cgModal.direction === 'bridge'">
+                        <p class="text-xs text-gray-600 italic">Fade klatek nie dotyczy trybu Most — cały klip jest interpolowany.</p>
+                    </template>
+                    <div class="flex items-center gap-4">
+                        <label class="text-xs text-gray-400 w-32">Krzywa (power)</label>
+                        <input type="number" x-model.number="cgModal.curvePower" min="0.5" max="10" step="0.5"
+                               class="bg-gray-800 border border-gray-600 rounded px-2 py-1 text-xs text-gray-300 w-20">
+                        <span class="text-xs text-gray-500">3 = wolno maleje, ostry drop na końcu</span>
+                    </div>
+                </div>
+            </details>
+
+            <!-- Preview -->
+            <div x-show="cgModal.previewUrl" class="space-y-2">
+                <p class="text-xs text-gray-400">Podgląd</p>
+                <video :src="cgModal.previewUrl" controls autoplay loop
+                       class="w-full rounded bg-black max-h-64" style="outline:none"></video>
+                <p class="text-xs text-gray-500" x-text="cgModal.previewInfo"></p>
+            </div>
+
+            <!-- Status / error -->
+            <p x-show="cgModal.error" class="text-xs text-red-400" x-text="cgModal.error"></p>
+        </div>
+
+        <!-- Footer buttons -->
+        <div class="flex items-center gap-3 px-5 py-3 border-t border-gray-700 flex-shrink-0">
+            <button @click="cgPreview()"
+                    :disabled="cgModal.busy"
+                    :class="cgModal.busy ? 'opacity-40 cursor-not-allowed' : 'hover:bg-purple-700'"
+                    class="bg-purple-800 text-white text-sm px-4 py-1.5 rounded transition">
+                <span x-show="cgModal.busy && cgModal.busyStep==='preview'" class="animate-spin inline-block mr-1">⟳</span>
+                Przelicz podgląd
+            </button>
+            <button @click="cgApply()"
+                    :disabled="cgModal.busy || !cgModal.previewUrl"
+                    :class="(cgModal.busy || !cgModal.previewUrl) ? 'opacity-40 cursor-not-allowed' : 'hover:bg-green-700'"
+                    class="bg-green-800 text-white text-sm px-4 py-1.5 rounded transition">
+                <span x-show="cgModal.busy && cgModal.busyStep==='apply'" class="animate-spin inline-block mr-1">⟳</span>
+                Zapisz
+            </button>
+            <button @click="cgModal.open = false"
+                    class="text-gray-500 hover:text-white text-sm px-3 py-1.5 rounded transition ml-auto">
+                Anuluj
+            </button>
+        </div>
+    </div>
+</div>
+
 <!-- ═══ SOURCE MODAL ═════════════════════════════════════════════ -->
 <div x-show="sourceModal.open" x-cloak
      class="fixed inset-0 bg-black/85 flex items-center justify-center z-50 p-4"
@@ -2332,6 +2574,21 @@
                                   x-text="editModal.data.frame_interpolation === false ? 'wyłączone'
                                         : editModal.data.frame_interpolation === true  ? 'włączone'
                                         : effectiveFI(null) ? 'domyślne (włączone)' : 'domyślne (wyłączone)'"></span>
+                        </div>
+                        <div class="col-span-2">
+                            <label class="block text-xs text-gray-400 mb-1">LoRA <span class="text-gray-600">(pusta = domyślna z workflow)</span></label>
+                            <input type="text" x-model="editModal.data.lora_name" placeholder="np. lightx2v_…bf16.safetensors"
+                                   class="w-full bg-gray-800 border border-gray-600 rounded px-3 py-1.5 text-sm text-gray-200 font-mono focus:outline-none focus:border-blue-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-gray-400 mb-1">Siła LoRA <span class="text-gray-600">(pass2=/3)</span></label>
+                            <input type="number" x-model.number="editModal.data.lora_strength" min="0" step="0.1" placeholder="domyślna"
+                                   class="w-full bg-gray-800 border border-gray-600 rounded px-3 py-1.5 text-sm text-gray-200 focus:outline-none focus:border-blue-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-amber-400 mb-1">Generuj N× <span class="text-gray-600">(2+ = wersje do wyboru)</span></label>
+                            <input type="number" x-model.number="editModal.data.generate_count" min="1" max="20" step="1" placeholder="1"
+                                   class="w-full bg-gray-800 border border-amber-900 rounded px-3 py-1.5 text-sm text-amber-100 focus:outline-none focus:border-amber-500">
                         </div>
                     </div>
                     <!-- AtlasCloud params (shown only when backend = atlascloud) -->
@@ -3355,6 +3612,14 @@
                     <p class="text-xs text-gray-500 mt-1 text-center leading-relaxed">Łańcuch I2I na wybranym obrazku — każdy krok może używać referencji</p>
                 </div>
             </button>
+            <button @click="picTypeSelectedDo('prompt_generator')"
+                    class="flex flex-col items-center gap-3 bg-gray-800 hover:bg-cyan-950/60 border border-gray-600 hover:border-cyan-500 rounded-xl p-4 transition text-left">
+                <span class="text-3xl">✨</span>
+                <div>
+                    <p class="text-xs font-semibold text-white text-center">Generator promptów</p>
+                    <p class="text-xs text-gray-500 mt-1 text-center leading-relaxed">AI buduje prompt przez rozmowę — Flux T2I, SDXL lub positive only</p>
+                </div>
+            </button>
         </div>
     </div>
 </div>
@@ -4204,8 +4469,15 @@
                                                        class="w-full bg-gray-800 border border-gray-600 rounded px-2 py-1 text-xs text-gray-300 text-center focus:outline-none focus:border-blue-500">
                                             </div>
                                         </div>
-                                        <!-- Edge feathering -->
-                                        <div class="grid grid-cols-2 gap-2">
+                                        <!-- preserve_alpha toggle -->
+                                        <label class="flex items-center gap-2 cursor-pointer select-none">
+                                            <input type="checkbox" x-model="char.preserve_alpha"
+                                                   class="w-3.5 h-3.5 accent-orange-500">
+                                            <span class="text-xs text-gray-400">Zachowaj alphę PNG <span class="text-gray-600">(pomija bbox crop i feather)</span></span>
+                                        </label>
+
+                                        <!-- Edge feathering (hidden when preserve_alpha) -->
+                                        <div class="grid grid-cols-2 gap-2" x-show="!char.preserve_alpha">
                                             <div>
                                                 <label class="block text-xs text-gray-500 mb-1">Erozja px <span class="text-gray-600">(frędze)</span></label>
                                                 <input type="number" x-model.number="char.erode_px" min="0" max="10" step="1"
@@ -5746,6 +6018,209 @@
 </div>
 </template>
 
+<!-- ══════ PROMPT GENERATOR MODAL ═════════════════════════════════ -->
+<template x-if="pgModal.open">
+<div class="fixed inset-0 bg-black/85 z-50 flex items-center justify-center p-4"
+     @keydown.escape.window="pgModal.open = false">
+    <div class="bg-gray-900 rounded-xl border border-gray-700 w-full flex flex-col" style="max-width:1200px; max-height:92vh">
+
+        <!-- Header -->
+        <div class="flex items-center justify-between px-5 py-3 border-b border-gray-700 flex-shrink-0">
+            <div class="flex items-center gap-3">
+                <span class="text-cyan-400">✨</span>
+                <div>
+                    <h2 class="text-sm font-semibold text-white" x-text="pgModal.tile?.name || 'Generator promptów'"></h2>
+                    <div class="flex items-center gap-1 mt-0.5">
+                        <span class="text-xs text-gray-500">Format:</span>
+                        <select x-model="pgModal.tile.output_format"
+                                @change="pgChangeFormat($event.target.value)"
+                                :disabled="pgModal.history.length > 0"
+                                :title="pgModal.history.length > 0 ? 'Format jest zablokowany po rozpoczęciu rozmowy' : 'Zmień format wyjściowy'"
+                                :class="pgModal.history.length > 0
+                                    ? 'bg-gray-900 border border-gray-800 rounded px-1.5 py-0 text-xs text-gray-600 cursor-not-allowed'
+                                    : 'bg-gray-800 border border-gray-700 rounded px-1.5 py-0 text-xs text-gray-300 focus:outline-none focus:border-cyan-600 cursor-pointer'">
+                            <option value="flux">Flux (clip_l + t5xxl)</option>
+                            <option value="sdxl">SDXL (positive + negative)</option>
+                            <option value="positive_only">Positive only</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="flex items-center gap-3">
+                <span class="text-xs text-gray-600" x-show="pgModal.totalCost > 0"
+                      x-text="'Łączny koszt: $' + pgModal.totalCost.toFixed(4)"></span>
+                <button @click="pgToggleIntents()"
+                        :class="pgModal.showIntents ? 'bg-amber-800 text-amber-200' : 'text-gray-500 hover:text-amber-400'"
+                        class="text-xs px-2 py-1 rounded border border-gray-700 hover:border-amber-600 transition"
+                        title="Debug: pokaż zdefiniowane intenty">🔍 Intenty</button>
+                <button @click="pgAutoSavePrompt(); pgModal.open = false" class="text-gray-500 hover:text-white text-xl leading-none">×</button>
+            </div>
+        </div>
+
+        <!-- Intents debug panel -->
+        <div x-show="pgModal.showIntents" class="border-b border-amber-900/50 bg-amber-950/20 px-4 py-3 overflow-y-auto flex-shrink-0" style="max-height:220px">
+            <p class="text-xs text-amber-400 font-medium mb-2">Zdefiniowane intenty (wykrywane z pierwszej wiadomości)</p>
+            <div class="grid grid-cols-2 gap-2">
+                <template x-for="(intent, key) in pgModal.intents" :key="key">
+                    <div class="bg-gray-900 rounded-lg px-3 py-2 border border-gray-800">
+                        <p class="text-xs font-medium text-white mb-1">
+                            <span x-text="intent.icon"></span>
+                            <span class="ml-1 font-mono text-amber-400" x-text="key"></span>
+                            — <span x-text="intent.label"></span>
+                        </p>
+                        <p class="text-xs text-gray-600 mb-1">Słowa kluczowe: <span class="text-gray-500" x-text="intent.keywords.join(', ')"></span></p>
+                        <ul class="space-y-0.5">
+                            <template x-for="q in intent.questions" :key="q">
+                                <li class="text-xs text-gray-500">• <span x-text="q"></span></li>
+                            </template>
+                        </ul>
+                        <p class="text-xs text-amber-900 mt-1 italic" x-text="intent.prompt_tips"></p>
+                    </div>
+                </template>
+            </div>
+        </div>
+
+        <!-- Body: three panels -->
+        <div class="flex flex-1 overflow-hidden min-h-0">
+
+            <!-- PANEL 1: Sessions list -->
+            <div class="flex flex-col border-r border-gray-700 flex-shrink-0 bg-gray-950" style="width:190px">
+                <div class="px-3 py-2 border-b border-gray-800 flex items-center justify-between flex-shrink-0">
+                    <span class="text-xs text-gray-500 font-medium uppercase tracking-wider">Sesje</span>
+                    <button @click="pgNewSession()"
+                            class="text-cyan-500 hover:text-cyan-300 text-lg leading-none font-bold transition" title="Nowa rozmowa">+</button>
+                </div>
+                <div class="flex-1 overflow-y-auto py-1 min-h-0">
+                    <template x-if="pgModal.sessions.length === 0">
+                        <p class="text-xs text-gray-700 text-center py-6 px-2">Brak sesji — kliknij + aby rozpocząć</p>
+                    </template>
+                    <template x-for="sess in pgModal.sessions" :key="sess.id">
+                        <div @click="pgModal.editingSessionId !== sess.id && pgLoadSession(sess.id)"
+                             :class="sess.id === pgModal.activeSessionId
+                                ? 'bg-cyan-900/30 border-l-2 border-cyan-500 text-white'
+                                : 'text-gray-400 hover:bg-gray-800 border-l-2 border-transparent hover:text-white'"
+                             class="group px-3 py-2 cursor-pointer transition flex items-start justify-between gap-1">
+                            <div class="min-w-0 flex-1">
+                                <!-- Rename input -->
+                                <template x-if="pgModal.editingSessionId === sess.id">
+                                    <input type="text"
+                                           x-model="pgModal.editingName"
+                                           @click.stop
+                                           @keydown.enter.prevent="pgRenameSession(sess.id)"
+                                           @keydown.escape.prevent="pgModal.editingSessionId = null"
+                                           @blur="pgRenameSession(sess.id)"
+                                           class="w-full bg-gray-700 border border-cyan-600 rounded px-1 py-0 text-xs text-white focus:outline-none"
+                                           x-init="$nextTick(() => $el.focus())">
+                                </template>
+                                <!-- Normal display -->
+                                <template x-if="pgModal.editingSessionId !== sess.id">
+                                    <p class="text-xs truncate"
+                                       @dblclick.stop="pgModal.editingSessionId = sess.id; pgModal.editingName = sess.name"
+                                       :title="'Dwuklik aby zmienić nazwę\n' + sess.name"
+                                       x-text="sess.name"></p>
+                                </template>
+                                <p class="text-xs text-gray-600 mt-0.5"
+                                   x-text="sess.updated_at?.slice(0,10) + (sess.has_prompt ? ' ✓' : '')"></p>
+                            </div>
+                            <div class="flex flex-col gap-0.5 flex-shrink-0">
+                                <button @click.stop="pgModal.editingSessionId = sess.id; pgModal.editingName = sess.name"
+                                        class="text-gray-700 hover:text-cyan-400 hover:bg-cyan-900/20 transition text-xs leading-none px-1 rounded"
+                                        title="Zmień nazwę">✎</button>
+                                <button @click.stop="pgDeleteSession(sess.id)"
+                                        class="text-gray-700 hover:text-red-400 hover:bg-red-900/20 transition text-xs leading-none px-1 rounded"
+                                        title="Usuń sesję">🗑</button>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+            </div>
+
+            <!-- PANEL 2: Chat -->
+            <div class="flex flex-col border-r border-gray-700 flex-shrink-0" style="width:390px">
+                <div class="px-3 py-2 border-b border-gray-800 flex items-center justify-between flex-shrink-0">
+                    <span class="text-xs text-gray-400 font-medium" x-text="pgModal.activeSessionId ? 'Rozmowa' : 'Wybierz lub utwórz sesję'"></span>
+                    <span x-show="pgModal.sessionCost > 0"
+                          class="text-xs text-gray-600"
+                          x-text="'$' + pgModal.sessionCost.toFixed(4)"></span>
+                </div>
+
+                <!-- Messages -->
+                <div class="flex-1 overflow-y-auto px-3 py-3 space-y-3 min-h-0" x-ref="pgChatMessages">
+                    <template x-if="!pgModal.activeSessionId">
+                        <p class="text-xs text-gray-700 text-center py-10">← Wybierz sesję lub utwórz nową</p>
+                    </template>
+                    <template x-if="pgModal.activeSessionId && pgModal.history.length === 0">
+                        <p class="text-xs text-gray-600 text-center py-8">Opisz co chcesz wygenerować — AI pomoże zbudować prompt.</p>
+                    </template>
+                    <template x-for="(msg, idx) in pgModal.history" :key="idx">
+                        <div :class="msg.role === 'user' ? 'flex justify-end' : 'flex justify-start'">
+                            <div :class="msg.role === 'user'
+                                    ? 'bg-blue-900/60 text-blue-100 rounded-xl rounded-br-sm px-3 py-2 text-xs max-w-xs'
+                                    : 'bg-gray-800 text-gray-200 rounded-xl rounded-bl-sm px-3 py-2 text-xs max-w-sm'"
+                                 style="white-space:pre-wrap" x-text="msg.content"></div>
+                        </div>
+                    </template>
+                    <template x-if="pgModal.sending">
+                        <div class="flex justify-start">
+                            <div class="bg-gray-800 text-gray-400 rounded-xl px-3 py-2 text-xs animate-pulse">AI pisze...</div>
+                        </div>
+                    </template>
+                </div>
+
+                <!-- Input -->
+                <div class="px-3 py-3 border-t border-gray-800 flex-shrink-0">
+                    <div class="flex gap-2">
+                        <textarea x-model="pgModal.input"
+                                  @keydown.ctrl.enter.prevent="pgSendMessage()"
+                                  :disabled="pgModal.sending || !pgModal.activeSessionId"
+                                  rows="3"
+                                  placeholder="Opisz scenę... (Ctrl+Enter)"
+                                  class="flex-1 bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-xs text-white placeholder-gray-600 resize-none focus:outline-none focus:border-cyan-600 disabled:opacity-40"></textarea>
+                        <button @click="pgSendMessage()"
+                                :disabled="pgModal.sending || !pgModal.input.trim() || !pgModal.activeSessionId"
+                                class="bg-cyan-700 hover:bg-cyan-600 disabled:opacity-40 disabled:cursor-not-allowed text-white px-3 py-2 rounded-lg text-xs font-medium transition self-end">
+                            Wyślij
+                        </button>
+                    </div>
+                    <p class="text-xs text-gray-700 mt-1">Ctrl+Enter — wyślij</p>
+                </div>
+            </div>
+
+            <!-- PANEL 3: Prompt output -->
+            <div class="flex-1 flex flex-col overflow-hidden min-h-0">
+                <div class="px-4 py-2 border-b border-gray-800 flex items-center justify-between flex-shrink-0">
+                    <span class="text-xs text-gray-400 font-medium">Wygenerowany prompt</span>
+                    <button @click="pgSavePrompt()"
+                            :disabled="!pgModal.activeSessionId"
+                            class="text-xs bg-cyan-800 hover:bg-cyan-700 disabled:opacity-40 text-white px-3 py-1 rounded transition">
+                        💾 Zapisz prompt
+                    </button>
+                </div>
+
+                <div class="flex-1 overflow-y-auto px-4 py-4 space-y-4 min-h-0">
+                    <template x-for="field in (pgModal.tile?.format_fields || ['clip_l','t5xxl'])" :key="field">
+                        <div>
+                            <div class="flex items-center justify-between mb-1">
+                                <label class="text-xs font-mono text-cyan-400" x-text="field"></label>
+                                <button @click="pgCopyField(field)"
+                                        class="text-xs text-gray-500 hover:text-white px-2 py-0.5 rounded hover:bg-gray-800 transition">
+                                    📋 Kopiuj
+                                </button>
+                            </div>
+                            <textarea :rows="field === 't5xxl' || field === 'positive' ? 8 : 3"
+                                      x-model="pgModal.promptFields[field]"
+                                      class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-xs text-gray-200 font-mono resize-none focus:outline-none focus:border-cyan-600"
+                                      :placeholder="'Pole ' + field + ' pojawi się tutaj...'"></textarea>
+                        </div>
+                    </template>
+                </div>
+            </div>
+
+        </div><!-- /body -->
+    </div>
+</div>
+</template>
+
 <!-- ═══ APP CONFIG MODAL ══════════════════════════════════════════ -->
 <template x-if="appCfgModal.open">
 <div class="fixed inset-0 bg-black/85 flex items-center justify-center z-50 p-4"
@@ -6313,6 +6788,15 @@ function app() {
         awaitingInput: false, inputPrompt: '',
         frameModal: { open: false, title: '', isImage: false, startUrl: '', endUrl: '' },
         videoModal: { open: false, name: '', url: '' },
+        cgModal: {
+            open: false, clip: '', prevClip: null, nextClip: null,
+            frames: {}, framesLoading: false,
+            direction: 'forward',
+            fadeFrames: 0, fadeFramesBwd: 0, curvePower: 3.0,
+            previewUrl: null, previewInfo: '', previewId: null,
+            busy: false, busyStep: '', error: '',
+            zoom: null,
+        },
         versionsModal: { open: false, name: '', files: [], loading: false },
         uploadModal:   { open: false, name: '', file: null, previewUrl: null, uploading: false, error: null, dragging: false },
         frameVersion:  Date.now(),
@@ -6509,6 +6993,18 @@ function app() {
                 if (msg.type === 'input_needed') { this._handleInputNeeded(msg.prompt || ''); return; }
                 if (msg.type === 'log') {
                     const t = msg.text || '';
+                    // Auto-open versions modal after multi-generate completes
+                    if (t.startsWith('[VERSIONS_READY]')) {
+                        const fname = t.slice('[VERSIONS_READY]'.length).trim();
+                        if (fname) {
+                            setTimeout(async () => {
+                                await this.refreshStatus();
+                                this.logLine('sys', `🎲 Multi-gen gotowy — wybierz najlepszą wersję`);
+                                await this.openVersionsModal(fname);
+                            }, 1200);
+                        }
+                        return;
+                    }
                     // Filter verbose debug lines from generation script
                     const isDebug = t.startsWith('🐛') ||
                                     t.startsWith('from_config:') ||
@@ -6868,6 +7364,160 @@ function app() {
         closeVideoModal() {
             if (this.$refs.videoPlayer) { this.$refs.videoPlayer.pause(); this.$refs.videoPlayer.src = ''; }
             this.videoModal = { open: false, name: '', url: '' };
+        },
+
+        // ── Color Grade ────────────────────────────────────────────────
+        _cgClipName(entry, si, direction) {
+            // Returns the relevant mp4 filename for color-grade reference.
+            // direction: 'prev' = last file in this entry, 'next' = first file
+            const item = entry.item || {};
+            if (item.type === 'talk') {
+                if (si?.status === 'green' || si?.status === 'partial') {
+                    if (direction === 'prev') {
+                        // bridge comes after talk clip in the final video sequence
+                        if (si?.bridge_name) return si.bridge_name;
+                        if (si?.name) return si.name;
+                    } else {
+                        if (si?.name) return si.name;
+                    }
+                }
+                return null;
+            }
+            if (item.chain_prefix) {
+                const steps = si?.steps || [];
+                if (direction === 'next') {
+                    if (steps[0]?.exists) return item.chain_prefix + '_001.mp4';
+                } else {
+                    const lastIdx = steps.length - 1;
+                    if (lastIdx >= 0 && steps[lastIdx]?.exists)
+                        return item.chain_prefix + '_' + String(lastIdx + 1).padStart(3, '0') + '.mp4';
+                }
+                return null;
+            }
+            if (si?.status === 'green' && si?.name) return si.name;
+            return null;
+        },
+
+        _cgOuterPrev(entry, seg) {
+            const items = seg?.items || [];
+            const pos = items.findIndex(e => e.idx === entry.idx);
+            for (let i = pos - 1; i >= 0; i--) {
+                const name = this._cgClipName(items[i], this._si(items[i].idx), 'prev');
+                if (name) return name;
+            }
+            return null;
+        },
+
+        _cgOuterNext(entry, seg) {
+            const items = seg?.items || [];
+            const pos = items.findIndex(e => e.idx === entry.idx);
+            for (let i = pos + 1; i < items.length; i++) {
+                const name = this._cgClipName(items[i], this._si(items[i].idx), 'next');
+                if (name) return name;
+            }
+            return null;
+        },
+
+        async openCGModal(clipName, prevClip, nextClip) {
+            this.cgModal = {
+                open: true, clip: clipName, prevClip, nextClip,
+                frames: {}, framesLoading: true,
+                direction: 'forward',
+                fadeFrames: 0, fadeFramesBwd: 0, curvePower: 3.0,
+                previewUrl: null, previewInfo: '', previewId: null,
+                busy: false, busyStep: '', error: '',
+                zoom: null,
+            };
+            try {
+                const params = new URLSearchParams({ run: this.selectedRun.filename, clip: clipName });
+                if (prevClip) params.set('prev_clip', prevClip);
+                if (nextClip) params.set('next_clip', nextClip);
+                const res = await fetch('/api/color-grade/frames?' + params);
+                if (res.ok) this.cgModal.frames = await res.json();
+            } catch(e) {
+                this.cgModal.error = 'Błąd ładowania klatek: ' + e.message;
+            } finally {
+                this.cgModal.framesLoading = false;
+            }
+        },
+
+        async openColorGradeModal(entry, seg) {
+            const clip = this.fileItemName(entry.idx);
+            if (!clip) return;
+            await this.openCGModal(clip, this._cgOuterPrev(entry, seg), this._cgOuterNext(entry, seg));
+        },
+
+        _cgBuildBody(m) {
+            const needsBwd = m.direction === 'both' || m.direction === 'bridge';
+            const refClip  = (m.direction === 'backward') ? m.nextClip : m.prevClip;
+            if (!refClip) return null;
+            if (needsBwd && !m.nextClip) return null;
+            const body = {
+                run: this.selectedRun.filename,
+                clip: m.clip,
+                ref_clip: refClip,
+                ref_position: m.direction === 'backward' ? 'first' : 'last',
+                direction: m.direction,
+                fade_frames: m.fadeFrames,
+                fade_frames_bwd: m.fadeFramesBwd,
+                curve_power: m.curvePower,
+            };
+            if (needsBwd) body.ref_clip_bwd = m.nextClip;
+            return body;
+        },
+
+        async cgPreview() {
+            const m = this.cgModal;
+            const body = this._cgBuildBody(m);
+            if (!body) {
+                m.error = (m.direction === 'forward' || m.direction === 'both' || m.direction === 'bridge')
+                    ? 'Brak poprzedniego klipu jako referencji'
+                    : 'Brak następnego klipu jako referencji';
+                return;
+            }
+            m.busy = true; m.busyStep = 'preview'; m.error = '';
+            try {
+                const res = await fetch('/api/color-grade/preview', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body),
+                });
+                const data = await res.json();
+                if (!res.ok) { m.error = data.detail || 'Błąd podglądu'; return; }
+                m.previewId  = data.preview_id;
+                m.previewUrl = `/api/color-grade/preview/${encodeURIComponent(data.preview_id)}?t=${Date.now()}`;
+                m.previewInfo = m.direction === 'bridge'
+                    ? 'Most liniowy (cały klip)'
+                    : `Fade: ${data.fade_frames}${data.fade_frames_bwd !== data.fade_frames ? ' / ' + data.fade_frames_bwd : ''} klatek`;
+            } catch(e) {
+                m.error = 'Błąd: ' + e.message;
+            } finally {
+                m.busy = false; m.busyStep = '';
+            }
+        },
+
+        async cgApply() {
+            const m = this.cgModal;
+            const body = this._cgBuildBody(m);
+            if (!body) { m.error = 'Brak klipu referencyjnego'; return; }
+            if (!confirm(`Zapisać korekcję koloru dla:\n${m.clip}\n\nOryginalny plik zostanie zarchiwizowany.`)) return;
+            m.busy = true; m.busyStep = 'apply'; m.error = '';
+            try {
+                const res = await fetch('/api/color-grade/apply', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body),
+                });
+                const data = await res.json();
+                if (!res.ok) { m.error = data.detail || 'Błąd zapisu'; return; }
+                this.logLine('sys', `🎨 Color grade zapisany: ${m.clip} (archiwum: ${data.archived_as})`);
+                m.open = false;
+                await this.refreshStatus();
+            } catch(e) {
+                m.error = 'Błąd: ' + e.message;
+            } finally {
+                m.busy = false; m.busyStep = '';
+            }
         },
 
         openSourceUpload(filename) {
@@ -7423,6 +8073,24 @@ function app() {
 
         // Tile type selection mini-modal
         picTypeModal: { open: false },
+
+        // Prompt Generator modal
+        pgModal: {
+            open:             false,
+            tile:             null,
+            sessions:         [],
+            activeSessionId:  null,
+            history:          [],
+            promptFields:     {},
+            sessionCost:      0,
+            totalCost:        0,
+            input:            '',
+            sending:          false,
+            editingSessionId: null,   // rename: which session is being edited
+            editingName:      '',     // rename: current input value
+            showIntents:      false,  // debug panel toggle
+            intents:          {},     // loaded from API
+        },
 
         // Tile edit modal
         tileModal: {
@@ -8327,6 +8995,8 @@ function app() {
             }
             // frame_interpolation: null = "domyślne" → remove from data (inherit from global)
             if (d.frame_interpolation === null || d.frame_interpolation === undefined) delete d.frame_interpolation;
+            // generate_count: 1 is default → don't store in YAML
+            if (!d.generate_count || d.generate_count <= 1) delete d.generate_count;
             if (Array.isArray(d.chain)) {
                 for (const step of d.chain) {
                     for (const k of optionals) {
@@ -8372,7 +9042,15 @@ function app() {
             const ok = await this._saveFlow(newFlow);
             if (ok) {
                 this.flowData.flow = newFlow;
-                this.frameVersion = Date.now();   // bust thumbnail cache → re-fetch after file rename
+                // Clear server-side frame cache so new source image is re-extracted
+                try {
+                    await fetch('/api/media/clear-frame-cache', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ run: this.selectedRun.filename }),
+                    });
+                } catch(e) {}
+                this.frameVersion = Date.now();   // bust browser thumbnail cache
                 this.editModal.open = false;
                 this.logLine('sys', `✅ Zapisano zmiany w elemencie #${this.editModal.idx + 1}`);
                 // Reset hidden thumbnails — @error may have set display:none on a
@@ -9344,6 +10022,11 @@ function app() {
         },
 
         picOpenTileModal(tile, type = null) {
+            // prompt_generator has its own modal
+            if ((tile && tile.type === 'prompt_generator') || type === 'prompt_generator') {
+                this.openPgModal(tile);
+                return;
+            }
             const projFolder = this.selectedRun?.project_folder || '';
             let tileData;
             if (tile) {
@@ -9673,6 +10356,260 @@ function app() {
                 await this.loadPicTiles();
                 this.logLine('sys', `📋 Skopiowano kafelek: ${tile?.name}`);
             } catch(e) { this.logLine('sys', `❌ ${e.message}`); }
+        },
+
+        // ── Prompt Generator ──────────────────────────────────
+
+        async openPgModal(tile) {
+            const runId = this.selectedRun?.filename;
+            if (!runId) return;
+
+            if (!tile) {
+                const res = await fetch(`/api/prompt-gen/${runId}/tiles`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name: 'Generator promptów', output_format: 'flux', n_images: 6, steps: 28 }),
+                });
+                if (!res.ok) { this.logLine('sys', '❌ Błąd tworzenia kafelka prompt_generator'); return; }
+                await this.loadPicTiles();
+                tile = await res.json();
+            }
+
+            try {
+                const [infoRes, sessRes, costRes] = await Promise.all([
+                    fetch(`/api/prompt-gen/${runId}/tiles/${tile.id}`),
+                    fetch(`/api/prompt-gen/${runId}/tiles/${tile.id}/sessions`),
+                    fetch(`/api/prompt-gen/${runId}/tiles/${tile.id}/cost`),
+                ]);
+                const info     = await infoRes.json();
+                const sessions = await sessRes.json();
+                const cost     = await costRes.json();
+
+                this.pgModal = {
+                    open:            true,
+                    tile:            info,
+                    sessions:        sessions,
+                    activeSessionId: null,
+                    history:         [],
+                    promptFields:    Object.fromEntries((info.format_fields||['clip_l','t5xxl']).map(f=>[f,''])),
+                    sessionCost:     0,
+                    totalCost:       cost.total_usd || 0,
+                    input:           '',
+                    sending:         false,
+                };
+            } catch(e) { this.logLine('sys', `❌ ${e.message}`); }
+        },
+
+        async pgNewSession() {
+            const runId  = this.selectedRun?.filename;
+            const tileId = this.pgModal.tile?.id;
+            try {
+                const res = await fetch(`/api/prompt-gen/${runId}/tiles/${tileId}/sessions`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name: 'Nowa rozmowa' }),
+                });
+                if (!res.ok) throw new Error((await res.json()).detail);
+                const sess = await res.json();
+                this.pgModal.sessions.unshift(sess);
+                await this.pgLoadSession(sess.id);
+            } catch(e) { this.logLine('sys', `❌ ${e.message}`); }
+        },
+
+        async pgLoadSession(sessionId) {
+            if (this.pgModal.activeSessionId && this.pgModal.activeSessionId !== sessionId) {
+                await this.pgAutoSavePrompt();
+            }
+            const runId  = this.selectedRun?.filename;
+            const tileId = this.pgModal.tile?.id;
+            try {
+                const res = await fetch(`/api/prompt-gen/${runId}/tiles/${tileId}/sessions/${sessionId}`);
+                if (!res.ok) throw new Error((await res.json()).detail);
+                const sess = await res.json();
+                const fmt  = this.pgModal.tile?.format_fields || ['clip_l','t5xxl'];
+                this.pgModal.activeSessionId = sessionId;
+                this.pgModal.history         = sess.conversation || [];
+                this.pgModal.promptFields    = { ...Object.fromEntries(fmt.map(f=>[f,''])), ...(sess.prompt_fields||{}) };
+                this.pgModal.sessionCost     = (sess.cost_log||[]).reduce((s,e)=>s+(e.cost_usd||0), 0);
+                this.$nextTick(() => this._pgScrollToBottom());
+            } catch(e) { this.logLine('sys', `❌ ${e.message}`); }
+        },
+
+        async pgDeleteSession(sessionId) {
+            if (!confirm('Usunąć tę sesję?')) return;
+            const runId  = this.selectedRun?.filename;
+            const tileId = this.pgModal.tile?.id;
+            try {
+                await fetch(`/api/prompt-gen/${runId}/tiles/${tileId}/sessions/${sessionId}`, { method: 'DELETE' });
+                this.pgModal.sessions = this.pgModal.sessions.filter(s => s.id !== sessionId);
+                if (this.pgModal.activeSessionId === sessionId) {
+                    this.pgModal.activeSessionId = null;
+                    this.pgModal.history         = [];
+                    this.pgModal.promptFields    = {};
+                    this.pgModal.sessionCost     = 0;
+                }
+            } catch(e) { this.logLine('sys', `❌ ${e.message}`); }
+        },
+
+        async pgSendMessage() {
+            if (!this.pgModal.input.trim() || this.pgModal.sending || !this.pgModal.activeSessionId) return;
+            const runId     = this.selectedRun?.filename;
+            const tileId    = this.pgModal.tile?.id;
+            const sessionId = this.pgModal.activeSessionId;
+            const msg       = this.pgModal.input.trim();
+            this.pgModal.input   = '';
+            this.pgModal.sending = true;
+
+            try {
+                const res = await fetch(`/api/prompt-gen/${runId}/tiles/${tileId}/sessions/${sessionId}/chat`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: msg, history: this.pgModal.history }),
+                });
+                if (!res.ok) { const d = await res.json(); throw new Error(d.detail || res.status); }
+                const data = await res.json();
+
+                this.pgModal.history      = data.history;
+                this.pgModal.sessionCost  = +(this.pgModal.sessionCost + data.cost_usd).toFixed(6);
+                this.pgModal.totalCost    = +(this.pgModal.totalCost   + data.cost_usd).toFixed(6);
+
+                // Update session name in list if auto-renamed
+                const s = this.pgModal.sessions.find(s => s.id === sessionId);
+                if (s && data.session_name) s.name = data.session_name;
+
+                // Auto-extract JSON prompt
+                const jsonMatch = data.reply.match(/\{[\s\S]*\}/);
+                if (jsonMatch) {
+                    try {
+                        const parsed = JSON.parse(jsonMatch[0]);
+                        const fields = this.pgModal.tile?.format_fields || ['clip_l','t5xxl'];
+                        for (const f of fields) {
+                            if (parsed[f] !== undefined) this.pgModal.promptFields[f] = parsed[f];
+                        }
+                    } catch(_) {}
+                }
+
+                this.$nextTick(() => this._pgScrollToBottom());
+            } catch(e) {
+                this.pgModal.history.push({ role: 'assistant', content: `❌ Błąd: ${e.message}` });
+            } finally {
+                this.pgModal.sending = false;
+            }
+        },
+
+        _pgScrollToBottom() {
+            const el = this.$refs.pgChatMessages;
+            if (el) el.scrollTop = el.scrollHeight;
+        },
+
+        async pgAutoSavePrompt() {
+            const runId     = this.selectedRun?.filename;
+            const tileId    = this.pgModal.tile?.id;
+            const sessionId = this.pgModal.activeSessionId;
+            if (!sessionId || !runId || !tileId) return;
+            const hasContent = Object.values(this.pgModal.promptFields).some(v => v?.trim());
+            if (!hasContent) return;
+            try {
+                await fetch(`/api/prompt-gen/${runId}/tiles/${tileId}/sessions/${sessionId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ prompt_fields: this.pgModal.promptFields }),
+                });
+                const s = this.pgModal.sessions.find(s => s.id === sessionId);
+                if (s) s.has_prompt = true;
+            } catch(e) { /* silent */ }
+        },
+
+        async pgSavePrompt() {
+            const runId     = this.selectedRun?.filename;
+            const tileId    = this.pgModal.tile?.id;
+            const sessionId = this.pgModal.activeSessionId;
+            if (!sessionId) return;
+            try {
+                const res = await fetch(`/api/prompt-gen/${runId}/tiles/${tileId}/sessions/${sessionId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ prompt_fields: this.pgModal.promptFields }),
+                });
+                if (!res.ok) throw new Error((await res.json()).detail);
+                // Update has_prompt flag in session list
+                const s = this.pgModal.sessions.find(s => s.id === sessionId);
+                if (s) s.has_prompt = Object.values(this.pgModal.promptFields).some(v => v);
+                this.logLine('sys', '💾 Prompt zapisany');
+            } catch(e) { this.logLine('sys', `❌ ${e.message}`); }
+        },
+
+        pgCopyField(field) {
+            const text = this.pgModal.promptFields[field] || '';
+            if (!text) return;
+            navigator.clipboard.writeText(text).then(() => {
+                this.logLine('sys', `📋 Skopiowano: ${field}`);
+            });
+        },
+
+        async pgChangeFormat(newFormat) {
+            const runId    = this.selectedRun?.filename;
+            const tileId   = this.pgModal.tile?.id;
+            const oldFormat = this.pgModal.tile?.output_format;
+            try {
+                const res = await fetch(`/api/prompt-gen/${runId}/tiles/${tileId}`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ output_format: newFormat }),
+                });
+                if (!res.ok) throw new Error((await res.json()).detail);
+                const info = await res.json();
+                this.pgModal.tile = info;
+
+                const prev = this.pgModal.promptFields;
+                // Cross-format content migration
+                const longText = prev.t5xxl || prev.positive || '';
+                const shortText = prev.clip_l || '';
+                let mapped = {};
+                if (newFormat === 'flux') {
+                    mapped = { clip_l: shortText, t5xxl: longText };
+                } else if (newFormat === 'sdxl') {
+                    mapped = { positive: longText || shortText, negative: prev.negative || '' };
+                } else if (newFormat === 'positive_only') {
+                    mapped = { positive: longText || shortText };
+                }
+                // Fall back to exact name match for any field not covered above
+                this.pgModal.promptFields = Object.fromEntries(
+                    (info.format_fields || []).map(f => [f, mapped[f] !== undefined ? mapped[f] : (prev[f] || '')])
+                );
+
+                const t = this.picTiles.find(t => t.id === tileId);
+                if (t) t.output_format = newFormat;
+                await this.pgAutoSavePrompt();
+                this.logLine('sys', `✓ Format zmieniony na: ${newFormat}`);
+            } catch(e) { this.logLine('sys', `❌ ${e.message}`); }
+        },
+
+        async pgRenameSession(sessionId) {
+            const name = this.pgModal.editingName.trim();
+            this.pgModal.editingSessionId = null;
+            if (!name) return;
+            const runId  = this.selectedRun?.filename;
+            const tileId = this.pgModal.tile?.id;
+            try {
+                await fetch(`/api/prompt-gen/${runId}/tiles/${tileId}/sessions/${sessionId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name }),
+                });
+                const s = this.pgModal.sessions.find(s => s.id === sessionId);
+                if (s) s.name = name;
+            } catch(e) { this.logLine('sys', `❌ ${e.message}`); }
+        },
+
+        async pgToggleIntents() {
+            this.pgModal.showIntents = !this.pgModal.showIntents;
+            if (this.pgModal.showIntents && Object.keys(this.pgModal.intents).length === 0) {
+                try {
+                    const res = await fetch('/api/prompt-gen/intents');
+                    this.pgModal.intents = await res.json();
+                } catch(e) { this.logLine('sys', `❌ ${e.message}`); }
+            }
         },
 
         // ── FS Browser ────────────────────────────────────────

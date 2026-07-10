@@ -79,6 +79,7 @@ class AtlasCloudVideoBackend(BaseBackend):
         positive_prompt, negative_prompt,
         width, height,
         blocks_to_swap=None, frame_interpolation=None,
+        lora_name=None, lora_strength=None,
     ):
         """
         Override BaseBackend — maps I2V/I2V2I to AtlasCloud /generateVideo.
@@ -364,7 +365,7 @@ class AtlasCloudVideoBackend(BaseBackend):
         # ── poll ──────────────────────────────────────────────────────────
         poll_url     = f"{_BASE_URL}/prediction/{prediction_id}"
         poll_headers = {"Authorization": f"Bearer {self.api_key}"}
-        timeout_s    = 600   # 10 min — generous for long/SR videos
+        timeout_s    = 1800  # 30 min — WAN 2.7 może potrzebować >10 min przy kolejce
         t0 = time.monotonic()
 
         video_url = None

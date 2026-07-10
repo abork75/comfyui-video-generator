@@ -67,6 +67,18 @@ parameters:
     param_name: blocks_to_swap
     description: "WanVideo Block Swap - liczba bloków do swapowania (20=domyślne, 35=1024x1024)"
 
+  lora_name:
+    node_id: 56
+    type: string
+    param_name: lora
+    description: "LoRA filename (node 56 pass1; node 97 pass2 ustawiany razem)"
+
+  lora_strength:
+    node_id: 56
+    type: float
+    param_name: strength
+    description: "LoRA strength pass1 (node 56); pass2 (node 97) = strength/3"
+
   frame_interpolation:
     node_id: 106
     type: int
