@@ -188,6 +188,7 @@ def get_transition_status(run_filename: str) -> dict | None:
                 exists = p.exists()
                 base_stem = Path(fname).stem
                 has_arch = _has_archived(chains_dir, base_stem)
+                step_meta = _get_clip_meta(p) if exists else {}
                 steps.append({
                     "filename":     fname,
                     "exists":       exists,
@@ -195,6 +196,7 @@ def get_transition_status(run_filename: str) -> dict | None:
                     "has_archived": has_arch,
                     "size_mb":      round(p.stat().st_size / 1_048_576, 1) if exists else None,
                     "path":         str(p) if exists else None,
+                    "has_audio":    step_meta.get("has_audio", False),
                 })
             all_exist = all(s["exists"] for s in steps)
             any_exist = any(s["exists"] for s in steps)
@@ -303,6 +305,7 @@ def get_transition_status(run_filename: str) -> dict | None:
         p = transition_path(pf, item.get("file", ""), next_item.get("file", ""))
         exists = p.exists()
         has_arch = _has_archived(p.parent, p.stem)
+        meta = _get_clip_meta(p) if exists else {}
         results.append({
             "index":        i_flow,
             "type":         "file",
@@ -312,6 +315,7 @@ def get_transition_status(run_filename: str) -> dict | None:
             "has_archived": has_arch,
             "size_mb":      round(p.stat().st_size / 1_048_576, 1) if exists else None,
             "path":         str(p) if exists else None,
+            "has_audio":    meta.get("has_audio", False),
         })
 
     # ── Totals (count each actual file once) ───────────────────────
@@ -357,9 +361,18 @@ def _get_clip_meta(path: Path) -> dict:
     Return {duration_s, width, height, fps} for a video/image file via ffprobe.
     Falls back to None values on any error (ffprobe not found, corrupt file, etc.).
     """
-    meta = {"duration_s": None, "width": None, "height": None, "fps": None}
+    meta = {"duration_s": None, "width": None, "height": None, "fps": None, "has_audio": False}
     if not path.exists():
         return meta
+    try:
+        audio_probe = subprocess.run(
+            ["ffprobe", "-v", "quiet", "-select_streams", "a:0",
+             "-show_entries", "stream=codec_type", "-of", "csv=p=0", str(path)],
+            capture_output=True, timeout=5,
+        )
+        meta["has_audio"] = audio_probe.returncode == 0 and b"audio" in audio_probe.stdout
+    except Exception:
+        pass
     try:
         result = subprocess.run(
             [

@@ -157,6 +157,8 @@ def run_batch_generation(config):
     default_seed = config.get('default_seed', -1)
     default_positive_prompt = config.get('default_positive_prompt', '')
     default_negative_prompt = config.get('default_negative_prompt', '')
+    default_audio_prompt         = config.get('default_audio_prompt', '')
+    default_audio_negative_prompt = config.get('default_audio_negative_prompt', '')
     default_blocks_to_swap      = config.get('default_blocks_to_swap', None)
     default_frame_interpolation = config.get('default_frame_interpolation', True)
     
@@ -285,6 +287,8 @@ def run_batch_generation(config):
                     'seed': to_config.get('seed', from_config.get('seed', default_seed)),
                     'positive_prompt': to_config.get('pos', from_config.get('pos', default_positive_prompt)),
                     'negative_prompt': to_config.get('neg', from_config.get('neg', default_negative_prompt)),
+                    'audio_prompt': to_config.get('audio_prompt', from_config.get('audio_prompt', default_audio_prompt)),
+                    'audio_negative_prompt': to_config.get('audio_negative_prompt', from_config.get('audio_negative_prompt', default_audio_negative_prompt)),
                     # ✅ FIX: talk clips carry their own portrait width/height (e.g. 608x832)
                     # which must NOT bleed into the chain resolution — skip them.
                     'width': to_config.get('width') or (None if is_from_talk else from_config.get('width')),
@@ -314,6 +318,8 @@ def run_batch_generation(config):
                     'seed': from_config.get('seed', to_config.get('seed', default_seed)),
                     'positive_prompt': from_config.get('pos', to_config.get('pos', default_positive_prompt)),
                     'negative_prompt': from_config.get('neg', to_config.get('neg', default_negative_prompt)),
+                    'audio_prompt': from_config.get('audio_prompt', to_config.get('audio_prompt', default_audio_prompt)),
+                    'audio_negative_prompt': from_config.get('audio_negative_prompt', to_config.get('audio_negative_prompt', default_audio_negative_prompt)),
                     # ✅ FIX: talk clips have their own width/height (e.g. 480x832 portrait)
                     # which must NOT be inherited as the transition resolution — skip them.
                     'width': (None if is_from_talk else from_config.get('width', None)) or to_config.get('width', None),
@@ -1310,6 +1316,8 @@ def run_batch_generation(config):
                 frame_interpolation=trans_config.get('frame_interpolation'),
                 lora_name=trans_config.get('lora_name'),
                 lora_strength=trans_config.get('lora_strength'),
+                audio_prompt=trans_config.get('audio_prompt', ''),
+                audio_negative_prompt=trans_config.get('audio_negative_prompt', ''),
             )
             # Pass AtlasCloud-specific per-item overrides (ignored by other backends)
             if backend_type == 'atlascloud':

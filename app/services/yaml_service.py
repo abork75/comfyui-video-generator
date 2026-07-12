@@ -571,6 +571,14 @@ def generate_py_from_yaml(yaml_path: Path, out_path: Path | None = None) -> Path
     _fi = defs.get('frame_interpolation')
     _fi_val = "True" if _fi is None or _fi else "False"
     parts.append(f"DEFAULT_FRAME_INTERPOLATION = {_fi_val}\n")
+    _pos_prompt = defs.get('default_positive_prompt', '') or "smooth motion, high quality, cinematic"
+    parts.append(f"DEFAULT_POSITIVE_PROMPT = {repr(str(_pos_prompt))}\n")
+    _neg_prompt = defs.get('default_negative_prompt', '') or "blurry, distorted, artifacts, watermark, text"
+    parts.append(f"DEFAULT_NEGATIVE_PROMPT = {repr(str(_neg_prompt))}\n")
+    _audio_prompt = defs.get('default_audio_prompt', '') or "ambient sound, environmental audio, natural soundscape, high quality"
+    parts.append(f"DEFAULT_AUDIO_PROMPT   = {repr(str(_audio_prompt))}\n")
+    _audio_neg_prompt = defs.get('default_audio_negative_prompt', '') or "music, melody, instruments, singing, low quality, distortion"
+    parts.append(f"DEFAULT_AUDIO_NEGATIVE_PROMPT = {repr(str(_audio_neg_prompt))}\n")
     parts.append(f"DEFAULT_SEED           = None\n")
     parts.append(f"SKIP_MISSING           = True\n")
     parts.append(f"SKIP_EXISTED           = {_py_val(defs.get('skip_existed', True))}\n")
@@ -657,6 +665,7 @@ _SKIP_KEYS = {
     "ASPECT_RATIO_TOLERANCE", "ASPECT_RATIO_STRATEGY",
     "MIN_WIDTH", "MIN_HEIGHT", "MAX_WIDTH", "MAX_HEIGHT",
     "DEFAULT_POSITIVE_PROMPT", "DEFAULT_NEGATIVE_PROMPT",
+    "DEFAULT_AUDIO_PROMPT", "DEFAULT_AUDIO_NEGATIVE_PROMPT",
     "GENERIC_PROMPTS", "POSTPROCESSING", "DEBUG_LOG",
     # cloud backend — kept separately
     "COMFY_ICU_WORKFLOW_ID", "WORKFLOW_TEMPLATE_PATH",

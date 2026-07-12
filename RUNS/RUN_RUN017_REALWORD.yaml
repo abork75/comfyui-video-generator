@@ -1,5 +1,5 @@
 # RUN_RUN017_REALWORD.yaml
-# Edited: 2026-07-10 00:58:07
+# Edited: 2026-07-12 02:13:19
 # Edit this file freely — regenerate .py with generate_py_from_yaml()
 #
 project_folder: C:\Users\abork\AppData\Local\CapCut\Videos\__DEVIANT ART\REALWORLD\film
@@ -42,6 +42,8 @@ flow:
   neg: |-
     hitting right buttock, hitting both buttocks equally, weak hits, no impact, static pose, slow motion, deformed bodies, bad anatomy, blurry motion, floating belt, poor physics, low quality, cartoon
   frame_interpolation: false
+  audio_prompt: sharp slap impact, flesh impact sound, skin contact, crisp smack, physical strike, body percussion, high quality, realistic foley
+  audio_negative_prompt: music, melody, ambient drone, echo, reverb, wet sound, low quality, distortion
 
 - file: FIN028_spank02.png
   backend: linux
@@ -53,6 +55,8 @@ flow:
   neg: |-
     hitting right buttock, hitting both buttocks equally, weak hits, no impact, static pose, slow motion, deformed bodies, bad anatomy, blurry motion, floating belt, poor physics, low quality, cartoon
   frame_interpolation: false
+  audio_prompt: sharp slap impact, flesh impact sound, skin contact, crisp smack, physical strike, body percussion, high quality, realistic foley
+  audio_negative_prompt: music, melody, ambient drone, echo, reverb, wet sound, low quality, distortion
 
 - file: FIN028_spank03.png
   backend: linux
@@ -64,6 +68,8 @@ flow:
   neg: |-
     hitting right buttock, hitting both buttocks equally, weak hits, no impact, static pose, slow motion, deformed bodies, bad anatomy, blurry motion, floating belt, poor physics, low quality, cartoon
   frame_interpolation: false
+  audio_prompt: sharp slap impact, flesh impact sound, skin contact, crisp smack, physical strike, body percussion, high quality, realistic foley
+  audio_negative_prompt: music, melody, ambient drone, echo, reverb, wet sound, low quality, distortion
 
 - file: FIN028_spank04.png
   backend: linux
@@ -83,6 +89,8 @@ flow:
   neg: |-
     static pose, slow motion, no movement, weak hits, no impact, blurry motion, deformed bodies, extra limbs, bad anatomy, low quality, cartoon, anime, text, watermark, deformed belt, floating belt, poor physics
   frame_interpolation: false
+  audio_prompt: sharp slap impact, flesh impact sound, skin contact, crisp smack, physical strike, body percussion, high quality, realistic foley
+  audio_negative_prompt: music, melody, ambient drone, echo, reverb, wet sound, low quality, distortion
 
 - file: FIN028_spank2.png
   backend: linux
@@ -92,6 +100,8 @@ flow:
   neg: |-
     NONE
   frame_interpolation: false
+  audio_prompt: subtle body movement, soft weight shift, quiet fabric rustle, gentle shuffling feet on floor, light position change, soft clothing sounds, natural movement foley, realistic, high quality
+  audio_negative_prompt: music, melody, ambient drone, loud impact, hard footsteps, slap, sustained atmosphere, low quality, distortion
 
 - file: FIN028_spank3.png
   backend: linux
@@ -100,6 +110,8 @@ flow:
   neg: |-
     static pose, slow motion, no movement, weak hits, no impact, blurry motion, deformed bodies, extra limbs, bad anatomy, low quality, cartoon, anime, text, watermark, deformed belt, floating belt, poor physics
   frame_interpolation: false
+  audio_prompt: sharp slap impact, flesh impact sound, skin contact, crisp smack, physical strike, body percussion, high quality, realistic foley
+  audio_negative_prompt: music, melody, ambient drone, echo, reverb, wet sound, low quality, distortion
 
 - file: FIN028_spank4.png
   backend: linux
@@ -130,6 +142,8 @@ flow:
   neg: |-
     static pose, slow motion, no movement, weak hits, no impact, blurry motion, deformed bodies, extra limbs, bad anatomy, low quality, cartoon, anime, text, watermark, deformed belt, floating belt, poor physics
   frame_interpolation: false
+  audio_prompt: sharp slap impact, flesh impact sound, skin contact, crisp smack, physical strike, body percussion, high quality, realistic foley
+  audio_negative_prompt: music, melody, ambient drone, echo, reverb, wet sound, low quality, distortion
 
 - file: FIN028_spank5.png
   backend: linux
@@ -138,6 +152,8 @@ flow:
   neg: |-
     static pose, slow motion, no movement, weak hits, no impact, blurry motion, deformed bodies, extra limbs, bad anatomy, low quality, cartoon, anime, text, watermark, deformed belt, floating belt, poor physics
   frame_interpolation: false
+  audio_prompt: sharp slap impact, flesh impact sound, skin contact, crisp smack, physical strike, body percussion, high quality, realistic foley
+  audio_negative_prompt: music, melody, ambient drone, echo, reverb, wet sound, low quality, distortion
 
 - file: FIN028_spank6.png
   backend: linux
@@ -149,6 +165,8 @@ flow:
   neg: |-
     hitting right buttock, hitting both buttocks equally, weak hits, no impact, static pose, slow motion, deformed bodies, bad anatomy, blurry motion, floating belt, poor physics, low quality, cartoon
   frame_interpolation: false
+  audio_prompt: sharp slap impact, flesh impact sound, skin contact, crisp smack, physical strike, body percussion, high quality, realistic foley
+  audio_negative_prompt: music, melody, ambient drone, echo, reverb, wet sound, low quality, distortion
 
 - file: FIN028_spank7.png
   backend: linux
@@ -185,6 +203,8 @@ flow:
   neg: |-
     hitting right buttock, hitting both buttocks equally, weak hits, no impact, static pose, slow motion, deformed bodies, bad anatomy, blurry motion, floating belt, poor physics, low quality, cartoon
   frame_interpolation: false
+  audio_prompt: sharp slap impact, flesh impact sound, skin contact, crisp smack, physical strike, body percussion, high quality, realistic foley
+  audio_negative_prompt: music, melody, ambient drone, echo, reverb, wet sound, low quality, distortion
 
 - file: FIN028_spank8.png
   backend: linux
@@ -196,6 +216,8 @@ flow:
   neg: |-
     hitting right buttock, hitting both buttocks equally, weak hits, no impact, static pose, slow motion, deformed bodies, bad anatomy, blurry motion, floating belt, poor physics, low quality, cartoon
   frame_interpolation: false
+  audio_prompt: sharp slap impact, flesh impact sound, skin contact, crisp smack, physical strike, body percussion, high quality, realistic foley
+  audio_negative_prompt: music, melody, ambient drone, echo, reverb, wet sound, low quality, distortion
 
 - file: FIN028_spank9.png
   backend: linux
@@ -233,10 +255,14 @@ flow:
       pos: |-
         Dominatrix is leaving the room, woman on bed is laying still without movement
       neg: ""
+      audio_prompt: foley sound effects, physical environment sounds, footsteps, cloth movement, objects, wind bursts, creaking, synchronized with video, crisp, realistic, high quality
+      audio_negative_prompt: music, melody, instruments, singing, ambient drone, sustained atmosphere, continuous background noise, reverb heavy, low quality, distortion
     - duration: 2
       pos: |-
         Woman on bed is still laying practially without any move just brathing, face down to bed
       neg: ""
+      audio_prompt: subtle body movement, soft weight shift, quiet fabric rustle, gentle shuffling feet on floor, light position change, soft clothing sounds, natural movement foley, realistic, high quality
+      audio_negative_prompt: music, melody, ambient drone, loud impact, hard footsteps, slap, sustained atmosphere, low quality, distortion
     backend: linux
     fps: 16
     steps: 6
@@ -273,6 +299,8 @@ flow:
       pos: |-
         Woman on bed is still laying practially without any move just brathing, face down to bed
       neg: ""
+      audio_prompt: subtle body movement, soft weight shift, quiet fabric rustle, gentle shuffling feet on floor, light position change, soft clothing sounds, natural movement foley, realistic, high quality
+      audio_negative_prompt: music, melody, ambient drone, loud impact, hard footsteps, slap, sustained atmosphere, low quality, distortion
     backend: linux
     fps: 16
     steps: 6
@@ -301,6 +329,8 @@ flow:
   neg: |-
     fast movement, sudden jump, easy rising, standing up too quickly, no effort, static camera, no camera movement, deformed body, bad anatomy, extra limbs, blurry motion, low quality, cartoon, unrealistic physics
   frame_interpolation: true
+  audio_prompt: subtle body movement, soft weight shift, quiet fabric rustle, gentle shuffling feet on floor, light position change, soft clothing sounds, natural movement foley, realistic, high quality
+  audio_negative_prompt: music, melody, ambient drone, loud impact, hard footsteps, slap, sustained atmosphere, low quality, distortion
 
 - file: FIN028_standingup.jpg
   backend: linux
@@ -317,6 +347,8 @@ flow:
       pos: |-
         Woman is leaving the scene going front to camera
       neg: ""
+      audio_prompt: subtle body movement, soft weight shift, quiet fabric rustle, gentle shuffling feet on floor, light position change, soft clothing sounds, natural movement foley, realistic, high quality
+      audio_negative_prompt: music, melody, ambient drone, loud impact, hard footsteps, slap, sustained atmosphere, low quality, distortion
     backend: linux
     fps: 16
     steps: 6
@@ -342,10 +374,14 @@ flow:
       pos: |-
         Domintarix is passing away, woman ad wall is standing still
       neg: ""
+      audio_prompt: foley sound effects, physical environment sounds, footsteps, cloth movement, objects, wind bursts, creaking, synchronized with video, crisp, realistic, high quality
+      audio_negative_prompt: music, melody, instruments, singing, ambient drone, sustained atmosphere, continuous background noise, reverb heavy, low quality, distortion
     - duration: 3
       pos: |-
         We woman on right is continuing leaving the scene. Woman at the wall standing still
       neg: ""
+      audio_prompt: foley sound effects, physical environment sounds, footsteps, cloth movement, objects, wind bursts, creaking, synchronized with video, crisp, realistic, high quality
+      audio_negative_prompt: music, melody, instruments, singing, ambient drone, sustained atmosphere, continuous background noise, reverb heavy, low quality, distortion
     backend: linux
     fps: 16
     steps: 6
@@ -363,6 +399,8 @@ flow:
     Smooth zoom on woman's face
   neg: |-
     NONE
+  audio_prompt: subtle body movement, soft weight shift, quiet fabric rustle, gentle shuffling feet on floor, light position change, soft clothing sounds, natural movement foley, realistic, high quality
+  audio_negative_prompt: music, melody, ambient drone, loud impact, hard footsteps, slap, sustained atmosphere, low quality, distortion
 
 - file: FIN028_finalhumilation_zoom.mp4
   backend: linux
@@ -371,6 +409,8 @@ flow:
     Camera slowly zoom out
   neg: |-
     NONE
+  audio_prompt: subtle body movement, soft weight shift, quiet fabric rustle, gentle shuffling feet on floor, light position change, soft clothing sounds, natural movement foley, realistic, high quality
+  audio_negative_prompt: music, melody, ambient drone, loud impact, hard footsteps, slap, sustained atmosphere, low quality, distortion
 
 - file: FIN028_finalhumilation_zoomout.png
   backend: linux
@@ -379,6 +419,8 @@ flow:
     Women is kneeling down before her dominatrix
   neg: |-
     NONE
+  audio_prompt: subtle body movement, soft weight shift, quiet fabric rustle, gentle shuffling feet on floor, light position change, soft clothing sounds, natural movement foley, realistic, high quality
+  audio_negative_prompt: music, melody, ambient drone, loud impact, hard footsteps, slap, sustained atmosphere, low quality, distortion
 
 - file: FIN028_kleczy.jpg
   backend: linux
@@ -387,6 +429,8 @@ flow:
     Women is bowing and kissing boots of her dominatrix
   neg: |-
     NONE
+  audio_prompt: subtle body movement, soft weight shift, quiet fabric rustle, gentle shuffling feet on floor, light position change, soft clothing sounds, natural movement foley, realistic, high quality
+  audio_negative_prompt: music, melody, ambient drone, loud impact, hard footsteps, slap, sustained atmosphere, low quality, distortion
 
 - file: FIN028_calujestopy.jpg
   backend: linux
@@ -396,11 +440,10 @@ flow:
   neg: |-
     NONE
 
-- break: true
-  label: FINAL HUMILATION
-
 defaults:
   backend: linux
   resolution:
-  - 960
-  - 1248
+  - 480
+  - 624
+  pre_target_w: 960
+  pre_target_h: 1248

@@ -372,8 +372,9 @@ class LinuxBackend(BaseBackend):
     def _maybe_add_audio(self, video_path: Path, params: dict) -> None:
         """If MMAUDIO_ENABLED env var is set, generate audio and merge into video."""
         if not os.environ.get("MMAUDIO_ENABLED"):
+            self.logger.info("  MMAudio: pominięto (przycisk 🔊 Audio był wyłączony)")
             return
-        prompt = params.get("pos_prompt", "")
+        prompt = params.get("audio_prompt") or params.get("pos_prompt", "")
         if not prompt:
             self.logger.warning("  MMAudio: brak promptu, pomijam")
             return
@@ -384,9 +385,11 @@ class LinuxBackend(BaseBackend):
             duration = info["duration"] if info["duration"] and info["duration"] > 0 else 10.0
         except Exception:
             duration = 10.0
+        negative_prompt = params.get("audio_negative_prompt", "")
         _mmaudio_add_audio(
             video_path=video_path,
             prompt=prompt,
+            negative_prompt=negative_prompt,
             api_url=self.api_url,
             duration=duration,
             steps=int(os.environ.get("MMAUDIO_STEPS", "25")),

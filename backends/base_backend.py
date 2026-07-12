@@ -134,7 +134,8 @@ class BaseBackend(ABC):
                       duration, fps, steps, cfg, seed,
                       positive_prompt, negative_prompt,
                       width, height, blocks_to_swap=None,
-                      frame_interpolation=None, lora_name=None, lora_strength=None):
+                      frame_interpolation=None, lora_name=None, lora_strength=None,
+                      audio_prompt=None, audio_negative_prompt=None):
         """
         High-level wrapper for transition generation
 
@@ -187,6 +188,8 @@ class BaseBackend(ABC):
                 'seed': seed,
                 'pos_prompt': positive_prompt,
                 'neg_prompt': negative_prompt,
+                'audio_prompt': audio_prompt or '',
+                'audio_negative_prompt': audio_negative_prompt or '',
                 'width': width,
                 'height': height,
                 'length': calculate_optimal_frames(duration, fps),  # Total frames

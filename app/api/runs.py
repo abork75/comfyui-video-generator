@@ -263,6 +263,35 @@ async def put_globals(filename: str, request: Request):
     return {"ok": True, "py_error": py_error}
 
 
+@router.patch("/{filename}/globals/pre-target")
+async def patch_pre_target(filename: str, request: Request):
+    """
+    Persist pre-processing target resolution (pre_target_w, pre_target_h) to YAML defaults.
+    Body: { "pre_target_w": 1920, "pre_target_h": 1080 }
+    """
+    import yaml as _yaml
+    if not filename.endswith(".yaml"):
+        raise HTTPException(status_code=422, detail="Only YAML files supported")
+    yaml_path = RUNS_FOLDER / filename
+    if not yaml_path.exists():
+        raise HTTPException(status_code=404, detail=f"Not found: {filename}")
+    try:
+        body = await request.json()
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid JSON")
+    w = body.get("pre_target_w")
+    h = body.get("pre_target_h")
+    if not isinstance(w, int) or not isinstance(h, int):
+        raise HTTPException(status_code=400, detail="pre_target_w and pre_target_h must be integers")
+    data = get_yaml_globals(yaml_path)
+    if data is None:
+        raise HTTPException(status_code=400, detail="Cannot parse YAML")
+    data["defaults"]["pre_target_w"] = w
+    data["defaults"]["pre_target_h"] = h
+    save_yaml_globals(yaml_path, data)
+    return {"ok": True}
+
+
 @router.put("/{filename}/flow")
 async def put_flow(filename: str, request: Request):
     """

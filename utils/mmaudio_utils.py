@@ -30,7 +30,7 @@ _POLL_INTERVAL = 4.0
 _TIMEOUT_S     = 300
 
 
-def _build_workflow(video_filename: str, prompt: str, duration: float, steps: int, cfg: float, seed: int) -> dict:
+def _build_workflow(video_filename: str, prompt: str, negative_prompt: str, duration: float, steps: int, cfg: float, seed: int) -> dict:
     """Build MMAudio ComfyUI API workflow dict."""
     return {
         "1": {
@@ -73,7 +73,7 @@ def _build_workflow(video_filename: str, prompt: str, duration: float, steps: in
                 "cfg":              cfg,
                 "seed":             seed,
                 "prompt":           prompt,
-                "negative_prompt":  "",
+                "negative_prompt":  negative_prompt,
                 "mask_away_clip":   False,
                 "force_offload":    True,
             },
@@ -178,10 +178,14 @@ def _merge_audio_into_video(video_path: Path, audio_bytes: bytes, audio_ext: str
 
     try:
         tmp_audio.write_bytes(audio_bytes)
+        if logger:
+            logger.info(f"  ffmpeg merge: {video_path.name} + audio → tmp...")
         cmd = [
             "ffmpeg", "-y",
             "-i", str(video_path),
             "-i", str(tmp_audio),
+            "-map", "0:v:0",
+            "-map", "1:a:0",
             "-c:v", "copy",
             "-c:a", "aac", "-b:a", "192k",
             "-shortest",
@@ -190,13 +194,34 @@ def _merge_audio_into_video(video_path: Path, audio_bytes: bytes, audio_ext: str
         r = subprocess.run(cmd, capture_output=True, timeout=120)
         if r.returncode != 0:
             if logger:
-                logger.warning(f"  ffmpeg merge exit {r.returncode}: {r.stderr.decode(errors='replace')[:200]}")
+                logger.warning(f"  ffmpeg merge exit {r.returncode}: {r.stderr.decode(errors='replace')[:300]}")
             return False
-        tmp_video.replace(video_path)
-        return True
+
+        if not tmp_video.exists() or tmp_video.stat().st_size == 0:
+            if logger:
+                logger.warning(f"  ffmpeg merge: tmp_video nie powstał lub pusty!")
+            return False
+
+        if logger:
+            logger.info(f"  ffmpeg merge OK ({tmp_video.stat().st_size // 1024} KB) — podmieniam plik...")
+
+        # Replace original — retry on Windows PermissionError (file open in browser)
+        for attempt in range(5):
+            try:
+                tmp_video.replace(video_path)
+                if logger:
+                    logger.success(f"  Plik podmieniony: {video_path.name}")
+                return True
+            except PermissionError as pe:
+                if attempt < 4:
+                    if logger:
+                        logger.warning(f"  PermissionError (próba {attempt+1}/5), czekam 1s... ({pe})")
+                    time.sleep(1)
+                else:
+                    raise
     except Exception as e:
         if logger:
-            logger.warning(f"  Błąd merge audio: {e}")
+            logger.warning(f"  Błąd merge audio: {type(e).__name__}: {e}")
         return False
     finally:
         tmp_audio.unlink(missing_ok=True)
@@ -207,6 +232,7 @@ def _merge_audio_into_video(video_path: Path, audio_bytes: bytes, audio_ext: str
 def add_audio(
     video_path: Path,
     prompt: str,
+    negative_prompt: str = "",
     api_url: str = "http://127.0.0.1:8189",
     duration: float = 10.0,
     steps: int = 25,
@@ -233,7 +259,7 @@ def add_audio(
         video_filename = _upload_video(video_path, api_url)
 
         # 2. Build and queue workflow
-        workflow = _build_workflow(video_filename, prompt, duration, steps, cfg, seed)
+        workflow = _build_workflow(video_filename, prompt, negative_prompt, duration, steps, cfg, seed)
         prompt_id = _queue_workflow(workflow, api_url)
         if logger:
             logger.info(f"  MMAudio: kolejka ({prompt_id[:8]}...) czekam...")
