@@ -668,6 +668,7 @@
                                                                         <template x-if="step.duration"><span class="px-1.5 py-0.5 bg-gray-700 rounded text-xs text-gray-300" x-text="step.duration + 's'"></span></template>
                                                                         <template x-if="step.blocks_to_swap != null"><span class="px-1.5 py-0.5 bg-indigo-900 rounded text-xs text-indigo-300" x-text="'bts:' + step.blocks_to_swap"></span></template>
                                                                         <template x-if="step.width && step.height"><span class="px-1.5 py-0.5 bg-gray-700 rounded text-xs text-yellow-400" x-text="step.width + '×' + step.height"></span></template>
+                                                                        <template x-if="entry.item.chain_prefix && _si(entry.idx)?.steps?.[si]?.has_audio"><span class="px-1.5 py-0.5 bg-violet-900/60 rounded text-xs text-violet-400" title="Ma ścieżkę audio">🔊</span></template>
                                                                     </div>
                                                                 </div>
                                                                 <!-- Pos prompt — green when active, gray when NONE -->
@@ -706,6 +707,9 @@
                                                                                     :class="(isRunning || (chainJobStatus.chain_prefix === entry.item.chain_prefix && (chainJobStatus.status === 'running' || chainJobStatus.status === 'queued'))) ? 'opacity-30 cursor-not-allowed text-gray-600' : 'text-gray-500 hover:text-blue-400'"
                                                                                     class="text-sm px-1 transition"
                                                                                     :title="'Re-generuj od step '+(si+1)+' do '+entry.item.chain.length">↺</button>
+                                                                            <button @click="regenAudio(fname, step.audio_prompt, step.audio_negative_prompt)"
+                                                                                    class="text-violet-600 hover:text-violet-400 text-sm px-1 transition"
+                                                                                    :title="step.audio_prompt ? 'Re-generuj audio [custom prompt]' : 'Re-generuj samo audio (MMAudio)'">🔊</button>
                                                                             <button @click="archiveChainFrom(entry.item.chain_prefix, si, entry.item.chain.length)"
                                                                                     class="text-gray-600 hover:text-red-400 text-sm px-1"
                                                                                     :title="'Archiwizuj od step '+(si+1)+' do '+entry.item.chain.length">🗑</button>
@@ -786,6 +790,7 @@
                                                                 <template x-if="entry.item.frame_interpolation === false"><span class="px-1.5 py-0.5 bg-yellow-900 rounded text-xs text-yellow-500" title="RIFE VFI wyłączone">⏸ no-interp</span></template>
                                                                 <template x-if="entry.item.frame_interpolation === true"><span class="px-1.5 py-0.5 bg-blue-900 rounded text-xs text-blue-400" title="RIFE VFI wymuszone włączone">⟳ interp</span></template>
                                                                 <template x-if="entry.item.width && entry.item.height"><span class="px-1.5 py-0.5 bg-gray-700 rounded text-xs text-yellow-400" x-text="entry.item.width + '×' + entry.item.height"></span></template>
+                                                                <template x-if="_si(entry.idx)?.has_audio"><span class="px-1.5 py-0.5 bg-violet-900/60 rounded text-xs text-violet-400" title="Plik ma ścieżkę audio">🔊</span></template>
                                                             </div>
                                                         </div>
                                                         <!-- Positive prompt — green when active (generates transition), gray when last-before-break -->
@@ -840,6 +845,12 @@
                                                                         :class="isRunning ? 'opacity-30 cursor-not-allowed text-gray-600' : 'text-gray-500 hover:text-blue-400'"
                                                                         class="text-sm px-1 py-0.5 rounded transition"
                                                                         title="Re-generuj (zarchiwizuj i uruchom ponownie)">↺</button>
+                                                                <button @click="regenAudio(fileItemName(entry.idx), entry.item.audio_prompt, entry.item.audio_negative_prompt)"
+                                                                        :disabled="isRunning"
+                                                                        :class="isRunning ? 'opacity-30 cursor-not-allowed text-gray-600' : 'text-violet-600 hover:text-violet-400'"
+                                                                        class="text-sm px-1 py-0.5 rounded transition"
+                                                                        :title="entry.item.audio_prompt ? 'Re-generuj audio [custom prompt]' : 'Re-generuj samo audio (MMAudio)'"
+                                                                        >🔊</button>
                                                                 <button @click="openColorGradeModal(entry, seg)"
                                                                         class="text-gray-600 hover:text-purple-400 text-sm px-1 py-0.5 rounded transition"
                                                                         title="Korekcja koloru z fade (MKL)">🎨</button>
@@ -1395,9 +1406,11 @@
                     <div class="flex items-center gap-3 px-5 py-2.5 border-b border-gray-700 bg-gray-900 flex-shrink-0 text-xs flex-wrap">
                         <span class="text-gray-400 flex-shrink-0">Docelowa rozdzielczość:</span>
                         <input x-model.number="preTargetW" type="number" min="64" max="8192" step="64"
+                               @change="savePreTarget()"
                                class="w-20 bg-gray-800 border border-gray-600 rounded px-2 py-1 text-gray-200 text-center focus:outline-none focus:border-purple-500">
                         <span class="text-gray-600">×</span>
                         <input x-model.number="preTargetH" type="number" min="64" max="8192" step="64"
+                               @change="savePreTarget()"
                                class="w-20 bg-gray-800 border border-gray-600 rounded px-2 py-1 text-gray-200 text-center focus:outline-none focus:border-purple-500">
                         <span class="text-gray-600"
                               x-show="selectedRun?.force_resolution"
@@ -1406,6 +1419,9 @@
                         <button @click="preSelectBelowTarget()" :disabled="preIsRunning"
                                 class="text-gray-400 hover:text-white border border-gray-600 hover:border-gray-400 px-2 py-1 rounded transition disabled:opacity-40">
                             ☑ Zaznacz poniżej celu</button>
+                        <button @click="preSelectNot24fps()" :disabled="preIsRunning"
+                                class="text-gray-400 hover:text-white border border-gray-600 hover:border-gray-400 px-2 py-1 rounded transition disabled:opacity-40">
+                            🎞 Zaznacz nie-24fps</button>
                         <button @click="preSelected = {}" :disabled="preIsRunning"
                                 class="text-gray-400 hover:text-white border border-gray-600 hover:border-gray-400 px-2 py-1 rounded transition disabled:opacity-40">
                             ☐ Odznacz</button>
@@ -1492,9 +1508,18 @@
                         <span class="text-gray-600"
                               x-text="`Zaznaczono: ${preSelectedCount()} z ${preClips.filter(c=>c.status==='ok').length} dostępnych`"></span>
                         <div class="flex-1"></div>
+                        <button @click="preBatchFps()"
+                                :disabled="preSelectedCount() === 0 || preIsRunning || preFpsRunning"
+                                :class="preSelectedCount() === 0 || preIsRunning || preFpsRunning
+                                    ? 'opacity-40 cursor-not-allowed bg-teal-900'
+                                    : 'bg-teal-700 hover:bg-teal-600 cursor-pointer'"
+                                class="flex items-center gap-2 px-4 py-1.5 text-white rounded-lg transition">
+                            <span x-show="preFpsRunning" class="animate-spin inline-block">⟳</span>
+                            <span x-text="preFpsRunning ? 'Konwertowanie FPS…' : `🎞 Konwertuj do 24fps (${preSelectedCount()})`"></span>
+                        </button>
                         <button @click="preStartBatch()"
-                                :disabled="preSelectedCount() === 0 || preIsRunning"
-                                :class="preSelectedCount() === 0 || preIsRunning
+                                :disabled="preSelectedCount() === 0 || preIsRunning || preFpsRunning"
+                                :class="preSelectedCount() === 0 || preIsRunning || preFpsRunning
                                     ? 'opacity-40 cursor-not-allowed bg-purple-900'
                                     : 'bg-purple-700 hover:bg-purple-600 cursor-pointer'"
                                 class="flex items-center gap-2 px-4 py-1.5 text-white rounded-lg transition">
@@ -1605,7 +1630,8 @@
                                                 <div class="sort-shot-item flex items-stretch gap-1" style="width:172px; flex-shrink:0">
                                                     <div class="sort-shot-handle flex-shrink-0 flex items-center justify-center w-4 cursor-grab active:cursor-grabbing select-none text-gray-600 hover:text-gray-200 transition text-base leading-none">⠿</div>
                                                     <!-- Ramka ujęcia -->
-                                                    <div class="flex-1 min-w-0 border border-gray-500 hover:border-gray-400 rounded-lg overflow-hidden bg-gray-800 flex flex-col transition">
+                                                    <div class="flex-1 min-w-0 border border-gray-500 hover:border-gray-400 rounded-lg overflow-hidden bg-gray-800 flex flex-col transition cursor-pointer"
+                                                         @click="openShotModal(gIdx, sIdx)">
                                                         <!-- Miniatura pierwszego itemu ujęcia -->
                                                         <div class="relative bg-gray-900" style="aspect-ratio:16/9">
                                                             <template x-if="shot.items.length > 0 && shot.items.find(i => i._thumb_url)">
@@ -1628,6 +1654,7 @@
                                                         <!-- Edytowalna nazwa ujęcia -->
                                                         <input type="text"
                                                                :value="shot.name"
+                                                               @click.stop
                                                                @input="sortGroups[gIdx].shots[sIdx].name = $event.target.value; sortDirty = true"
                                                                @keydown.enter="$el.blur()"
                                                                class="w-full text-xs text-gray-300 bg-transparent outline-none px-1.5 py-1 border-t border-gray-700 hover:bg-gray-700/40 focus:bg-gray-700/60 focus:border-teal-500 transition placeholder-gray-600 cursor-text"
@@ -2320,6 +2347,124 @@
     </div>
 </div>
 
+<!-- ═══ SHOT PREVIEW MODAL ════════════════════════════════════════ -->
+<template x-if="shotModal.open">
+<div class="fixed inset-0 bg-black/85 flex items-center justify-center z-50 p-4"
+     @keydown.escape.window="closeShotModal()">
+    <div class="bg-gray-900 rounded-xl border border-gray-700 w-full flex flex-col" style="max-width:720px; max-height:90vh">
+
+        <!-- Header -->
+        <div class="flex items-center justify-between px-4 py-3 border-b border-gray-700 flex-shrink-0">
+            <div class="flex items-center gap-2">
+                <span class="text-teal-400">🎬</span>
+                <span class="text-sm font-semibold text-gray-200"
+                      x-text="shotModal.shot?.name || ('Ujęcie ' + (_shotGlobalIdx(shotModal.gIdx, shotModal.sIdx)))"></span>
+                <span class="text-xs text-gray-600" x-text="shotModal.files.length + ' klipów'"></span>
+            </div>
+            <button @click="closeShotModal()" class="text-gray-500 hover:text-white text-xl leading-none">×</button>
+        </div>
+
+        <div class="flex-1 overflow-y-auto">
+
+            <!-- Player -->
+            <div class="bg-black relative" style="aspect-ratio:16/9">
+                <video x-ref="shotPlayer"
+                       class="w-full h-full object-contain"
+                       @ended="shotPlayerEnded()"
+                       @play="shotModal.playerPlaying=true"
+                       @pause="shotModal.playerPlaying=false"
+                       @click="shotPlayerToggle()">
+                </video>
+                <div x-show="shotModal.loading"
+                     class="absolute inset-0 flex items-center justify-center text-gray-500 text-sm gap-2">
+                    <span class="animate-spin">⟳</span> Ładowanie…
+                </div>
+                <div x-show="!shotModal.loading && !shotModal.files.length"
+                     class="absolute inset-0 flex items-center justify-center text-gray-600 text-sm">
+                    Brak wygenerowanych plików w ujęciu
+                </div>
+                <!-- Overlay controls -->
+                <div x-show="!shotModal.loading && shotModal.files.length"
+                     class="absolute bottom-2 left-2 right-2 flex items-center gap-2">
+                    <button @click="shotPlayerToggle()"
+                            class="bg-black/60 hover:bg-black/80 text-white rounded px-2 py-1 text-sm transition"
+                            x-text="shotModal.playerPlaying ? '⏸' : '▶'"></button>
+                    <div class="flex gap-1 flex-wrap">
+                        <template x-for="(f, fi) in shotModal.files" :key="fi">
+                            <button @click="_shotPlayerLoad(fi); $refs.shotPlayer?.play().catch(()=>{})"
+                                    :class="fi === shotModal.playerIdx
+                                        ? 'bg-teal-600 text-white'
+                                        : 'bg-black/60 hover:bg-gray-700 text-gray-300'"
+                                    class="rounded px-1.5 py-0.5 text-xs transition"
+                                    x-text="fi + 1"></button>
+                        </template>
+                    </div>
+                    <div class="flex-1"></div>
+                    <span class="text-xs text-gray-400 bg-black/60 rounded px-1.5 py-0.5"
+                          x-text="(shotModal.files[shotModal.playerIdx]?.name || '').replace(/_transition\.mp4$/,'').slice(-30)"></span>
+                </div>
+            </div>
+
+            <!-- Clip list -->
+            <div x-show="shotModal.files.length" class="px-4 py-3 border-b border-gray-700 space-y-1">
+                <template x-for="(f, fi) in shotModal.files" :key="fi">
+                    <div class="flex items-center gap-2 cursor-pointer rounded px-2 py-1 transition"
+                         :class="fi === shotModal.playerIdx ? 'bg-gray-700' : 'hover:bg-gray-800'"
+                         @click="_shotPlayerLoad(fi); $refs.shotPlayer?.play().catch(()=>{})">
+                        <span class="text-xs text-gray-600 w-5 flex-shrink-0" x-text="fi+1"></span>
+                        <span class="text-xs font-mono text-gray-300 flex-1 truncate" x-text="f.name"></span>
+                        <template x-if="f.has_audio">
+                            <span class="px-1.5 py-0.5 bg-violet-900/60 rounded text-xs text-violet-400">🔊</span>
+                        </template>
+                        <template x-if="!f.has_audio">
+                            <span class="text-xs text-gray-700">bez audio</span>
+                        </template>
+                    </div>
+                </template>
+            </div>
+
+            <!-- Audio smoothing -->
+            <div class="px-4 py-4 space-y-3">
+                <div class="flex items-center gap-2">
+                    <span class="text-violet-400 text-sm">🔊</span>
+                    <span class="text-xs text-violet-400 font-semibold">Uspójnianie audio</span>
+                    <span class="text-xs text-gray-600">— fade in/out + loudnorm na klipach z audio</span>
+                </div>
+                <div class="flex items-center gap-4 flex-wrap">
+                    <label class="flex items-center gap-2 text-xs text-gray-400">
+                        Fade
+                        <input type="range" x-model.number="shotModal.fadePct" min="0.05" max="0.3" step="0.05"
+                               class="w-24 accent-violet-500">
+                        <span class="text-violet-300 w-8" x-text="Math.round(shotModal.fadePct*100)+'%'"></span>
+                    </label>
+                    <label class="flex items-center gap-2 text-xs text-gray-400 cursor-pointer">
+                        <input type="checkbox" x-model="shotModal.loudnorm" class="accent-violet-500">
+                        Loudnorm (EBU R128)
+                    </label>
+                    <span class="text-xs text-gray-600"
+                          x-text="shotModal.files.filter(f=>f.has_audio).length + '/' + shotModal.files.length + ' klipów ma audio'"></span>
+                </div>
+                <div class="flex items-center gap-3">
+                    <button @click="smoothShotAudio()"
+                            :disabled="shotModal.smoothRunning || !shotModal.files.filter(f=>f.has_audio).length"
+                            :class="(shotModal.smoothRunning || !shotModal.files.filter(f=>f.has_audio).length)
+                                ? 'opacity-40 cursor-not-allowed bg-gray-700 text-gray-400'
+                                : 'bg-violet-700 hover:bg-violet-600 text-white'"
+                            class="text-xs rounded px-3 py-1.5 transition font-semibold">
+                        <span x-show="!shotModal.smoothRunning">🔊 Uspójnij audio</span>
+                        <span x-show="shotModal.smoothRunning" class="flex items-center gap-1">
+                            <span class="animate-spin inline-block">⟳</span> Przetwarzam…
+                        </span>
+                    </button>
+                    <span class="text-xs text-gray-600">Operacja in-place — modyfikuje oryginalne pliki</span>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+</template>
+
 <!-- ═══ SORT UNSAVED GUARD MODAL ══════════════════════════════════ -->
 <div x-show="sortGuardModal.open" x-cloak
      class="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4"
@@ -2459,6 +2604,42 @@
                     </div>
                 </div>
                 <p class="text-xs text-gray-600 mt-2">Szer. i Wys. ustawiają FORCE_RESOLUTION — zostaw puste aby używać domyślnego 1024×1024. Wartości są automatycznie zaokrąglane do wielokrotności 16.</p>
+            </div>
+
+            <!-- Video prompts section -->
+            <div class="bg-gray-800 rounded-lg p-4 space-y-3">
+                <h4 class="text-xs font-semibold text-orange-400 uppercase tracking-wider">Prompty wideo (domyślne)</h4>
+                <div>
+                    <label class="block text-xs text-gray-400 mb-1">Positive prompt</label>
+                    <textarea x-model="globalsModal.data.defaults.default_positive_prompt"
+                              rows="3" placeholder="domyślnie: smooth motion, high quality, cinematic"
+                              class="w-full bg-gray-700 text-white text-xs rounded px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-orange-500 resize-none font-mono"></textarea>
+                </div>
+                <div>
+                    <label class="block text-xs text-gray-400 mb-1">Negative prompt</label>
+                    <textarea x-model="globalsModal.data.defaults.default_negative_prompt"
+                              rows="2" placeholder="domyślnie: blurry, distorted, artifacts, watermark, text"
+                              class="w-full bg-gray-700 text-white text-xs rounded px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-orange-500 resize-none font-mono"></textarea>
+                </div>
+                <p class="text-xs text-gray-600">Fallback gdy klip w flow nie ma własnego pos/neg. Puste pole = wbudowany domyślny prompt.</p>
+            </div>
+
+            <!-- Audio prompt section -->
+            <div class="bg-gray-800 rounded-lg p-4 space-y-3">
+                <h4 class="text-xs font-semibold text-violet-400 uppercase tracking-wider">Audio (MMAudio)</h4>
+                <div>
+                    <label class="block text-xs text-gray-400 mb-1">Positive prompt audio</label>
+                    <textarea x-model="globalsModal.data.defaults.default_audio_prompt"
+                              rows="3" placeholder="domyślnie: ambient sound, environmental audio, natural soundscape, high quality"
+                              class="w-full bg-gray-700 text-white text-xs rounded px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-violet-500 resize-none font-mono"></textarea>
+                </div>
+                <div>
+                    <label class="block text-xs text-gray-400 mb-1">Negative prompt audio</label>
+                    <textarea x-model="globalsModal.data.defaults.default_audio_negative_prompt"
+                              rows="2" placeholder="domyślnie: music, melody, instruments, singing, low quality, distortion"
+                              class="w-full bg-gray-700 text-white text-xs rounded px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-violet-500 resize-none font-mono"></textarea>
+                </div>
+                <p class="text-xs text-gray-600">Używany gdy klikniesz 🔊 Audio przed generacją. Positive — fallback na positive prompt klipu gdy puste.</p>
             </div>
 
         </div>
@@ -2632,6 +2813,41 @@
                         <textarea x-model="editModal.data.neg" rows="3"
                                   class="w-full bg-gray-800 border border-gray-600 rounded px-3 py-2 text-sm text-gray-200 font-mono focus:outline-none focus:border-red-500 resize-y"></textarea>
                     </div>
+                    <div class="border-t border-gray-700 pt-3">
+                        <div class="flex items-center gap-2 mb-2">
+                            <span class="text-violet-400 text-sm">🔊</span>
+                            <span class="text-xs text-violet-400 font-semibold">Audio (MMAudio)</span>
+                            <span class="text-xs text-gray-600">— zostaw puste = użyj domyślnych projektu</span>
+                        </div>
+                        <div class="space-y-2">
+                            <div>
+                                <label class="block text-xs text-violet-300 mb-1">Audio prompt (pozytywny)</label>
+                                <div class="flex flex-wrap gap-1 mb-1">
+                                    <template x-for="p in mmAudioPresets" :key="p.label">
+                                        <button type="button" @click="editModal.data.audio_prompt = p.pos; editModal.data.audio_negative_prompt = p.neg"
+                                                class="px-1.5 py-0.5 bg-violet-900/40 hover:bg-violet-700/60 text-violet-300 text-xs rounded transition"
+                                                x-text="p.label"></button>
+                                    </template>
+                                    <button type="button" x-show="editModal.data.audio_prompt || editModal.data.audio_negative_prompt"
+                                            @click="editModal.data.audio_prompt = ''; editModal.data.audio_negative_prompt = ''"
+                                            class="px-1.5 py-0.5 bg-gray-700 hover:bg-gray-600 text-gray-400 text-xs rounded transition">✕ wyczyść</button>
+                                </div>
+                                <textarea x-model="editModal.data.audio_prompt" rows="2"
+                                          class="w-full bg-gray-800 border border-violet-900 rounded px-3 py-2 text-sm text-gray-200 font-mono focus:outline-none focus:border-violet-500 resize-y"
+                                          :placeholder="`domyślny: ${runAudioDefaults.audio_prompt}`"></textarea>
+                                <p x-show="!editModal.data.audio_prompt" class="text-xs text-gray-600 mt-1 font-mono truncate"
+                                   x-text="`domyślny prompt: ${runAudioDefaults.audio_prompt}`"></p>
+                            </div>
+                            <div>
+                                <label class="block text-xs text-violet-300 mb-1">Audio prompt (negatywny)</label>
+                                <textarea x-model="editModal.data.audio_negative_prompt" rows="2"
+                                          class="w-full bg-gray-800 border border-violet-900 rounded px-3 py-2 text-sm text-gray-200 font-mono focus:outline-none focus:border-violet-500 resize-y"
+                                          :placeholder="`domyślny: ${runAudioDefaults.audio_negative_prompt}`"></textarea>
+                                <p x-show="!editModal.data.audio_negative_prompt" class="text-xs text-gray-600 mt-1 font-mono truncate"
+                                   x-text="`domyślny prompt: ${runAudioDefaults.audio_negative_prompt}`"></p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </template>
 
@@ -2776,6 +2992,31 @@
                                     <label class="block text-xs text-red-400 mb-0.5">Neg (override chain neg)</label>
                                     <textarea x-model="step.neg" rows="2"
                                               class="w-full bg-gray-900 border border-gray-700 rounded px-2 py-1 text-xs text-gray-200 font-mono focus:outline-none focus:border-red-500 resize-y"></textarea>
+                                </div>
+                                <div class="mt-2 pt-2 border-t border-gray-700/50">
+                                    <div class="flex items-center gap-1.5 mb-1.5">
+                                        <span class="text-violet-400 text-xs">🔊</span>
+                                        <span class="text-xs text-violet-400">Audio (MMAudio)</span>
+                                        <span class="text-xs text-gray-700">— puste = domyślny projektu</span>
+                                    </div>
+                                    <div class="flex flex-wrap gap-1 mb-1">
+                                        <template x-for="p in mmAudioPresets" :key="p.label">
+                                            <button type="button" @click="step.audio_prompt = p.pos; step.audio_negative_prompt = p.neg"
+                                                    class="px-1.5 py-0.5 bg-violet-900/40 hover:bg-violet-700/60 text-violet-300 text-xs rounded transition"
+                                                    x-text="p.label"></button>
+                                        </template>
+                                        <button type="button" x-show="step.audio_prompt || step.audio_negative_prompt"
+                                                @click="step.audio_prompt = ''; step.audio_negative_prompt = ''"
+                                                class="px-1.5 py-0.5 bg-gray-700 hover:bg-gray-600 text-gray-400 text-xs rounded transition">✕ wyczyść</button>
+                                    </div>
+                                    <textarea x-model="step.audio_prompt" rows="2"
+                                              class="w-full bg-gray-900 border border-violet-900 rounded px-2 py-1 text-xs text-gray-200 font-mono focus:outline-none focus:border-violet-500 resize-y mb-1"
+                                              :placeholder="`domyślny: ${runAudioDefaults.audio_prompt}`"></textarea>
+                                    <p x-show="!step.audio_prompt" class="text-xs text-gray-700 font-mono truncate mb-1"
+                                       x-text="`domyślny: ${runAudioDefaults.audio_prompt}`"></p>
+                                    <textarea x-model="step.audio_negative_prompt" rows="1"
+                                              class="w-full bg-gray-900 border border-violet-900 rounded px-2 py-1 text-xs text-gray-200 font-mono focus:outline-none focus:border-violet-500 resize-y"
+                                              :placeholder="`neg domyślny: ${runAudioDefaults.audio_negative_prompt}`"></textarea>
                                 </div>
                             </div>
                         </template>
@@ -7006,6 +7247,11 @@ function app() {
                 if (msg.type === 'input_needed') { this._handleInputNeeded(msg.prompt || ''); return; }
                 if (msg.type === 'log') {
                     const t = msg.text || '';
+                    // Refresh status after MMAudio completes so 🔊 sticker appears
+                    if (t.startsWith('[AUDIO_READY]')) {
+                        setTimeout(() => this.refreshStatus(), 500);
+                        return;
+                    }
                     // Auto-open versions modal after multi-generate completes
                     if (t.startsWith('[VERSIONS_READY]')) {
                         const fname = t.slice('[VERSIONS_READY]'.length).trim();
@@ -7248,6 +7494,8 @@ function app() {
             this.postMode = false;  // reset to flow view on run switch
             this.picMode  = false;
             this.sortMode = false;
+            const wasPreMode = this.preMode;
+            this.preMode  = false;
             this.picTiles = []; this.picStatuses = {}; this.picTypeModal = { open: false };
             this.picGroups = []; this.picCollapse = {}; this._pendingNewTileGroup = null;
             if (this._picGroupSortable) { this._picGroupSortable.destroy(); this._picGroupSortable = null; }
@@ -7260,7 +7508,23 @@ function app() {
             const ready = run.compatibility === 'current' || run.compatibility === 'yaml';
             if (ready) {
                 await Promise.all([this.loadFlow(run.filename), this.refreshStatus()]);
+                if (wasPreMode) { this.preMode = true; await this.loadPreClips(); }
+                if (run.filename.endsWith('.yaml')) this._loadRunAudioDefaults(run.filename);
             }
+        },
+
+        async _loadRunAudioDefaults(filename) {
+            const SYS_POS = 'ambient sound, environmental audio, natural soundscape, high quality';
+            const SYS_NEG = 'music, melody, instruments, singing, low quality, distortion';
+            try {
+                const res = await fetch(`/api/runs/${encodeURIComponent(filename)}/globals`);
+                if (!res.ok) return;
+                const data = await res.json();
+                this.runAudioDefaults = {
+                    audio_prompt:          data.defaults?.default_audio_prompt          || SYS_POS,
+                    audio_negative_prompt: data.defaults?.default_audio_negative_prompt || SYS_NEG,
+                };
+            } catch(e) { /* zostają system defaults */ }
         },
         async loadFlow(filename) {
             this.flowLoading = true; this.flowError = null;
@@ -7363,7 +7627,7 @@ function app() {
             this.videoModal = {
                 open: true,
                 name: name,
-                url: `/api/media/video?run=${encodeURIComponent(this.selectedRun.filename)}&name=${encodeURIComponent(name)}`,
+                url: `/api/media/video?run=${encodeURIComponent(this.selectedRun.filename)}&name=${encodeURIComponent(name)}&t=${Date.now()}`,
             };
         },
         openSourceVideoModal(filename) {
@@ -7692,6 +7956,28 @@ function app() {
             await this._startOnly([name]);
         },
 
+        async regenAudio(name, audioPrompt='', audioNegPrompt='') {
+            if (!name || !this.selectedRun) return;
+            if (!confirm(`Re-generować audio dla:\n${name}\n\nJeśli plik ma już dźwięk — zostanie nadpisany.`)) return;
+            this.logLine('sys', `🔊 Re-generuję audio: ${name}${audioPrompt ? ' [custom prompt]' : ''}...`);
+            try {
+                const body = { name };
+                if (audioPrompt)    body.audio_prompt          = audioPrompt;
+                if (audioNegPrompt) body.audio_negative_prompt = audioNegPrompt;
+                const res = await fetch(`/api/audio/${encodeURIComponent(this.selectedRun.filename)}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body),
+                });
+                const data = await res.json();
+                if (!res.ok) {
+                    this.logLine('sys', `❌ MMAudio błąd: ${data.detail || JSON.stringify(data)}`);
+                } else {
+                    this.logLine('sys', `🔊 MMAudio uruchomiony w tle — wyniki w logu...`);
+                }
+            } catch(e) { this.logLine('sys', `❌ ${e.message}`); }
+        },
+
         // Re-generate a chain step AND all subsequent steps.
         // fromSi: 0-based index of the step to start from.
         // totalSteps: item.chain.length
@@ -7745,6 +8031,103 @@ function app() {
         },
         sortGuardCancel() {
             this.sortGuardModal = { open: false, pendingFn: null };
+        },
+
+        // ─ Shot modal ─────────────────────────────────────────────────
+        async openShotModal(gIdx, sIdx) {
+            const shot = this.sortGroups[gIdx]?.shots[sIdx];
+            if (!shot) return;
+            this.shotModal = {
+                ...this.shotModal,
+                open: true, gIdx, sIdx, shot,
+                files: [], loading: true,
+                playerIdx: 0, playerPlaying: false, smoothRunning: false,
+            };
+            // Fetch status to resolve file names + has_audio
+            try {
+                const res = await fetch(`/api/runs/${encodeURIComponent(this.selectedRun.filename)}/status`);
+                if (res.ok) {
+                    const data = await res.json();
+                    const files = [];
+                    for (const item of shot.items) {
+                        const si = data.items?.[item._sort_idx];
+                        if (!si) continue;
+                        if (si.type === 'chain') {
+                            for (const step of (si.steps || [])) {
+                                if (step.exists) files.push({
+                                    name: step.filename, has_audio: step.has_audio,
+                                    duration_s: step.duration_s || null, is_chain: true,
+                                });
+                            }
+                        } else if (si.status === 'green' && si.name) {
+                            files.push({
+                                name: si.name, has_audio: si.has_audio || false,
+                                duration_s: si.duration_s || null, is_chain: false,
+                            });
+                        }
+                    }
+                    this.shotModal.files = files;
+                }
+            } catch(e) {}
+            this.shotModal.loading = false;
+            this.$nextTick(() => this._shotPlayerLoad(0));
+        },
+        closeShotModal() {
+            const vid = this.$refs.shotPlayer;
+            if (vid) { vid.pause(); vid.src = ''; }
+            this.shotModal.open = false;
+        },
+        _shotVideoUrl(name) {
+            if (!this.selectedRun) return '';
+            return `/api/media/video?run=${encodeURIComponent(this.selectedRun.filename)}&name=${encodeURIComponent(name)}&t=${Date.now()}`;
+        },
+        _shotPlayerLoad(idx) {
+            const files = this.shotModal.files;
+            if (!files.length) return;
+            idx = Math.max(0, Math.min(idx, files.length - 1));
+            this.shotModal.playerIdx = idx;
+            const vid = this.$refs.shotPlayer;
+            if (!vid) return;
+            vid.src = this._shotVideoUrl(files[idx].name);
+            vid.load();
+            if (this.shotModal.playerPlaying) vid.play().catch(() => {});
+        },
+        shotPlayerEnded() {
+            const next = this.shotModal.playerIdx + 1;
+            if (next < this.shotModal.files.length) {
+                this._shotPlayerLoad(next);
+                this.$refs.shotPlayer?.play().catch(() => {});
+            } else {
+                this.shotModal.playerPlaying = false;
+            }
+        },
+        shotPlayerToggle() {
+            const vid = this.$refs.shotPlayer;
+            if (!vid) return;
+            if (vid.paused) { vid.play().catch(() => {}); this.shotModal.playerPlaying = true; }
+            else            { vid.pause(); this.shotModal.playerPlaying = false; }
+        },
+        async smoothShotAudio() {
+            const files = this.shotModal.files.filter(f => f.has_audio);
+            if (!files.length) { alert('Brak plików z audio w ujęciu.'); return; }
+            this.shotModal.smoothRunning = true;
+            this.logLine('sys', `🔊 Uspójnianie audio ujęcia: ${files.length} plików...`);
+            try {
+                const res = await fetch('/api/media/audio-smooth', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        run: this.selectedRun.filename,
+                        names: files.map(f => f.name),
+                        fade_pct: this.shotModal.fadePct,
+                        loudnorm: this.shotModal.loudnorm,
+                    }),
+                });
+                const text = await res.text();
+                let data = {}; try { data = JSON.parse(text); } catch {}
+                if (!res.ok) this.logLine('sys', `❌ audio-smooth: ${data.detail || text.slice(0, 120)}`);
+            } catch(e) { this.logLine('sys', `❌ ${e.message}`); }
+            finally { this.shotModal.smoothRunning = false; }
         },
 
         async moveSegment(segIdx, dir) {
@@ -7977,7 +8360,7 @@ function app() {
                     {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ only: names }),
+                        body: JSON.stringify({ only: names, ...(this.mmAudio ? { mmaudio: true } : {}) }),
                     }
                 );
                 if (!res.ok) { const e = await res.json(); this.logLine('sys', `❌ ${e.detail}`); }
@@ -8058,6 +8441,13 @@ function app() {
         sortSaved:       false,
         sortDbg:         '',
         sortGuardModal:  { open: false, pendingFn: null },
+        shotModal: {
+            open: false, gIdx: null, sIdx: null,
+            shot: null, files: [],        // [{name, has_audio, duration_s, exists}]
+            loading: false,
+            playerIdx: 0, playerPlaying: false,
+            fadePct: 0.15, loudnorm: true, smoothRunning: false,
+        },
         _sortable:       null,
         _innerSortables: [],
 
@@ -8216,7 +8606,15 @@ function app() {
         preSelected:    {},     // { [clip.name]: true }
         preQueue:       [],     // [{ clip, status, elapsed_s, error }]
         preQueueStatus: {},     // { [clip.name]: 'pending'|'running'|'done'|'error' }
+        runAudioDefaults: { audio_prompt: 'foley sound effects, physical environment sounds, footsteps, cloth movement, objects, wind bursts, creaking, synchronized with video, crisp, realistic, high quality', audio_negative_prompt: 'music, melody, instruments, singing, ambient drone, sustained atmosphere, continuous background noise, reverb heavy, low quality, distortion' },
+        mmAudioPresets: [
+            { label: 'Standard FX', pos: 'foley sound effects, physical environment sounds, footsteps, cloth movement, objects, wind bursts, creaking, synchronized with video, crisp, realistic, high quality', neg: 'music, melody, instruments, singing, ambient drone, sustained atmosphere, continuous background noise, reverb heavy, low quality, distortion' },
+            { label: 'Spanking',    pos: 'sharp slap impact, flesh impact sound, skin contact, crisp smack, physical strike, body percussion, high quality, realistic foley',                                  neg: 'music, melody, ambient drone, echo, reverb, wet sound, low quality, distortion' },
+            { label: 'Ruch postaci', pos: 'subtle body movement, soft weight shift, quiet fabric rustle, gentle shuffling feet on floor, light position change, soft clothing sounds, natural movement foley, realistic, high quality', neg: 'music, melody, ambient drone, loud impact, hard footsteps, slap, sustained atmosphere, low quality, distortion' },
+        ],
         preIsRunning:   false,
+        preFpsRunning:  false,
+        _preTargetRun:  null,
         _prePolling:    null,
 
         // ─ Post-processing ────────────────────────────────
@@ -8818,9 +9216,27 @@ function app() {
                     this.preClips = all.filter(c =>
                         !c.name.includes('_ver') && !c.name.includes('_beforeupscale')
                     );
-                    // Set default target from project force_resolution
-                    const fr = this.selectedRun?.force_resolution;
-                    if (fr) { this.preTargetW = fr[0]; this.preTargetH = fr[1]; }
+                    // Load saved pre target resolution (YAML defaults) — only when switching runs
+                    if (this._preTargetRun !== this.selectedRun.filename) {
+                        this._preTargetRun = this.selectedRun.filename;
+                        try {
+                            const gr = await fetch(`/api/runs/${encodeURIComponent(this.selectedRun.filename)}/globals`);
+                            if (gr.ok) {
+                                const gd = await gr.json();
+                                const w = gd.defaults?.pre_target_w;
+                                const h = gd.defaults?.pre_target_h;
+                                if (w && h) {
+                                    this.preTargetW = w; this.preTargetH = h;
+                                } else {
+                                    const fr = this.selectedRun?.force_resolution;
+                                    if (fr) { this.preTargetW = fr[0]; this.preTargetH = fr[1]; }
+                                }
+                            }
+                        } catch(e) {
+                            const fr = this.selectedRun?.force_resolution;
+                            if (fr) { this.preTargetW = fr[0]; this.preTargetH = fr[1]; }
+                        }
+                    }
                     // Auto-select files below target
                     this.preSelectBelowTarget();
                 }
@@ -8839,6 +9255,50 @@ function app() {
                 if (this.preBelowTarget(c)) sel[c.name] = true;
             }
             this.preSelected = sel;
+        },
+
+        async savePreTarget() {
+            if (!this.selectedRun?.filename?.endsWith('.yaml')) return;
+            try {
+                await fetch(`/api/runs/${encodeURIComponent(this.selectedRun.filename)}/globals/pre-target`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ pre_target_w: parseInt(this.preTargetW) || 1024, pre_target_h: parseInt(this.preTargetH) || 1024 }),
+                });
+            } catch(e) { /* silent */ }
+        },
+
+        preSelectNot24fps() {
+            const sel = {};
+            for (const c of this.preClips) {
+                if (c.status === 'ok' && c.fps != null && Math.abs(c.fps - 24) > 0.5) sel[c.name] = true;
+            }
+            this.preSelected = sel;
+        },
+
+        async preBatchFps() {
+            if (this.preFpsRunning || this.preIsRunning) return;
+            const names = Object.keys(this.preSelected);
+            if (names.length === 0) return;
+            this.preFpsRunning = true;
+            try {
+                const res = await fetch('/api/media/batch-ensure-fps', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ run: this.selectedRun.filename, names }),
+                });
+                const data = await res.json();
+                if (!res.ok) {
+                    this.logLine('sys', `❌ Konwersja FPS błąd: ${data.detail || JSON.stringify(data)}`);
+                } else {
+                    this.logLine('sys', `🎞 Konwersja FPS uruchomiona (${data.count} plików) — postęp w logu...`);
+                    this.preSelected = {};
+                }
+            } catch(e) {
+                this.logLine('sys', `❌ ${e.message}`);
+            } finally {
+                this.preFpsRunning = false;
+            }
         },
 
         preToggle(name) {

@@ -227,3 +227,155 @@ async def upload_source(
         status = 413 if "za duży" in result["error"] else 400
         raise HTTPException(status_code=status, detail=result["error"])
     return result
+
+
+@router.post("/audio-smooth")
+async def audio_smooth(request: Request):
+    """
+    Apply fade-in/out + loudnorm to audio tracks of selected clips in-place.
+    Body: { "run": "RUN_xxx.yaml", "names": ["a.mp4", "b.mp4", ...],
+            "fade_pct": 0.15, "loudnorm": true }
+    First clip: fade-out only. Last clip: fade-in only. Middle: both.
+    """
+    import asyncio
+    from pathlib import Path as _Path
+    from app.services.process_service import process_service
+    from app.services.yaml_service import get_yaml_globals
+    from utils.video_utils import smooth_audio_clip, get_video_info
+
+    RUNS_FOLDER_local = _Path(__file__).parent.parent.parent / "RUNS"
+
+    try:
+        body = await request.json()
+    except Exception:
+        raise HTTPException(status_code=400, detail="Nieprawidłowy JSON")
+
+    run: str = (body.get("run") or "").strip()
+    names: list = body.get("names") or []
+    fade_pct: float = float(body.get("fade_pct") or 0.15)
+    do_loudnorm: bool = bool(body.get("loudnorm", True))
+
+    if not run or not names:
+        raise HTTPException(status_code=400, detail="Brak parametrów run/names")
+
+    yaml_path = RUNS_FOLDER_local / run
+    globals_data = get_yaml_globals(yaml_path)
+    if not globals_data:
+        raise HTTPException(status_code=400, detail="Nie można odczytać YAML")
+
+    project_folder = _Path(globals_data.get("project_folder") or "")
+    transitions_dir = project_folder / "transitions"
+
+    class _Log:
+        def info(self, m):    process_service.log_sys(f"ℹ️  {m}")
+        def success(self, m): process_service.log_sys(f"✅ {m}")
+        def warning(self, m): process_service.log_sys(f"⚠️  {m}")
+        def error(self, m):   process_service.log_sys(f"❌ {m}")
+
+    def _resolve(name: str) -> Path | None:
+        for p in [transitions_dir / name, transitions_dir / "chains" / name]:
+            if p.exists():
+                return p
+        return None
+
+    async def _run_smooth():
+        logger = _Log()
+        valid = [(n, _resolve(n)) for n in names]
+        valid = [(n, p) for n, p in valid if p is not None]
+        if not valid:
+            logger.warning("Brak plików do przetworzenia")
+            return
+        logger.info(f"🔊 Uspójnianie audio: {len(valid)} plików...")
+        n_total = len(valid)
+        done = 0
+        loop = asyncio.get_running_loop()
+        for i, (name, path) in enumerate(valid):
+            info = get_video_info(path)
+            dur = info.get("duration") or 0.0
+            fade_s = min(dur * fade_pct, 0.5) if dur > 0 else 0.0
+            fade_in  = fade_s if i > 0           else 0.0
+            fade_out = fade_s if i < n_total - 1 else 0.0
+            logger.info(f"  [{i+1}/{n_total}] {name} (fi={fade_in:.2f}s fo={fade_out:.2f}s)")
+            ok = await loop.run_in_executor(
+                None,
+                lambda p=path, fi=fade_in, fo=fade_out: smooth_audio_clip(
+                    p, fade_in_s=fi, fade_out_s=fo, loudnorm=do_loudnorm, logger=logger
+                ),
+            )
+            if ok:
+                done += 1
+        logger.success(f"🔊 Uspójnianie zakończone ({done}/{n_total} plików)")
+
+    asyncio.create_task(_run_smooth())
+    return {"ok": True, "count": len(names)}
+
+
+@router.post("/batch-ensure-fps")
+async def batch_ensure_fps(request: Request):
+    """
+    Convert selected transition videos to 24fps in-place using ffmpeg.
+    Runs in background; progress logged to the WebSocket log panel.
+    Body: { "run": "run.yaml", "names": ["a.mp4", "b.mp4", ...] }
+    """
+    import asyncio
+    from pathlib import Path
+    from app.services.process_service import process_service
+    from app.services.yaml_service import get_yaml_globals
+    from utils.video_utils import ensure_24fps
+
+    RUNS_FOLDER = Path(__file__).parent.parent.parent / "RUNS"
+
+    try:
+        body = await request.json()
+    except Exception:
+        raise HTTPException(status_code=400, detail="Nieprawidłowy JSON")
+
+    run: str = (body.get("run") or "").strip()
+    names: list = body.get("names") or []
+    if not run or not names:
+        raise HTTPException(status_code=400, detail="Brak parametrów run/names")
+
+    yaml_path = RUNS_FOLDER / run
+    globals_data = get_yaml_globals(yaml_path)
+    if not globals_data:
+        raise HTTPException(status_code=400, detail="Nie można odczytać YAML")
+
+    project_folder = Path(globals_data.get("project_folder") or "")
+    if not project_folder.exists():
+        raise HTTPException(status_code=400, detail=f"Folder projektu nie istnieje: {project_folder}")
+
+    transitions_dir = project_folder / "transitions"
+
+    class _Log:
+        def info(self, m):    process_service.log_sys(f"ℹ️  {m}")
+        def success(self, m): process_service.log_sys(f"✅ {m}")
+        def warning(self, m): process_service.log_sys(f"⚠️  {m}")
+        def error(self, m):   process_service.log_sys(f"❌ {m}")
+
+    def _resolve(name: str) -> Path | None:
+        # Regular transition
+        p = transitions_dir / name
+        if p.exists():
+            return p
+        # Chain clip (stored in transitions/chains/)
+        p2 = transitions_dir / "chains" / name
+        if p2.exists():
+            return p2
+        return None
+
+    async def _run_batch():
+        logger = _Log()
+        logger.info(f"Konwersja FPS: {len(names)} plików...")
+        done = 0
+        for name in names:
+            path = _resolve(name)
+            if path is None:
+                logger.warning(f"Pominięto (brak pliku): {name}")
+                continue
+            loop = asyncio.get_running_loop()
+            await loop.run_in_executor(None, lambda p=path: ensure_24fps(p, logger))
+            done += 1
+        logger.success(f"Konwersja FPS zakończona ({done}/{len(names)} plików)")
+
+    asyncio.create_task(_run_batch())
+    return {"ok": True, "count": len(names)}

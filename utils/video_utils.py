@@ -29,57 +29,100 @@ def get_video_info(video_path: Path) -> dict:
 
 def convert_to_fps(input_path: Path, output_path: Path, target_fps: float = 24.0) -> Path:
     """
-    Convert video to target FPS using frame duplication (no re-encoding artifacts).
-    Preserves duration. Overwrites output_path if it exists.
-
-    Pattern for 16→24: alternates 2,1 frame repeats (avg 1.5x per source frame).
-    For other ratios: rounds to nearest integer repeats per frame.
-
-    Returns output_path on success, input_path on failure (safe fallback).
+    Convert video to target FPS using ffmpeg (H.264, browser-compatible).
+    ffmpeg fps filter handles frame duplication/dropping automatically.
+    Preserves audio if present. Returns output_path on success, input_path on failure.
     """
-    cap = cv2.VideoCapture(str(input_path))
-    src_fps = cap.get(cv2.CAP_PROP_FPS)
-    w = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-    h = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+    import subprocess
 
+    src_fps = get_video_fps(input_path)
     if src_fps <= 0:
-        cap.release()
         return input_path
-
     if abs(src_fps - target_fps) < 0.5:
-        cap.release()
         if input_path != output_path:
             import shutil
             shutil.copy2(str(input_path), str(output_path))
         return output_path
 
-    ratio = target_fps / src_fps  # e.g. 24/16 = 1.5
-    out = cv2.VideoWriter(
+    cmd = [
+        "ffmpeg", "-y",
+        "-i", str(input_path),
+        "-vf", f"fps={target_fps}",
+        "-c:v", "libx264", "-crf", "18", "-preset", "fast",
+        "-c:a", "copy",
         str(output_path),
-        cv2.VideoWriter_fourcc(*'mp4v'),
-        target_fps,
-        (w, h)
-    )
+    ]
+    try:
+        r = subprocess.run(cmd, capture_output=True, timeout=300)
+        if r.returncode == 0 and output_path.exists() and output_path.stat().st_size > 0:
+            return output_path
+    except Exception:
+        pass
+    return input_path
 
-    i = 0
-    while True:
-        ret, frame = cap.read()
-        if not ret:
-            break
-        # Distribute frames evenly: accumulate fractional position
-        repeats = round(ratio * (i + 1)) - round(ratio * i)
-        repeats = max(1, repeats)
-        for _ in range(repeats):
-            out.write(frame)
-        i += 1
 
-    cap.release()
-    out.release()
+def smooth_audio_clip(
+    path: Path,
+    fade_in_s: float = 0.0,
+    fade_out_s: float = 0.0,
+    loudnorm: bool = True,
+    logger=None,
+) -> bool:
+    """
+    Apply loudnorm + fade-in/fade-out to the audio track of an MP4 in-place.
+    Returns True on success. Video stream is copied without re-encoding.
+    """
+    import subprocess
+    import shutil
 
-    if not output_path.exists() or output_path.stat().st_size == 0:
-        return input_path
+    info = get_video_info(path)
+    duration = info.get("duration") or 0.0
+    if duration <= 0:
+        if logger:
+            logger.warning(f"  Brak czasu trwania: {path.name}")
+        return False
 
-    return output_path
+    # Build audio filter chain
+    filters = []
+    if loudnorm:
+        filters.append("loudnorm=I=-16:LRA=11:TP=-1.5")
+    if fade_in_s > 0:
+        filters.append(f"afade=t=in:st=0:d={fade_in_s:.3f}")
+    if fade_out_s > 0:
+        fade_start = max(0.0, duration - fade_out_s)
+        filters.append(f"afade=t=out:st={fade_start:.3f}:d={fade_out_s:.3f}")
+
+    if not filters:
+        return True  # nothing to do
+
+    af = ",".join(filters)
+    tmp = path.with_suffix(".tmp_smooth.mp4")
+    cmd = [
+        "ffmpeg", "-y",
+        "-i", str(path),
+        "-c:v", "copy",
+        "-af", af,
+        "-c:a", "aac", "-b:a", "192k",
+        str(tmp),
+    ]
+    try:
+        r = subprocess.run(cmd, capture_output=True, timeout=120)
+        if r.returncode == 0 and tmp.exists() and tmp.stat().st_size > 0:
+            shutil.move(str(tmp), str(path))
+            return True
+        if logger:
+            logger.error(f"  ffmpeg błąd: {r.stderr[-300:].decode(errors='replace')}")
+        return False
+    except Exception as e:
+        if logger:
+            logger.error(f"  smooth_audio wyjątek: {e}")
+        return False
+    finally:
+        if tmp.exists():
+            try:
+                tmp.unlink()
+            except OSError:
+                pass
 
 
 def ensure_24fps(video_path: Path, logger=None) -> Path:
