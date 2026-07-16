@@ -36,6 +36,8 @@ async def chain_start(request: Request):
     run_filename = body.get("run_filename")
     chain_prefix = body.get("chain_prefix")
     from_step    = int(body.get("from_step", 0))
+    to_step_raw  = body.get("to_step")
+    to_step      = int(to_step_raw) if to_step_raw is not None else None
 
     if not run_filename or not chain_prefix:
         raise HTTPException(
@@ -43,7 +45,7 @@ async def chain_start(request: Request):
             detail="Required fields: run_filename, chain_prefix",
         )
 
-    result = start_chain(run_filename, chain_prefix, from_step)
+    result = start_chain(run_filename, chain_prefix, from_step, to_step)
     if not result["ok"]:
         raise HTTPException(status_code=400, detail=result["error"])
     return result

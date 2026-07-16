@@ -69,15 +69,16 @@ def cancel_chain() -> dict:
 
 # ── Public entry point ────────────────────────────────────────────────────────
 
-def start_chain(run_filename: str, chain_prefix: str, from_step_0: int) -> dict:
+def start_chain(run_filename: str, chain_prefix: str, from_step_0: int, to_step_0: int | None = None) -> dict:
     """
     Queue a chain generation job.
 
     Parameters
     ----------
-    run_filename : str   RUN_*.yaml filename
-    chain_prefix : str   chain_prefix field from YAML
-    from_step_0  : int   0-indexed step to start from (UI's si value)
+    run_filename : str        RUN_*.yaml filename
+    chain_prefix : str        chain_prefix field from YAML
+    from_step_0  : int        0-indexed step to start from (UI's si value)
+    to_step_0    : int|None   0-indexed last step to generate (inclusive); None = all remaining
     """
     global _task
 
@@ -112,6 +113,7 @@ def start_chain(run_filename: str, chain_prefix: str, from_step_0: int) -> dict:
 
     total_steps = len(steps)
     from_step = from_step_0 + 1  # convert to 1-indexed
+    to_step   = (to_step_0 + 1) if to_step_0 is not None else total_steps
 
     if not 1 <= from_step <= total_steps:
         return {"ok": False, "error": f"Nieprawidłowy krok: {from_step} (total: {total_steps})"}
@@ -144,6 +146,7 @@ def start_chain(run_filename: str, chain_prefix: str, from_step_0: int) -> dict:
                 run_filename=run_filename,
                 chain_prefix=chain_prefix,
                 from_step=from_step,
+                to_step=to_step,
                 chain_item=chain_item,
                 preceding_file=preceding_file,
                 end_target=end_target,
@@ -373,6 +376,7 @@ async def _run_chain(
     run_filename:   str,
     chain_prefix:   str,
     from_step:      int,
+    to_step:        int,
     chain_item:     dict,
     preceding_file: str | None,
     end_target:     str | None,
@@ -426,7 +430,7 @@ async def _run_chain(
 
         _state["status"] = "running"
 
-        for step_idx in range(from_step, total + 1):
+        for step_idx in range(from_step, to_step + 1):
             _state["step"] = step_idx
 
             print(f"  ⛓  Chain '{chain_prefix}' — step {step_idx}/{total}")

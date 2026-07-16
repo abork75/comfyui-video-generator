@@ -2091,6 +2091,31 @@
 </div>
 </template>
 
+<!-- ═══ CHAIN REGEN MODAL ══════════════════════════════════════════ -->
+<div x-show="chainRegenModal.show" x-cloak
+     class="fixed inset-0 bg-black/85 flex items-center justify-center z-50 p-4"
+     @keydown.escape.window="chainRegenModal._resolve && chainRegenModal._resolve(null); chainRegenModal.show=false">
+    <div class="bg-gray-900 rounded-xl border border-gray-700 w-full max-w-sm p-5 space-y-4">
+        <h3 class="text-sm font-semibold text-gray-200">Re-generuj chain ⛓ <span class="text-blue-300 font-mono" x-text="chainRegenModal.prefix"></span></h3>
+        <p class="text-xs text-gray-400">Step <span x-text="chainRegenModal.fromStep"></span> z <span x-text="chainRegenModal.totalSteps"></span></p>
+        <div class="flex flex-col gap-2">
+            <button @click="chainRegenModal._resolve('one'); chainRegenModal.show=false"
+                    class="w-full px-4 py-2 bg-blue-700 hover:bg-blue-600 rounded-lg text-sm text-white transition">
+                Tylko ten krok (<span x-text="chainRegenModal.prefix + '_' + String(chainRegenModal.fromStep).padStart(3,'0') + '.mp4'"></span>)
+            </button>
+            <button @click="chainRegenModal._resolve('all'); chainRegenModal.show=false"
+                    class="w-full px-4 py-2 bg-indigo-800 hover:bg-indigo-700 rounded-lg text-sm text-white transition"
+                    x-show="chainRegenModal.fromStep < chainRegenModal.totalSteps">
+                Ten i wszystkie kolejne (step <span x-text="chainRegenModal.fromStep"></span>–<span x-text="chainRegenModal.totalSteps"></span>)
+            </button>
+            <button @click="chainRegenModal._resolve(null); chainRegenModal.show=false"
+                    class="w-full px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg text-sm text-gray-300 transition">
+                Anuluj
+            </button>
+        </div>
+    </div>
+</div>
+
 <!-- ═══ VERSIONS MODAL ════════════════════════════════════════════ -->
 <div x-show="versionsModal.open" x-cloak
      class="fixed inset-0 bg-black/85 flex items-center justify-center z-50 p-4"
@@ -8990,18 +9015,21 @@ function app() {
                 return;
             }
 
-            // Build filenames for step fromSi … totalSteps-1
+            // Ask: only this step, or this + all following?
+            const choice = await new Promise(resolve => {
+                this.chainRegenModal = { show: true, prefix: chainPrefix, fromStep: fromSi + 1, totalSteps, _resolve: resolve };
+            });
+            if (!choice) return;
+
+            // Build filenames based on choice
             const names = [];
-            for (let i = fromSi; i < totalSteps; i++) {
-                names.push(`${chainPrefix}_${String(i+1).padStart(3,'0')}.mp4`);
+            if (choice === 'one') {
+                names.push(`${chainPrefix}_${String(fromSi+1).padStart(3,'0')}.mp4`);
+            } else {
+                for (let i = fromSi; i < totalSteps; i++) {
+                    names.push(`${chainPrefix}_${String(i+1).padStart(3,'0')}.mp4`);
+                }
             }
-
-            const stepLabel  = `step ${fromSi + 1}`;
-            const rangeLabel = names.length === 1
-                ? names[0]
-                : `${names[0]} … ${names[names.length-1]} (${names.length} pliki)`;
-
-            if (!confirm(`Re-generować chain od ${stepLabel}?\n\n${rangeLabel}\n\nIstniejące pliki zostaną zarchiwizowane.`)) return;
 
             // Batch-archive with shared timestamp (files that don't exist are silently skipped)
             try {
@@ -9044,6 +9072,7 @@ function app() {
                         run_filename: this.selectedRun.filename,
                         chain_prefix: chainPrefix,
                         from_step:    fromSi,
+                        ...(choice === 'one' ? { to_step: fromSi } : {}),
                     }),
                 });
                 if (!res.ok) {
@@ -9354,6 +9383,7 @@ function app() {
         // ─ Chain generation ───────────────────────────────────
         chainJobStatus: { status: 'idle', chain_prefix: null, step: null, total_steps: null, from_step: null, error: null, elapsed_s: null },
         _chainPollTimer: null,
+        chainRegenModal: { show: false, prefix: '', fromStep: 0, totalSteps: 0, _resolve: null },
 
         // ─ Single-transition regeneration ─────────────────────
         singleTransStatus: { status: 'idle', transition_name: null, error: null, elapsed_s: null },
