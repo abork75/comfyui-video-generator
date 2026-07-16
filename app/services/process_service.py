@@ -15,6 +15,7 @@ import re
 import sys
 import codecs
 import asyncio
+import datetime
 import threading
 import traceback
 import subprocess
@@ -22,6 +23,8 @@ from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).parent.parent.parent
 PYTHON_EXE   = sys.executable   # same .streamlit_env that runs FastAPI
+
+LOGS_DIR = PROJECT_ROOT / "logs"
 
 # Strip ANSI colour codes before sending to the browser
 ANSI_ESCAPE = re.compile(r"\x1b\[[0-9;]*[mK]")
@@ -51,6 +54,9 @@ class ProcessService:
         self._pending_input: str | None = None
         self._awaiting:      bool = False
 
+        # File logging
+        self._log_file_lock: threading.Lock = threading.Lock()
+
     # ── Properties ───────────────────────────────────────────────────
 
     @property
@@ -73,11 +79,26 @@ class ProcessService:
 
     def _push(self, msg: dict) -> None:
         """Thread-safe: put message into every subscribed queue."""
+        if msg.get("type") == "log":
+            self._write_to_file(msg.get("stream", "?"), msg.get("text", ""))
         for q in list(self._log_queues):
             try:
                 q.put_nowait(msg)
             except asyncio.QueueFull:
                 pass
+
+    def _write_to_file(self, stream: str, text: str) -> None:
+        """Append one log line to today's daily log file."""
+        try:
+            LOGS_DIR.mkdir(exist_ok=True)
+            log_path = LOGS_DIR / f"gen_{datetime.date.today():%Y-%m-%d}.log"
+            ts   = datetime.datetime.now().strftime("%H:%M:%S")
+            line = f"[{ts}] [{stream:<6}] {text}\n"
+            with self._log_file_lock:
+                with log_path.open("a", encoding="utf-8") as fh:
+                    fh.write(line)
+        except Exception:
+            pass
 
     # ── Public control API (called from async context) ───────────────
 

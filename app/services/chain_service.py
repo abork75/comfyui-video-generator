@@ -15,6 +15,8 @@ import sys
 import time
 from pathlib import Path
 
+from pathlib import Path as _Path
+
 from app.services.media_service import _project_folder
 from app.services.run_file_service import get_run_flow
 
@@ -164,8 +166,31 @@ def _find_chain(flow: list, chain_prefix: str) -> tuple[int, dict | None]:
     return -1, None
 
 
+def _talk_video_relpath(talk_item: dict) -> str:
+    """Return the project-relative path to a talk tile's output video."""
+    explicit = (talk_item.get("prefix") or "").strip()
+    if explicit:
+        stem = f"talk_{explicit}"
+    else:
+        audio = talk_item.get("audio", "")
+        if isinstance(audio, list):
+            first = audio[0] if audio else "unknown"
+        else:
+            first = audio
+        if isinstance(first, dict):
+            first = first.get("file", "unknown")
+        stem = f"talk_{Path(str(first)).stem}"
+    return str(Path("transitions") / "talks" / f"{stem}.mp4")
+
+
 def _find_preceding_file(flow: list, chain_idx: int) -> str | None:
-    """Return the filename of the item that immediately precedes the chain."""
+    """Return the filename (or relative path) of the item that immediately precedes the chain.
+
+    Stops at talk tiles and returns their virtual video path so _get_start_frame
+    can extract the last frame from the talk video (case 1: talk → chain).
+    When talk has an explicit transition and a file follows it (case 2:
+    talk → file_B → chain), the file_B item is found first and returned instead.
+    """
     for i in range(chain_idx - 1, -1, -1):
         item = flow[i]
         if not isinstance(item, dict):
@@ -174,6 +199,9 @@ def _find_preceding_file(flow: list, chain_idx: int) -> str | None:
             return None
         if item.get("file"):
             return item["file"]
+        if item.get("type") == "talk":
+            # Don't look further back past talk — chain continues from talk's end.
+            return _talk_video_relpath(item)
     return None
 
 
@@ -313,6 +341,32 @@ def _get_end_frame(pf: Path, end_target: str, target_w: int, target_h: int) -> P
     return None
 
 
+# ── Param logging ────────────────────────────────────────────────────────────
+
+def _log_gen_params(label, width, height, duration, fps, steps, cfg, seed,
+                    bts, bts_src, fi, lora_high=None, lora_low=None,
+                    audio_prompt=None, pos=None):
+    from app.services.process_service import process_service
+    bts_str = f"{bts} ({bts_src})" if bts is not None else f"workflow ({bts_src})"
+    fi_str  = "✓" if fi else "✗"
+    lora_str = ""
+    if lora_high or lora_low:
+        lh = _Path(lora_high).stem if lora_high else "—"
+        ll = _Path(lora_low).stem  if lora_low  else "—"
+        lora_str = f"\n   🎭 LoRA H: {lh} | L: {ll}"
+    audio_str = f"\n   🔊 {audio_prompt[:70]}..." if audio_prompt and len(audio_prompt) > 70 \
+                else (f"\n   🔊 {audio_prompt}" if audio_prompt else "")
+    pos_str = f"\n   📝 pos: {pos[:80]}..." if pos and len(pos) > 80 \
+              else (f"\n   📝 pos: {pos}" if pos else "")
+    process_service.log_sys(
+        f"{label}\n"
+        f"   📐 {width}×{height} | ⏱ {duration}s | 🎞 {fps}fps | "
+        f"🪜 {steps} steps | cfg={cfg} | seed={seed}\n"
+        f"   🔲 bts={bts_str} | RIFE={fi_str}"
+        f"{lora_str}{audio_str}{pos_str}"
+    )
+
+
 # ── Background task ───────────────────────────────────────────────────────────
 
 async def _run_chain(
@@ -332,7 +386,23 @@ async def _run_chain(
     try:
         flow_data  = get_run_flow(run_filename)
         flow       = flow_data["flow"] if flow_data else []
-        target_w, target_h = _detect_resolution(pf, flow)
+
+        # Use configured resolution from YAML defaults; fall back to image auto-detect
+        from app.services.run_file_service import get_run_details
+        run_details = get_run_details(run_filename) or {}
+        # Priority: per-chain > project > auto-detect
+        _tile_w = chain_item.get("width")
+        _tile_h = chain_item.get("height")
+        if _tile_w and _tile_h:
+            target_w = (int(_tile_w) // 16) * 16 or 1024
+            target_h = (int(_tile_h) // 16) * 16 or 1024
+        else:
+            configured_res = run_details.get("force_resolution") or run_details.get("default_resolution")
+            if configured_res:
+                target_w = (int(configured_res[0]) // 16) * 16 or 1024
+                target_h = (int(configured_res[1]) // 16) * 16 or 1024
+            else:
+                target_w, target_h = _detect_resolution(pf, flow)
 
         # Validate backend (blocking)
         backend = _init_backend(chain_item)
@@ -342,6 +412,10 @@ async def _run_chain(
         steps    = chain_item["chain"]
         total    = len(steps)
         defaults = app_config_service.get_defaults()
+        # Merge project-level defaults on top (project overrides app globals)
+        proj_defs = (run_details.get("defaults") or {})
+        if proj_defs:
+            defaults = {**defaults, **{k: v for k, v in proj_defs.items() if v is not None}}
         frame_cache: dict[str, Path] = {}
 
         # Chain-level config (shared across all steps)
@@ -360,11 +434,20 @@ async def _run_chain(
             # Merge per-step overrides on top of chain defaults
             step_cfg = {**chain_base, **steps[step_idx - 1]}
 
+            # Per-step resolution override
+            _sw = step_cfg.get("width")
+            _sh = step_cfg.get("height")
+            if _sw and _sh:
+                cur_w = (int(_sw) // 16) * 16 or 1024
+                cur_h = (int(_sh) // 16) * 16 or 1024
+            else:
+                cur_w, cur_h = target_w, target_h
+
             # Resolve frames
             start_frame = _get_start_frame(
                 pf, chain_prefix, step_idx,
                 preceding_file, frame_cache,
-                target_w, target_h,
+                cur_w, cur_h,
             )
             if start_frame is None or not Path(start_frame).exists():
                 raise RuntimeError(
@@ -374,7 +457,7 @@ async def _run_chain(
 
             end_frame: Path | None = None
             if step_idx == total and end_target:
-                end_frame = _get_end_frame(pf, end_target, target_w, target_h)
+                end_frame = _get_end_frame(pf, end_target, cur_w, cur_h)
 
             # Output
             out_name = f"{chain_prefix}_{step_idx:03d}.mp4"
@@ -387,6 +470,34 @@ async def _run_chain(
                     backend.config["atlascloud_resolution"] = step_cfg["atlascloud_resolution"]
                 if step_cfg.get("atlascloud_prompt_extend") is not None:
                     backend.config["atlascloud_prompt_extend"] = step_cfg["atlascloud_prompt_extend"]
+
+            # Log generation params to UI panel
+            _tile_bts = step_cfg.get("blocks_to_swap")
+            if _tile_bts is not None:
+                _bts, _bts_src = _tile_bts, "manual"
+            else:
+                _proj_auto = (run_details.get("defaults") or {}).get("auto_blocks_to_swap")
+                _is_auto   = _proj_auto if _proj_auto is not None else defaults.get("auto_blocks_to_swap", True)
+                if _is_auto:
+                    from backends.base_backend import _auto_blocks_to_swap as _calc_bts
+                    _bts, _bts_src = _calc_bts(cur_w, cur_h), "auto"
+                else:
+                    _bts, _bts_src = defaults.get("blocks_to_swap"), "global"
+            _log_gen_params(
+                label=f"⛓ {chain_prefix} — step {step_idx}/{total}",
+                width=cur_w, height=cur_h,
+                duration=step_cfg.get("duration", defaults.get("duration", 5)),
+                fps=step_cfg.get("fps", defaults.get("fps", 16)),
+                steps=step_cfg.get("steps", defaults.get("steps", 6)),
+                cfg=step_cfg.get("cfg", defaults.get("cfg", 2.0)),
+                seed=step_cfg.get("seed", -1),
+                bts=_bts, bts_src=_bts_src,
+                fi=step_cfg.get("frame_interpolation", defaults.get("frame_interpolation", True)),
+                lora_high=step_cfg.get("lora_high") or None,
+                lora_low=step_cfg.get("lora_low") or None,
+                audio_prompt=step_cfg.get("audio_prompt") or None,
+                pos=(step_cfg.get("pos", "") or "")[:80],
+            )
 
             # Run generation in thread pool (blocking call)
             sf, ef, op, sc = start_frame, end_frame, out_path, step_cfg
@@ -403,13 +514,15 @@ async def _run_chain(
                     seed=sc.get("seed", -1),
                     positive_prompt=sc.get("pos", "") or "",
                     negative_prompt=sc.get("neg", "") or "",
-                    width=target_w,
-                    height=target_h,
-                    blocks_to_swap=sc.get("blocks_to_swap", defaults.get("blocks_to_swap")),
+                    width=cur_w,
+                    height=cur_h,
+                    blocks_to_swap=_bts,
                     frame_interpolation=sc.get(
                         "frame_interpolation",
                         defaults.get("frame_interpolation", True),
                     ),
+                    lora_high=sc.get("lora_high") or None,
+                    lora_low=sc.get("lora_low") or None,
                 ),
             )
 
@@ -421,7 +534,7 @@ async def _run_chain(
             # Extract last frame for the next step's start
             last_frame = await loop.run_in_executor(
                 None,
-                lambda op=out_path: chain_handler.extract_last_frame(op, target_w, target_h),
+                lambda op=out_path, cw=cur_w, ch=cur_h: chain_handler.extract_last_frame(op, cw, ch),
             )
             if last_frame:
                 frame_cache[out_name] = last_frame
@@ -433,7 +546,7 @@ async def _run_chain(
                     try:
                         from utils.frame_extractor import FrameExtractor
                         FrameExtractor(project_folder=pf).extract_last_frame_to(
-                            out_path, target_w, target_h, real_p
+                            out_path, cur_w, cur_h, real_p
                         )
                     except Exception:
                         pass

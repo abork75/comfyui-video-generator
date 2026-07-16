@@ -198,7 +198,7 @@ def _yaml_item_to_internal(item: dict) -> dict:
             "chain":        transitions,
             "chain_prefix": chain_data.get("prefix", "chain"),
         }
-        for k in ("backend", "fps", "steps", "cfg", "neg", "blocks_to_swap", "frame_interpolation", "atlascloud_resolution", "atlascloud_prompt_extend"):
+        for k in ("backend", "duration", "fps", "steps", "cfg", "neg", "blocks_to_swap", "width", "height", "frame_interpolation", "atlascloud_resolution", "atlascloud_prompt_extend"):
             if k in chain_data:
                 result[k] = chain_data[k]
         return result
@@ -229,7 +229,7 @@ def _internal_item_to_yaml(item: dict) -> dict:
             "prefix":      chain_prefix,
             "transitions": item.get("chain", []),
         }
-        for k in ("backend", "fps", "steps", "cfg", "neg", "blocks_to_swap", "frame_interpolation", "atlascloud_resolution", "atlascloud_prompt_extend"):
+        for k in ("backend", "duration", "fps", "steps", "cfg", "neg", "blocks_to_swap", "width", "height", "frame_interpolation", "atlascloud_resolution", "atlascloud_prompt_extend"):
             if k in item:
                 chain_data[k] = item[k]
         return {"chain": chain_data}
@@ -441,7 +441,7 @@ def _flow_list_to_py(flow: list, var_name: str) -> str:
                 lines.append("            },")
             lines.append("        ],")
             lines.append(f'        "chain_prefix": {repr(chain_prefix)},')
-            for k in ("backend", "fps", "steps", "cfg", "neg", "blocks_to_swap", "frame_interpolation", "atlascloud_resolution", "atlascloud_prompt_extend"):
+            for k in ("backend", "duration", "fps", "steps", "cfg", "neg", "blocks_to_swap", "width", "height", "frame_interpolation", "atlascloud_resolution", "atlascloud_prompt_extend"):
                 if k in item:
                     vr = _py_val(item[k], 8)
                     lines.append(f'        {repr(k)}: {vr},')

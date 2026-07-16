@@ -201,9 +201,12 @@ class LinuxBackend(BaseBackend):
 
             # ============================================================
             # 8. Znajdź plik wideo
+            # Preferuj outputs z ComfyUI history (powiązane z konkretnym
+            # prompt_id) zamiast skanowania po czasie — eliminuje ryzyko
+            # pobrania pliku z równoległego/zakolejkowanego prompta.
             # ============================================================
 
-            output_video = self._find_output_video(start_time)
+            output_video = self._find_output_from_history(result) or self._find_output_video(start_time)
 
             if not output_video:
                 return None
@@ -296,6 +299,43 @@ class LinuxBackend(BaseBackend):
                 runner.workflow['97']['inputs']['strength'] = s2
                 self.logger.info(f"  LoRA pass2 (node 97) strength = {s2} (={s}/3)")
 
+        lora_high = (params.get('lora_high') or '').strip()
+        lora_low  = (params.get('lora_low')  or '').strip() or lora_high
+        if lora_high and '56' in runner.workflow and '97' in runner.workflow:
+            self._inject_content_loras(runner, lora_high, lora_low)
+
+    def _inject_content_loras(self, runner, lora_high: str, lora_low: str):
+        """Wstrzykuje content LoRA nodes 117 (high) i 118 (low) przed speed LoRA 56/97."""
+        wf = runner.workflow
+
+        # Node 117: content LoRA dla high noise (przed node 56)
+        wf['117'] = {
+            'inputs': {
+                'lora': lora_high,
+                'strength': 1.0,
+                'low_mem_load': False,
+                'merge_loras': False,
+            },
+            'class_type': 'WanVideoLoraSelect',
+            '_meta': {'title': 'Content LoRA High Noise'},
+        }
+        wf['56']['inputs']['prev_lora'] = ['117', 0]
+        self.logger.info(f"  Content LoRA high (node 117): {lora_high}")
+
+        # Node 118: content LoRA dla low noise (przed node 97)
+        wf['118'] = {
+            'inputs': {
+                'lora': lora_low,
+                'strength': 1.0,
+                'low_mem_load': False,
+                'merge_loras': False,
+            },
+            'class_type': 'WanVideoLoraSelect',
+            '_meta': {'title': 'Content LoRA Low Noise'},
+        }
+        wf['97']['inputs']['prev_lora'] = ['118', 0]
+        self.logger.info(f"  Content LoRA low  (node 118): {lora_low}")
+
     def _set_seed(self, seed=None):
         """Ustawia unikalny seed (zapobiega cache ComfyUI)"""
         import random
@@ -337,8 +377,40 @@ class LinuxBackend(BaseBackend):
         if cleaned > 0:
             self.logger.info(f"    Wyczyszczono {cleaned} starych plików")
 
+    def _find_output_from_history(self, run_result: dict):
+        """
+        Znajdź plik wideo na podstawie outputs zwróconych przez ComfyUI history.
+        Bardziej niezawodne niż timestamp-scan: plik jest bezpośrednio powiązany
+        z konkretnym prompt_id, więc równoległe/zakolejkowane prompty nie mogą
+        zakłócić przypisania.
+
+        run_result: dict z {'prompt_id': ..., 'outputs': {...}} zwrócony przez run()
+        """
+        outputs = run_result.get('outputs') if isinstance(run_result, dict) else None
+        if not outputs:
+            return None
+
+        comfyui_output = Path(self.output_folder)
+
+        for node_id, node_out in outputs.items():
+            # ComfyUI zwraca pliki jako 'videos' lub 'images' z type='output'
+            for key in ('videos', 'images', 'gifs'):
+                for item in node_out.get(key, []):
+                    if item.get('type') != 'output':
+                        continue
+                    subfolder = item.get('subfolder', '')
+                    filename  = item.get('filename', '')
+                    if not filename:
+                        continue
+                    candidate = comfyui_output / subfolder / filename if subfolder else comfyui_output / filename
+                    if candidate.exists() and candidate.suffix.lower() in ('.mp4', '.avi', '.mov', '.mkv'):
+                        self.logger.info(f"  Znaleziono (history): {candidate.name}")
+                        return candidate
+
+        return None
+
     def _find_output_video(self, start_time):
-        """Szuka nowo wygenerowanego pliku wideo"""
+        """Szuka nowo wygenerowanego pliku wideo (fallback: timestamp-scan)"""
         comfyui_output = Path(self.output_folder)
 
         search_dirs = [comfyui_output]
