@@ -161,7 +161,18 @@ def run_batch_generation(config):
     default_audio_negative_prompt = config.get('default_audio_negative_prompt', '')
     default_blocks_to_swap      = config.get('default_blocks_to_swap', None)
     default_frame_interpolation = config.get('default_frame_interpolation', True)
-    
+
+    # If global auto_blocks_to_swap is enabled, let generate_transition() calculate
+    # BTS per-clip from the auto_bts_table (based on resolution). Setting default to
+    # None here ensures the fallback chain (lines below) yields None for unconfigured
+    # tiles, which triggers auto-calculation in base_backend.generate_transition().
+    try:
+        from app.services.app_config_service import get_defaults as _get_gdefs
+        if _get_gdefs().get("auto_blocks_to_swap", False):
+            default_blocks_to_swap = None
+    except Exception:
+        pass
+
     # Check ffmpeg
     import subprocess
     try:
@@ -250,6 +261,8 @@ def run_batch_generation(config):
                 'frame_interpolation': transition_to_next.get('frame_interpolation', chain_config.get('frame_interpolation', default_frame_interpolation)),
                 'lora_name':     transition_to_next.get('lora_name',     chain_config.get('lora_name')),
                 'lora_strength': transition_to_next.get('lora_strength', chain_config.get('lora_strength')),
+                'lora_high':     transition_to_next.get('lora_high',     chain_config.get('lora_high')),
+                'lora_low':      transition_to_next.get('lora_low',      chain_config.get('lora_low')),
                 'generate_count': transition_to_next.get('generate_count', chain_config.get('generate_count', 1)),
 
                 # Mark as normal I2V2I (not chain I2V)
@@ -297,6 +310,8 @@ def run_batch_generation(config):
                     'frame_interpolation': to_config.get('frame_interpolation', from_config.get('frame_interpolation', default_frame_interpolation)),
                     'lora_name':     to_config.get('lora_name',     from_config.get('lora_name')),
                     'lora_strength': to_config.get('lora_strength', from_config.get('lora_strength')),
+                    'lora_high':     to_config.get('lora_high',     from_config.get('lora_high')),
+                    'lora_low':      to_config.get('lora_low',      from_config.get('lora_low')),
                     'generate_count': to_config.get('generate_count', from_config.get('generate_count', 1)),
                     'is_i2v_mode': True,  # Chain is always I2V
                     'atlascloud_resolution':    to_config.get('atlascloud_resolution',    from_config.get('atlascloud_resolution')),
@@ -328,6 +343,8 @@ def run_batch_generation(config):
                     'frame_interpolation': from_config.get('frame_interpolation', to_config.get('frame_interpolation', default_frame_interpolation)),
                     'lora_name':     from_config.get('lora_name',     to_config.get('lora_name')),
                     'lora_strength': from_config.get('lora_strength', to_config.get('lora_strength')),
+                    'lora_high':     from_config.get('lora_high',     to_config.get('lora_high')),
+                    'lora_low':      from_config.get('lora_low',      to_config.get('lora_low')),
                     'generate_count': from_config.get('generate_count', to_config.get('generate_count', 1)),
                     'is_i2v_mode': False,
                     'atlascloud_resolution':    from_config.get('atlascloud_resolution',    to_config.get('atlascloud_resolution')),
@@ -1316,6 +1333,8 @@ def run_batch_generation(config):
                 frame_interpolation=trans_config.get('frame_interpolation'),
                 lora_name=trans_config.get('lora_name'),
                 lora_strength=trans_config.get('lora_strength'),
+                lora_high=trans_config.get('lora_high'),
+                lora_low=trans_config.get('lora_low'),
                 audio_prompt=trans_config.get('audio_prompt', ''),
                 audio_negative_prompt=trans_config.get('audio_negative_prompt', ''),
             )
