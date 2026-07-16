@@ -8646,14 +8646,33 @@ function app() {
                 const item = flow[idx];
                 if (!item || typeof item !== 'object') continue;
                 const si = this._si(idx);
-                if (!si || (si.status !== 'ok' && si.status !== 'green')) continue;
-                if (si.has_audio) continue;
-                if (!si.name) continue;
-                clips.push({
-                    name: si.name,
-                    audio_prompt: item.audio_prompt || defPos,
-                    audio_negative_prompt: item.audio_negative_prompt || defNeg,
-                });
+                if (!si) continue;
+
+                if (item.chain_prefix && Array.isArray(item.chain)) {
+                    // Chain: iterate per step
+                    const steps = si.steps || [];
+                    for (let s = 0; s < item.chain.length; s++) {
+                        const stepSi = steps[s];
+                        if (!stepSi?.exists || stepSi.has_audio) continue;
+                        const fname = stepSi.filename || `${item.chain_prefix}_${String(s+1).padStart(3,'0')}.mp4`;
+                        const stepCfg = item.chain[s] || {};
+                        clips.push({
+                            name: fname,
+                            audio_prompt: stepCfg.audio_prompt || item.audio_prompt || defPos,
+                            audio_negative_prompt: stepCfg.audio_negative_prompt || item.audio_negative_prompt || defNeg,
+                        });
+                    }
+                } else {
+                    // Regular transition
+                    if (si.status !== 'ok' && si.status !== 'green') continue;
+                    if (si.has_audio) continue;
+                    if (!si.name) continue;
+                    clips.push({
+                        name: si.name,
+                        audio_prompt: item.audio_prompt || defPos,
+                        audio_negative_prompt: item.audio_negative_prompt || defNeg,
+                    });
+                }
             }
             if (!clips.length) { this.logLine('sys', '🔊 Brak klipów do uzupełnienia audio'); return; }
             this.logLine('sys', `🔊 Generuję brakujące audio: ${clips.length} klipów...`);
