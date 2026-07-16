@@ -8636,21 +8636,23 @@ function app() {
             if (!this.selectedRun || this.isRunning || this.batchAudioRunning) return;
             if (!this.statusData) { this.logLine('sys', '❌ Brak statusData — odśwież widok'); return; }
 
-            // Collect clips: has audio_prompt in YAML + video exists + no audio track
+            // Collect clips: video exists + no audio track
+            // audio_prompt from YAML if set, otherwise project/global default
             const clips = [];
             const flow = this.flowData?.flow || [];
+            const defPos = this.runAudioDefaults.audio_prompt;
+            const defNeg = this.runAudioDefaults.audio_negative_prompt;
             for (let idx = 0; idx < flow.length; idx++) {
                 const item = flow[idx];
                 if (!item || typeof item !== 'object') continue;
-                if (!item.audio_prompt) continue;
                 const si = this._si(idx);
-                if (!si || si.status !== 'ok') continue;
+                if (!si || (si.status !== 'ok' && si.status !== 'green')) continue;
                 if (si.has_audio) continue;
                 if (!si.name) continue;
                 clips.push({
                     name: si.name,
-                    audio_prompt: item.audio_prompt,
-                    audio_negative_prompt: item.audio_negative_prompt || '',
+                    audio_prompt: item.audio_prompt || defPos,
+                    audio_negative_prompt: item.audio_negative_prompt || defNeg,
                 });
             }
             if (!clips.length) { this.logLine('sys', '🔊 Brak klipów do uzupełnienia audio'); return; }
