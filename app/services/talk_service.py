@@ -905,14 +905,19 @@ def start_talk(
     talk_name = dest_path.name
 
     # ── Log generation summary ────────────────────────────────────────────
-    _sf_tag = (' 🎯 real (last frame of preceding clip)'
-               if '_real' in img_path.name
-               else ' (static source image)')
-    print(f"  🎙️ Talk start:")
-    print(f"     start frame : {img_path.name}{_sf_tag}")
-    print(f"     audio       : {', '.join(e['path'].name for e in audio_entries)}")
-    print(f"     size        : {width}x{height}")
-    print(f"     output      : {talk_name}")
+    _sf_tag = " 🎯 real" if '_real' in img_path.name else " 📸 static"
+    _audio_names = ", ".join(e["path"].name for e in audio_entries)
+    _pos_display = (talk_item.get("pos", "") or "")[:80]
+    try:
+        from app.services.process_service import process_service as _ps
+        _ps.log_sys(
+            f"🎙️ {talk_name}\n"
+            f"   📐 {width}×{height} | start: {img_path.name}{_sf_tag}\n"
+            f"   🔊 {_audio_names}"
+            + (f"\n   📝 pos: {_pos_display}" if _pos_display else "")
+        )
+    except Exception:
+        print(f"  🎙️ Talk start: {talk_name} | {width}x{height} | audio: {_audio_names}")
 
     _reset_state()
     _state.update({

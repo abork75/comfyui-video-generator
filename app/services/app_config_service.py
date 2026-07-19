@@ -61,13 +61,20 @@ _DEFAULTS: dict[str, Any] = {
         },
     },
     "defaults": {
-        "resolution":          [1024, 1024],
-        "fps":                 16,
-        "steps":               6,
-        "cfg":                 2.0,
-        "duration":            2,
-        "blocks_to_swap":      35,
-        "frame_interpolation": True,
+        "resolution":           [1024, 1024],
+        "fps":                  16,
+        "steps":                6,
+        "cfg":                  2.0,
+        "duration":             2,
+        "blocks_to_swap":       35,
+        "auto_blocks_to_swap":  True,
+        "auto_bts_table": [
+            {"max_pixels": 310000,  "bts": 10},
+            {"max_pixels": 510000,  "bts": 20},
+            {"max_pixels": 760000,  "bts": 30},
+            {"max_pixels": 9999999, "bts": 40},
+        ],
+        "frame_interpolation":  True,
     },
 }
 

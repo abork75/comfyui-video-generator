@@ -7,6 +7,26 @@ All backends must implement this interface
 from abc import ABC, abstractmethod
 from pathlib import Path
 
+def _auto_blocks_to_swap(width: int, height: int) -> int:
+    """Calculate blocks_to_swap from config table (falls back to hardcoded if missing)."""
+    pixels = width * height
+    try:
+        from app.services.app_config_service import get_defaults as _gd
+        table = _gd().get("auto_bts_table") or []
+        for row in sorted(table, key=lambda r: r["max_pixels"]):
+            if pixels <= row["max_pixels"]:
+                return row["bts"]
+        if table:
+            return sorted(table, key=lambda r: r["max_pixels"])[-1]["bts"]
+    except Exception:
+        pass
+    # hardcoded fallback
+    if pixels < 310_000: return 10
+    if pixels < 510_000: return 20
+    if pixels < 760_000: return 30
+    return 40
+
+
 def calculate_optimal_frames(duration, fps):
     """
     Calculate optimal frame count for WAN (must be n*4 + 1)
@@ -135,6 +155,7 @@ class BaseBackend(ABC):
                       positive_prompt, negative_prompt,
                       width, height, blocks_to_swap=None,
                       frame_interpolation=None, lora_name=None, lora_strength=None,
+                      lora_high=None, lora_low=None,
                       audio_prompt=None, audio_negative_prompt=None):
         """
         High-level wrapper for transition generation
@@ -198,12 +219,21 @@ class BaseBackend(ABC):
 
             if blocks_to_swap is not None:
                 params['blocks_to_swap'] = blocks_to_swap
+            else:
+                from app.services.app_config_service import get_defaults as _get_defaults
+                _defs = _get_defaults()
+                if _defs.get("auto_blocks_to_swap", False):
+                    params['blocks_to_swap'] = _auto_blocks_to_swap(width, height)
             if frame_interpolation is not None:
                 params['frame_interpolation'] = frame_interpolation
             if lora_name is not None:
                 params['lora_name'] = lora_name
             if lora_strength is not None:
                 params['lora_strength'] = lora_strength
+            if lora_high is not None:
+                params['lora_high'] = lora_high
+            if lora_low is not None:
+                params['lora_low'] = lora_low
             
             # Use existing interface (implemented by subclasses)
             inputs = self.prepare_inputs(pair, workflow=None)

@@ -71,13 +71,27 @@ parameters:
     node_id: 56
     type: string
     param_name: lora
-    description: "LoRA filename (node 56 pass1; node 97 pass2 ustawiany razem)"
+    description: "Speed LoRA filename (node 56 pass1; node 97 pass2 ustawiany razem)"
 
   lora_strength:
     node_id: 56
     type: float
     param_name: strength
-    description: "LoRA strength pass1 (node 56); pass2 (node 97) = strength/3"
+    description: "Speed LoRA strength pass1 (node 56); pass2 (node 97) = strength/3"
+
+  # Content LoRAs (NSFW/style) — wstrzykiwane dynamicznie jako nodes 117/118
+  # przed speed LoRAs (56/97). Obsługiwane w backendzie, nie przez set_parameter.
+  lora_high:
+    node_id: null
+    type: string
+    param_name: null
+    description: "Content LoRA dla high noise modelu (node 117, wstrzykiwany dynamicznie)"
+
+  lora_low:
+    node_id: null
+    type: string
+    param_name: null
+    description: "Content LoRA dla low noise modelu (node 118). Jeśli puste = kopiuje lora_high"
 
   frame_interpolation:
     node_id: 106

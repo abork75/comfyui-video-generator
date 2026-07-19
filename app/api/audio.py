@@ -8,6 +8,7 @@ POST /api/audio/{run_filename}
 """
 
 import asyncio
+import sys
 from pathlib import Path
 
 from fastapi import APIRouter, HTTPException, Request
@@ -121,3 +122,97 @@ async def add_audio_to_clip(run_filename: str, request: Request):
 
     asyncio.create_task(_run_audio_bg(video_path, audio_prompt, audio_negative_prompt, api_url, duration))
     return {"ok": True}
+
+
+# ── Batch missing audio ───────────────────────────────────────────────────────
+
+_batch_state: dict = {"status": "idle", "done": 0, "total": 0, "error": None}
+
+
+@router.get("/batch_missing_status")
+async def batch_missing_status():
+    return dict(_batch_state)
+
+
+@router.post("/batch_missing/{run_filename}")
+async def batch_missing_audio(run_filename: str, request: Request):
+    """
+    Generate audio for all clips that have audio_prompt but no audio track.
+    Runs sequentially in background.
+    Body: { "clips": [{"name": "x.mp4", "audio_prompt": "...", "audio_negative_prompt": "..."}] }
+    """
+    global _batch_state
+    if _batch_state["status"] == "running":
+        raise HTTPException(status_code=400, detail="Batch audio już trwa")
+
+    try:
+        body = await request.json()
+    except Exception:
+        raise HTTPException(status_code=422, detail="Invalid JSON")
+
+    clips = body.get("clips", [])
+    if not clips:
+        raise HTTPException(status_code=400, detail="Brak klipów do przetworzenia")
+
+    yaml_path = RUNS_FOLDER / run_filename
+    if not yaml_path.exists():
+        raise HTTPException(status_code=404, detail=f"Plik nie istnieje: {run_filename}")
+
+    globals_data = get_yaml_globals(yaml_path)
+    if not globals_data:
+        raise HTTPException(status_code=400, detail="Nie można odczytać YAML")
+
+    project_folder = Path(globals_data.get("project_folder") or "")
+    if not project_folder or not project_folder.exists():
+        raise HTTPException(status_code=400, detail=f"Folder projektu nie istnieje: {project_folder}")
+
+    lb = globals_data.get("linux_backend") or {}
+    api_url = lb.get("api_url") or cfg_get_backend("linux").get("api_url", "http://127.0.0.1:8189")
+
+    _batch_state.update({"status": "running", "done": 0, "total": len(clips), "error": None})
+    asyncio.create_task(_run_batch_audio(clips, project_folder, api_url))
+    return {"ok": True, "total": len(clips)}
+
+
+async def _run_batch_audio(clips: list, project_folder: Path, api_url: str) -> None:
+    global _batch_state
+    from utils.mmaudio_utils import add_audio as _add_audio
+    from utils.video_utils import get_video_info
+
+    logger = _LogBridge()
+    loop = asyncio.get_running_loop()
+
+    try:
+        for i, clip in enumerate(clips):
+            name    = clip.get("name", "")
+            prompt  = clip.get("audio_prompt", "")
+            neg     = clip.get("audio_negative_prompt", "") or _FALLBACK_AUDIO_NEG_PROMPT
+
+            video_path = project_folder / "transitions" / name
+            if not video_path.exists():
+                video_path = project_folder / "transitions" / "chains" / name
+            if not video_path.exists():
+                logger.warning(f"Pomijam (brak pliku): {name}")
+                _batch_state["done"] = i + 1
+                continue
+
+            try:
+                info = get_video_info(video_path)
+                duration = float(info["duration"]) if info.get("duration") and info["duration"] > 0 else 10.0
+            except Exception:
+                duration = 10.0
+
+            logger.info(f"MMAudio [{i+1}/{len(clips)}]: {name}")
+            await loop.run_in_executor(None, lambda vp=video_path, p=prompt, n=neg, d=duration: _add_audio(
+                video_path=vp, prompt=p, negative_prompt=n,
+                api_url=api_url, duration=d, steps=25, cfg=4.5, seed=-1, logger=logger,
+            ))
+            process_service.log_sys(f"[AUDIO_READY] {name}")
+            _batch_state["done"] = i + 1
+
+        _batch_state["status"] = "done"
+        logger.success(f"Batch audio zakończone ({len(clips)} klipów)")
+
+    except Exception as exc:
+        _batch_state.update({"status": "error", "error": str(exc)})
+        print(f"  ✗ Batch audio error: {exc}", file=sys.stderr)

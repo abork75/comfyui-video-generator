@@ -34,6 +34,18 @@ categories:
   name: chłosta
   icon: 💫
   order: 102
+- id: nsfw
+  name: NSFW
+  icon: 🗂
+  order: 103
+- id: nsfw_i2i
+  name: NSFW I2I
+  icon: 🗂
+  order: 104
+- id: mmaudio
+  name: MMAudio
+  icon: 🔊
+  order: 200
 defaults:
   steps: 30
   cfg: 8
@@ -754,4 +766,276 @@ prompts:
     steps: 30
     cfg: 8.0
     denoise: 1.0
-last_id: 67
+- id: p0000068
+  category: nsfw
+  name: Potwór od tylu doggy style front view
+  note: Dziala
+  positive: 'Explicit front view scene in the forest: a woman kneeling on all fours on the grass, back arched. A large, massive monster standing behind her and vigorously fucking her in doggystyle position. Strong, deep, rhythmic penetration, monster''s hips slamming against her ass. Clear front view showing the woman''s face, breasts hanging and bouncing with each thrust, open mouth, wide eyes, intense pleasure and overwhelm expression, heavy breathing. Monster''s large clawed hands gripping her waist tightly, dynamic and powerful sex motion, detailed anatomy, realistic penetration, forest setting, dramatic lighting, high detail, erotic atmosphere'
+  negative: side view, back view, wrong camera angle, no penetration, bad anatomy, deformed body, extra limbs, blurry, low quality, censored, clothes on, monster not behind her, weak motion, static pose, cartoon, floating, unrealistic scale, poor connection between bodies
+  params:
+    steps: 30
+    cfg: 8.0
+    denoise: 1.0
+- id: p0000069
+  category: nsfw_i2i
+  name: doggy style widok z oczu monster
+  note: nie udało się poprawnie wygenerować
+  positive: Explicit doggystyle sex scene from the monster's point of view, camera looking through the monster's eyes. A woman on all fours in front of the camera, back arched, ass up, getting fucked hard in doggystyle position. She turns her head back over her shoulder looking directly towards the camera with pleasure-filled expression, open mouth, eyes half-closed in ecstasy. Strong rhythmic thrusting motion visible, her body moving with each thrust, breasts hanging and swinging, detailed skin texture, realistic anatomy, intense erotic atmosphere, dramatic lighting, high detail
+  negative: ''
+  params:
+    steps: 30
+    cfg: 8.0
+    denoise: 1.0
+- id: p0000070
+  category: nsfw_i2i
+  name: 'Oral I2I '
+  note: 'tylko positive nie zadzialal jeszcze '
+  positive: Explicit close-up erotic scene, woman giving oral sex to a large monster, detailed front view of her face with the monster's thick, veiny penis deep inside her mouth, her lips stretched wide around the big shaft, cheeks hollowed from strong suction, eyes looking up with watery eyes, lots of saliva dripping from her mouth and chin, visible tongue working on the underside, realistic anatomy and size difference, glistening wet penis, high detail, dramatic cinematic lighting, intense and explicit oral sex atmosphere
+  negative: ''
+  params:
+    steps: 30
+    cfg: 8.0
+    denoise: 1.0
+- id: p0000071
+  category: nsfw_i2i
+  name: Oral I2I tylko positve
+  note: nie zadziałał poprawnie ale ciekawy obrazek zrobił
+  positive: Explicit close-up erotic scene, woman giving oral sex to a large monster, detailed front view of her face with the monster's thick, veiny penis deep inside her mouth, her lips stretched wide around the big shaft, cheeks hollowed from strong suction, eyes looking up with watery eyes, lots of saliva dripping from her mouth and chin, visible tongue working on the underside, realistic anatomy and size difference, glistening wet penis, high detail, dramatic cinematic lighting, intense and explicit oral sex atmosphere
+  negative: ''
+  params:
+    steps: 30
+    cfg: 8.0
+    denoise: 1.0
+- id: p0000072
+  category: nsfw_i2i
+  name: Oral T2I Flux
+  note: poniżej to nie negativ tylko dwuskładnikowy prompt - działa
+  positive: Explicit close-up erotic scene, a beautiful woman kneeling and giving intense oral sex to a massive monster, highly detailed front view of her face, the monster's huge thick veiny penis deep inside her mouth, her lips stretched wide around the massive shaft, cheeks hollowed from strong suction, watery eyes looking up submissively, lots of saliva dripping from her mouth and chin, visible tongue licking the underside of the penis, realistic anatomy and extreme size difference, glistening wet penis covered in saliva, dramatic cinematic lighting, intense and explicit oral sex atmosphere, masterpiece, best quality, ultra detailed, 8k
+  negative: A beautiful woman on her knees giving a deep blowjob to a giant monster, close-up front view of her face with the monster's enormous thick veiny cock buried deep in her mouth, lips stretched to the limit, cheeks sucked in, saliva everywhere
+  params:
+    steps: 30
+    cfg: 8.0
+    denoise: 1.0
+- id: p0000073
+  category: nsfw_i2i
+  name: Doggy style potwor rzut z przodu
+  note: zadziałał - do wan 2.7 tylko positive
+  positive: 'Explicit adult scene, front view: large terrifying monster standing behind a kneeling woman in doggy style position, monster thrusting deep and powerfully into her from behind, intense penetration, strong rhythmic motion, monster''s hands gripping her hips tightly, woman on all fours with back arched, breasts visible, mouth open, face showing pleasure and overwhelm, detailed anatomy, realistic sex, front camera angle clearly showing both bodies and penetration, high detail, dramatic lighting, explicit erotic atmosphere, cinematic, 8k'
+  negative: ''
+  params:
+    steps: 30
+    cfg: 8.0
+    denoise: 1.0
+- id: p0000074
+  category: nsfw
+  name: Blow job monster tranzycja od całowania
+  note: 'działa '
+  positive: A woman passionately kissing a large monster. The video then jumpcuts to the same woman giving a blowjob to the monster standing in the same location. She is kneeling in front of him, looking up as she performs the blowjob. She is holding the monster's thick penis with both hands. She looks at the camera the entire time. She shoves the monster's penis deep in her mouth, sucking intensely with visible effort, saliva dripping, cheeks hollowed. Dynamic oral sex, high detail, explicit, realistic anatomy and size difference
+  negative: bad anatomy, deformed penis, extra limbs, blurry, low quality, censored, small penis, no saliva, closed mouth, no eye contact, bad hand position, teeth visible, static pose, cartoon, plastic skin, poor connection, weak motion
+  params:
+    steps: 30
+    cfg: 8.0
+    denoise: 1.0
+- id: p0000075
+  category: nsfw
+  name: Doggy style back monster
+  note: działa
+  positive: 'The video begins with a front view shot of a large monster vigorously fucking a woman in doggystyle position. The video then jumpcuts to the same woman now having sex in doggystyle position in the same location. From an overhead perspective, she is on all fours with her back facing the camera. A monster is positioned behind her, his hands gripping her hips as he penetrates her from behind. The woman''s expression changes throughout the scene, showing moments of pleasure and engagement with her partner. Her legs are spread apart with the man in-between her legs.
+
+
+    Woman has no make up face the same as on start image.
+
+
+    she is looking directly at the camera fully facing it.
+
+
+    she looks back at the camera.
+
+
+    she looks at the camera throughout the video.'
+  negative: ''
+  params:
+    steps: 30
+    cfg: 8.0
+    denoise: 1.0
+- id: p0000076
+  category: mmaudio
+  name: Standard FX
+  note: ''
+  positive: 'foley sound effects, physical environment sounds, footsteps, cloth movement, objects, wind bursts, creaking, synchronized with video, crisp, realistic, high quality'
+  negative: 'music, melody, instruments, singing, ambient drone, sustained atmosphere, continuous background noise, reverb heavy, low quality, distortion'
+  params:
+    steps: 30
+    cfg: 8.0
+    denoise: 1.0
+- id: p0000077
+  category: mmaudio
+  name: Spanking
+  note: ''
+  positive: 'sharp slap impact, flesh impact sound, skin contact, crisp smack, physical strike, body percussion, high quality, realistic foley'
+  negative: 'music, melody, ambient drone, echo, reverb, wet sound, low quality, distortion'
+  params:
+    steps: 30
+    cfg: 8.0
+    denoise: 1.0
+- id: p0000078
+  category: mmaudio
+  name: Ruch postaci
+  note: ''
+  positive: 'subtle body movement, soft weight shift, quiet fabric rustle, gentle shuffling feet on floor, light position change, soft clothing sounds, natural movement foley, realistic, high quality'
+  negative: 'music, melody, ambient drone, loud impact, hard footsteps, slap, sustained atmosphere, low quality, distortion'
+  params:
+    steps: 30
+    cfg: 8.0
+    denoise: 1.0
+- id: p0000079
+  category: mmaudio
+  name: Walka — uderzenia
+  note: ''
+  positive: 'metal impact, armor strike, sword clash, weapon hit, sharp blow, hard combat hit, physical impact foley, synchronized with video, crisp, high quality, realistic'
+  negative: 'music, melody, ambient drone, sustained atmosphere, continuous background, crowd noise, reverb heavy, low quality, distortion'
+  params:
+    steps: 30
+    cfg: 8.0
+    denoise: 1.0
+- id: p0000080
+  category: mmaudio
+  name: Spadająca zbroja
+  note: ''
+  positive: 'heavy metal plate falling, armor crashing to ground, metallic clanging, metal scraping on floor, armor pieces dropping and rattling, hard surface impact, synchronized with video, crisp, high quality, realistic'
+  negative: 'music, melody, ambient drone, sustained tone, continuous background noise, soft sounds, low quality, distortion'
+  params:
+    steps: 30
+    cfg: 8.0
+    denoise: 1.0
+- id: p0000081
+  category: mmaudio
+  name: Kroki w biegu po lesie
+  note: ''
+  positive: 'urgent running footsteps on forest floor, leaves and twigs crunching underfoot, branches snapping, fast heavy footfalls on dirt and leaves, synchronized with video, crisp, realistic, high quality'
+  negative: 'music, melody, ambient drone, bird sounds, wind loop, sustained atmosphere, continuous background noise, low quality, distortion'
+  params:
+    steps: 30
+    cfg: 8.0
+    denoise: 1.0
+- id: p0000082
+  category: mmaudio
+  name: Igraszki — kontakt ciał
+  note: ''
+  positive: 'rhythmic skin-on-skin slapping, flesh impact sounds, body weight shifting, wet contact sounds, rhythmic thrusting foley, synchronized with video, crisp, high quality, realistic'
+  negative: 'music, melody, ambient drone, moaning, voice, sustained atmosphere, continuous background noise, low quality, distortion'
+  params:
+    steps: 30
+    cfg: 8.0
+    denoise: 1.0
+- id: p0000083
+  category: mmaudio
+  name: Blow job — mlaskanie
+  note: ''
+  positive: 'wet mouth sounds, oral suction, saliva dripping, lips sliding, rhythmic sucking and slurping, oral motion foley, synchronized with video, crisp, high quality, realistic'
+  negative: 'music, melody, ambient drone, moaning, voice, sustained atmosphere, continuous background noise, low quality, distortion'
+  params:
+    steps: 30
+    cfg: 8.0
+    denoise: 1.0
+- id: p0000084
+  category: mmaudio
+  name: Cum shot — płyny
+  note: ''
+  positive: 'wet splashing sounds, thick liquid impact, fluid spray, viscous liquid dripping and hitting skin, wet surface contact, synchronized with video, crisp, high quality, realistic'
+  negative: 'music, melody, ambient drone, moaning, voice, sustained atmosphere, continuous background noise, low quality, distortion'
+  params:
+    steps: 30
+    cfg: 8.0
+    denoise: 1.0
+- id: p0000085
+  category: mmaudio
+  name: Kroki — zmęczone chodzenie
+  note: ''
+  positive: 'slow tired footsteps on forest floor, soft leaves crunching underfoot, heavy labored walking, weight settling sounds, wood creak as sitting on log, body weight on wood, synchronized with video, crisp, high quality, realistic'
+  negative: 'music, melody, ambient drone, running, fast footsteps, bird sounds, wind loop, sustained atmosphere, continuous background noise, low quality, distortion'
+  params:
+    steps: 30
+    cfg: 8.0
+    denoise: 1.0
+- id: p0000086
+  category: mmaudio
+  name: Cisza — brak odgłosów FX
+  note: ''
+  positive: 'near silence, very subtle room tone, minimal ambient presence, no distinct sounds'
+  negative: 'music, melody, voice, moaning, footsteps, impacts, foley, sound effects, loud sounds, sustained atmosphere, continuous noise, low quality, distortion'
+  params:
+    steps: 30
+    cfg: 8.0
+    denoise: 1.0
+- id: p0000087
+  category: mmaudio
+  name: Kroki — spokojny spacer
+  note: ''
+  positive: 'slow walking footsteps on forest floor, soft leaves crunching underfoot, gentle footfalls on dirt path, peaceful walking pace, synchronized with video, crisp, high quality, realistic'
+  negative: 'music, melody, ambient drone, running, fast footsteps, bird sounds, wind loop, sustained atmosphere, continuous background noise, low quality, distortion'
+  params:
+    steps: 30
+    cfg: 8.0
+    denoise: 1.0
+- id: p0000088
+  category: mmaudio
+  name: Whip + cry — uderzenie
+  note: ''
+  positive: 'sharp whip crack impact, loud leather whip strike, crisp snap sound, woman sharp gasp cry of pain, realistic foley'
+  negative: 'music, melody, ambient drone, echo, reverb, sustained atmosphere, continuous background noise, low quality, distortion'
+  params:
+    steps: 30
+    cfg: 8.0
+    denoise: 1.0
+- id: p0000089
+  category: mmaudio
+  name: Whip + cry — głos
+  note: ''
+  positive: 'whip crack slap sound, woman yelp cry out pain, sharp impact flesh, gasp moan distress, high quality sound effects'
+  negative: 'music, melody, ambient drone, echo, reverb, sustained atmosphere, continuous background noise, low quality, distortion'
+  params:
+    steps: 30
+    cfg: 8.0
+    denoise: 1.0
+- id: p0000090
+  category: mmaudio
+  name: Whip + cry — sekwencja
+  note: ''
+  positive: 'leather whip whoosh and crack, sharp impact sound, female vocal reaction pain cry, body impact foley'
+  negative: 'music, melody, ambient drone, echo, reverb, sustained atmosphere, continuous background noise, low quality, distortion'
+  params:
+    steps: 30
+    cfg: 8.0
+    denoise: 1.0
+- id: p0000091
+  category: mmaudio
+  name: Missionary — oddech i rytm
+  note: ''
+  positive: 'rhythmic body slapping, heavy breathing, soft female moaning pleasure, bed creaking rhythmic, skin contact foley, intimate ambience'
+  negative: 'music, melody, speech, words, lyrics, echo chamber, reverb, distortion, cartoon, low quality'
+  params:
+    steps: 30
+    cfg: 8.0
+    denoise: 1.0
+- id: p0000092
+  category: mmaudio
+  name: Missionary — głośne jęki
+  note: ''
+  positive: 'female moaning loud pleasure, rhythmic thrusting sounds, skin slapping wet impact, gasping breath, increasing intensity, climax vocal'
+  negative: 'music, melody, speech, words, lyrics, reverb, echo, distortion, cartoon, low quality'
+  params:
+    steps: 30
+    cfg: 8.0
+    denoise: 1.0
+- id: p0000093
+  category: mmaudio
+  name: Missionary — ciche intymne
+  note: ''
+  positive: 'quiet intimate breathing, soft female whimpers pleasure, gentle rhythmic motion sound, rustling sheets, subtle skin contact, tender moans'
+  negative: 'music, melody, speech, words, lyrics, loud noise, reverb, echo, distortion, low quality'
+  params:
+    steps: 30
+    cfg: 8.0
+    denoise: 1.0
+last_id: 93

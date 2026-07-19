@@ -39,22 +39,53 @@ def _item_type(item: dict) -> str:
     return "unknown"
 
 
-def _thumbnail_url(filename: str, item: dict) -> str | None:
-    """Return a /api/media/frame URL for items that have a source file."""
-    src = item.get("file")
-    if not src:
-        return None
-    return f"/api/media/frame?run={filename}&file={src}&kind=start"
+def _video_thumb_url(filename: str, video_name: str) -> str:
+    return f"/api/media/video-thumb?run={filename}&name={video_name}"
 
 
 def _enrich(filename: str, flow: list[dict]) -> list[dict]:
+    # Pre-compute next real item index for each position (skip breaks/scene_breaks)
+    next_real: dict[int, int] = {}
+    last_real = None
+    for i in range(len(flow) - 1, -1, -1):
+        itype = _item_type(flow[i])
+        if itype not in ("break", "scene_break"):
+            last_real = i
+        next_real[i] = last_real  # points to itself or next real item after
+
     results = []
     for idx, item in enumerate(flow):
         itype = _item_type(item)
+        thumb_url = None
+
+        if itype == "chain":
+            prefix = item.get("chain_prefix") or item.get("chain", [{}])[0].get("chain_prefix", "chain")
+            video_name = f"{prefix}_001.mp4"
+            if media_service.resolve_video(filename, video_name):
+                thumb_url = _video_thumb_url(filename, video_name)
+
+        elif itype in ("file", "video"):
+            # Find next real item to compute transition filename
+            src = item.get("file", "")
+            nxt_idx = next_real.get(idx + 1) if idx + 1 < len(flow) else None
+            if nxt_idx is not None:
+                nxt = flow[nxt_idx]
+                nxt_src = nxt.get("file", "")
+                if src and nxt_src:
+                    from app.services.media_service import transition_path, _project_folder
+                    pf = _project_folder(filename)
+                    if pf:
+                        tp = transition_path(pf, src, nxt_src)
+                        if tp.exists():
+                            thumb_url = _video_thumb_url(filename, tp.name)
+            # Fallback to source image if no generated video found
+            if thumb_url is None:
+                thumb_url = f"/api/media/frame?run={filename}&file={src}&kind=start"
+
         entry: dict[str, Any] = {
-            "_sort_idx":   idx,
-            "_type":       itype,
-            "_thumb_url":  _thumbnail_url(filename, item) if itype in ("file", "video") else None,
+            "_sort_idx": idx,
+            "_type":     itype,
+            "_thumb_url": thumb_url,
         }
         entry.update(item)
         results.append(entry)

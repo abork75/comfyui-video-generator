@@ -31,6 +31,10 @@ from app.api.chain import router as chain_router
 from app.api.color_grade import router as color_grade_router
 from app.api.prompt_gen import router as prompt_gen_router
 from app.api.audio import router as audio_router
+from app.api.single_transition import router as single_transition_router
+from app.api.trim import router as trim_router
+from app.api.frames import router as frames_router
+from app.api.sound import router as sound_router
 from app.services.process_service import process_service
 
 # ============================================================
@@ -63,6 +67,10 @@ app.include_router(chain_router)
 app.include_router(color_grade_router)
 app.include_router(prompt_gen_router)
 app.include_router(audio_router)
+app.include_router(single_transition_router)
+app.include_router(trim_router)
+app.include_router(frames_router)
+app.include_router(sound_router)
 
 # Static files
 FRONTEND_DIR = Path(__file__).parent / "frontend"

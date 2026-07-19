@@ -396,6 +396,7 @@ def generate_capcut_project(
     capcut_projects_dir: Path,
     project_name: str | None = None,
     template_dir: Path | None = None,
+    overwrite: bool = False,
 ) -> dict:
     """
     Build a CapCut desktop project from a run's post-clips list.
@@ -470,6 +471,10 @@ def generate_capcut_project(
     # ── Resolve paths ────────────────────────────────────────────────────────
     project_name = project_name or Path(run_filename).stem
     real_root    = capcut_projects_dir.resolve()
+    base_dir     = real_root / project_name
+    if overwrite and base_dir.exists():
+        import shutil as _shutil
+        _shutil.rmtree(base_dir)
     project_dir  = _unique_folder(real_root, project_name)
     meta_root    = _get_meta_root(real_root)   # C:/ path CapCut uses in its files
 

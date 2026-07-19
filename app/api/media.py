@@ -164,6 +164,194 @@ async def trash(request: Request):
     return result
 
 
+@router.get("/dimensions")
+async def get_dimensions(run: str, file: str):
+    """
+    Return actual pixel dimensions of a source image or video file.
+    GET /api/media/dimensions?run=RUN_xxx.yaml&file=09.51.+full+street.png
+    Response: {"width": 1920, "height": 1080, "ratio": 0.5625}
+    """
+    from pathlib import Path as _Path
+    path = resolve_frame(run, file, kind="start")
+    if path is None:
+        raise HTTPException(status_code=404, detail=f"File not found: {file}")
+    p = _Path(path)
+    suffix = p.suffix.lower()
+    try:
+        if suffix in (".mp4", ".avi", ".mov", ".mkv", ".webm"):
+            import cv2
+            cap = cv2.VideoCapture(str(p))
+            w = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+            h = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+            cap.release()
+        else:
+            from PIL import Image
+            with Image.open(str(p)) as img:
+                w, h = img.size
+        ratio = round(h / w, 3) if w else 0
+        return {"width": w, "height": h, "ratio": ratio}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/loras")
+async def list_loras(dir: str = "WAN2.2_LoraSet"):
+    """
+    Return list of .safetensors filenames from D:\\ComfyUI\\models\\loras\\{dir}
+    GET /api/media/loras?dir=WAN2.2_LoraSet
+    Response: {"files": ["lora_a.safetensors", ...]}
+    """
+    import os as _os
+    base = _os.path.join(r"D:\ComfyUI\models\loras", dir)
+    if not _os.path.isdir(base):
+        raise HTTPException(status_code=404, detail=f"Directory not found: {base}")
+    files = sorted(
+        dir + "/" + f   # ComfyUI expects subdir/filename relative to models/loras/
+        for f in _os.listdir(base)
+        if f.lower().endswith(".safetensors")
+    )
+    return {"files": files}
+
+
+@router.post("/crop-to-ratio")
+async def crop_to_ratio(request: Request):
+    """
+    Crop or resize a source image to the target aspect ratio + dimensions.
+    Archives original as _beforecrop before modifying.
+    Body: {run, file, width, height, mode: "resize"|"crop"}
+    """
+    from pathlib import Path as _Path
+    from PIL import Image as _Image
+    import shutil as _shutil
+    from datetime import datetime as _dt
+
+    body = await request.json()
+    run    = body.get('run')
+    file   = body.get('file')
+    width  = int(body.get('width', 0))
+    height = int(body.get('height', 0))
+    mode   = body.get('mode', 'crop')
+
+    if not run or not file:
+        raise HTTPException(status_code=400, detail="Brak run lub file")
+    if width < 64 or height < 64:
+        raise HTTPException(status_code=400, detail="Wymiary za małe (min 64px)")
+
+    path = resolve_frame(run, file, kind="start")
+    if path is None:
+        raise HTTPException(status_code=404, detail=f"Plik nie znaleziony: {file}")
+
+    # For MP4 files resolve_frame returned the cached thumbnail; we need the actual source file
+    from app.services.media_service import _project_folder as _get_pf
+    pf = _get_pf(run)
+    if pf is None:
+        raise HTTPException(status_code=404, detail="Nie znaleziono project folder")
+
+    ext = _Path(file).suffix.lower()
+    p   = pf / file   # actual source file (image or video)
+    if not p.exists():
+        raise HTTPException(status_code=404, detail=f"Plik nie znaleziony: {file}")
+
+    ts     = _dt.now().strftime("%y%m%d%H%M%S")
+    backup = p.parent / f"{p.stem}_ver{ts}_beforecrop{p.suffix}"
+
+    if ext == '.mp4':
+        # ── Video crop via ffmpeg ──────────────────────────────────────
+        import subprocess as _sp, json as _json
+        # Get source dimensions via ffprobe
+        probe = _sp.run(
+            ['ffprobe', '-v', 'error', '-select_streams', 'v:0',
+             '-show_entries', 'stream=width,height', '-of', 'json', str(p)],
+            capture_output=True, timeout=15,
+        )
+        if probe.returncode != 0:
+            raise HTTPException(status_code=500, detail='ffprobe failed: ' + probe.stderr.decode())
+        dims = _json.loads(probe.stdout)['streams'][0]
+        src_w, src_h = dims['width'], dims['height']
+
+        if mode == 'resize':
+            vf = f'scale={width}:{height}'
+        else:
+            # center crop (same logic as PIL path below)
+            target_ratio = width / height
+            src_ratio    = src_w / src_h
+            if src_ratio > target_ratio:
+                new_w = int(src_h * target_ratio)
+                x     = (src_w - new_w) // 2
+                vf    = f'crop={new_w}:{src_h}:{x}:0,scale={width}:{height}'
+            elif src_ratio < target_ratio:
+                new_h = int(src_w / target_ratio)
+                y     = (src_h - new_h) // 2
+                vf    = f'crop={src_w}:{new_h}:0:{y},scale={width}:{height}'
+            else:
+                vf = f'scale={width}:{height}'
+
+        _shutil.copy2(str(p), str(backup))
+        tmp = p.parent / f"_tmp_crop_{p.name}"
+        try:
+            cmd = [
+                'ffmpeg', '-y', '-i', str(p),
+                '-vf', vf,
+                '-c:v', 'libx264', '-crf', '18', '-c:a', 'copy',
+                str(tmp),
+            ]
+            r = _sp.run(cmd, capture_output=True, timeout=300)
+            if r.returncode != 0:
+                raise RuntimeError(r.stderr.decode())
+            p.unlink()
+            tmp.rename(p)
+            # Invalidate cached thumbnail so it's re-extracted on next view
+            from app.services.media_service import frame_path as _frame_path
+            cached_thumb = _frame_path(pf, file, 'start')
+            if cached_thumb.exists():
+                cached_thumb.unlink()
+        except Exception as e:
+            if tmp.exists():
+                tmp.unlink()
+            raise HTTPException(status_code=500, detail=str(e))
+        return {"ok": True}
+
+    # ── Image crop via PIL ────────────────────────────────────────────
+    if ext not in ('.jpg', '.jpeg', '.png', '.webp', '.bmp', '.tiff', '.tif'):
+        raise HTTPException(status_code=400, detail="Crop działa tylko na obrazkach lub MP4")
+
+    try:
+        with _Image.open(str(p)) as img:
+            img = img.convert('RGB') if img.mode not in ('RGB', 'RGBA', 'L') else img.copy()
+            src_w, src_h = img.size
+
+            if mode == 'resize':
+                result = img.resize((width, height), _Image.LANCZOS)
+            else:
+                # center crop to target ratio, then resize to exact dimensions
+                target_ratio = width / height
+                src_ratio    = src_w / src_h
+                if src_ratio > target_ratio:
+                    # too wide — crop left/right equally
+                    new_w = int(src_h * target_ratio)
+                    left  = (src_w - new_w) // 2
+                    img   = img.crop((left, 0, left + new_w, src_h))
+                elif src_ratio < target_ratio:
+                    # too tall — crop top/bottom equally
+                    new_h = int(src_w / target_ratio)
+                    top   = (src_h - new_h) // 2
+                    img   = img.crop((0, top, src_w, top + new_h))
+                result = img.resize((width, height), _Image.LANCZOS)
+
+        _shutil.copy2(str(p), str(backup))
+
+        # Save via temp → rename (no partial-write risk)
+        tmp = p.parent / f"_tmp_crop_{p.name}"
+        save_kwargs = {'quality': 95} if ext in ('.jpg', '.jpeg') else {}
+        result.save(str(tmp), **save_kwargs)
+        p.unlink()
+        tmp.rename(p)
+
+        return {"ok": True}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @router.post("/clear-frame-cache")
 async def clear_frame_cache_endpoint(request: Request):
     """

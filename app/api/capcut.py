@@ -19,6 +19,16 @@ router = APIRouter(prefix="/api/capcut", tags=["capcut"])
 
 class ExportRequest(BaseModel):
     project_name: str | None = None
+    overwrite: bool = False
+
+
+@router.get("/{filename}/exists")
+async def check_capcut_exists(filename: str):
+    if not settings.capcut_projects_dir:
+        return {"exists": False}
+    project_name = Path(filename).stem
+    project_dir = Path(settings.capcut_projects_dir).resolve() / project_name
+    return {"exists": project_dir.exists()}
 
 
 @router.post("/{filename}/export")
@@ -34,6 +44,7 @@ async def export_capcut(filename: str, body: ExportRequest = ExportRequest()):
         capcut_projects_dir=Path(settings.capcut_projects_dir),
         project_name=body.project_name or None,
         template_dir=Path(settings.capcut_template_dir),
+        overwrite=body.overwrite,
     )
 
     if not result["ok"]:

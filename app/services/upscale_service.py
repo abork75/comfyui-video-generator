@@ -187,20 +187,42 @@ def _find_video_in_outputs(outputs: dict) -> dict | None:
     return None
 
 
-def _newest_mp4_added_after(directory: Path, known: set[str]) -> Path | None:
+
+
+async def _wait_for_stable_file(
+    path: Path,
+    poll_interval: float = 2.0,
+    stable_rounds: int = 3,
+    max_wait: float = 120.0,
+) -> bool:
     """
-    Return the newest .mp4 in `directory` whose name is NOT in `known`.
-    Used as a fallback when history API doesn't return usable data.
+    Poll `path` until its size stops changing for `stable_rounds` consecutive
+    readings.  Returns True when stable, False if max_wait exceeded.
+    This catches the case where ComfyUI reports a job as done but is still
+    encoding/writing the output file (common for long videos).
     """
-    if not directory.exists():
-        return None
-    candidates = [
-        p for p in directory.glob("*.mp4")
-        if p.name not in known
-    ]
-    if not candidates:
-        return None
-    return max(candidates, key=lambda p: p.stat().st_mtime)
+    prev_size = -1
+    stable_count = 0
+    deadline = time.time() + max_wait
+
+    while time.time() < deadline:
+        await asyncio.sleep(poll_interval)
+        try:
+            cur_size = path.stat().st_size
+        except OSError:
+            stable_count = 0
+            prev_size = -1
+            continue
+
+        if cur_size > 0 and cur_size == prev_size:
+            stable_count += 1
+            if stable_count >= stable_rounds:
+                return True
+        else:
+            stable_count = 0
+            prev_size = cur_size
+
+    return False
 
 
 async def _run_upscale(
@@ -232,11 +254,8 @@ async def _run_upscale(
     tmp_in   = input_dir / tmp_name
 
     try:
-        # 1. Snapshot existing output files BEFORE submitting (for fallback detection)
-        existing_mp4s: set[str] = (
-            {p.name for p in video_dir.glob("*.mp4")}
-            if video_dir.exists() else set()
-        )
+        # 1. expected_prefix used by fallback to find the exact output file
+        expected_prefix: str = f"upscale_{ts}"
 
         # 2. Copy source → ComfyUI input dir
         input_dir.mkdir(parents=True, exist_ok=True)
@@ -255,6 +274,11 @@ async def _run_upscale(
         workflow["9"]["inputs"]["file"]    = tmp_name
         workflow["13"]["inputs"]["width"]  = width
         workflow["13"]["inputs"]["height"] = height
+        # Unique prefix per job → output: video/upscale_{ts}_00001_.mp4
+        # Lets us detect the exact output file without mtime tricks or name collisions.
+        upscale_prefix = f"video/upscale_{ts}"
+        if "12" in workflow and "filename_prefix" in workflow["12"].get("inputs", {}):
+            workflow["12"]["inputs"]["filename_prefix"] = upscale_prefix
 
         # 4. Submit to ComfyUI
         def _submit():
@@ -263,7 +287,7 @@ async def _run_upscale(
             except OSError as e:
                 if getattr(e, "errno", None) in (10061, 111):  # Windows / Linux "connection refused"
                     raise RuntimeError(
-                        f"Windows ComfyUI niedostępny (port 8100). "
+                        f"Windows ComfyUI niedostępny ({upscale_url}). "
                         f"Uruchom środowisko Windows i spróbuj ponownie."
                     ) from e
                 raise
@@ -277,7 +301,7 @@ async def _run_upscale(
         _state["status"]    = "running"
 
         # 5. Poll for completion (history API + directory fallback)
-        max_polls = 300          # 300 × 3 s = 900 s max
+        max_polls = 800          # 800 × 3 s = 40 min max (RealESRGAN ~17 min observed)
         out_video_path: Path | None = None
         _prompt_id = prompt_id   # local copy for closures
 
@@ -301,10 +325,13 @@ async def _run_upscale(
                         subfolder      = video_entry.get("subfolder", "")
                         filename       = video_entry["filename"]
                         candidate      = output_dir / subfolder / filename
+                        print(f"  [upscale] history API → subfolder={subfolder!r} file={filename!r} candidate={candidate}")
                         if candidate.exists():
                             out_video_path = candidate
                             break
-                        # File not yet flushed to disk — wait one more cycle
+                        print(f"  [upscale] candidate not on disk yet, waiting...")
+                    else:
+                        print(f"  [upscale] history API: job done but no video entry in outputs={list(outputs.keys())}")
 
                     # Detect ComfyUI-reported error
                     status_info = job.get("status", {})
@@ -319,17 +346,20 @@ async def _run_upscale(
 
             except RuntimeError:
                 raise   # re-raise ComfyUI errors
-            except Exception:
-                pass    # transient network hiccup — try fallback
+            except Exception as _e:
+                print(f"  [upscale] history API hiccup: {_e}")  # transient — try fallback
 
-            # ── Fallback: detect new mp4 in output directory ──────────
-            new_file = _newest_mp4_added_after(video_dir, existing_mp4s)
-            if new_file is not None:
-                out_video_path = new_file
+            # ── Fallback: scan output_dir for file matching our unique prefix ──
+            for p in output_dir.rglob("*.mp4"):
+                if expected_prefix in p.name and p.stat().st_size > 0:
+                    print(f"  [upscale] fallback found: {p}")
+                    out_video_path = p
+                    break
+            if out_video_path:
                 break
 
         else:
-            raise RuntimeError("Timeout: upscale job did not complete within 15 minutes")
+            raise RuntimeError("Timeout: upscale job did not complete within 40 minutes")
 
         if out_video_path is None or not out_video_path.exists():
             raise RuntimeError(
@@ -337,13 +367,25 @@ async def _run_upscale(
                 f"Checked ComfyUI output: {video_dir}"
             )
 
-        # 6. Wait for ComfyUI to release the file handle (Windows file locking)
-        #    ComfyUI reports job done before closing the file — 5 s is enough.
-        await asyncio.sleep(5)
+        # 6. Wait until ComfyUI finishes writing the file (size must stabilize).
+        #    For long videos (26s+) ComfyUI keeps encoding after reporting job done.
+        #    Poll every 2s; require 3 stable consecutive readings; max wait 120s.
+        stable = await _wait_for_stable_file(out_video_path, poll_interval=2.0, stable_rounds=3, max_wait=120.0)
+        file_size = out_video_path.stat().st_size if out_video_path.exists() else 0
+        if not stable or file_size < 1024:
+            raise RuntimeError(
+                f"Output file incomplete after wait: {out_video_path.name} "
+                f"({file_size} bytes) — ComfyUI może mieć OOM lub plik urwany"
+            )
 
         # 7. Archive original (with _beforeupscale label)
         #    Done AFTER the wait so the original is still intact if step 8 fails.
-        _archive_before_upscale(source_path, clip_type)
+        #    Non-fatal: some paths (e.g. CapCut junction-backed folders) reject mkdir.
+        #    Log the warning but proceed — user loses the backup, not the upscale.
+        try:
+            _archive_before_upscale(source_path, clip_type)
+        except Exception as _arch_err:
+            print(f"  ⚠ Archiwizacja pominięta ({_arch_err}); kontynuuję upscale bez kopii zapasowej")
 
         # 8. Copy upscaled file to original path, then delete source.
         #    Strategy: copy2 to a temp file in dest dir → atomic rename → delete source.
@@ -371,6 +413,14 @@ async def _run_upscale(
             raise RuntimeError(
                 f"Nie można odczytać pliku wyjściowego ComfyUI "
                 f"(zablokowany przez Windows po {8 * 2}s): {last_err}"
+            )
+
+        # Sanity check — verify the copy is not empty
+        copied_size = tmp_dest.stat().st_size if tmp_dest.exists() else 0
+        if copied_size < 1024:
+            tmp_dest.unlink(missing_ok=True)
+            raise RuntimeError(
+                f"Skopiowany plik jest pusty lub uszkodzony ({copied_size} bytes): {tmp_dest.name}"
             )
 
         # Atomically replace dest (same drive → rename is instant, no empty-file risk)

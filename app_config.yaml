@@ -36,4 +36,16 @@ defaults:
   cfg: 2
   duration: 2
   blocks_to_swap: 35
+  auto_blocks_to_swap: true
+  auto_bts_table:
+  - max_pixels: 310000
+    bts: 15
+  - max_pixels: 510000
+    bts: 20
+  - max_pixels: 760000
+    bts: 30
+  - max_pixels: 1100000
+    bts: 35
+  - max_pixels: 9999999
+    bts: 50
   frame_interpolation: true

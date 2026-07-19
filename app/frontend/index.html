@@ -190,6 +190,14 @@
             </div>
         </template>
 
+        <!-- Sound tab — always visible -->
+        <div class="flex items-center border-l border-gray-700 px-2 flex-shrink-0">
+            <button @click="soundMode=!soundMode; if(soundMode) loadSoundFiles()"
+                    :class="soundMode ? 'bg-emerald-900 text-emerald-200' : 'text-gray-500 hover:text-gray-300 hover:bg-gray-700/50'"
+                    class="text-xs px-2.5 py-1 rounded transition"
+                    title="Sound — pętle audio">🎵 Sound</button>
+        </div>
+
         <!-- Right side actions — only when run is active -->
         <template x-if="selectedRun && (selectedRun.compatibility === 'current' || selectedRun.compatibility === 'yaml') && !selectedRun.syntax_error">
             <div class="flex items-center gap-2 px-3 border-l border-gray-700 flex-shrink-0">
@@ -383,8 +391,102 @@
             </template>
         </div>
 
+        <!-- ─── SOUND PANEL ─── -->
+        <div x-show="soundMode" class="flex-1 overflow-y-auto p-6 space-y-6">
+            <h2 class="text-sm font-semibold text-emerald-300">🎵 Sound — generator pętli audio</h2>
+
+            <!-- Row: source picker + params -->
+            <div class="flex flex-wrap gap-6 items-start">
+
+                <!-- Source file list -->
+                <div class="flex-1 min-w-56">
+                    <p class="text-xs text-gray-500 mb-2">Plik źródłowy <span class="text-gray-600">(D:\audio\podklady\)</span></p>
+                    <div class="space-y-1 max-h-64 overflow-y-auto pr-1">
+                        <template x-for="f in sound.files" :key="f.name">
+                            <div :class="sound.selected === f.name ? 'bg-emerald-900 border-emerald-600' : 'bg-gray-800 border-gray-700 hover:border-gray-500'"
+                                 class="rounded border text-xs font-mono transition">
+                                <div @click="sound.selected = f.name"
+                                     class="flex justify-between gap-2 items-center px-3 py-2 cursor-pointer">
+                                    <span x-text="f.name" class="truncate"
+                                          :class="sound.selected === f.name ? 'text-emerald-200' : 'text-gray-300'"></span>
+                                    <span class="text-gray-500 flex-shrink-0" x-text="f.size_kb + ' KB'"></span>
+                                </div>
+                                <div class="px-2 pb-2">
+                                    <audio controls :src="'/api/sound/play/' + encodeURIComponent(f.name)"
+                                           class="h-7 w-full"></audio>
+                                </div>
+                            </div>
+                        </template>
+                        <template x-if="sound.files.length === 0">
+                            <p class="text-gray-600 text-xs py-2">Brak plików w D:\audio\podklady\</p>
+                        </template>
+                    </div>
+                    <button @click="loadSoundFiles()" class="mt-2 text-xs text-gray-600 hover:text-gray-400 transition">⟳ odśwież</button>
+                </div>
+
+                <!-- Params -->
+                <div class="space-y-4 min-w-48">
+                    <div>
+                        <label class="text-xs text-gray-400 block mb-1">Długość docelowa (sekundy)</label>
+                        <input type="number" x-model.number="sound.duration" min="1" max="3600" step="1"
+                               class="w-32 bg-gray-800 border border-gray-600 rounded px-3 py-1.5 text-sm text-white text-center">
+                    </div>
+                    <div>
+                        <label class="text-xs text-gray-400 block mb-1">Crossfade (sekundy)</label>
+                        <input type="number" x-model.number="sound.crossfade" min="0.01" max="5" step="0.05"
+                               class="w-32 bg-gray-800 border border-gray-600 rounded px-3 py-1.5 text-sm text-white text-center">
+                    </div>
+                    <div>
+                        <label class="text-xs text-gray-400 block mb-1">Krzywa crossfade</label>
+                        <select x-model="sound.curve"
+                                class="bg-gray-800 border border-gray-600 rounded px-3 py-1.5 text-sm text-white">
+                            <option value="tri">tri — liniowa</option>
+                            <option value="nofade">nofade — bez fade</option>
+                            <option value="exp">exp — wykładnicza</option>
+                            <option value="log">log — logarytmiczna</option>
+                            <option value="qsin">qsin — sinusoidalna</option>
+                        </select>
+                    </div>
+                    <button @click="buildSoundLoop()"
+                            :disabled="sound.busy || !sound.selected"
+                            class="px-5 py-2 bg-emerald-700 hover:bg-emerald-600 text-white text-sm rounded transition disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-2">
+                        <span x-show="sound.busy" class="animate-spin inline-block">⟳</span>
+                        🎵 Generuj
+                    </button>
+                    <p x-show="sound.error" class="text-xs text-red-400" x-text="sound.error"></p>
+                    <div x-show="sound.lastResult" class="text-xs text-emerald-400 space-y-0.5">
+                        <p>✅ Gotowe: <span class="font-mono" x-text="sound.lastResult?.filename"></span></p>
+                        <p class="text-gray-500"><span x-text="sound.lastResult?.copies"></span> pętle → <span x-text="sound.lastResult?.actual_duration"></span>s</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Results list -->
+            <div>
+                <div class="flex items-center gap-3 mb-2">
+                    <p class="text-xs text-gray-500">Wyniki <span class="text-gray-600">(D:\audio\podklady\robocze\)</span></p>
+                    <button @click="loadSoundResults()" class="text-xs text-gray-600 hover:text-gray-400 transition">⟳ odśwież</button>
+                </div>
+                <div class="space-y-1">
+                    <template x-for="f in sound.results" :key="f.name">
+                        <div class="flex items-center gap-3 bg-gray-800 rounded px-3 py-2 border border-gray-700">
+                            <span class="text-xs font-mono text-gray-300 flex-1 truncate" x-text="f.name"></span>
+                            <span class="text-xs text-gray-600 flex-shrink-0" x-text="f.size_kb + ' KB'"></span>
+                            <audio controls :src="'/api/sound/play/' + encodeURIComponent(f.name)"
+                                   class="h-7 flex-shrink-0" style="min-width:160px"></audio>
+                            <button @click="deleteSoundResult(f.name)"
+                                    class="text-gray-600 hover:text-red-400 transition text-xs flex-shrink-0" title="Usuń">🗑</button>
+                        </div>
+                    </template>
+                    <template x-if="sound.results.length === 0">
+                        <p class="text-gray-600 text-xs py-2">Brak wyników</p>
+                    </template>
+                </div>
+            </div>
+        </div>
+
         <!-- ─── MAIN SCROLL AREA ─── -->
-        <div class="flex-1 overflow-y-auto">
+        <div x-show="!soundMode" class="flex-1 overflow-y-auto">
 
             <!-- No run selected -->
             <template x-if="!selectedRun">
@@ -806,7 +908,7 @@
                                                                           class="px-1.5 py-0.5 border rounded text-xs"
                                                                           x-text="dimCache[selectedRun.filename + '|' + entry.item.file].width + '×' + dimCache[selectedRun.filename + '|' + entry.item.file].height + '  ' + dimCache[selectedRun.filename + '|' + entry.item.file].ratio"></span>
                                                                 </template>
-                                                                <template x-if="dimCache[selectedRun.filename + '|' + entry.item.file]?.width && selectedRun.force_resolution">
+                                                                <template x-if="dimCache[selectedRun.filename + '|' + entry.item.file]?.width">
                                                                     <button @click="openCropModal(entry.item.file)"
                                                                             class="px-1 py-0.5 text-xs text-gray-600 hover:text-green-300 transition rounded leading-none"
                                                                             title="Przytnij / przeskaluj do proporcji projektu">✂</button>
@@ -2518,6 +2620,10 @@
                     <span class="text-xs text-gray-500">kl. (<span x-text="(trimModal.fadeOutFrames/trimModal.fps).toFixed(2)"></span>s)</span>
                 </span>
             </template>
+            <label class="flex items-center gap-1.5 cursor-pointer select-none ml-2">
+                <input type="checkbox" x-model="trimModal.removeAudio" class="accent-orange-500 w-3.5 h-3.5">
+                <span class="text-xs text-orange-400">🔇 Usuń audio</span>
+            </label>
         </div>
 
         <!-- Summary + actions -->
@@ -2542,7 +2648,7 @@
                 Anuluj
             </button>
             <button @click="trimApply()"
-                    :disabled="trimModal.busy || (trimModal.inFrame === 0 && trimModal.outFrame < 0 && !trimModal.fadeIn && !trimModal.fadeOut)"
+                    :disabled="trimModal.busy || (trimModal.inFrame === 0 && trimModal.outFrame < 0 && !trimModal.fadeIn && !trimModal.fadeOut && !trimModal.removeAudio)"
                     class="px-4 py-1.5 bg-yellow-700 hover:bg-yellow-600 text-white text-sm rounded transition disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1">
                 <span x-show="trimModal.busy" class="animate-spin inline-block">⟳</span>
                 ✂️ Zastosuj i zapisz
@@ -2985,7 +3091,6 @@
                                             class="text-xs px-2 py-1 rounded border transition font-mono"
                                             x-text="`${p.w}×${p.h}  bts≈${p.bts}`"></button>
                                 </template>
-                                <span x-show="!editModal._projW" class="text-xs text-gray-600 italic">otwórz Ustawienia projektu aby zobaczyć presety</span>
                             </div>
                             <!-- Custom inputs -->
                             <div class="flex items-center gap-2">
@@ -3181,7 +3286,6 @@
                                             class="text-xs px-2 py-1 rounded border transition font-mono"
                                             x-text="`${p.w}×${p.h}  bts≈${p.bts}`"></button>
                                 </template>
-                                <span x-show="!editModal._projW" class="text-xs text-gray-600 italic">otwórz Ustawienia projektu aby zobaczyć presety</span>
                             </div>
                             <div class="flex items-center gap-2">
                                 <input type="number" x-model.number="editModal.data.width" min="64" step="16" placeholder="szer."
@@ -7563,6 +7667,7 @@ function app() {
             inFrame: 0, outFrame: -1,
             fadeIn: false, fadeInFrames: 12,
             fadeOut: false, fadeOutFrames: 12,
+            removeAudio: false,
             frameImg: '', loading: false, busy: false, error: '',
         },
         versionsModal: { open: false, name: '', files: [], loading: false },
@@ -8247,6 +8352,7 @@ function app() {
             m.currentFrame = 0;
             m.inFrame = 0;
             m.outFrame = -1;
+            m.removeAudio = false;
             m.frameImg = '';
             m.error = '';
             m.busy = false;
@@ -8304,8 +8410,8 @@ function app() {
 
         async trimApply() {
             const m = this.trimModal;
-            if (m.inFrame === 0 && m.outFrame < 0 && !m.fadeIn && !m.fadeOut) return;
-            if (!confirm(`Zastosować do klipu:\n${m.clip}\n\nIN: kl.${m.inFrame} (${this.trimFrameToTime(m.inFrame)})\nOUT: ${m.outFrame < 0 ? 'koniec' : 'kl.'+m.outFrame+' ('+this.trimFrameToTime(m.outFrame)+')'}\n${m.fadeIn ? '+ Fade IN: '+m.fadeInFrames+' kl.\n' : ''}${m.fadeOut ? '+ Fade OUT: '+m.fadeOutFrames+' kl.\n' : ''}\nOryginalny plik zostanie zarchiwizowany.`)) return;
+            if (m.inFrame === 0 && m.outFrame < 0 && !m.fadeIn && !m.fadeOut && !m.removeAudio) return;
+            if (!confirm(`Zastosować do klipu:\n${m.clip}\n\nIN: kl.${m.inFrame} (${this.trimFrameToTime(m.inFrame)})\nOUT: ${m.outFrame < 0 ? 'koniec' : 'kl.'+m.outFrame+' ('+this.trimFrameToTime(m.outFrame)+')'}\n${m.fadeIn ? '+ Fade IN: '+m.fadeInFrames+' kl.\n' : ''}${m.fadeOut ? '+ Fade OUT: '+m.fadeOutFrames+' kl.\n' : ''}${m.removeAudio ? '+ Usuń audio\n' : ''}\nOryginalny plik zostanie zarchiwizowany.`)) return;
             m.busy = true; m.error = '';
             try {
                 const r = await fetch('/api/trim/apply', {
@@ -8316,6 +8422,7 @@ function app() {
                         start_frame: m.inFrame, end_frame: m.outFrame,
                         fade_in_frames: m.fadeIn ? m.fadeInFrames : 0,
                         fade_out_frames: m.fadeOut ? m.fadeOutFrames : 0,
+                        remove_audio: m.removeAudio,
                     }),
                 });
                 const data = await r.json();
@@ -9191,7 +9298,13 @@ function app() {
         preMode:       false,
         picMode:       false,
         sortMode:      false,
+        soundMode:     false,
         globalPicOpen: false,
+        sound: {
+            files: [], results: [], busy: false, error: '',
+            selected: '', duration: 60, crossfade: 0.3, curve: 'tri',
+            lastResult: null,
+        },
 
         // ─ Sort view ──────────────────────────────────────
         sortFlow:        [],
@@ -9396,6 +9509,7 @@ function app() {
         // ─ CapCut export ──────────────────────────────────────
         capcutExporting: false,
         capcutResult:    null,
+        capcutConfirm:   null,  // null | resolve fn — pending user choice
 
         // ─ Talk generation ────────────────────────────────────
         talkStatus: { status: 'idle', talk_name: null, segment: null, total_segs: null, error: null, elapsed_s: null },
@@ -9507,13 +9621,24 @@ function app() {
 
         async exportCapcut() {
             if (!this.selectedRun || this.capcutExporting) return;
+            let choice = 'new';
+            try {
+                const chk = await fetch(`/api/capcut/${encodeURIComponent(this.selectedRun.filename)}/exists`);
+                const { exists } = await chk.json();
+                if (exists) {
+                    choice = await new Promise(resolve => { this.capcutConfirm = resolve; });
+                    this.capcutConfirm = null;
+                    if (choice === 'cancel') return;
+                }
+            } catch { /* sieć — leć dalej */ }
             this.capcutExporting = true;
             this.capcutResult = null;
             this.logLine('sys', '🎬 Eksportuję projekt do CapCut...');
             try {
+                const body = JSON.stringify({ overwrite: choice === 'overwrite' });
                 const res = await fetch(
                     `/api/capcut/${encodeURIComponent(this.selectedRun.filename)}/export`,
-                    { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' }
+                    { method: 'POST', headers: { 'Content-Type': 'application/json' }, body }
                 );
                 const data = await res.json();
                 if (res.ok) {
@@ -10655,7 +10780,9 @@ function app() {
 
         // ─ Resolution presets ──────────────────────────────────────────────
         _resoPresets() {
-            const projW = this.editModal._projW, projH = this.editModal._projH;
+            const defRes = this.appCfgModal.data?.defaults?.resolution;
+            const projW = this.editModal._projW || defRes?.[0] || 1024;
+            const projH = this.editModal._projH || defRes?.[1] || 1024;
             if (!projW || !projH) return [];
             const ratio = projW / projH;
             const tbl = (this.appCfgModal.data?.defaults?.auto_bts_table) || [
@@ -13457,6 +13584,53 @@ function app() {
             } catch(e) {}
             return this.dimCache[key];
         },
+        // ─ Sound ──────────────────────────────────────────
+        async loadSoundFiles() {
+            try {
+                const r = await fetch('/api/sound/files');
+                if (r.ok) this.sound.files = (await r.json()).files || [];
+            } catch(e) {}
+            await this.loadSoundResults();
+        },
+        async loadSoundResults() {
+            try {
+                const r = await fetch('/api/sound/results');
+                if (r.ok) this.sound.results = (await r.json()).files || [];
+            } catch(e) {}
+        },
+        async buildSoundLoop() {
+            const s = this.sound;
+            if (!s.selected) return;
+            s.busy = true; s.error = ''; s.lastResult = null;
+            try {
+                const r = await fetch('/api/sound/loop', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        filename: s.selected,
+                        duration: s.duration,
+                        crossfade: s.crossfade,
+                        curve: s.curve,
+                    }),
+                });
+                const data = await r.json();
+                if (!r.ok) { s.error = data.detail || 'Błąd'; return; }
+                s.lastResult = data;
+                await this.loadSoundResults();
+            } catch(e) {
+                s.error = e.message;
+            } finally {
+                s.busy = false;
+            }
+        },
+        async deleteSoundResult(filename) {
+            if (!confirm(`Usunąć ${filename}?`)) return;
+            try {
+                const r = await fetch(`/api/sound/results/${encodeURIComponent(filename)}`, { method: 'DELETE' });
+                if (r.ok) await this.loadSoundResults();
+            } catch(e) {}
+        },
+
         async fetchLoraList() {
             try {
                 const r = await fetch('/api/media/loras?dir=WAN2.2_LoraSet');
@@ -13901,6 +14075,31 @@ function picMaskEditor() {
     };
 }
 </script>
+
+<!-- CapCut export confirm dialog -->
+<div x-show="capcutConfirm !== null"
+     class="fixed inset-0 z-50 flex items-center justify-center bg-black/60"
+     @keydown.escape.window="capcutConfirm && capcutConfirm('cancel')"
+     style="display:none">
+  <div class="bg-gray-900 border border-gray-700 rounded-xl shadow-2xl p-6 w-80 space-y-4">
+    <div class="text-gray-200 font-semibold text-sm">🎬 Eksport CapCut</div>
+    <div class="text-gray-400 text-xs">Projekt o tej nazwie może już istnieć. Co zrobić?</div>
+    <div class="flex flex-col gap-2">
+      <button @click="capcutConfirm('overwrite')"
+              class="w-full px-4 py-2 rounded bg-red-800 hover:bg-red-700 text-white text-sm transition">
+        Nadpisz istniejący
+      </button>
+      <button @click="capcutConfirm('new')"
+              class="w-full px-4 py-2 rounded bg-indigo-700 hover:bg-indigo-600 text-white text-sm transition">
+        Zapisz jako nowy (_2, _3…)
+      </button>
+      <button @click="capcutConfirm('cancel')"
+              class="w-full px-4 py-2 rounded bg-gray-700 hover:bg-gray-600 text-gray-300 text-sm transition">
+        Zrezygnuj
+      </button>
+    </div>
+  </div>
+</div>
 
 </body>
 </html>

@@ -35,6 +35,8 @@ class EnvService:
             "linux":       "ready" if linux_ok       else "stopped",
             "windows":     "ready" if windows_ok     else "stopped",
             "atlascloud":  "ready" if atlascloud_ok  else "stopped",
+            "windows_url": windows_url,
+            "linux_url":   linux_url,
         }
 
 
