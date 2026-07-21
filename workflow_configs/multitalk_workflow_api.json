@@ -1,0 +1,360 @@
+{
+  "1": {
+    "inputs": {"unet_name": "wan2.1-i2v-14b-480p-Q4_0.gguf"},
+    "class_type": "UnetLoaderGGUF",
+    "_meta": {"title": "[LOADER] Base Model"}
+  },
+  "2": {
+    "inputs": {
+      "lora_name": "lightx2v_I2V_14B_480p_cfg_step_distill_rank64_bf16.safetensors",
+      "strength_model": 1,
+      "model": ["1", 0]
+    },
+    "class_type": "LoraLoaderModelOnly",
+    "_meta": {"title": "[LOADER] LoRA"}
+  },
+  "3": {
+    "inputs": {"name": "wan2.1_infiniteTalk_multi_fp16.safetensors"},
+    "class_type": "ModelPatchLoader",
+    "_meta": {"title": "[LOADER] InfiniteTalk Patch"}
+  },
+  "4": {
+    "inputs": {
+      "clip_name": "umt5_xxl_fp8_e4m3fn_scaled.safetensors",
+      "type": "wan",
+      "device": "default"
+    },
+    "class_type": "CLIPLoader",
+    "_meta": {"title": "[LOADER] CLIP"}
+  },
+  "5": {
+    "inputs": {
+      "text": "Two people talking naturally",
+      "clip": ["4", 0]
+    },
+    "class_type": "CLIPTextEncode",
+    "_meta": {"title": "[PATCH] Positive Prompt"}
+  },
+  "6": {
+    "inputs": {"conditioning": ["5", 0]},
+    "class_type": "ConditioningZeroOut",
+    "_meta": {"title": "Negative (zero)"}
+  },
+  "7": {
+    "inputs": {"vae_name": "Wan2_1_VAE_bf16.safetensors"},
+    "class_type": "VAELoader",
+    "_meta": {"title": "[LOADER] VAE"}
+  },
+  "8": {
+    "inputs": {"audio_encoder_name": "wav2vec2-chinese-base_fp16.safetensors"},
+    "class_type": "AudioEncoderLoader",
+    "_meta": {"title": "[LOADER] Audio Encoder"}
+  },
+
+  "10": {
+    "inputs": {"image": "placeholder_mask1.png"},
+    "class_type": "LoadImage",
+    "_meta": {"title": "[PATCH] Image + Maska Osoba 1"}
+  },
+  "11": {
+    "inputs": {"image": "placeholder_mask2.png"},
+    "class_type": "LoadImage",
+    "_meta": {"title": "[PATCH] Image + Maska Osoba 2 (ten sam obrazek, inna maska)"}
+  },
+  "12": {
+    "inputs": {"audio": "speaker1.mp3", "audioUI": ""},
+    "class_type": "LoadAudio",
+    "_meta": {"title": "[PATCH] Audio - Osoba mowiaca"}
+  },
+  "13": {
+    "inputs": {"audio": "silence.mp3", "audioUI": ""},
+    "class_type": "LoadAudio",
+    "_meta": {"title": "[PATCH] Audio - Cisza (tail ~0.5s)"}
+  },
+
+  "20": {
+    "inputs": {
+      "audio_encoder": ["8", 0],
+      "audio": ["12", 0]
+    },
+    "class_type": "AudioEncoderEncode",
+    "_meta": {"title": "Encode Audio Osoba 1"}
+  },
+  "21": {
+    "inputs": {
+      "audio_encoder": ["8", 0],
+      "audio": ["13", 0]
+    },
+    "class_type": "AudioEncoderEncode",
+    "_meta": {"title": "Encode Audio Osoba 2 / Cisza"}
+  },
+  "22": {
+    "inputs": {
+      "direction": "after",
+      "audio1": ["12", 0],
+      "audio2": ["13", 0]
+    },
+    "class_type": "AudioConcat",
+    "_meta": {"title": "Concat Audio (mowa + tail)"}
+  },
+  "23": {
+    "inputs": {
+      "threshold": 307200,
+      "image": ["10", 0]
+    },
+    "class_type": "ImageToVideoDimensions",
+    "_meta": {"title": "Auto Wymiary (max ~0.7Mpx)"}
+  },
+  "24": {
+    "inputs": {"fps": 24, "audio": ["12", 0]},
+    "class_type": "AudioDurationToFrames",
+    "_meta": {"title": "Klatki - Main Pass (audio osoby mowiacej)"}
+  },
+  "25": {
+    "inputs": {"fps": 24, "audio": ["13", 0]},
+    "class_type": "AudioDurationToFrames",
+    "_meta": {"title": "Klatki - Tail Pass (cisza)"}
+  },
+
+  "60": {
+    "inputs": {
+      "upscale_method": "lanczos",
+      "width": ["23", 0],
+      "height": ["23", 1],
+      "crop": "disabled",
+      "image": ["10", 0]
+    },
+    "class_type": "ImageScale",
+    "_meta": {"title": "Resize Image 1"}
+  },
+  "61": {
+    "inputs": {"mask": ["10", 1]},
+    "class_type": "MaskToImage",
+    "_meta": {"title": "Mask1 → Image"}
+  },
+  "62": {
+    "inputs": {
+      "upscale_method": "lanczos",
+      "width": ["23", 0],
+      "height": ["23", 1],
+      "crop": "disabled",
+      "image": ["61", 0]
+    },
+    "class_type": "ImageScale",
+    "_meta": {"title": "Resize Mask 1"}
+  },
+  "63": {
+    "inputs": {"image": ["62", 0], "channel": "red"},
+    "class_type": "ImageToMask",
+    "_meta": {"title": "Image → Mask1"}
+  },
+  "64": {
+    "inputs": {"mask": ["11", 1]},
+    "class_type": "MaskToImage",
+    "_meta": {"title": "Mask2 → Image"}
+  },
+  "65": {
+    "inputs": {
+      "upscale_method": "lanczos",
+      "width": ["23", 0],
+      "height": ["23", 1],
+      "crop": "disabled",
+      "image": ["64", 0]
+    },
+    "class_type": "ImageScale",
+    "_meta": {"title": "Resize Mask 2"}
+  },
+  "66": {
+    "inputs": {"image": ["65", 0], "channel": "red"},
+    "class_type": "ImageToMask",
+    "_meta": {"title": "Image → Mask2"}
+  },
+
+  "30": {
+    "inputs": {
+      "mode": "two_speakers",
+      "width": ["23", 0],
+      "height": ["23", 1],
+      "length": ["24", 0],
+      "motion_frame_count": 9,
+      "audio_scale": 1,
+      "model": ["2", 0],
+      "model_patch": ["3", 0],
+      "positive": ["5", 0],
+      "negative": ["6", 0],
+      "vae": ["7", 0],
+      "audio_encoder_output_1": ["20", 0],
+      "start_image": ["60", 0],
+      "mode.audio_encoder_output_2": ["21", 0],
+      "mode.mask_1": ["63", 0],
+      "mode.mask_2": ["66", 0]
+    },
+    "class_type": "WanInfiniteTalkToVideo",
+    "_meta": {"title": "InfiniteTalk - Main Pass"}
+  },
+  "145:108": {
+    "inputs": {"sampler_name": "euler"},
+    "class_type": "KSamplerSelect",
+    "_meta": {"title": "Sampler (main)"}
+  },
+  "145:107": {
+    "inputs": {
+      "cfg": 1,
+      "model": ["30", 0],
+      "positive": ["30", 1],
+      "negative": ["30", 2]
+    },
+    "class_type": "CFGGuider",
+    "_meta": {"title": "CFG Guider (main)"}
+  },
+  "145:19": {
+    "inputs": {
+      "scheduler": "normal",
+      "steps": 4,
+      "denoise": 1,
+      "model": ["30", 0]
+    },
+    "class_type": "BasicScheduler",
+    "_meta": {"title": "Scheduler (main)"}
+  },
+  "145:106": {
+    "inputs": {
+      "noise_seed": 42,
+      "control_after_generate": "randomize"
+    },
+    "class_type": "RandomNoise",
+    "_meta": {"title": "Noise (main)"}
+  },
+  "145:120": {
+    "inputs": {
+      "noise": ["145:106", 0],
+      "guider": ["145:107", 0],
+      "sampler": ["145:108", 0],
+      "sigmas": ["145:19", 0],
+      "latent_image": ["30", 3]
+    },
+    "class_type": "SamplerCustomAdvanced",
+    "_meta": {"title": "Sampler Advanced (main)"}
+  },
+  "36": {
+    "inputs": {
+      "samples": ["145:120", 0],
+      "vae": ["7", 0]
+    },
+    "class_type": "VAEDecode",
+    "_meta": {"title": "VAE Decode (main)"}
+  },
+
+  "40": {
+    "inputs": {
+      "mode": "two_speakers",
+      "width": ["23", 0],
+      "height": ["23", 1],
+      "length": ["25", 0],
+      "motion_frame_count": 9,
+      "audio_scale": 1,
+      "model": ["2", 0],
+      "model_patch": ["3", 0],
+      "positive": ["5", 0],
+      "negative": ["6", 0],
+      "vae": ["7", 0],
+      "audio_encoder_output_1": ["20", 0],
+      "start_image": ["60", 0],
+      "previous_frames": ["36", 0],
+      "mode.audio_encoder_output_2": ["21", 0],
+      "mode.mask_1": ["63", 0],
+      "mode.mask_2": ["66", 0]
+    },
+    "class_type": "WanInfiniteTalkToVideo",
+    "_meta": {"title": "InfiniteTalk - Tail Pass"}
+  },
+  "146:175": {
+    "inputs": {"sampler_name": "euler"},
+    "class_type": "KSamplerSelect",
+    "_meta": {"title": "Sampler (tail)"}
+  },
+  "146:176": {
+    "inputs": {
+      "cfg": 1,
+      "model": ["40", 0],
+      "positive": ["40", 1],
+      "negative": ["40", 2]
+    },
+    "class_type": "CFGGuider",
+    "_meta": {"title": "CFG Guider (tail)"}
+  },
+  "146:177": {
+    "inputs": {
+      "scheduler": "normal",
+      "steps": 4,
+      "denoise": 1,
+      "model": ["40", 0]
+    },
+    "class_type": "BasicScheduler",
+    "_meta": {"title": "Scheduler (tail)"}
+  },
+  "146:178": {
+    "inputs": {
+      "noise_seed": 42,
+      "control_after_generate": "randomize"
+    },
+    "class_type": "RandomNoise",
+    "_meta": {"title": "Noise (tail)"}
+  },
+  "146:179": {
+    "inputs": {
+      "noise": ["146:178", 0],
+      "guider": ["146:176", 0],
+      "sampler": ["146:175", 0],
+      "sigmas": ["146:177", 0],
+      "latent_image": ["40", 3]
+    },
+    "class_type": "SamplerCustomAdvanced",
+    "_meta": {"title": "Sampler Advanced (tail)"}
+  },
+  "46": {
+    "inputs": {
+      "samples": ["146:179", 0],
+      "vae": ["7", 0]
+    },
+    "class_type": "VAEDecode",
+    "_meta": {"title": "VAE Decode (tail)"}
+  },
+  "47": {
+    "inputs": {
+      "batch_index": ["40", 4],
+      "length": 4096,
+      "image": ["46", 0]
+    },
+    "class_type": "ImageFromBatch",
+    "_meta": {"title": "Trim tail (od trim_image)"}
+  },
+  "48": {
+    "inputs": {
+      "image1": ["36", 0],
+      "image2": ["47", 0]
+    },
+    "class_type": "ImageBatch",
+    "_meta": {"title": "Polacz main + tail"}
+  },
+
+  "50": {
+    "inputs": {
+      "fps": 24,
+      "images": ["48", 0],
+      "audio": ["22", 0]
+    },
+    "class_type": "CreateVideo",
+    "_meta": {"title": "Create Video"}
+  },
+  "51": {
+    "inputs": {
+      "filename_prefix": "video/multitalk",
+      "format": "auto",
+      "codec": "auto",
+      "video": ["50", 0]
+    },
+    "class_type": "SaveVideo",
+    "_meta": {"title": "Save Video"}
+  }
+}
