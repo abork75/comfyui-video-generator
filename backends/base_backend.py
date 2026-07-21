@@ -7,6 +7,8 @@ All backends must implement this interface
 from abc import ABC, abstractmethod
 from pathlib import Path
 
+_BTS_MAX = 48  # WAN LongCat-video hard cap
+
 def _auto_blocks_to_swap(width: int, height: int) -> int:
     """Calculate blocks_to_swap from config table (falls back to hardcoded if missing)."""
     pixels = width * height
@@ -15,9 +17,9 @@ def _auto_blocks_to_swap(width: int, height: int) -> int:
         table = _gd().get("auto_bts_table") or []
         for row in sorted(table, key=lambda r: r["max_pixels"]):
             if pixels <= row["max_pixels"]:
-                return row["bts"]
+                return min(row["bts"], _BTS_MAX)
         if table:
-            return sorted(table, key=lambda r: r["max_pixels"])[-1]["bts"]
+            return min(sorted(table, key=lambda r: r["max_pixels"])[-1]["bts"], _BTS_MAX)
     except Exception:
         pass
     # hardcoded fallback

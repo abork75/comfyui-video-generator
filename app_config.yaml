@@ -47,5 +47,5 @@ defaults:
   - max_pixels: 1100000
     bts: 35
   - max_pixels: 9999999
-    bts: 50
+    bts: 48
   frame_interpolation: true

@@ -92,11 +92,11 @@ async def talk_suggest_resolution(request: Request):
     audio_names  = body.get("audio", [])
     if isinstance(audio_names, str):
         audio_names = [audio_names]
-    # audio items may be step dicts {audio: "...", pos: "...", neg: "..."} — extract filename
+    # audio items may be dicts {file: "...", pos: "...", neg: "..."} — extract filename
     audio_names = [
-        (a["audio"] if isinstance(a, dict) else a)
+        (a.get("file") or a.get("audio", "") if isinstance(a, dict) else a)
         for a in audio_names
-        if a and (isinstance(a, str) or (isinstance(a, dict) and a.get("audio")))
+        if a and (isinstance(a, str) or (isinstance(a, dict) and (a.get("file") or a.get("audio"))))
     ]
 
     if not run_filename:

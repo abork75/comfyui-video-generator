@@ -466,6 +466,21 @@ def _color_correct_to_source(video_path: Path, source_image: Path) -> bool:
     return False
 
 
+# ── Last-frame extractor ─────────────────────────────────────────────────────
+
+def _extract_last_frame(mp4_path: Path, out_path: Path) -> bool:
+    """Extract last frame of mp4 to out_path (PNG). Returns True on success."""
+    try:
+        subprocess.run(
+            ["ffmpeg", "-y", "-sseof", "-2", "-i", str(mp4_path),
+             "-vframes", "1", str(out_path)],
+            capture_output=True, timeout=30,
+        )
+        return out_path.exists() and out_path.stat().st_size > 0
+    except Exception:
+        return False
+
+
 # ── Single-segment generator ─────────────────────────────────────────────────
 
 async def _generate_segment(
@@ -629,6 +644,8 @@ async def _generate_segment(
         # Re-mux with the original audio to guarantee an audio track.
         # VHS_VideoCombine may not embed audio correctly when it receives audio
         # from MultiTalkWav2VecEmbeds output [1] — so we always mux explicitly.
+        # Use tmp_audio (the copy we already placed in input_dir) — the original
+        # audio_path may be on a remote/CapCut filesystem not visible to ffmpeg.
         muxed = out_video_path.with_name(f"_mux_{out_video_path.name}")
         try:
             mx = await loop.run_in_executor(
@@ -637,7 +654,7 @@ async def _generate_segment(
                     [
                         "ffmpeg", "-y",
                         "-i", str(out_video_path),
-                        "-i", str(audio_path),
+                        "-i", str(tmp_audio),
                         "-c:v", "copy",
                         "-c:a", "aac",
                         "-ar", "44100",   # standard sample rate
@@ -717,6 +734,8 @@ async def _run_talk(
         total = len(audio_entries)
         _state["total_segs"] = total
 
+        current_image = source_image
+
         for idx, entry in enumerate(audio_entries, 1):
             audio_path = entry["path"]
             seg_pos    = entry.get("pos", "")
@@ -731,7 +750,7 @@ async def _run_talk(
                 comfyui_url=url,
                 input_dir=input_dir,
                 output_dir=output_dir,
-                image_path=source_image,
+                image_path=current_image,
                 audio_path=audio_path,
                 width=width,
                 height=height,
@@ -740,6 +759,12 @@ async def _run_talk(
                 prefix=prefix,
             )
             segment_paths.append(seg_out)
+
+            # Each subsequent segment anchors on the last frame of the previous one
+            if idx < total:
+                frame_path = input_dir / f"talk_lastframe_{Path(dest_path).stem}_{idx:02d}.png"
+                if _extract_last_frame(seg_out, frame_path):
+                    current_image = frame_path
 
         # Merge segments (or just move if only one)
         dest_path.parent.mkdir(parents=True, exist_ok=True)

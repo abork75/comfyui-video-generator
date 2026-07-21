@@ -1,0 +1,194 @@
+{
+  "14": {
+    "inputs": {
+      "text": "Woman talking naturally",
+      "clip": ["16", 0]
+    },
+    "class_type": "CLIPTextEncode",
+    "_meta": {"title": "CLIP Text Encode (Prompt)"}
+  },
+  "16": {
+    "inputs": {
+      "clip_name": "umt5_xxl_fp8_e4m3fn_scaled.safetensors",
+      "type": "wan",
+      "device": "default"
+    },
+    "class_type": "CLIPLoader",
+    "_meta": {"title": "Load CLIP"}
+  },
+  "17": {
+    "inputs": {
+      "conditioning": ["14", 0]
+    },
+    "class_type": "ConditioningZeroOut",
+    "_meta": {"title": "ConditioningZeroOut"}
+  },
+  "24": {
+    "inputs": {
+      "audio": "placeholder.mp3",
+      "audioUI": "/api/view?filename=placeholder.mp3&type=input&subfolder=&rand=0.5"
+    },
+    "class_type": "LoadAudio",
+    "_meta": {"title": "Load Audio"}
+  },
+  "25": {
+    "inputs": {
+      "audio_encoder": ["26", 0],
+      "audio": ["24", 0]
+    },
+    "class_type": "AudioEncoderEncode",
+    "_meta": {"title": "AudioEncoderEncode"}
+  },
+  "26": {
+    "inputs": {
+      "audio_encoder_name": "wav2vec2-chinese-base_fp16.safetensors"
+    },
+    "class_type": "AudioEncoderLoader",
+    "_meta": {"title": "AudioEncoderLoader"}
+  },
+  "29": {
+    "inputs": {
+      "vae_name": "Wan2_1_VAE_bf16.safetensors"
+    },
+    "class_type": "VAELoader",
+    "_meta": {"title": "Load VAE"}
+  },
+  "32": {
+    "inputs": {
+      "image": "placeholder.png"
+    },
+    "class_type": "LoadImage",
+    "_meta": {"title": "Load Image"}
+  },
+  "33": {
+    "inputs": {
+      "lora_name": "lightx2v_I2V_14B_480p_cfg_step_distill_rank64_bf16.safetensors",
+      "strength_model": 1,
+      "model": ["192", 0]
+    },
+    "class_type": "LoraLoaderModelOnly",
+    "_meta": {"title": "Load LoRA"}
+  },
+  "112": {
+    "inputs": {
+      "name": "wan2.1_infiniteTalk_multi_fp16.safetensors"
+    },
+    "class_type": "ModelPatchLoader",
+    "_meta": {"title": "ModelPatchLoader"}
+  },
+  "119": {
+    "inputs": {
+      "samples": ["145:120", 0],
+      "vae": ["29", 0]
+    },
+    "class_type": "VAEDecode",
+    "_meta": {"title": "VAE Decode"}
+  },
+  "129": {
+    "inputs": {
+      "mode": "single_speaker",
+      "width": ["174", 0],
+      "height": ["174", 1],
+      "length": ["170", 0],
+      "motion_frame_count": 9,
+      "audio_scale": 1,
+      "model": ["33", 0],
+      "model_patch": ["112", 0],
+      "positive": ["14", 0],
+      "negative": ["17", 0],
+      "vae": ["29", 0],
+      "audio_encoder_output_1": ["25", 0],
+      "start_image": ["32", 0]
+    },
+    "class_type": "WanInfiniteTalkToVideo",
+    "_meta": {"title": "WanInfiniteTalkToVideo"}
+  },
+  "138": {
+    "inputs": {
+      "fps": 24,
+      "images": ["119", 0],
+      "audio": ["24", 0]
+    },
+    "class_type": "CreateVideo",
+    "_meta": {"title": "Create Video"}
+  },
+  "162": {
+    "inputs": {
+      "filename_prefix": "video/ComfyUI",
+      "format": "auto",
+      "codec": "auto",
+      "video": ["138", 0]
+    },
+    "class_type": "SaveVideo",
+    "_meta": {"title": "Save Video"}
+  },
+  "170": {
+    "inputs": {
+      "fps": 24,
+      "audio": ["24", 0]
+    },
+    "class_type": "AudioDurationToFrames",
+    "_meta": {"title": "Audio Duration to Frames"}
+  },
+  "174": {
+    "inputs": {
+      "threshold": 699648,
+      "image": ["32", 0]
+    },
+    "class_type": "ImageToVideoDimensions",
+    "_meta": {"title": "Image to Video Dimensions"}
+  },
+  "192": {
+    "inputs": {
+      "unet_name": "Wan2_1-InfiniteTalk_Single_Q8.gguf"
+    },
+    "class_type": "UnetLoaderGGUF",
+    "_meta": {"title": "Unet Loader GGUF"}
+  },
+  "145:106": {
+    "inputs": {
+      "noise_seed": 673016367615473,
+      "control_after_generate": "randomize"
+    },
+    "class_type": "RandomNoise",
+    "_meta": {"title": "RandomNoise"}
+  },
+  "145:107": {
+    "inputs": {
+      "cfg": 1,
+      "model": ["129", 0],
+      "positive": ["129", 1],
+      "negative": ["129", 2]
+    },
+    "class_type": "CFGGuider",
+    "_meta": {"title": "CFGGuider"}
+  },
+  "145:108": {
+    "inputs": {
+      "sampler_name": "euler"
+    },
+    "class_type": "KSamplerSelect",
+    "_meta": {"title": "KSamplerSelect"}
+  },
+  "145:19": {
+    "inputs": {
+      "scheduler": "normal",
+      "steps": 4,
+      "denoise": 1,
+      "model": ["129", 0]
+    },
+    "class_type": "BasicScheduler",
+    "_meta": {"title": "BasicScheduler"}
+  },
+  "145:120": {
+    "inputs": {
+      "noise": ["145:106", 0],
+      "guider": ["145:107", 0],
+      "sampler": ["145:108", 0],
+      "sigmas": ["145:19", 0],
+      "latent_image": ["129", 3]
+    },
+    "class_type": "SamplerCustomAdvanced",
+    "_meta": {"title": "SamplerCustomAdvanced"}
+  }
+}

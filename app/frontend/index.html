@@ -198,6 +198,14 @@
                     title="Sound — pętle audio">🎵 Sound</button>
         </div>
 
+        <!-- Scene Conf tab — always visible -->
+        <div class="flex items-center border-l border-gray-700 px-2 flex-shrink-0">
+            <button @click="sceneConfMode=!sceneConfMode; if(sceneConfMode) loadSceneTemplates()"
+                    :class="sceneConfMode ? 'bg-orange-900 text-orange-200' : 'text-gray-500 hover:text-gray-300 hover:bg-gray-700/50'"
+                    class="text-xs px-2.5 py-1 rounded transition"
+                    title="Scene Configurator — generuj RUN z szablonu">🎭 Scene</button>
+        </div>
+
         <!-- Right side actions — only when run is active -->
         <template x-if="selectedRun && (selectedRun.compatibility === 'current' || selectedRun.compatibility === 'yaml') && !selectedRun.syntax_error">
             <div class="flex items-center gap-2 px-3 border-l border-gray-700 flex-shrink-0">
@@ -485,8 +493,124 @@
             </div>
         </div>
 
+        <!-- ─── SCENE CONF PANEL ─── -->
+        <div x-show="sceneConfMode" class="flex-1 overflow-y-auto p-6 space-y-6">
+            <h2 class="text-sm font-semibold text-orange-300">🎭 Scene Configurator — generuj RUN z szablonu</h2>
+
+            <div class="flex flex-wrap gap-6 items-start">
+
+                <!-- Left col: template + image -->
+                <div class="space-y-4 min-w-64 flex-1">
+
+                    <!-- Template selector -->
+                    <div>
+                        <label class="text-xs text-gray-400 block mb-1">Szablon</label>
+                        <select x-model.number="sceneConf.templateIndex"
+                                class="w-full bg-gray-800 border border-gray-600 rounded px-3 py-1.5 text-sm text-white">
+                            <template x-for="t in sceneConf.templates" :key="t.index">
+                                <option :value="t.index" x-text="t.name"></option>
+                            </template>
+                        </select>
+                        <p x-show="sceneConf.templates.length === 0" class="text-xs text-gray-600 mt-1">Brak szablonów w RUN_000 - templates.yaml</p>
+                    </div>
+
+                    <!-- Start image -->
+                    <div>
+                        <label class="text-xs text-gray-400 block mb-1">Obraz startowy</label>
+                        <button @click="openFsBrowser('image', selectedRun?.project_folder || '', 'Wybierz obraz startowy', (p) => { sceneConf.imagePath = p; sceneConf.imageName = p.split(/[\\/]/).pop(); sceneConf.imagePreview = '/api/fs/image?path=' + encodeURIComponent(p); sceneConf.descriptor = null; sceneConf.generatedFile = null; })"
+                                class="px-3 py-1.5 bg-gray-700 hover:bg-gray-600 text-gray-200 text-xs rounded transition">
+                            📁 Wybierz z dysku…
+                        </button>
+                        <template x-if="sceneConf.imagePreview">
+                            <img :src="sceneConf.imagePreview" class="mt-2 max-h-40 rounded border border-gray-700 object-contain">
+                        </template>
+                        <p x-show="sceneConf.imageName" class="text-xs text-gray-500 mt-1 font-mono" x-text="sceneConf.imageName"></p>
+                    </div>
+
+                    <!-- Analyze button -->
+                    <button @click="sceneConfAnalyze()"
+                            :disabled="sceneConf.analyzing || !sceneConf.imagePath"
+                            class="px-5 py-2 bg-orange-700 hover:bg-orange-600 text-white text-sm rounded transition disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-2">
+                        <span x-show="sceneConf.analyzing" class="animate-spin inline-block">⟳</span>
+                        🔍 Analizuj (Qwen)
+                    </button>
+                    <p x-show="sceneConf.analyzeError" class="text-xs text-red-400" x-text="sceneConf.analyzeError"></p>
+                </div>
+
+                <!-- Right col: descriptor + generate -->
+                <div class="space-y-4 min-w-64 flex-1">
+
+                    <!-- Descriptor fields -->
+                    <template x-if="sceneConf.descriptor !== null">
+                    <div class="space-y-3">
+                        <p class="text-xs text-gray-500">Deskryptor (edytowalny)</p>
+                        <div>
+                            <label class="text-xs text-gray-400 block mb-0.5">Etniczność</label>
+                            <input type="text" x-model="sceneConf.descriptor.ethnicity"
+                                   class="w-full bg-gray-800 border border-gray-600 rounded px-3 py-1.5 text-sm text-white font-mono">
+                        </div>
+                        <div>
+                            <label class="text-xs text-gray-400 block mb-0.5">Skóra</label>
+                            <input type="text" x-model="sceneConf.descriptor.skin"
+                                   class="w-full bg-gray-800 border border-gray-600 rounded px-3 py-1.5 text-sm text-white font-mono">
+                        </div>
+                        <div>
+                            <label class="text-xs text-gray-400 block mb-0.5">Włosy</label>
+                            <input type="text" x-model="sceneConf.descriptor.hair"
+                                   class="w-full bg-gray-800 border border-gray-600 rounded px-3 py-1.5 text-sm text-white font-mono">
+                        </div>
+                        <div>
+                            <label class="text-xs text-gray-400 block mb-0.5">Tło</label>
+                            <input type="text" x-model="sceneConf.descriptor.background"
+                                   class="w-full bg-gray-800 border border-gray-600 rounded px-3 py-1.5 text-sm text-white font-mono">
+                        </div>
+                    </div>
+                    </template>
+
+                    <!-- Generate -->
+                    <div x-show="sceneConf.descriptor !== null" class="space-y-3 pt-2 border-t border-gray-700">
+                        <p class="text-xs text-gray-400">Dodaj scenę do: <span class="text-white font-mono" x-text="selectedRun?.filename || '—'"></span></p>
+
+                        <!-- Scene name input -->
+                        <div>
+                            <label class="text-xs text-gray-400 block mb-1">Nazwa sceny</label>
+                            <input type="text" x-model="sceneConf.sceneName"
+                                   :placeholder="sceneConf.templates[sceneConf.templateIndex]?.name || 'np. scena_1'"
+                                   :class="sceneConfNameTaken() ? 'border-red-500' : 'border-gray-600'"
+                                   class="w-full bg-gray-800 border rounded px-3 py-1.5 text-sm text-white">
+                            <template x-if="sceneConfNameTaken()">
+                                <p class="text-xs text-red-400 mt-1">⚠ Nazwa już istnieje w tym projekcie</p>
+                            </template>
+                        </div>
+
+                        <!-- Existing scene names -->
+                        <template x-if="sceneConfExistingNames().length > 0">
+                            <div class="text-xs text-gray-500">
+                                Istniejące sceny:
+                                <span class="text-gray-400" x-text="sceneConfExistingNames().join(', ')"></span>
+                            </div>
+                        </template>
+
+                        <button @click="sceneConfGenerate()"
+                                :disabled="sceneConf.generating || !selectedRun || !sceneConf.sceneName.trim() || sceneConfNameTaken()"
+                                class="px-5 py-2 bg-green-700 hover:bg-green-600 text-white text-sm rounded transition disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-2">
+                            <span x-show="sceneConf.generating" class="animate-spin inline-block">⟳</span>
+                            ✅ Dopisz scenę do projektu
+                        </button>
+                        <p x-show="sceneConf.generateError" class="text-xs text-red-400" x-text="sceneConf.generateError"></p>
+                        <div x-show="sceneConf.sceneAdded" class="text-xs text-green-400 space-y-1">
+                            <p>✅ Scena „<span x-text="sceneConf.sceneName"></span>" dopisana</p>
+                            <button @click="sceneConfOpenRun()" class="text-orange-400 hover:text-orange-300 transition underline">
+                                → Otwórz Flow
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- ─── MAIN SCROLL AREA ─── -->
-        <div x-show="!soundMode" class="flex-1 overflow-y-auto">
+        <div x-show="!soundMode && !sceneConfMode" class="flex-1 overflow-y-auto">
 
             <!-- No run selected -->
             <template x-if="!selectedRun">
@@ -606,8 +730,9 @@
                                         <!-- Editable segment label -->
                                         <span class="text-xs text-gray-600 font-medium mr-0.5" x-text="(segIdx + 1) + '.'"></span>
                                         <input type="text"
-                                               :value="seg.label || ''"
-                                               @change="setSegmentLabel(seg, segIdx, $event.target.value)"
+                                               x-init="if (segLabels[segIdx] === undefined) segLabels[segIdx] = seg.label || ''"
+                                               x-model="segLabels[segIdx]"
+                                               @change="setSegmentLabel(seg, segIdx, segLabels[segIdx])"
                                                :placeholder="'Ujęcie ' + (segIdx + 1)"
                                                class="flex-1 text-xs bg-transparent border-0 border-b border-transparent focus:border-gray-500 focus:outline-none text-gray-400 placeholder-gray-600 font-medium tracking-wide px-0.5 py-0 min-w-0" />
                                         <!-- Move up/down -->
@@ -900,7 +1025,7 @@
                                                         <div class="flex flex-wrap items-center gap-2">
                                                             <span class="font-mono text-sm text-gray-200 flex-shrink-0" x-text="entry.item.file"></span>
                                                             <div class="flex flex-wrap gap-1.5">
-                                                                <!-- Source file dimensions badge -->
+                                                                <!-- Source file dimensions badge: dimCache (actual disk) takes priority, falls back to stored item dimensions -->
                                                                 <template x-if="dimCache[selectedRun.filename + '|' + entry.item.file]?.width">
                                                                     <span :class="selectedRun.force_resolution && Math.abs(dimCache[selectedRun.filename+'|'+entry.item.file].ratio - selectedRun.force_resolution[1]/selectedRun.force_resolution[0]) > 0.01
                                                                                   ? 'bg-red-900/60 border-red-700/50 text-red-300'
@@ -908,11 +1033,17 @@
                                                                           class="px-1.5 py-0.5 border rounded text-xs"
                                                                           x-text="dimCache[selectedRun.filename + '|' + entry.item.file].width + '×' + dimCache[selectedRun.filename + '|' + entry.item.file].height + '  ' + dimCache[selectedRun.filename + '|' + entry.item.file].ratio"></span>
                                                                 </template>
-                                                                <template x-if="dimCache[selectedRun.filename + '|' + entry.item.file]?.width">
-                                                                    <button @click="openCropModal(entry.item.file)"
-                                                                            class="px-1 py-0.5 text-xs text-gray-600 hover:text-green-300 transition rounded leading-none"
-                                                                            title="Przytnij / przeskaluj do proporcji projektu">✂</button>
+                                                                <template x-if="!dimCache[selectedRun.filename + '|' + entry.item.file]?.width && entry.item.width && entry.item.height">
+                                                                    <span :class="selectedRun.force_resolution && Math.abs((entry.item.height/entry.item.width) - selectedRun.force_resolution[1]/selectedRun.force_resolution[0]) > 0.01
+                                                                                  ? 'bg-red-900/60 border-red-700/50 text-red-300'
+                                                                                  : 'bg-blue-900/60 border-blue-700/50 text-blue-300'"
+                                                                          class="px-1.5 py-0.5 border rounded text-xs"
+                                                                          x-text="entry.item.width + '×' + entry.item.height"></span>
                                                                 </template>
+                                                                <!-- Scissors always visible for file items -->
+                                                                <button @click="openCropModal(entry.item.file)"
+                                                                        class="px-1 py-0.5 text-xs text-gray-600 hover:text-green-300 transition rounded leading-none"
+                                                                        title="Przytnij / przeskaluj do proporcji projektu">✂</button>
                                                                 <template x-if="entry.item.backend"><span class="px-1.5 py-0.5 bg-gray-700 rounded text-xs text-gray-300" x-text="entry.item.backend"></span></template>
                                                                 <template x-if="entry.item.duration"><span class="px-1.5 py-0.5 bg-gray-700 rounded text-xs text-gray-300" x-text="entry.item.duration + 's'"></span></template>
                                                                 <template x-if="entry.item.fps"><span class="px-1.5 py-0.5 bg-gray-700 rounded text-xs text-gray-400" x-text="entry.item.fps + ' fps'"></span></template>
@@ -921,7 +1052,6 @@
                                                                 <template x-if="entry.item.blocks_to_swap != null"><span class="px-1.5 py-0.5 bg-indigo-900 rounded text-xs text-indigo-300" x-text="'bts:' + entry.item.blocks_to_swap"></span></template>
                                                                 <template x-if="entry.item.frame_interpolation === false"><span class="px-1.5 py-0.5 bg-yellow-900 rounded text-xs text-yellow-500" title="RIFE VFI wyłączone">⏸ no-interp</span></template>
                                                                 <template x-if="entry.item.frame_interpolation === true"><span class="px-1.5 py-0.5 bg-blue-900 rounded text-xs text-blue-400" title="RIFE VFI wymuszone włączone">⟳ interp</span></template>
-                                                                <template x-if="entry.item.width && entry.item.height"><span class="px-1.5 py-0.5 bg-gray-700 rounded text-xs text-yellow-400" x-text="entry.item.width + '×' + entry.item.height"></span></template>
                                                                 <template x-if="_si(entry.idx)?.has_audio"><span class="px-1.5 py-0.5 bg-violet-900/60 rounded text-xs text-violet-400" title="Plik ma ścieżkę audio">🔊</span></template>
                                                             </div>
                                                         </div>
@@ -3025,7 +3155,7 @@
                         <template x-if="editModal.projectFiles.length > 0">
                             <div class="mt-1 bg-gray-950 border border-gray-700 rounded max-h-40 overflow-y-auto">
                                 <template x-for="f in editModal.projectFiles" :key="f">
-                                    <button type="button" @click="editModal.data.file = f"
+                                    <button type="button" @click="editModal.data.file = f; _fetchFileDims(f)"
                                             :class="editModal.data.file === f
                                                 ? 'bg-blue-900/60 text-blue-200 border-l-2 border-blue-500'
                                                 : 'text-gray-400 hover:bg-gray-800 hover:text-gray-200 border-l-2 border-transparent'"
@@ -3077,6 +3207,7 @@
                             <div class="flex items-center gap-2 mb-2">
                                 <label class="text-xs text-gray-400">Rozdzielczość override</label>
                                 <span class="text-xs text-gray-600">puste = projekt/auto · mod 16</span>
+                                <span x-show="editModal.resHint" class="text-xs text-teal-500 font-mono" x-text="editModal.resHint"></span>
                             </div>
                             <!-- Presets -->
                             <div class="flex flex-wrap gap-1.5 mb-2">
@@ -3365,6 +3496,8 @@
                                         <button @click="editMoveChainStep(si, 1)" :disabled="si === (editModal.data.chain.length - 1)"
                                                 :class="si === editModal.data.chain.length - 1 ? 'opacity-30 cursor-not-allowed' : 'hover:text-white'"
                                                 class="text-gray-600 text-xs px-1">↓</button>
+                                        <button @click="editDuplicateChainStep(si)"
+                                                class="text-gray-600 hover:text-blue-400 text-xs px-1" title="Duplikuj step">⧉</button>
                                         <button @click="editRemoveChainStep(si)"
                                                 class="text-gray-600 hover:text-red-400 text-xs px-1">✕</button>
                                     </div>
@@ -3540,7 +3673,9 @@
                     <!-- Resolution (pixel w/h — InfiniteTalk only) -->
                     <div x-show="(editModal.data.backend || 'linux') !== 'atlascloud'">
                         <div class="flex items-center justify-between mb-1">
-                            <label class="block text-xs text-gray-400">Rozdzielczość</label>
+                            <label class="block text-xs text-gray-400">Rozdzielczość
+                                <span class="text-gray-600 font-normal ml-1">mod 16</span>
+                            </label>
                             <button @click="editTalkAutoResolve()"
                                     :disabled="editModal.resolvingRes"
                                     class="text-xs text-teal-600 hover:text-teal-400 border border-teal-900 hover:border-teal-700 rounded px-2 py-0.5 transition flex items-center gap-1">
@@ -3548,31 +3683,33 @@
                                 <span>Auto-wykryj</span>
                             </button>
                         </div>
+                        <!-- Preset buttons (same logic as chain) -->
+                        <div class="flex flex-wrap gap-1.5 mb-2">
+                            <button type="button"
+                                    @click="editModal.data.width = editModal._projW || null; editModal.data.height = editModal._projH || null; editModal.resHint = '';"
+                                    :class="(!editModal.data.width && !editModal.data.height) || (editModal.data.width === editModal._projW && editModal.data.height === editModal._projH && editModal._projW)
+                                            ? 'bg-gray-600 text-white border-gray-500' : 'border-gray-700 text-gray-500 hover:border-gray-400'"
+                                    class="text-xs px-2 py-1 rounded border transition"
+                                    x-text="editModal._projW ? `projekt (${editModal._projW}×${editModal._projH})` : 'projekt'"
+                            ></button>
+                            <template x-for="p in _resoPresets()" :key="p.bts">
+                                <button type="button" @click="_resoSetPreset(p.w, p.h)"
+                                        :class="editModal.data.width===p.w && editModal.data.height===p.h
+                                                ? 'bg-teal-700 border-teal-500 text-white'
+                                                : 'border-gray-700 text-gray-400 hover:border-teal-500 hover:text-teal-300'"
+                                        class="text-xs px-2 py-1 rounded border transition font-mono"
+                                        x-text="`${p.w}×${p.h}`"></button>
+                            </template>
+                        </div>
+                        <!-- Custom W × H inputs -->
                         <div class="flex items-center gap-2">
-                            <select @change="editTalkSetPreset($event.target.value)"
-                                    class="flex-1 bg-gray-800 border border-gray-600 rounded px-2 py-1.5 text-sm text-gray-200 focus:outline-none focus:border-teal-500">
-                                <option value="">— wybierz preset —</option>
-                                <optgroup label="9:16 (pionowy)">
-                                    <option value="480,832">480×832 ✅</option>
-                                    <option value="576,1024">576×1024</option>
-                                    <option value="720,1280">720×1280</option>
-                                </optgroup>
-                                <optgroup label="16:9 (poziomy)">
-                                    <option value="832,480">832×480 ✅</option>
-                                    <option value="1024,576">1024×576</option>
-                                    <option value="1280,720">1280×720</option>
-                                </optgroup>
-                                <optgroup label="1:1 (kwadrat)">
-                                    <option value="512,512">512×512 ✅</option>
-                                    <option value="640,640">640×640 ✅</option>
-                                    <option value="768,768">768×768</option>
-                                </optgroup>
-                            </select>
-                            <input type="number" x-model.number="editModal.data.width" min="64" max="2048" step="32" placeholder="W"
-                                   class="w-20 bg-gray-800 border border-gray-600 rounded px-2 py-1.5 text-sm text-gray-200 text-center focus:outline-none focus:border-teal-500">
+                            <input type="number" x-model.number="editModal.data.width" min="64" max="2048" step="16" placeholder="szer."
+                                   @change="editModal.data.width = editModal.data.width ? Math.round(editModal.data.width/16)*16 : editModal.data.width"
+                                   class="flex-1 bg-gray-800 border border-gray-600 rounded px-2 py-1.5 text-sm text-gray-200 text-center font-mono focus:outline-none focus:border-teal-500">
                             <span class="text-gray-600">×</span>
-                            <input type="number" x-model.number="editModal.data.height" min="64" max="2048" step="32" placeholder="H"
-                                   class="w-20 bg-gray-800 border border-gray-600 rounded px-2 py-1.5 text-sm text-gray-200 text-center focus:outline-none focus:border-teal-500">
+                            <input type="number" x-model.number="editModal.data.height" min="64" max="2048" step="16" placeholder="wys."
+                                   @change="editModal.data.height = editModal.data.height ? Math.round(editModal.data.height/16)*16 : editModal.data.height"
+                                   class="flex-1 bg-gray-800 border border-gray-600 rounded px-2 py-1.5 text-sm text-gray-200 text-center font-mono focus:outline-none focus:border-teal-500">
                         </div>
                         <p x-show="editModal.resHint" class="text-xs text-teal-600 mt-1" x-text="editModal.resHint"></p>
                     </div>
@@ -7247,7 +7384,7 @@
                             :class="cropModal.mode==='crop' ? 'bg-green-800 text-green-200 border-green-600' : 'bg-gray-800 text-gray-400 border-gray-600 hover:border-gray-400'"
                             class="flex-1 border rounded px-3 py-2 text-xs text-center transition">
                         <div class="font-semibold mb-0.5">Przytnij</div>
-                        <div class="text-gray-500 text-xs">center crop, bez zniekształceń</div>
+                        <div class="text-gray-500 text-xs">tylko proporcje — zachowuje oryginalną rozdzielczość</div>
                     </button>
                 </div>
                 <p class="text-gray-400 text-xs mb-2">Docelowa proporcja rozdzielczości:</p>
@@ -7481,8 +7618,8 @@ function _flattenSortGroups() {
     for (let i = 0; i < proxy.sortGroups.length; i++) {
         const scene = proxy.sortGroups[i];
         if (i === 0) {
-            // Leading scene_break for first scene (only if named — preserves files without scene_break at start)
-            if (scene.name) flow.push({ type: 'scene_break', name: scene.name });
+            // Leading scene_break for first scene: preserve if it originally existed (hasBreak) or has a name
+            if (scene.hasBreak || scene.name) flow.push({ type: 'scene_break', name: scene.name });
         } else {
             // Correct YAML order: break+label of prev scene's last shot BEFORE scene_break
             const prevShots = proxy.sortGroups[i - 1].shots;
@@ -7552,7 +7689,7 @@ async function doSortSave() {
 
 function buildSortGroups(flow) {
     const scenes = [];
-    let curScene = { name: '', shots: [] };
+    let curScene = { name: '', shots: [], hasBreak: false };
     let curShot  = { name: '', items: [] };
 
     const flushShot = () => {
@@ -7567,9 +7704,9 @@ function buildSortGroups(flow) {
     };
     const flushScene = () => {
         flushShot();
-        if (curScene.shots.length > 0 || curScene.name) {
+        if (curScene.shots.length > 0 || curScene.name || curScene.hasBreak) {
             scenes.push(curScene);
-            curScene = { name: '', shots: [] };
+            curScene = { name: '', shots: [], hasBreak: false };
         }
     };
     // label na breaku pochodzi PO treści ujęcia → nadaj nazwę ostatniemu flush-owanemu ujęciu
@@ -7590,6 +7727,7 @@ function buildSortGroups(flow) {
         if (item._type === 'scene_break') {
             flushScene();
             curScene.name = item.name || '';
+            curScene.hasBreak = true;
         } else if (item._type === 'break') {
             flushShot();
             if (item.label) nameLastShot(item.label);
@@ -7675,6 +7813,7 @@ function app() {
         frameVersion:  Date.now(),
         negOpen: {},
         dimCache: {},
+        segLabels: {},
         loraList: [],
         logHeight: 160,
         _genPyBusy: false,
@@ -8115,6 +8254,7 @@ function app() {
 
         async selectRun(run) {
             this.selectedRun = run; this.flowData = null; this.flowError = null; this.statusData = null;
+            this.segLabels = {};    // clear segment label cache on run switch
             this.editMode = true;   // keep edit mode on run switch
             this.postMode = false;  // reset to flow view on run switch
             this.picMode  = false;
@@ -8853,9 +8993,19 @@ function app() {
         async setSegmentLabel(seg, segIdx, value) {
             const newFlow = JSON.parse(JSON.stringify(this.flowData.flow));
             if (seg.breakIdx === null) {
-                // Last segment — no trailing break exists yet; create one to carry the label
                 if (!value.trim()) return;
-                newFlow.push({ break: true, label: value.trim() });
+                // Insert break right after the last item of THIS segment (not at the very end).
+                // Segments bounded only by scene_break items have no break: true terminator,
+                // so we must splice one in at the correct position.
+                let insertAt;
+                if (seg.items.length > 0) {
+                    insertAt = seg.items[seg.items.length - 1].idx + 1;
+                } else if (seg.sceneBreak) {
+                    insertAt = seg.sceneBreak.idx + 1;
+                } else {
+                    insertAt = newFlow.length;
+                }
+                newFlow.splice(insertAt, 0, { break: true, label: value.trim() });
             } else {
                 const breakItem = newFlow[seg.breakIdx];
                 if (value.trim()) {
@@ -9299,6 +9449,16 @@ function app() {
         picMode:       false,
         sortMode:      false,
         soundMode:     false,
+        sceneConfMode: false,
+        sceneConf: {
+            templates: [], templateIndex: 0,
+            imagePath: null, imagePreview: null, imageName: '',
+            analyzing: false, analyzeError: '',
+            descriptor: null,
+            sceneName: '',
+            generating: false, generateError: '',
+            sceneAdded: false,
+        },
         globalPicOpen: false,
         sound: {
             files: [], results: [], busy: false, error: '',
@@ -9669,10 +9829,15 @@ function app() {
                 return;
             }
 
-            // Find the start frame: previous file item in flow
+            // Find the start frame: chain last step OR previous file item in flow
             let startImage = null;
             for (let i = flowIdx - 1; i >= 0; i--) {
                 const prev = this.flowData.flow[i];
+                if (prev.chain !== undefined && prev.chain_prefix && prev.chain.length > 0) {
+                    const n = String(prev.chain.length).padStart(3, '0');
+                    startImage = `${prev.chain_prefix}_${n}.mp4`;
+                    break;
+                }
                 if (prev.file) { startImage = prev.file; break; }
                 if (prev.break) break;
             }
@@ -10493,6 +10658,33 @@ function app() {
                     .catch(() => { })
                     .finally(() => { this.editModal.loadingFiles = false; });
             }
+            // Auto-detect image resolution for file items without existing width/height
+            if (kind === 'file' && item.file && !item.width && !item.height && this.selectedRun?.filename) {
+                this._fetchFileDims(item.file, false);
+            }
+        },
+
+        async _fetchFileDims(fname, overwrite = true) {
+            if (!fname || !this.selectedRun?.filename) return;
+            try {
+                const run = encodeURIComponent(this.selectedRun.filename);
+                const f   = encodeURIComponent(fname);
+                const res = await fetch(`/api/media/dimensions?run=${run}&file=${f}`);
+                if (!res.ok) return;
+                const { width: w, height: h } = await res.json();
+                if (!w || !h) return;
+                // update dimCache so the flow-view blue badge shows immediately
+                const key = this.selectedRun.filename + '|' + fname;
+                this.dimCache[key] = { width: w, height: h, ratio: Math.round(h / w * 1000) / 1000 };
+                // snap to nearest 16 px (WAN model requirement)
+                const sw = Math.round(w / 16) * 16;
+                const sh = Math.round(h / 16) * 16;
+                this.editModal.resHint = `wykryto: ${w}×${h} → ${sw}×${sh}`;
+                if (overwrite || (!this.editModal.data.width && !this.editModal.data.height)) {
+                    this.editModal.data.width  = sw;
+                    this.editModal.data.height = sh;
+                }
+            } catch(e) { /* ignore */ }
         },
 
         async editModalSave() {
@@ -10749,7 +10941,8 @@ function app() {
             } else if (kind === 'file') {
                 newItem = { file: 'nowy_plik.png', backend: 'linux', duration: 2, pos: 'NONE', neg: 'NONE' };
             } else if (kind === 'talk') {
-                newItem = { type: 'talk', audio: ['glos.mp3'], width: 480, height: 832, pos: '', backend: 'linux' };
+                const _tr = this.selectedRun?.force_resolution || this.selectedRun?.default_resolution || null;
+                newItem = { type: 'talk', audio: ['glos.mp3'], width: _tr ? _tr[0] : 480, height: _tr ? _tr[1] : 832, pos: '', backend: 'linux' };
             } else {
                 newItem = {
                     chain_prefix: this.nextChainPrefix(),
@@ -10838,6 +11031,11 @@ function app() {
             const ni = si + dir;
             if (ni < 0 || ni >= steps.length) return;
             [steps[si], steps[ni]] = [steps[ni], steps[si]];
+        },
+        editDuplicateChainStep(si) {
+            const steps = this.editModal.data.chain;
+            const copy = JSON.parse(JSON.stringify(steps[si]));
+            steps.splice(si + 1, 0, copy);
         },
 
         async setChainBackend(idx, value) {
@@ -13631,6 +13829,82 @@ function app() {
             } catch(e) {}
         },
 
+        // ─ Scene Configurator ─────────────────────────────────────────────────
+        async loadSceneTemplates() {
+            try {
+                const r = await fetch('/api/scene-conf/templates');
+                if (r.ok) {
+                    const data = await r.json();
+                    this.sceneConf.templates = data.templates || [];
+                    if (this.sceneConf.templates.length > 0)
+                        this.sceneConf.templateIndex = this.sceneConf.templates[0].index;
+                }
+            } catch(e) {}
+        },
+        async sceneConfAnalyze() {
+            const sc = this.sceneConf;
+            if (!sc.imagePath) return;
+            sc.analyzing = true; sc.analyzeError = ''; sc.descriptor = null;
+            try {
+                const r = await fetch('/api/scene-conf/analyze', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ image_path: sc.imagePath }),
+                });
+                const data = await r.json();
+                if (!r.ok) { sc.analyzeError = data.detail || 'Błąd analizy'; return; }
+                sc.descriptor = data.descriptor;
+            } catch(e) {
+                sc.analyzeError = e.message;
+            } finally {
+                sc.analyzing = false;
+            }
+        },
+        sceneConfExistingNames() {
+            return (this.flowData?.flow || [])
+                .filter(i => i.type === 'scene_break' && i.name)
+                .map(i => i.name);
+        },
+        sceneConfNameTaken() {
+            const name = this.sceneConf.sceneName.trim();
+            if (!name) return false;
+            return this.sceneConfExistingNames().includes(name);
+        },
+
+        async sceneConfGenerate() {
+            const sc = this.sceneConf;
+            if (!sc.descriptor || !this.selectedRun || !sc.sceneName.trim()) return;
+            sc.generating = true; sc.generateError = ''; sc.sceneAdded = false;
+            try {
+                const r = await fetch('/api/scene-conf/generate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        target_filename: this.selectedRun.filename,
+                        template_index: sc.templateIndex,
+                        descriptor: sc.descriptor,
+                        start_image: sc.imageName,
+                        scene_name: sc.sceneName.trim(),
+                    }),
+                });
+                const data = await r.json();
+                if (!r.ok) { sc.generateError = data.detail || 'Błąd generacji'; return; }
+                sc.sceneAdded = true;
+                await this.loadFlow(this.selectedRun.filename);
+            } catch(e) {
+                sc.generateError = e.message;
+            } finally {
+                sc.generating = false;
+            }
+        },
+        async sceneConfOpenRun() {
+            if (!this.selectedRun) return;
+            this.sceneConfMode = false;
+            await this.loadRuns();
+            const run = this.runs.find(r => r.filename === this.selectedRun.filename);
+            if (run) await this.selectRun(run);
+        },
+
         async fetchLoraList() {
             try {
                 const r = await fetch('/api/media/loras?dir=WAN2.2_LoraSet');
@@ -14011,12 +14285,15 @@ function picMaskEditor() {
         },
 
         sortAddSceneBreak(afterIdx, atStart = false) {
-            const insertAt = atStart ? 0 : afterIdx;
-            this.sortFlow.splice(insertAt, 0, {
-                _type: 'scene_break', _sort_idx: -1, type: 'scene_break', name: ''
-            });
+            // Add a new empty scene group to sortGroups (what doSortSave reads)
+            const newScene = { name: '', shots: [], hasBreak: true };
+            if (atStart) {
+                this.sortGroups.unshift(newScene);
+            } else {
+                // afterIdx is a _sort_idx in sortFlow; find the group index it belongs to
+                this.sortGroups.push(newScene);
+            }
             this.sortDirty = true;
-            this.$nextTick(() => this._initSortable());
         },
 
         async sortRefreshThumbs() {

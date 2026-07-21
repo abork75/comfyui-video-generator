@@ -272,19 +272,22 @@ async def crop_to_ratio(request: Request):
         if mode == 'resize':
             vf = f'scale={width}:{height}'
         else:
-            # center crop (same logic as PIL path below)
+            # center crop only — preserve source resolution, just fix the ratio
             target_ratio = width / height
             src_ratio    = src_w / src_h
             if src_ratio > target_ratio:
                 new_w = int(src_h * target_ratio)
                 x     = (src_w - new_w) // 2
-                vf    = f'crop={new_w}:{src_h}:{x}:0,scale={width}:{height}'
+                vf    = f'crop={new_w}:{src_h}:{x}:0'
             elif src_ratio < target_ratio:
                 new_h = int(src_w / target_ratio)
                 y     = (src_h - new_h) // 2
-                vf    = f'crop={src_w}:{new_h}:0:{y},scale={width}:{height}'
+                vf    = f'crop={src_w}:{new_h}:0:{y}'
             else:
-                vf = f'scale={width}:{height}'
+                vf = None  # ratios match — nothing to do
+
+        if vf is None:
+            return {"ok": True, "note": "ratio already matches — no crop needed"}
 
         _shutil.copy2(str(p), str(backup))
         tmp = p.parent / f"_tmp_crop_{p.name}"
@@ -323,7 +326,7 @@ async def crop_to_ratio(request: Request):
             if mode == 'resize':
                 result = img.resize((width, height), _Image.LANCZOS)
             else:
-                # center crop to target ratio, then resize to exact dimensions
+                # center crop to target ratio only — preserve source resolution
                 target_ratio = width / height
                 src_ratio    = src_w / src_h
                 if src_ratio > target_ratio:
@@ -336,7 +339,8 @@ async def crop_to_ratio(request: Request):
                     new_h = int(src_w / target_ratio)
                     top   = (src_h - new_h) // 2
                     img   = img.crop((0, top, src_w, top + new_h))
-                result = img.resize((width, height), _Image.LANCZOS)
+                # no resize — keep native resolution after crop
+                result = img
 
         _shutil.copy2(str(p), str(backup))
 

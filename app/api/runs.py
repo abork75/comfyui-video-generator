@@ -334,6 +334,7 @@ async def put_flow(filename: str, request: Request):
         py_error = str(exc)
 
     invalidate_run_info_cache(filename)
+    invalidate_run_cache(filename)
     return {"ok": True, "flow_key": flow_key, "py_error": py_error}
 
 
