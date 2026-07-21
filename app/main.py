@@ -21,6 +21,7 @@ from app.api.media import router as media_router
 from app.api.upscale import router as upscale_router
 from app.api.env import router as env_router
 from app.api.talks import router as talks_router
+from app.api.multitalks import router as multitalks_router
 from app.api.capcut import router as capcut_router
 from app.api.app_config import router as app_config_router
 from app.api.i2i import router as i2i_router
@@ -58,6 +59,7 @@ app.include_router(media_router)
 app.include_router(upscale_router)
 app.include_router(env_router)
 app.include_router(talks_router)
+app.include_router(multitalks_router)
 app.include_router(capcut_router)
 app.include_router(app_config_router)
 app.include_router(i2i_router)
