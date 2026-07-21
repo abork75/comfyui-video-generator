@@ -1,5 +1,5 @@
 # RUN_013 - evil queen punishment.yaml
-# Edited: 2026-06-30 02:29:00
+# Edited: 2026-07-18 00:37:35
 # Edit this file freely — regenerate .py with generate_py_from_yaml()
 #
 defaults:
@@ -167,22 +167,14 @@ flow:
 
 - break: true
 
-- file: rozprucie_start.png
+- file: rozprucie_start_v3.png
   backend: linux
   duration: 3
   pos: |-
-    Queen's elegant green dress made of luxurious expensive fabric with intricate golden embroidery patterns, high-quality material in perfect condition at start and end frames, lower part of the dress magically tearing and ripping open to reveal buttocks and legs, woman standing under pillory, magical tearing effect with bright flash, detailed fabric texture, realistic cloth dynamics
+    Queen's elegant green dress made of luxurious expensive fabric with intricate golden embroidery patterns, high-quality material in perfect condition at start and end frames, lower part of the dress magically tearing and ripping open to reveal buttocks and legs as sorceress on left wave her hand and magic light is visible, woman standing under pillory, magical tearing effect with bright flash, detailed fabric texture, realistic cloth dynamics
   neg: |-
     deformed, bad anatomy, blurry, low quality, extra limbs, mutated hands, poorly drawn face, text, watermark, overexposed, underexposed, torn dress at start, damaged fabric, cheap material
   frame_interpolation: false
-
-- file: rozprucie_end.png
-  backend: linux
-  duration: 2
-  pos: |-
-    Queen's elegant green dress made of luxurious expensive fabric with intricate golden embroidery patterns, high-quality material in perfect condition at start and end frames, lower part of the dress magically tearing and ripping open to reveal buttocks and legs, woman standing under pillory with wrists bound, magical bonds disappearing from wrists while camera performs smooth zoom out, beautiful sorceress entering the frame holding a whip in her hand during the zoom out, same dramatic lighting, detailed fabric texture, realistic cloth dynamics, cinematic camera movement
-  neg: |-
-    deformed, bad anatomy, blurry, low quality, extra limbs, mutated hands, poorly drawn face, text, watermark, overexposed, underexposed, torn dress at start, damaged fabric, cheap material
 
 - file: wiezy_znikaja.png
   backend: linux
@@ -222,6 +214,8 @@ flow:
     static scene, slow motion, few strikes, single whip hit, blurry motion, deformed body, bad anatomy, low quality, artifacts, text, watermark, censored, calm scene, no movement, smiling, peaceful, static camera, weak hits
   lora_strength: null
   frame_interpolation: false
+  audio_prompt: sharp whip crack impact, loud leather whip strike, crisp snap sound, woman sharp gasp cry of pain, realistic foley
+  audio_negative_prompt: music, melody, ambient drone, echo, reverb, sustained atmosphere, continuous background noise, low quality, distortion
 
 - file: whip1_p2.png
   backend: linux
@@ -242,6 +236,8 @@ flow:
   neg: |-
     static scene, slow motion, few strikes, single whip hit, blurry motion, deformed body, bad anatomy, low quality, artifacts, text, watermark, censored, calm scene, no movement, smiling, peaceful, static camera, weak hits
   frame_interpolation: false
+  audio_prompt: whip crack slap sound, woman yelp cry out pain, sharp impact flesh, gasp moan distress, high quality sound effects
+  audio_negative_prompt: music, melody, ambient drone, echo, reverb, sustained atmosphere, continuous background noise, low quality, distortion
 
 - file: whip1_p4.png
   backend: linux
@@ -259,6 +255,8 @@ flow:
   neg: |-
     static scene, slow motion, few strikes, single whip hit, blurry motion, deformed body, bad anatomy, low quality, artifacts, text, watermark, censored, calm scene, no movement, smiling, peaceful, static camera, weak hits
   frame_interpolation: false
+  audio_prompt: sharp whip crack impact, loud leather whip strike, crisp snap sound, woman sharp gasp cry of pain, realistic foley
+  audio_negative_prompt: music, melody, ambient drone, echo, reverb, sustained atmosphere, continuous background noise, low quality, distortion
 
 - file: whip1_p6.png
   backend: linux
@@ -278,6 +276,8 @@ flow:
   neg: |-
     static scene, slow motion, few strikes, single whip hit, blurry motion, deformed body, bad anatomy, low quality, artifacts, text, watermark, censored, calm scene, no movement, smiling, peaceful, static camera, weak hits
   frame_interpolation: false
+  audio_prompt: whip crack slap sound, woman yelp cry out pain, sharp impact flesh, gasp moan distress, high quality sound effects
+  audio_negative_prompt: music, melody, ambient drone, echo, reverb, sustained atmosphere, continuous background noise, low quality, distortion
 
 - file: whip1_p8.png
   backend: linux
@@ -297,6 +297,8 @@ flow:
   neg: |-
     static scene, slow motion, few strikes, single whip hit, blurry motion, deformed body, bad anatomy, low quality, artifacts, text, watermark, censored, calm scene, no movement, smiling, peaceful, static camera, weak hits
   frame_interpolation: false
+  audio_prompt: sharp whip crack impact, loud leather whip strike, crisp snap sound, woman sharp gasp cry of pain, realistic foley
+  audio_negative_prompt: music, melody, ambient drone, echo, reverb, sustained atmosphere, continuous background noise, low quality, distortion
 
 - file: whip1_p10.png
   backend: linux
@@ -316,6 +318,8 @@ flow:
   neg: |-
     static scene, slow motion, few strikes, single whip hit, blurry motion, deformed body, bad anatomy, low quality, artifacts, text, watermark, censored, calm scene, no movement, smiling, peaceful, static camera, weak hits
   frame_interpolation: false
+  audio_prompt: whip crack slap sound, woman yelp cry out pain, sharp impact flesh, gasp moan distress, high quality sound effects
+  audio_negative_prompt: music, melody, ambient drone, echo, reverb, sustained atmosphere, continuous background noise, low quality, distortion
 
 - file: whip1_p12.png
   backend: linux
@@ -335,6 +339,8 @@ flow:
   neg: |-
     static scene, slow motion, few strikes, single whip hit, blurry motion, deformed body, bad anatomy, low quality, artifacts, text, watermark, censored, calm scene, no movement, smiling, peaceful, static camera, weak hits
   frame_interpolation: false
+  audio_prompt: sharp whip crack impact, loud leather whip strike, crisp snap sound, woman sharp gasp cry of pain, realistic foley
+  audio_negative_prompt: music, melody, ambient drone, echo, reverb, sustained atmosphere, continuous background noise, low quality, distortion
 
 - file: whip1_p14.png
   backend: linux
@@ -354,6 +360,8 @@ flow:
   neg: |-
     static scene, slow motion, few strikes, single whip hit, blurry motion, deformed body, bad anatomy, low quality, artifacts, text, watermark, censored, calm scene, no movement, smiling, peaceful, static camera, weak hits
   frame_interpolation: false
+  audio_prompt: whip crack slap sound, woman yelp cry out pain, sharp impact flesh, gasp moan distress, high quality sound effects
+  audio_negative_prompt: music, melody, ambient drone, echo, reverb, sustained atmosphere, continuous background noise, low quality, distortion
 
 - file: whip1_p16.png
   backend: linux
@@ -373,6 +381,8 @@ flow:
   neg: |-
     static scene, slow motion, few strikes, single whip hit, blurry motion, deformed body, bad anatomy, low quality, artifacts, text, watermark, censored, calm scene, no movement, smiling, peaceful, static camera, weak hits
   frame_interpolation: false
+  audio_prompt: sharp whip crack impact, loud leather whip strike, crisp snap sound, woman sharp gasp cry of pain, realistic foley
+  audio_negative_prompt: music, melody, ambient drone, echo, reverb, sustained atmosphere, continuous background noise, low quality, distortion
 
 - file: whip1_p18.png
   backend: linux
@@ -392,6 +402,8 @@ flow:
   neg: |-
     static scene, slow motion, few strikes, single whip hit, blurry motion, deformed body, bad anatomy, low quality, artifacts, text, watermark, censored, calm scene, no movement, smiling, peaceful, static camera, weak hits
   frame_interpolation: false
+  audio_prompt: whip crack slap sound, woman yelp cry out pain, sharp impact flesh, gasp moan distress, high quality sound effects
+  audio_negative_prompt: music, melody, ambient drone, echo, reverb, sustained atmosphere, continuous background noise, low quality, distortion
 
 - file: whip1_p20.png
   backend: linux
@@ -408,10 +420,14 @@ flow:
       pos: |-
         Woman bound to the cross is moving her butt, shaking head
       neg: ""
+      audio_prompt: subtle body movement, soft weight shift, quiet fabric rustle, gentle shuffling feet on floor, light position change, soft clothing sounds, natural movement foley, realistic, high quality
+      audio_negative_prompt: music, melody, ambient drone, loud impact, hard footsteps, slap, sustained atmosphere, low quality, distortion
     - duration: 5
       pos: |-
         The woman beneath the cross lets go of the ropes she is holding, kneeling at the cross - face to cross, and putting hands behind her back
       neg: ""
+      audio_prompt: subtle body movement, soft weight shift, quiet fabric rustle, gentle shuffling feet on floor, light position change, soft clothing sounds, natural movement foley, realistic, high quality
+      audio_negative_prompt: music, melody, ambient drone, loud impact, hard footsteps, slap, sustained atmosphere, low quality, distortion
     backend: linux
     fps: 16
     steps: 6
@@ -449,6 +465,8 @@ flow:
   neg: |-
     static scene, slow motion, few strikes, single whip hit, blurry motion, deformed body, bad anatomy, low quality, artifacts, text, watermark, censored, calm scene, no movement, smiling, peaceful, static camera, weak hits
   frame_interpolation: false
+  audio_prompt: whip crack slap sound, woman yelp cry out pain, sharp impact flesh, gasp moan distress, high quality sound effects
+  audio_negative_prompt: music, melody, ambient drone, echo, reverb, sustained atmosphere, continuous background noise, low quality, distortion
 
 - file: whip1_p22.png
   backend: linux
@@ -468,6 +486,8 @@ flow:
   neg: |-
     static scene, slow motion, few strikes, single whip hit, blurry motion, deformed body, bad anatomy, low quality, artifacts, text, watermark, censored, calm scene, no movement, smiling, peaceful, static camera, weak hits
   frame_interpolation: false
+  audio_prompt: sharp whip crack impact, loud leather whip strike, crisp snap sound, woman sharp gasp cry of pain, realistic foley
+  audio_negative_prompt: music, melody, ambient drone, echo, reverb, sustained atmosphere, continuous background noise, low quality, distortion
 
 - file: whip1_p24.png
   backend: linux
@@ -487,6 +507,8 @@ flow:
   neg: |-
     static scene, slow motion, few strikes, single whip hit, blurry motion, deformed body, bad anatomy, low quality, artifacts, text, watermark, censored, calm scene, no movement, smiling, peaceful, static camera, weak hits
   frame_interpolation: false
+  audio_prompt: sharp whip crack impact, loud leather whip strike, crisp snap sound, woman sharp gasp cry of pain, realistic foley
+  audio_negative_prompt: music, melody, ambient drone, echo, reverb, sustained atmosphere, continuous background noise, low quality, distortion
 
 - file: whip1_p26.png
   backend: linux
@@ -506,6 +528,8 @@ flow:
   neg: |-
     static scene, slow motion, few strikes, single whip hit, blurry motion, deformed body, bad anatomy, low quality, artifacts, text, watermark, censored, calm scene, no movement, smiling, peaceful, static camera, weak hits
   frame_interpolation: false
+  audio_prompt: whip crack slap sound, woman yelp cry out pain, sharp impact flesh, gasp moan distress, high quality sound effects
+  audio_negative_prompt: music, melody, ambient drone, echo, reverb, sustained atmosphere, continuous background noise, low quality, distortion
 
 - file: whip1_p28.png
   backend: linux
@@ -526,6 +550,8 @@ flow:
     static scene, slow motion, few strikes, single whip hit, blurry motion, deformed body, bad anatomy, low quality, artifacts, text, watermark, censored, calm scene, no movement, smiling, peaceful, static camera, weak hits
   frame_interpolation: false
   generate_count: 3
+  audio_prompt: whip crack slap sound, woman yelp cry out pain, sharp impact flesh, gasp moan distress, high quality sound effects
+  audio_negative_prompt: music, melody, ambient drone, echo, reverb, sustained atmosphere, continuous background noise, low quality, distortion
 
 - file: whip1_p30.png
   backend: linux
@@ -545,6 +571,8 @@ flow:
   neg: |-
     static scene, slow motion, few strikes, single whip hit, blurry motion, deformed body, bad anatomy, low quality, artifacts, text, watermark, censored, calm scene, no movement, smiling, peaceful, static camera, weak hits
   frame_interpolation: false
+  audio_prompt: whip crack slap sound, woman yelp cry out pain, sharp impact flesh, gasp moan distress, high quality sound effects
+  audio_negative_prompt: music, melody, ambient drone, echo, reverb, sustained atmosphere, continuous background noise, low quality, distortion
 
 - file: whip1_p32.png
   backend: linux
@@ -565,6 +593,8 @@ flow:
     static scene, slow motion, few strikes, single whip hit, blurry motion, deformed body, bad anatomy, low quality, artifacts, text, watermark, censored, calm scene, no movement, smiling, peaceful, static camera, weak hits
   frame_interpolation: false
   generate_count: 3
+  audio_prompt: whip crack slap sound, woman yelp cry out pain, sharp impact flesh, gasp moan distress, high quality sound effects
+  audio_negative_prompt: music, melody, ambient drone, echo, reverb, sustained atmosphere, continuous background noise, low quality, distortion
 
 - file: whip1_p34.png
   backend: linux
@@ -585,6 +615,8 @@ flow:
     static scene, slow motion, few strikes, single whip hit, blurry motion, deformed body, bad anatomy, low quality, artifacts, text, watermark, censored, calm scene, no movement, smiling, peaceful, static camera, weak hits
   frame_interpolation: false
   generate_count: 3
+  audio_prompt: whip crack slap sound, woman yelp cry out pain, sharp impact flesh, gasp moan distress, high quality sound effects
+  audio_negative_prompt: music, melody, ambient drone, echo, reverb, sustained atmosphere, continuous background noise, low quality, distortion
 
 - file: whip1_p36.png
   backend: linux
@@ -605,6 +637,8 @@ flow:
     static scene, slow motion, few strikes, single whip hit, blurry motion, deformed body, bad anatomy, low quality, artifacts, text, watermark, censored, calm scene, no movement, smiling, peaceful, static camera, weak hits
   frame_interpolation: false
   generate_count: 3
+  audio_prompt: whip crack slap sound, woman yelp cry out pain, sharp impact flesh, gasp moan distress, high quality sound effects
+  audio_negative_prompt: music, melody, ambient drone, echo, reverb, sustained atmosphere, continuous background noise, low quality, distortion
 
 - file: whip1_p38.png
   backend: linux
@@ -625,6 +659,8 @@ flow:
     static scene, slow motion, few strikes, single whip hit, blurry motion, deformed body, bad anatomy, low quality, artifacts, text, watermark, censored, calm scene, no movement, smiling, peaceful, static camera, weak hits
   frame_interpolation: false
   generate_count: 3
+  audio_prompt: whip crack slap sound, woman yelp cry out pain, sharp impact flesh, gasp moan distress, high quality sound effects
+  audio_negative_prompt: music, melody, ambient drone, echo, reverb, sustained atmosphere, continuous background noise, low quality, distortion
 
 - file: whip1_p40.png
   backend: linux

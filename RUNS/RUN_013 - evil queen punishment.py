@@ -4,7 +4,7 @@
 # Edit RUN_013 - evil queen punishment.yaml and regenerate with:
 #     from app.services.yaml_service import generate_py_from_yaml
 #     generate_py_from_yaml(Path("RUNS/RUN_013 - evil queen punishment.yaml"))
-# Generated: 2026-06-30 02:29:00
+# Generated: 2026-07-18 00:37:36
 # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 import sys
@@ -36,6 +36,10 @@ DEFAULT_CFG            = 2
 DEFAULT_DURATION       = 2
 DEFAULT_BLOCKS_TO_SWAP      = 35
 DEFAULT_FRAME_INTERPOLATION = True
+DEFAULT_POSITIVE_PROMPT = 'smooth motion, high quality, cinematic'
+DEFAULT_NEGATIVE_PROMPT = 'blurry, distorted, artifacts, watermark, text'
+DEFAULT_AUDIO_PROMPT   = 'ambient sound, environmental audio, natural soundscape, high quality'
+DEFAULT_AUDIO_NEGATIVE_PROMPT = 'music, melody, instruments, singing, low quality, distortion'
 DEFAULT_SEED           = None
 SKIP_MISSING           = True
 SKIP_EXISTED           = True
@@ -197,19 +201,12 @@ FLOW_FULL = [
     {"break": True},
 
     {
-        'file': 'rozprucie_start.png',
+        'file': 'rozprucie_start_v3.png',
         'backend': 'linux',
         'duration': 3,
-        'pos': "Queen's elegant green dress made of luxurious expensive fabric with intricate golden embroidery patterns, high-quality material in perfect condition at start and end frames, lower part of the dress magically tearing and ripping open to reveal buttocks and legs, woman standing under pillory, magical tearing effect with bright flash, detailed fabric texture, realistic cloth dynamics",
+        'pos': "Queen's elegant green dress made of luxurious expensive fabric with intricate golden embroidery patterns, high-quality material in perfect condition at start and end frames, lower part of the dress magically tearing and ripping open to reveal buttocks and legs as sorceress on left wave her hand and magic light is visible, woman standing under pillory, magical tearing effect with bright flash, detailed fabric texture, realistic cloth dynamics",
         'neg': 'deformed, bad anatomy, blurry, low quality, extra limbs, mutated hands, poorly drawn face, text, watermark, overexposed, underexposed, torn dress at start, damaged fabric, cheap material',
         'frame_interpolation': False,
-    },
-    {
-        'file': 'rozprucie_end.png',
-        'backend': 'linux',
-        'duration': 2,
-        'pos': "Queen's elegant green dress made of luxurious expensive fabric with intricate golden embroidery patterns, high-quality material in perfect condition at start and end frames, lower part of the dress magically tearing and ripping open to reveal buttocks and legs, woman standing under pillory with wrists bound, magical bonds disappearing from wrists while camera performs smooth zoom out, beautiful sorceress entering the frame holding a whip in her hand during the zoom out, same dramatic lighting, detailed fabric texture, realistic cloth dynamics, cinematic camera movement",
-        'neg': 'deformed, bad anatomy, blurry, low quality, extra limbs, mutated hands, poorly drawn face, text, watermark, overexposed, underexposed, torn dress at start, damaged fabric, cheap material',
     },
     {
         'file': 'wiezy_znikaja.png',
@@ -250,6 +247,8 @@ Realistic whip motion with motion blur, dynamic action, cinematic side view, dra
         'neg': 'static scene, slow motion, few strikes, single whip hit, blurry motion, deformed body, bad anatomy, low quality, artifacts, text, watermark, censored, calm scene, no movement, smiling, peaceful, static camera, weak hits',
         'lora_strength': None,
         'frame_interpolation': False,
+        'audio_prompt': 'sharp whip crack impact, loud leather whip strike, crisp snap sound, woman sharp gasp cry of pain, realistic foley',
+        'audio_negative_prompt': 'music, melody, ambient drone, echo, reverb, sustained atmosphere, continuous background noise, low quality, distortion',
     },
     {
         'file': 'whip1_p2.png',
@@ -277,6 +276,8 @@ In the background: animated medieval crowd with subtle natural movement - people
 Realistic whip motion with motion blur, dynamic action, cinematic side view, dramatic lighting, dark fantasy atmosphere, highly detailed main subjects, subtle background animation, 5 seconds video""",
         'neg': 'static scene, slow motion, few strikes, single whip hit, blurry motion, deformed body, bad anatomy, low quality, artifacts, text, watermark, censored, calm scene, no movement, smiling, peaceful, static camera, weak hits',
         'frame_interpolation': False,
+        'audio_prompt': 'whip crack slap sound, woman yelp cry out pain, sharp impact flesh, gasp moan distress, high quality sound effects',
+        'audio_negative_prompt': 'music, melody, ambient drone, echo, reverb, sustained atmosphere, continuous background noise, low quality, distortion',
     },
     {
         'file': 'whip1_p4.png',
@@ -298,6 +299,8 @@ In the background: animated medieval crowd with subtle natural movement - people
 Realistic whip motion with motion blur, dynamic action, cinematic side view, dramatic lighting, dark fantasy atmosphere, highly detailed main subjects, subtle background animation, 5 seconds video""",
         'neg': 'static scene, slow motion, few strikes, single whip hit, blurry motion, deformed body, bad anatomy, low quality, artifacts, text, watermark, censored, calm scene, no movement, smiling, peaceful, static camera, weak hits',
         'frame_interpolation': False,
+        'audio_prompt': 'sharp whip crack impact, loud leather whip strike, crisp snap sound, woman sharp gasp cry of pain, realistic foley',
+        'audio_negative_prompt': 'music, melody, ambient drone, echo, reverb, sustained atmosphere, continuous background noise, low quality, distortion',
     },
     {
         'file': 'whip1_p6.png',
@@ -319,6 +322,8 @@ In the background: animated medieval crowd with subtle natural movement - people
 Realistic whip motion with motion blur, dynamic action, cinematic side view, dramatic lighting, dark fantasy atmosphere, highly detailed main subjects, subtle background animation, 3 seconds video""",
         'neg': 'static scene, slow motion, few strikes, single whip hit, blurry motion, deformed body, bad anatomy, low quality, artifacts, text, watermark, censored, calm scene, no movement, smiling, peaceful, static camera, weak hits',
         'frame_interpolation': False,
+        'audio_prompt': 'whip crack slap sound, woman yelp cry out pain, sharp impact flesh, gasp moan distress, high quality sound effects',
+        'audio_negative_prompt': 'music, melody, ambient drone, echo, reverb, sustained atmosphere, continuous background noise, low quality, distortion',
     },
     {
         'file': 'whip1_p8.png',
@@ -340,6 +345,8 @@ In the background: animated medieval crowd with subtle natural movement - people
 Realistic whip motion with motion blur, dynamic action, cinematic side view, dramatic lighting, dark fantasy atmosphere, highly detailed main subjects, subtle background animation, 3 seconds video""",
         'neg': 'static scene, slow motion, few strikes, single whip hit, blurry motion, deformed body, bad anatomy, low quality, artifacts, text, watermark, censored, calm scene, no movement, smiling, peaceful, static camera, weak hits',
         'frame_interpolation': False,
+        'audio_prompt': 'sharp whip crack impact, loud leather whip strike, crisp snap sound, woman sharp gasp cry of pain, realistic foley',
+        'audio_negative_prompt': 'music, melody, ambient drone, echo, reverb, sustained atmosphere, continuous background noise, low quality, distortion',
     },
     {
         'file': 'whip1_p10.png',
@@ -361,6 +368,8 @@ In the background: animated medieval crowd with subtle natural movement - people
 Realistic whip motion with motion blur, dynamic action, cinematic side view, dramatic lighting, dark fantasy atmosphere, highly detailed main subjects, subtle background animation, 3 seconds video""",
         'neg': 'static scene, slow motion, few strikes, single whip hit, blurry motion, deformed body, bad anatomy, low quality, artifacts, text, watermark, censored, calm scene, no movement, smiling, peaceful, static camera, weak hits',
         'frame_interpolation': False,
+        'audio_prompt': 'whip crack slap sound, woman yelp cry out pain, sharp impact flesh, gasp moan distress, high quality sound effects',
+        'audio_negative_prompt': 'music, melody, ambient drone, echo, reverb, sustained atmosphere, continuous background noise, low quality, distortion',
     },
     {
         'file': 'whip1_p12.png',
@@ -382,6 +391,8 @@ In the background: animated medieval crowd with subtle natural movement - people
 Realistic whip motion with motion blur, dynamic action, cinematic side view, dramatic lighting, dark fantasy atmosphere, highly detailed main subjects, subtle background animation, 3 seconds video""",
         'neg': 'static scene, slow motion, few strikes, single whip hit, blurry motion, deformed body, bad anatomy, low quality, artifacts, text, watermark, censored, calm scene, no movement, smiling, peaceful, static camera, weak hits',
         'frame_interpolation': False,
+        'audio_prompt': 'sharp whip crack impact, loud leather whip strike, crisp snap sound, woman sharp gasp cry of pain, realistic foley',
+        'audio_negative_prompt': 'music, melody, ambient drone, echo, reverb, sustained atmosphere, continuous background noise, low quality, distortion',
     },
     {
         'file': 'whip1_p14.png',
@@ -403,6 +414,8 @@ In the background: animated medieval crowd with subtle natural movement - people
 Realistic whip motion with motion blur, dynamic action, cinematic side view, dramatic lighting, dark fantasy atmosphere, highly detailed main subjects, subtle background animation, 3 seconds video""",
         'neg': 'static scene, slow motion, few strikes, single whip hit, blurry motion, deformed body, bad anatomy, low quality, artifacts, text, watermark, censored, calm scene, no movement, smiling, peaceful, static camera, weak hits',
         'frame_interpolation': False,
+        'audio_prompt': 'whip crack slap sound, woman yelp cry out pain, sharp impact flesh, gasp moan distress, high quality sound effects',
+        'audio_negative_prompt': 'music, melody, ambient drone, echo, reverb, sustained atmosphere, continuous background noise, low quality, distortion',
     },
     {
         'file': 'whip1_p16.png',
@@ -424,6 +437,8 @@ In the background: animated medieval crowd with subtle natural movement - people
 Realistic whip motion with motion blur, dynamic action, cinematic side view, dramatic lighting, dark fantasy atmosphere, highly detailed main subjects, subtle background animation, 3 seconds video""",
         'neg': 'static scene, slow motion, few strikes, single whip hit, blurry motion, deformed body, bad anatomy, low quality, artifacts, text, watermark, censored, calm scene, no movement, smiling, peaceful, static camera, weak hits',
         'frame_interpolation': False,
+        'audio_prompt': 'sharp whip crack impact, loud leather whip strike, crisp snap sound, woman sharp gasp cry of pain, realistic foley',
+        'audio_negative_prompt': 'music, melody, ambient drone, echo, reverb, sustained atmosphere, continuous background noise, low quality, distortion',
     },
     {
         'file': 'whip1_p18.png',
@@ -445,6 +460,8 @@ In the background: animated medieval crowd with subtle natural movement - people
 Realistic whip motion with motion blur, dynamic action, cinematic side view, dramatic lighting, dark fantasy atmosphere, highly detailed main subjects, subtle background animation, 3 seconds video""",
         'neg': 'static scene, slow motion, few strikes, single whip hit, blurry motion, deformed body, bad anatomy, low quality, artifacts, text, watermark, censored, calm scene, no movement, smiling, peaceful, static camera, weak hits',
         'frame_interpolation': False,
+        'audio_prompt': 'whip crack slap sound, woman yelp cry out pain, sharp impact flesh, gasp moan distress, high quality sound effects',
+        'audio_negative_prompt': 'music, melody, ambient drone, echo, reverb, sustained atmosphere, continuous background noise, low quality, distortion',
     },
     {
         'file': 'whip1_p20.png',
@@ -459,11 +476,15 @@ Realistic whip motion with motion blur, dynamic action, cinematic side view, dra
                 'duration': 5,
                 'pos': 'Woman bound to the cross is moving her butt, shaking head',
                 'neg': '',
+                'audio_prompt': 'subtle body movement, soft weight shift, quiet fabric rustle, gentle shuffling feet on floor, light position change, soft clothing sounds, natural movement foley, realistic, high quality',
+                'audio_negative_prompt': 'music, melody, ambient drone, loud impact, hard footsteps, slap, sustained atmosphere, low quality, distortion',
             },
             {
                 'duration': 5,
                 'pos': 'The woman beneath the cross lets go of the ropes she is holding, kneeling at the cross - face to cross, and putting hands behind her back',
                 'neg': '',
+                'audio_prompt': 'subtle body movement, soft weight shift, quiet fabric rustle, gentle shuffling feet on floor, light position change, soft clothing sounds, natural movement foley, realistic, high quality',
+                'audio_negative_prompt': 'music, melody, ambient drone, loud impact, hard footsteps, slap, sustained atmosphere, low quality, distortion',
             },
         ],
         "chain_prefix": 'Cierpienie krolowej0',
@@ -505,6 +526,8 @@ In the background: animated medieval crowd with subtle natural movement - people
 Realistic whip motion with motion blur, dynamic action, cinematic side view, dramatic lighting, dark fantasy atmosphere, highly detailed main subjects, subtle background animation, 3 seconds video""",
         'neg': 'static scene, slow motion, few strikes, single whip hit, blurry motion, deformed body, bad anatomy, low quality, artifacts, text, watermark, censored, calm scene, no movement, smiling, peaceful, static camera, weak hits',
         'frame_interpolation': False,
+        'audio_prompt': 'whip crack slap sound, woman yelp cry out pain, sharp impact flesh, gasp moan distress, high quality sound effects',
+        'audio_negative_prompt': 'music, melody, ambient drone, echo, reverb, sustained atmosphere, continuous background noise, low quality, distortion',
     },
     {
         'file': 'whip1_p22.png',
@@ -526,6 +549,8 @@ In the background: animated medieval crowd with subtle natural movement - people
 Realistic whip motion with motion blur, dynamic action, cinematic side view, dramatic lighting, dark fantasy atmosphere, highly detailed main subjects, subtle background animation, 3 seconds video""",
         'neg': 'static scene, slow motion, few strikes, single whip hit, blurry motion, deformed body, bad anatomy, low quality, artifacts, text, watermark, censored, calm scene, no movement, smiling, peaceful, static camera, weak hits',
         'frame_interpolation': False,
+        'audio_prompt': 'sharp whip crack impact, loud leather whip strike, crisp snap sound, woman sharp gasp cry of pain, realistic foley',
+        'audio_negative_prompt': 'music, melody, ambient drone, echo, reverb, sustained atmosphere, continuous background noise, low quality, distortion',
     },
     {
         'file': 'whip1_p24.png',
@@ -547,6 +572,8 @@ In the background: animated medieval crowd with subtle natural movement - people
 Realistic whip motion with motion blur, dynamic action, cinematic side view, dramatic lighting, dark fantasy atmosphere, highly detailed main subjects, subtle background animation, 3 seconds video""",
         'neg': 'static scene, slow motion, few strikes, single whip hit, blurry motion, deformed body, bad anatomy, low quality, artifacts, text, watermark, censored, calm scene, no movement, smiling, peaceful, static camera, weak hits',
         'frame_interpolation': False,
+        'audio_prompt': 'sharp whip crack impact, loud leather whip strike, crisp snap sound, woman sharp gasp cry of pain, realistic foley',
+        'audio_negative_prompt': 'music, melody, ambient drone, echo, reverb, sustained atmosphere, continuous background noise, low quality, distortion',
     },
     {
         'file': 'whip1_p26.png',
@@ -568,6 +595,8 @@ In the background: animated medieval crowd with subtle natural movement - people
 Realistic whip motion with motion blur, dynamic action, cinematic side view, dramatic lighting, dark fantasy atmosphere, highly detailed main subjects, subtle background animation, 3 seconds video""",
         'neg': 'static scene, slow motion, few strikes, single whip hit, blurry motion, deformed body, bad anatomy, low quality, artifacts, text, watermark, censored, calm scene, no movement, smiling, peaceful, static camera, weak hits',
         'frame_interpolation': False,
+        'audio_prompt': 'whip crack slap sound, woman yelp cry out pain, sharp impact flesh, gasp moan distress, high quality sound effects',
+        'audio_negative_prompt': 'music, melody, ambient drone, echo, reverb, sustained atmosphere, continuous background noise, low quality, distortion',
     },
     {
         'file': 'whip1_p28.png',
@@ -590,6 +619,8 @@ Realistic whip motion with motion blur, dynamic action, cinematic side view, dra
         'neg': 'static scene, slow motion, few strikes, single whip hit, blurry motion, deformed body, bad anatomy, low quality, artifacts, text, watermark, censored, calm scene, no movement, smiling, peaceful, static camera, weak hits',
         'frame_interpolation': False,
         'generate_count': 3,
+        'audio_prompt': 'whip crack slap sound, woman yelp cry out pain, sharp impact flesh, gasp moan distress, high quality sound effects',
+        'audio_negative_prompt': 'music, melody, ambient drone, echo, reverb, sustained atmosphere, continuous background noise, low quality, distortion',
     },
     {
         'file': 'whip1_p30.png',
@@ -611,6 +642,8 @@ In the background: animated medieval crowd with subtle natural movement - people
 Realistic whip motion with motion blur, dynamic action, cinematic side view, dramatic lighting, dark fantasy atmosphere, highly detailed main subjects, subtle background animation, 3 seconds video""",
         'neg': 'static scene, slow motion, few strikes, single whip hit, blurry motion, deformed body, bad anatomy, low quality, artifacts, text, watermark, censored, calm scene, no movement, smiling, peaceful, static camera, weak hits',
         'frame_interpolation': False,
+        'audio_prompt': 'whip crack slap sound, woman yelp cry out pain, sharp impact flesh, gasp moan distress, high quality sound effects',
+        'audio_negative_prompt': 'music, melody, ambient drone, echo, reverb, sustained atmosphere, continuous background noise, low quality, distortion',
     },
     {
         'file': 'whip1_p32.png',
@@ -633,6 +666,8 @@ Realistic whip motion with motion blur, dynamic action, cinematic side view, dra
         'neg': 'static scene, slow motion, few strikes, single whip hit, blurry motion, deformed body, bad anatomy, low quality, artifacts, text, watermark, censored, calm scene, no movement, smiling, peaceful, static camera, weak hits',
         'frame_interpolation': False,
         'generate_count': 3,
+        'audio_prompt': 'whip crack slap sound, woman yelp cry out pain, sharp impact flesh, gasp moan distress, high quality sound effects',
+        'audio_negative_prompt': 'music, melody, ambient drone, echo, reverb, sustained atmosphere, continuous background noise, low quality, distortion',
     },
     {
         'file': 'whip1_p34.png',
@@ -655,6 +690,8 @@ Realistic whip motion with motion blur, dynamic action, cinematic side view, dra
         'neg': 'static scene, slow motion, few strikes, single whip hit, blurry motion, deformed body, bad anatomy, low quality, artifacts, text, watermark, censored, calm scene, no movement, smiling, peaceful, static camera, weak hits',
         'frame_interpolation': False,
         'generate_count': 3,
+        'audio_prompt': 'whip crack slap sound, woman yelp cry out pain, sharp impact flesh, gasp moan distress, high quality sound effects',
+        'audio_negative_prompt': 'music, melody, ambient drone, echo, reverb, sustained atmosphere, continuous background noise, low quality, distortion',
     },
     {
         'file': 'whip1_p36.png',
@@ -677,6 +714,8 @@ Realistic whip motion with motion blur, dynamic action, cinematic side view, dra
         'neg': 'static scene, slow motion, few strikes, single whip hit, blurry motion, deformed body, bad anatomy, low quality, artifacts, text, watermark, censored, calm scene, no movement, smiling, peaceful, static camera, weak hits',
         'frame_interpolation': False,
         'generate_count': 3,
+        'audio_prompt': 'whip crack slap sound, woman yelp cry out pain, sharp impact flesh, gasp moan distress, high quality sound effects',
+        'audio_negative_prompt': 'music, melody, ambient drone, echo, reverb, sustained atmosphere, continuous background noise, low quality, distortion',
     },
     {
         'file': 'whip1_p38.png',
@@ -699,6 +738,8 @@ Realistic whip motion with motion blur, dynamic action, cinematic side view, dra
         'neg': 'static scene, slow motion, few strikes, single whip hit, blurry motion, deformed body, bad anatomy, low quality, artifacts, text, watermark, censored, calm scene, no movement, smiling, peaceful, static camera, weak hits',
         'frame_interpolation': False,
         'generate_count': 3,
+        'audio_prompt': 'whip crack slap sound, woman yelp cry out pain, sharp impact flesh, gasp moan distress, high quality sound effects',
+        'audio_negative_prompt': 'music, melody, ambient drone, echo, reverb, sustained atmosphere, continuous background noise, low quality, distortion',
     },
     {
         'file': 'whip1_p40.png',

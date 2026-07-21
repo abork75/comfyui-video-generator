@@ -46,6 +46,10 @@ categories:
   name: MMAudio
   icon: 🔊
   order: 200
+- id: taniec
+  name: Taniec
+  icon: 🎭
+  order: 201
 defaults:
   steps: 30
   cfg: 8
@@ -318,126 +322,16 @@ prompts:
     cfg: 8
     denoise: 1
 - id: p0000024
-  category: ''
+  category: repose
   name: Pochylona przodem ręce na udach - cała postać
   note: ''
   positive: 'Change the woman''s pose: Her full body is visible from feet to head. She is now leaning forward at the waist, with her upper body tilted toward the camera. Both of her hands are resting on her thighs (palms on top of thighs or fingers gripping them). She is looking directly at the camera with a strong eye contact. Keep her exact facial expression, head angle (only slight adjustment for looking at camera), hair, clothing, body proportions, lighting, and background unchanged. Only modify the torso lean, arm position, and hand placement. Maintain realistic anatomy, natural spine curvature, balanced weight distribution, and correct shoulder positioning. Photorealistic, seamless edit, high detail, perfect proportions.'
   negative: ''
   params:
     steps: 30
-    cfg: 8
-    denoise: 1
+    cfg: 8.0
+    denoise: 1.0
 - id: p0000025
-  category: ''
-  name: Zmiana pozy na pilce
-  note: ''
-  positive: "Change the woman's pose on the large exercise ball to a more dynamic and active position. She is now firmly gripping the sides of the ball with both hands — palms pressing against the left and right sides of the ball, fingers spread and engaged. \n\nHer arms are bent, shoulders slightly forward, upper body leaning a bit more dynamically over the ball. The pose looks energetic, controlled and stable. \n\nKeep her exact facial expression, head position, hair, clothing, leg position, lighting, shadows and background completely unchanged. Only modify the position of her arms and hands and make a slight adjustment to the torso lean for a more dynamic feel. \n\nRealistic hand grip and pressure on the ball, natural muscle tension, perfect anatomy, photorealistic, seamless edit, high detail."
-  negative: hands on knees, hands in lap, resting hands, static pose, arms straight, hands not touching ball, weak grip, floating hands, deformed hands, extra fingers, bad hand anatomy, stiff arms, hunched back, overly leaned forward, bad balance, unnatural posture, deformed ball, ball deformation, changed leg position, changed facial expression, different clothing, different hair, altered lighting, shadows changed, low quality, artifacts, blurry hands, rubbery arms, unrealistic grip, minimal movement, no dynamic pose
-  params:
-    steps: 30
-    cfg: 8
-    denoise: 1
-- id: p0000026
-  category: ''
-  name: Zmiana pozy na pilce
-  note: ''
-  positive: "Change the woman's pose on the large exercise ball to a more dynamic and active position. She is now firmly gripping the sides of the ball with both hands — palms pressing against the left and right sides of the ball, fingers spread and engaged. \n\nHer arms are bent, shoulders slightly forward, upper body leaning a bit more dynamically over the ball. The pose looks energetic, controlled and stable. \n\nKeep her exact facial expression, head position, hair, clothing, leg position, lighting, shadows and background completely unchanged. Only modify the position of her arms and hands and make a slight adjustment to the torso lean for a more dynamic feel. \n\nRealistic hand grip and pressure on the ball, natural muscle tension, perfect anatomy, photorealistic, seamless edit, high detail."
-  negative: hands on knees, hands in lap, resting hands, static pose, arms straight, hands not touching ball, weak grip, floating hands, deformed hands, extra fingers, bad hand anatomy, stiff arms, hunched back, overly leaned forward, bad balance, unnatural posture, deformed ball, ball deformation, changed leg position, changed facial expression, different clothing, different hair, altered lighting, shadows changed, low quality, artifacts, blurry hands, rubbery arms, unrealistic grip, minimal movement, no dynamic pose
-  params:
-    steps: 30
-    cfg: 8
-    denoise: 1
-- id: p0000027
-  category: ''
-  name: Zmiana pozy na pilce
-  note: ''
-  positive: "Change the woman's pose on the large exercise ball to a more dynamic and active position. She is now firmly gripping the sides of the ball with both hands — palms pressing against the left and right sides of the ball, fingers spread and engaged. \n\nHer arms are bent, shoulders slightly forward, upper body leaning a bit more dynamically over the ball. The pose looks energetic, controlled and stable. \n\nKeep her exact facial expression, head position, hair, clothing, leg position, lighting, shadows and background completely unchanged. Only modify the position of her arms and hands and make a slight adjustment to the torso lean for a more dynamic feel. \n\nRealistic hand grip and pressure on the ball, natural muscle tension, perfect anatomy, photorealistic, seamless edit, high detail."
-  negative: hands on knees, hands in lap, resting hands, static pose, arms straight, hands not touching ball, weak grip, floating hands, deformed hands, extra fingers, bad hand anatomy, stiff arms, hunched back, overly leaned forward, bad balance, unnatural posture, deformed ball, ball deformation, changed leg position, changed facial expression, different clothing, different hair, altered lighting, shadows changed, low quality, artifacts, blurry hands, rubbery arms, unrealistic grip, minimal movement, no dynamic pose
-  params:
-    steps: 30
-    cfg: 8
-    denoise: 1
-- id: p0000028
-  category: ''
-  name: Zmiana pozy na pilce
-  note: ''
-  positive: "Change the woman's pose on the large exercise ball to a more dynamic and active position. She is now firmly gripping the sides of the ball with both hands — palms pressing against the left and right sides of the ball, fingers spread and engaged. \n\nHer arms are bent, shoulders slightly forward, upper body leaning a bit more dynamically over the ball. The pose looks energetic, controlled and stable. \n\nKeep her exact facial expression, head position, hair, clothing, leg position, lighting, shadows and background completely unchanged. Only modify the position of her arms and hands and make a slight adjustment to the torso lean for a more dynamic feel. \n\nRealistic hand grip and pressure on the ball, natural muscle tension, perfect anatomy, photorealistic, seamless edit, high detail."
-  negative: hands on knees, hands in lap, resting hands, static pose, arms straight, hands not touching ball, weak grip, floating hands, deformed hands, extra fingers, bad hand anatomy, stiff arms, hunched back, overly leaned forward, bad balance, unnatural posture, deformed ball, ball deformation, changed leg position, changed facial expression, different clothing, different hair, altered lighting, shadows changed, low quality, artifacts, blurry hands, rubbery arms, unrealistic grip, minimal movement, no dynamic pose
-  params:
-    steps: 30
-    cfg: 8
-    denoise: 1
-- id: p0000029
-  category: ''
-  name: Zmiana pozy na pilce
-  note: ''
-  positive: "Change the woman's pose on the large exercise ball to a more dynamic and active position. She is now firmly gripping the sides of the ball with both hands — palms pressing against the left and right sides of the ball, fingers spread and engaged. \n\nHer arms are bent, shoulders slightly forward, upper body leaning a bit more dynamically over the ball. The pose looks energetic, controlled and stable. \n\nKeep her exact facial expression, head position, hair, clothing, leg position, lighting, shadows and background completely unchanged. Only modify the position of her arms and hands and make a slight adjustment to the torso lean for a more dynamic feel. \n\nRealistic hand grip and pressure on the ball, natural muscle tension, perfect anatomy, photorealistic, seamless edit, high detail."
-  negative: hands on knees, hands in lap, resting hands, static pose, arms straight, hands not touching ball, weak grip, floating hands, deformed hands, extra fingers, bad hand anatomy, stiff arms, hunched back, overly leaned forward, bad balance, unnatural posture, deformed ball, ball deformation, changed leg position, changed facial expression, different clothing, different hair, altered lighting, shadows changed, low quality, artifacts, blurry hands, rubbery arms, unrealistic grip, minimal movement, no dynamic pose
-  params:
-    steps: 30
-    cfg: 8
-    denoise: 1
-- id: p0000030
-  category: ''
-  name: Zmiana pozy na pilce
-  note: ''
-  positive: "Change the woman's pose on the large exercise ball to a more dynamic and active position. She is now firmly gripping the sides of the ball with both hands — palms pressing against the left and right sides of the ball, fingers spread and engaged. \n\nHer arms are bent, shoulders slightly forward, upper body leaning a bit more dynamically over the ball. The pose looks energetic, controlled and stable. \n\nKeep her exact facial expression, head position, hair, clothing, leg position, lighting, shadows and background completely unchanged. Only modify the position of her arms and hands and make a slight adjustment to the torso lean for a more dynamic feel. \n\nRealistic hand grip and pressure on the ball, natural muscle tension, perfect anatomy, photorealistic, seamless edit, high detail."
-  negative: hands on knees, hands in lap, resting hands, static pose, arms straight, hands not touching ball, weak grip, floating hands, deformed hands, extra fingers, bad hand anatomy, stiff arms, hunched back, overly leaned forward, bad balance, unnatural posture, deformed ball, ball deformation, changed leg position, changed facial expression, different clothing, different hair, altered lighting, shadows changed, low quality, artifacts, blurry hands, rubbery arms, unrealistic grip, minimal movement, no dynamic pose
-  params:
-    steps: 30
-    cfg: 8
-    denoise: 1
-- id: p0000031
-  category: ''
-  name: Zmiana pozy na pilce
-  note: ''
-  positive: "Change the woman's pose on the large exercise ball to a more dynamic and active position. She is now firmly gripping the sides of the ball with both hands — palms pressing against the left and right sides of the ball, fingers spread and engaged. \n\nHer arms are bent, shoulders slightly forward, upper body leaning a bit more dynamically over the ball. The pose looks energetic, controlled and stable. \n\nKeep her exact facial expression, head position, hair, clothing, leg position, lighting, shadows and background completely unchanged. Only modify the position of her arms and hands and make a slight adjustment to the torso lean for a more dynamic feel. \n\nRealistic hand grip and pressure on the ball, natural muscle tension, perfect anatomy, photorealistic, seamless edit, high detail."
-  negative: hands on knees, hands in lap, resting hands, static pose, arms straight, hands not touching ball, weak grip, floating hands, deformed hands, extra fingers, bad hand anatomy, stiff arms, hunched back, overly leaned forward, bad balance, unnatural posture, deformed ball, ball deformation, changed leg position, changed facial expression, different clothing, different hair, altered lighting, shadows changed, low quality, artifacts, blurry hands, rubbery arms, unrealistic grip, minimal movement, no dynamic pose
-  params:
-    steps: 30
-    cfg: 8
-    denoise: 1
-- id: p0000032
-  category: ''
-  name: Zmiana pozy na pilce
-  note: ''
-  positive: "Change the woman's pose on the large exercise ball to a more dynamic and active position. She is now firmly gripping the sides of the ball with both hands — palms pressing against the left and right sides of the ball, fingers spread and engaged. \n\nHer arms are bent, shoulders slightly forward, upper body leaning a bit more dynamically over the ball. The pose looks energetic, controlled and stable. \n\nKeep her exact facial expression, head position, hair, clothing, leg position, lighting, shadows and background completely unchanged. Only modify the position of her arms and hands and make a slight adjustment to the torso lean for a more dynamic feel. \n\nRealistic hand grip and pressure on the ball, natural muscle tension, perfect anatomy, photorealistic, seamless edit, high detail."
-  negative: hands on knees, hands in lap, resting hands, static pose, arms straight, hands not touching ball, weak grip, floating hands, deformed hands, extra fingers, bad hand anatomy, stiff arms, hunched back, overly leaned forward, bad balance, unnatural posture, deformed ball, ball deformation, changed leg position, changed facial expression, different clothing, different hair, altered lighting, shadows changed, low quality, artifacts, blurry hands, rubbery arms, unrealistic grip, minimal movement, no dynamic pose
-  params:
-    steps: 30
-    cfg: 8
-    denoise: 1
-- id: p0000033
-  category: ''
-  name: Zmiana pozy na pilce
-  note: ''
-  positive: "Change the woman's pose on the large exercise ball to a more dynamic and active position. She is now firmly gripping the sides of the ball with both hands — palms pressing against the left and right sides of the ball, fingers spread and engaged. \n\nHer arms are bent, shoulders slightly forward, upper body leaning a bit more dynamically over the ball. The pose looks energetic, controlled and stable. \n\nKeep her exact facial expression, head position, hair, clothing, leg position, lighting, shadows and background completely unchanged. Only modify the position of her arms and hands and make a slight adjustment to the torso lean for a more dynamic feel. \n\nRealistic hand grip and pressure on the ball, natural muscle tension, perfect anatomy, photorealistic, seamless edit, high detail."
-  negative: hands on knees, hands in lap, resting hands, static pose, arms straight, hands not touching ball, weak grip, floating hands, deformed hands, extra fingers, bad hand anatomy, stiff arms, hunched back, overly leaned forward, bad balance, unnatural posture, deformed ball, ball deformation, changed leg position, changed facial expression, different clothing, different hair, altered lighting, shadows changed, low quality, artifacts, blurry hands, rubbery arms, unrealistic grip, minimal movement, no dynamic pose
-  params:
-    steps: 30
-    cfg: 8
-    denoise: 1
-- id: p0000034
-  category: ''
-  name: Zmiana pozy na pilce
-  note: ''
-  positive: "Change the woman's pose on the large exercise ball to a more dynamic and active position. She is now firmly gripping the sides of the ball with both hands — palms pressing against the left and right sides of the ball, fingers spread and engaged. \n\nHer arms are bent, shoulders slightly forward, upper body leaning a bit more dynamically over the ball. The pose looks energetic, controlled and stable. \n\nKeep her exact facial expression, head position, hair, clothing, leg position, lighting, shadows and background completely unchanged. Only modify the position of her arms and hands and make a slight adjustment to the torso lean for a more dynamic feel. \n\nRealistic hand grip and pressure on the ball, natural muscle tension, perfect anatomy, photorealistic, seamless edit, high detail."
-  negative: hands on knees, hands in lap, resting hands, static pose, arms straight, hands not touching ball, weak grip, floating hands, deformed hands, extra fingers, bad hand anatomy, stiff arms, hunched back, overly leaned forward, bad balance, unnatural posture, deformed ball, ball deformation, changed leg position, changed facial expression, different clothing, different hair, altered lighting, shadows changed, low quality, artifacts, blurry hands, rubbery arms, unrealistic grip, minimal movement, no dynamic pose
-  params:
-    steps: 30
-    cfg: 8
-    denoise: 1
-- id: p0000035
-  category: ''
-  name: Zmiana pozy na pilce
-  note: ''
-  positive: "Change the woman's pose on the large exercise ball to a more dynamic and active position. She is now firmly gripping the sides of the ball with both hands — palms pressing against the left and right sides of the ball, fingers spread and engaged. \n\nHer arms are bent, shoulders slightly forward, upper body leaning a bit more dynamically over the ball. The pose looks energetic, controlled and stable. \n\nKeep her exact facial expression, head position, hair, clothing, leg position, lighting, shadows and background completely unchanged. Only modify the position of her arms and hands and make a slight adjustment to the torso lean for a more dynamic feel. \n\nRealistic hand grip and pressure on the ball, natural muscle tension, perfect anatomy, photorealistic, seamless edit, high detail."
-  negative: hands on knees, hands in lap, resting hands, static pose, arms straight, hands not touching ball, weak grip, floating hands, deformed hands, extra fingers, bad hand anatomy, stiff arms, hunched back, overly leaned forward, bad balance, unnatural posture, deformed ball, ball deformation, changed leg position, changed facial expression, different clothing, different hair, altered lighting, shadows changed, low quality, artifacts, blurry hands, rubbery arms, unrealistic grip, minimal movement, no dynamic pose
-  params:
-    steps: 30
-    cfg: 8
-    denoise: 1
-- id: p0000036
   category: ''
   name: Zmiana pozy na pilce
   note: ''
@@ -449,16 +343,6 @@ prompts:
     denoise: 1
 - id: p0000037
   category: usun_tlo
-  name: Zmiana pozy na pilce
-  note: ''
-  positive: "Change the woman's pose on the large exercise ball to a more dynamic and active position. She is now firmly gripping the sides of the ball with both hands — palms pressing against the left and right sides of the ball, fingers spread and engaged. \n\nHer arms are bent, shoulders slightly forward, upper body leaning a bit more dynamically over the ball. The pose looks energetic, controlled and stable. \n\nKeep her exact facial expression, head position, hair, clothing, leg position, lighting, shadows and background completely unchanged. Only modify the position of her arms and hands and make a slight adjustment to the torso lean for a more dynamic feel. \n\nRealistic hand grip and pressure on the ball, natural muscle tension, perfect anatomy, photorealistic, seamless edit, high detail."
-  negative: hands on knees, hands in lap, resting hands, static pose, arms straight, hands not touching ball, weak grip, floating hands, deformed hands, extra fingers, bad hand anatomy, stiff arms, hunched back, overly leaned forward, bad balance, unnatural posture, deformed ball, ball deformation, changed leg position, changed facial expression, different clothing, different hair, altered lighting, shadows changed, low quality, artifacts, blurry hands, rubbery arms, unrealistic grip, minimal movement, no dynamic pose
-  params:
-    steps: 30
-    cfg: 8
-    denoise: 1
-- id: p0000038
-  category: ''
   name: Zmiana pozy na pilce
   note: ''
   positive: "Change the woman's pose on the large exercise ball to a more dynamic and active position. She is now firmly gripping the sides of the ball with both hands — palms pressing against the left and right sides of the ball, fingers spread and engaged. \n\nHer arms are bent, shoulders slightly forward, upper body leaning a bit more dynamically over the ball. The pose looks energetic, controlled and stable. \n\nKeep her exact facial expression, head position, hair, clothing, leg position, lighting, shadows and background completely unchanged. Only modify the position of her arms and hands and make a slight adjustment to the torso lean for a more dynamic feel. \n\nRealistic hand grip and pressure on the ball, natural muscle tension, perfect anatomy, photorealistic, seamless edit, high detail."
@@ -604,26 +488,6 @@ prompts:
     steps: 30
     cfg: 8.0
     denoise: 1.0
-- id: p0000052
-  category: ''
-  name: human look
-  note: ''
-  positive: Change into more human look, Remember it is logo
-  negative: ''
-  params:
-    steps: 30
-    cfg: 8
-    denoise: 1
-- id: p0000053
-  category: ''
-  name: korekta nosa
-  note: ''
-  positive: Correct nose for more realistic human nose vector
-  negative: photorealism
-  params:
-    steps: 30
-    cfg: 8
-    denoise: 1
 - id: p0000054
   category: body_shape
   name: transer body shape
@@ -654,16 +518,6 @@ prompts:
     steps: 30
     cfg: 8.0
     denoise: 1.0
-- id: p0000057
-  category: ''
-  name: obroża
-  note: ''
-  positive: Add silver collar on the neck
-  negative: ''
-  params:
-    steps: 30
-    cfg: 8
-    denoise: 1
 - id: p0000058
   category: repose
   name: Siedzi z szeroko rozchylonymi nogami
@@ -674,16 +528,6 @@ prompts:
     steps: 30
     cfg: 8.0
     denoise: 1.0
-- id: p0000059
-  category: ''
-  name: usun czarodziejke
-  note: ''
-  positive: Remove sorceress from image
-  negative: background change
-  params:
-    steps: 30
-    cfg: 8
-    denoise: 1
 - id: p0000060
   category: fotorealizm
   name: Poprawa anatomii
@@ -862,8 +706,8 @@ prompts:
   category: mmaudio
   name: Standard FX
   note: ''
-  positive: 'foley sound effects, physical environment sounds, footsteps, cloth movement, objects, wind bursts, creaking, synchronized with video, crisp, realistic, high quality'
-  negative: 'music, melody, instruments, singing, ambient drone, sustained atmosphere, continuous background noise, reverb heavy, low quality, distortion'
+  positive: foley sound effects, physical environment sounds, footsteps, cloth movement, objects, wind bursts, creaking, synchronized with video, crisp, realistic, high quality
+  negative: music, melody, instruments, singing, ambient drone, sustained atmosphere, continuous background noise, reverb heavy, low quality, distortion
   params:
     steps: 30
     cfg: 8.0
@@ -872,8 +716,8 @@ prompts:
   category: mmaudio
   name: Spanking
   note: ''
-  positive: 'sharp slap impact, flesh impact sound, skin contact, crisp smack, physical strike, body percussion, high quality, realistic foley'
-  negative: 'music, melody, ambient drone, echo, reverb, wet sound, low quality, distortion'
+  positive: sharp slap impact, flesh impact sound, skin contact, crisp smack, physical strike, body percussion, high quality, realistic foley
+  negative: music, melody, ambient drone, echo, reverb, wet sound, low quality, distortion
   params:
     steps: 30
     cfg: 8.0
@@ -882,8 +726,8 @@ prompts:
   category: mmaudio
   name: Ruch postaci
   note: ''
-  positive: 'subtle body movement, soft weight shift, quiet fabric rustle, gentle shuffling feet on floor, light position change, soft clothing sounds, natural movement foley, realistic, high quality'
-  negative: 'music, melody, ambient drone, loud impact, hard footsteps, slap, sustained atmosphere, low quality, distortion'
+  positive: subtle body movement, soft weight shift, quiet fabric rustle, gentle shuffling feet on floor, light position change, soft clothing sounds, natural movement foley, realistic, high quality
+  negative: music, melody, ambient drone, loud impact, hard footsteps, slap, sustained atmosphere, low quality, distortion
   params:
     steps: 30
     cfg: 8.0
@@ -892,8 +736,8 @@ prompts:
   category: mmaudio
   name: Walka — uderzenia
   note: ''
-  positive: 'metal impact, armor strike, sword clash, weapon hit, sharp blow, hard combat hit, physical impact foley, synchronized with video, crisp, high quality, realistic'
-  negative: 'music, melody, ambient drone, sustained atmosphere, continuous background, crowd noise, reverb heavy, low quality, distortion'
+  positive: metal impact, armor strike, sword clash, weapon hit, sharp blow, hard combat hit, physical impact foley, synchronized with video, crisp, high quality, realistic
+  negative: music, melody, ambient drone, sustained atmosphere, continuous background, crowd noise, reverb heavy, low quality, distortion
   params:
     steps: 30
     cfg: 8.0
@@ -902,8 +746,8 @@ prompts:
   category: mmaudio
   name: Spadająca zbroja
   note: ''
-  positive: 'heavy metal plate falling, armor crashing to ground, metallic clanging, metal scraping on floor, armor pieces dropping and rattling, hard surface impact, synchronized with video, crisp, high quality, realistic'
-  negative: 'music, melody, ambient drone, sustained tone, continuous background noise, soft sounds, low quality, distortion'
+  positive: heavy metal plate falling, armor crashing to ground, metallic clanging, metal scraping on floor, armor pieces dropping and rattling, hard surface impact, synchronized with video, crisp, high quality, realistic
+  negative: music, melody, ambient drone, sustained tone, continuous background noise, soft sounds, low quality, distortion
   params:
     steps: 30
     cfg: 8.0
@@ -912,8 +756,8 @@ prompts:
   category: mmaudio
   name: Kroki w biegu po lesie
   note: ''
-  positive: 'urgent running footsteps on forest floor, leaves and twigs crunching underfoot, branches snapping, fast heavy footfalls on dirt and leaves, synchronized with video, crisp, realistic, high quality'
-  negative: 'music, melody, ambient drone, bird sounds, wind loop, sustained atmosphere, continuous background noise, low quality, distortion'
+  positive: urgent running footsteps on forest floor, leaves and twigs crunching underfoot, branches snapping, fast heavy footfalls on dirt and leaves, synchronized with video, crisp, realistic, high quality
+  negative: music, melody, ambient drone, bird sounds, wind loop, sustained atmosphere, continuous background noise, low quality, distortion
   params:
     steps: 30
     cfg: 8.0
@@ -922,8 +766,8 @@ prompts:
   category: mmaudio
   name: Igraszki — kontakt ciał
   note: ''
-  positive: 'rhythmic skin-on-skin slapping, flesh impact sounds, body weight shifting, wet contact sounds, rhythmic thrusting foley, synchronized with video, crisp, high quality, realistic'
-  negative: 'music, melody, ambient drone, moaning, voice, sustained atmosphere, continuous background noise, low quality, distortion'
+  positive: rhythmic skin-on-skin slapping, flesh impact sounds, body weight shifting, wet contact sounds, rhythmic thrusting foley, synchronized with video, crisp, high quality, realistic
+  negative: music, melody, ambient drone, moaning, voice, sustained atmosphere, continuous background noise, low quality, distortion
   params:
     steps: 30
     cfg: 8.0
@@ -932,8 +776,8 @@ prompts:
   category: mmaudio
   name: Blow job — mlaskanie
   note: ''
-  positive: 'wet mouth sounds, oral suction, saliva dripping, lips sliding, rhythmic sucking and slurping, oral motion foley, synchronized with video, crisp, high quality, realistic'
-  negative: 'music, melody, ambient drone, moaning, voice, sustained atmosphere, continuous background noise, low quality, distortion'
+  positive: wet mouth sounds, oral suction, saliva dripping, lips sliding, rhythmic sucking and slurping, oral motion foley, synchronized with video, crisp, high quality, realistic
+  negative: music, melody, ambient drone, moaning, voice, sustained atmosphere, continuous background noise, low quality, distortion
   params:
     steps: 30
     cfg: 8.0
@@ -942,8 +786,8 @@ prompts:
   category: mmaudio
   name: Cum shot — płyny
   note: ''
-  positive: 'wet splashing sounds, thick liquid impact, fluid spray, viscous liquid dripping and hitting skin, wet surface contact, synchronized with video, crisp, high quality, realistic'
-  negative: 'music, melody, ambient drone, moaning, voice, sustained atmosphere, continuous background noise, low quality, distortion'
+  positive: wet splashing sounds, thick liquid impact, fluid spray, viscous liquid dripping and hitting skin, wet surface contact, synchronized with video, crisp, high quality, realistic
+  negative: music, melody, ambient drone, moaning, voice, sustained atmosphere, continuous background noise, low quality, distortion
   params:
     steps: 30
     cfg: 8.0
@@ -952,8 +796,8 @@ prompts:
   category: mmaudio
   name: Kroki — zmęczone chodzenie
   note: ''
-  positive: 'slow tired footsteps on forest floor, soft leaves crunching underfoot, heavy labored walking, weight settling sounds, wood creak as sitting on log, body weight on wood, synchronized with video, crisp, high quality, realistic'
-  negative: 'music, melody, ambient drone, running, fast footsteps, bird sounds, wind loop, sustained atmosphere, continuous background noise, low quality, distortion'
+  positive: slow tired footsteps on forest floor, soft leaves crunching underfoot, heavy labored walking, weight settling sounds, wood creak as sitting on log, body weight on wood, synchronized with video, crisp, high quality, realistic
+  negative: music, melody, ambient drone, running, fast footsteps, bird sounds, wind loop, sustained atmosphere, continuous background noise, low quality, distortion
   params:
     steps: 30
     cfg: 8.0
@@ -962,8 +806,8 @@ prompts:
   category: mmaudio
   name: Cisza — brak odgłosów FX
   note: ''
-  positive: 'near silence, very subtle room tone, minimal ambient presence, no distinct sounds'
-  negative: 'music, melody, voice, moaning, footsteps, impacts, foley, sound effects, loud sounds, sustained atmosphere, continuous noise, low quality, distortion'
+  positive: near silence, very subtle room tone, minimal ambient presence, no distinct sounds
+  negative: music, melody, voice, moaning, footsteps, impacts, foley, sound effects, loud sounds, sustained atmosphere, continuous noise, low quality, distortion
   params:
     steps: 30
     cfg: 8.0
@@ -972,8 +816,8 @@ prompts:
   category: mmaudio
   name: Kroki — spokojny spacer
   note: ''
-  positive: 'slow walking footsteps on forest floor, soft leaves crunching underfoot, gentle footfalls on dirt path, peaceful walking pace, synchronized with video, crisp, high quality, realistic'
-  negative: 'music, melody, ambient drone, running, fast footsteps, bird sounds, wind loop, sustained atmosphere, continuous background noise, low quality, distortion'
+  positive: slow walking footsteps on forest floor, soft leaves crunching underfoot, gentle footfalls on dirt path, peaceful walking pace, synchronized with video, crisp, high quality, realistic
+  negative: music, melody, ambient drone, running, fast footsteps, bird sounds, wind loop, sustained atmosphere, continuous background noise, low quality, distortion
   params:
     steps: 30
     cfg: 8.0
@@ -982,8 +826,8 @@ prompts:
   category: mmaudio
   name: Whip + cry — uderzenie
   note: ''
-  positive: 'sharp whip crack impact, loud leather whip strike, crisp snap sound, woman sharp gasp cry of pain, realistic foley'
-  negative: 'music, melody, ambient drone, echo, reverb, sustained atmosphere, continuous background noise, low quality, distortion'
+  positive: sharp whip crack impact, loud leather whip strike, crisp snap sound, woman sharp gasp cry of pain, realistic foley
+  negative: music, melody, ambient drone, echo, reverb, sustained atmosphere, continuous background noise, low quality, distortion
   params:
     steps: 30
     cfg: 8.0
@@ -992,8 +836,8 @@ prompts:
   category: mmaudio
   name: Whip + cry — głos
   note: ''
-  positive: 'whip crack slap sound, woman yelp cry out pain, sharp impact flesh, gasp moan distress, high quality sound effects'
-  negative: 'music, melody, ambient drone, echo, reverb, sustained atmosphere, continuous background noise, low quality, distortion'
+  positive: whip crack slap sound, woman yelp cry out pain, sharp impact flesh, gasp moan distress, high quality sound effects
+  negative: music, melody, ambient drone, echo, reverb, sustained atmosphere, continuous background noise, low quality, distortion
   params:
     steps: 30
     cfg: 8.0
@@ -1002,8 +846,8 @@ prompts:
   category: mmaudio
   name: Whip + cry — sekwencja
   note: ''
-  positive: 'leather whip whoosh and crack, sharp impact sound, female vocal reaction pain cry, body impact foley'
-  negative: 'music, melody, ambient drone, echo, reverb, sustained atmosphere, continuous background noise, low quality, distortion'
+  positive: leather whip whoosh and crack, sharp impact sound, female vocal reaction pain cry, body impact foley
+  negative: music, melody, ambient drone, echo, reverb, sustained atmosphere, continuous background noise, low quality, distortion
   params:
     steps: 30
     cfg: 8.0
@@ -1012,8 +856,8 @@ prompts:
   category: mmaudio
   name: Missionary — oddech i rytm
   note: ''
-  positive: 'rhythmic body slapping, heavy breathing, soft female moaning pleasure, bed creaking rhythmic, skin contact foley, intimate ambience'
-  negative: 'music, melody, speech, words, lyrics, echo chamber, reverb, distortion, cartoon, low quality'
+  positive: rhythmic body slapping, heavy breathing, soft female moaning pleasure, bed creaking rhythmic, skin contact foley, intimate ambience
+  negative: music, melody, speech, words, lyrics, echo chamber, reverb, distortion, cartoon, low quality
   params:
     steps: 30
     cfg: 8.0
@@ -1022,8 +866,8 @@ prompts:
   category: mmaudio
   name: Missionary — głośne jęki
   note: ''
-  positive: 'female moaning loud pleasure, rhythmic thrusting sounds, skin slapping wet impact, gasping breath, increasing intensity, climax vocal'
-  negative: 'music, melody, speech, words, lyrics, reverb, echo, distortion, cartoon, low quality'
+  positive: female moaning loud pleasure, rhythmic thrusting sounds, skin slapping wet impact, gasping breath, increasing intensity, climax vocal
+  negative: music, melody, speech, words, lyrics, reverb, echo, distortion, cartoon, low quality
   params:
     steps: 30
     cfg: 8.0
@@ -1032,10 +876,191 @@ prompts:
   category: mmaudio
   name: Missionary — ciche intymne
   note: ''
-  positive: 'quiet intimate breathing, soft female whimpers pleasure, gentle rhythmic motion sound, rustling sheets, subtle skin contact, tender moans'
-  negative: 'music, melody, speech, words, lyrics, loud noise, reverb, echo, distortion, low quality'
+  positive: quiet intimate breathing, soft female whimpers pleasure, gentle rhythmic motion sound, rustling sheets, subtle skin contact, tender moans
+  negative: music, melody, speech, words, lyrics, loud noise, reverb, echo, distortion, low quality
   params:
     steps: 30
     cfg: 8.0
     denoise: 1.0
-last_id: 93
+- id: p0000094
+  category: taniec
+  name: Taniec 1
+  note: Szerokie ruchy bioder, wypinanie klatki piersiowej, przesuwanie dłoni po krągłościach, obracanie się, kontakt wzrokowy i zoom kamery
+  positive: 'Create a short, seductive video from this image:
+
+
+    She begins a slow, provocative erotic dance – very confident and bold. She sways her hips in wide, circular, teasing movements, rolling them seductively forward and backward, accentuating every curve of her body.
+
+
+    She arches her back deeply, pushing her chest forward to emphasize her cleavage, then runs her hands slowly down her sides, over her waist, hips and thighs.
+
+
+    She turns around slowly, showing her back and buttocks, bending slightly at the waist while continuing the hypnotic hip rolls.
+
+
+    She faces the camera again, biting her lip, maintaining intense eye contact, lifting her arms above her head to stretch her body and highlight her figure.
+
+
+    Her movements are fluid, sensual, deliberately exhibitionistic – she proudly exposes and accentuates her breasts, waist, hips, legs and curves with every sway and twist. The dance is unapologetically provocative and inviting.
+
+
+    Camera: static medium-wide shot at first, then slowly zooms in slightly during the most intense hip movements, keeping her full body in frame most of the time. Realistic motion, smooth and natural animation, high detail, cinematic moody lighting with soft blue city lights reflecting on her skin, office background unchanged.'
+  negative: ''
+  params:
+    steps: 30
+    cfg: 8.0
+    denoise: 1.0
+- id: p0000095
+  category: taniec
+  name: Taniec 2
+  note: Prowokacyjny, mocno wypiętym tyłem do kamery taniec bioder  i tyłka, pochylona pozycja, ręce na kolanach  bez pokazywania przodu i biustu.
+  positive: 'Create a short, erotic video from this image:
+
+
+    She slowly turns her back to the camera, facing away completely.
+
+
+    Then she bends forward at the waist, keeping her legs straight or very slightly bent, arches her back deeply, and places both hands on her knees (or just above them) for support. Her posture is very pronounced: ass pushed out toward the camera, back arched, head slightly lowered or turned to the side so part of her face is visible in profile.
+
+
+    In this position she starts provocatively twerking / circling her hips and ass — slow, deliberate, seductive movements: rolling her hips in wide circles, then short, teasing up-and-down bounces, making her buttocks bounce and sway enticingly. Every motion is meant to invite and arouse, very exhibitionistic and confident.
+
+
+    She keeps this inviting, ass-out pose the whole time, hands staying on her knees, back arched, occasionally glancing back over her shoulder with a naughty, knowing look or biting her lip.
+
+
+    Camera remains static in a medium-low angle shot from behind, slightly below hip level, emphasizing her curves and movements. Realistic motion, smooth and fluid animation, high detail, cinematic moody lighting with city lights reflecting on her skin, office background unchanged.'
+  negative: ''
+  params:
+    steps: 30
+    cfg: 8.0
+    denoise: 1.0
+- id: p0000096
+  category: taniec
+  name: Taniec 3
+  note: 'Zarzuca włosami, splata ręce za głową, dotyka intymnych miejsc, kończy łapiąc biust. '
+  positive: 'Create a 5-second cinematic erotic dance video, highly detailed and hyper-realistic
+
+
+    Action sequence (5 seconds total, fluid and provocative movements):
+
+
+    0-1 second (Introduction):
+
+    - She stands center-frame facing camera at medium shot, hips swaying seductively side-to-side.
+
+    - Slowly tosses her long hair back dramatically with both hands, arching her back slightly, lips parted in invitation.
+
+
+    1-3 seconds (Build-up):
+
+    - Raises both arms gracefully, interlacing fingers behind her head, elbows out - thrusting her chest forward prominently.
+
+    - Body undulates in slow waves: shoulders roll, torso twists erotically, hips circle teasingly while maintaining arched posture.
+
+
+    3-4 seconds (Intensification):
+
+    - Hands glide down sensually from behind head, tracing neck, over shoulders, down sides of body.
+
+    - Fingers trail provocatively over breasts, then lower to caress inner thighs and intimate areas through sheer fabric - lingering touches with slight hip thrusts.
+
+
+    4-5 seconds (Climax):
+
+    - Both hands cup and squeeze her full breasts firmly from below, lifting and presenting them to camera.
+
+    - Ends with a sultry gaze directly into lens, biting lower lip, body frozen in this pose as subtle hip sway fades out.
+
+
+    Camera work:
+
+    - Starts with smooth tracking shot circling from front at eye level.
+
+    - Transitions to slight low-angle tilt-up emphasizing curves and movements.
+
+    - Static hold in final second for intimate close-up on face and bust.
+
+    - Realistic motion blur, depth of field with sharp focus on body, bokeh lights in background.'
+  negative: ''
+  params:
+    steps: 30
+    cfg: 8.0
+    denoise: 1.0
+- id: p0000097
+  category: taniec
+  name: Taniec 4
+  note: '10s: Najpierw bierze ręcę za głowę potem  się odwraca tyłem, wypina i kręci tyłkiem potem zwraca się do kamery i tańczy dotykając miejsc intymnych'
+  positive: 'Create a 10-second hyper-detailed cinematic erotic dance video, 8K realistic animation, 60fps smooth motion.
+
+
+    Scene setup:
+
+
+    Precise 10-second sequence focusing purely on body movements:
+
+    0-2s: Places both hands behind head, elbows wide, hips sway seductively side-to-side, chest thrust forward.
+
+    2-4s: Slowly pivots 180 degrees turning back to camera, arches back, pushes buttocks out prominently.
+
+    4-7s: Maintains rear pose, circles hips/ass in wide deliberate rolls, adds short teasing up-down bounces making buttocks jiggle enticingly.
+
+    7-10s: Swings back to face camera, intense eye contact, hands glide provocatively over breasts, down stomach to caress inner thighs and intimate areas through fabric.
+
+    Camera: Static medium shot eye-level, subtle zoom to hips during rear section, full body visible. Fluid natural motions only, high detail.'
+  negative: ''
+  params:
+    steps: 30
+    cfg: 8.0
+    denoise: 1.0
+- id: p0000098
+  category: taniec
+  name: Taniec 5
+  note: Tancerka zmysłowo dotyka inymnych części ciała najpierw piersi potem brzuch a potem zjeżdza rękami miedzy nogi
+  positive: 'A sensual female dancer performs an intimate, slow-motion erotic dance in a luxurious dimly lit bedroom, 10-second cinematic video with fluid progression.
+
+
+    Action sequence (smooth 10-second progression at 24fps, slow-motion 0.25x speed):
+
+    • 0-3s: Starts in a standing pose facing camera at 45-degree angle, hands slowly rising from hips, tracing up her sides with fingertips grazing ribs, then cupping and caressing her full breasts sensually, arching back slightly as camera orbits clockwise from low angle to emphasize cleavage and curve of torso
+
+    • 3-6s: Hands glide downward in fluid waves over her toned abdomen, fingers splaying and pressing into soft skin, body undulating in hypnotic hip sways, camera pulls back to medium shot tracking her movements, side lighting casting erotic highlights on muscles flexing
+
+    • 6-10s: Hands descend teasingly between her thighs, one palm pressing inward while the other traces inner legs, knees bending into a deep sensual squat with legs parting slowly, head tilting back in pleasure; camera dolly zooms in from front low angle to intimate close-up on hands and face, ending with a lingering hold'
+  negative: ''
+  params:
+    steps: 30
+    cfg: 8.0
+    denoise: 1.0
+- id: p0000099
+  category: taniec
+  name: Taniec 6
+  note: Tancerka erotyczna kończy taniec obraca się w prawo i wychodzi poza kadr
+  positive: 'A provocative erotic dancer finishes her routine with a graceful rightward turn and exit, 5-second cinematic video featuring STRICTLY STATIC CAMERA - no movement, pans, or orbits; dancer simply rotates and walks off-frame with poise, nothing more.
+
+
+    Action sequence (precise 5-second progression at 24fps, fluid slow-motion 0.25x; STATIC CAMERA ONLY):
+
+    • 0-2s (Beginning): Stands center-frame facing camera at slight angle, exhales from performance, arms dropping naturally; slowly pivots clockwise on heels, turning rightward with elegant hip shift
+
+    • 2-4s (Development): Completes 180-degree turn facing right edge of frame, body elongated gracefully, hair cascading over shoulder; takes two poised steps forward
+
+    • 4-5s (End): Glides smoothly out of frame right with final sway, leaving empty space center; static frame holds on vacated spot with lingering light trails
+
+
+    Camera and movement:
+
+    • STRICTLY STATIC LOCKED-OFF CAMERA at fixed medium-wide angle, eye-level height, no panning, tilting, zooming, or tracking - dancer moves through frame naturally
+
+    • Fixed shallow DoF (f/2.0) isolating subject against softly blurred background throughout
+
+
+    Technical rendering:
+
+    Cinematic hyper-realistic 8K resolution, HDR high contrast, precise motion blur on hair and fabrics, photorealistic skin textures and lace details, subtle depth haze.'
+  negative: ''
+  params:
+    steps: 30
+    cfg: 8.0
+    denoise: 1.0
+last_id: 99

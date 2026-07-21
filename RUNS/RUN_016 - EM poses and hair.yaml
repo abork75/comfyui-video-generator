@@ -1,5 +1,5 @@
 # RUN_016 - EM poses and hair.yaml
-# Edited: 2026-06-12 18:29:22
+# Edited: 2026-07-20 10:34:39
 # Edit this file freely — regenerate .py with generate_py_from_yaml()
 #
 project_folder: C:\Users\abork\AppData\Local\CapCut\Videos\muszelka_pliki\EM\Poses and hair\film
@@ -191,6 +191,7 @@ flow:
       static, frozen, no movement
 
 defaults:
+  auto_blocks_to_swap: true
   resolution:
   - 880
   - 1184

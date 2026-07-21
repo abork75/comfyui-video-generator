@@ -1,0 +1,293 @@
+# RUN_019_sluzki.yaml
+# Edited: 2026-07-18 15:02:26
+# Edit this file freely — regenerate .py with generate_py_from_yaml()
+#
+project_folder: C:\Users\abork\AppData\Local\CapCut\Videos\dungeon_team\filmsluzki
+
+use_test_flow: false
+
+# ──────────────────────────────────────────────────────────
+# FLOW — lista generacji
+# ──────────────────────────────────────────────────────────
+flow:
+- file: 05. Start_sluzki_sie_zastanawiaja.mp4
+  backend: linux
+  duration: 2
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- break: true
+
+- file: 06. Sluzka czerwona nie zdradzi krolowej.mp4
+  backend: linux
+  duration: 2
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- break: true
+
+- file: 07. Sluzka zielona nie zdradzi krolowej.mp4
+  backend: linux
+  duration: 2
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- break: true
+
+- file: 08. no mercy.mp4
+  backend: linux
+  duration: 2
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- break: true
+
+- file: 11 w strojach nocnych.mp4
+  backend: linux
+  duration: 2
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- break: true
+
+- file: 21. start przejażdzki.mp4
+  backend: linux
+  duration: 2
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- break: true
+
+- file: 22. Wsiadanie na woz.mp4
+  backend: linux
+  duration: 2
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- break: true
+
+- file: 24.01. start tranzycji do zwiazania.jpg
+  backend: linux
+  duration: 5
+  pos: |-
+    two women sitting, hands become bound behind back, ropes appear around wrists,
+    cloth gag tied around mouth, women restrained and silenced, subtle struggle,
+    medieval setting, dramatic lighting, same position throughout
+  neg: |-
+    standing up, falling, camera movement, extra people, clothes changing,
+    background changing, smooth morph, dissolve effect, blurry transition
+
+- file: 24.02. koniec tranzycji do zwiazania.png
+  backend: linux
+  duration: 2
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- break: true
+
+- file: 25.01.  woz_odjezdza_start.png
+  backend: linux
+  duration: 2
+  pos: |-
+    side view of horse-drawn cart slowly moving out of frame to the right, wooden cart boards visible in foreground,
+    women seated on cart moving away with it women on cart fidgeting nervously, shifting uneasily, anxious movements, cart wheels rolling, castle courtyard,
+    cart gradually disappearing off the edge of frame, courtyard becoming empty,
+    crowd or guards in background, medieval atmosphere
+  neg: |-
+    side view of horse-drawn cart slowly moving out of frame to the right,
+  width: 1040
+  height: 1040
+
+- file: 25.02.  woz_odjezdza_end.jpg
+  backend: linux
+  duration: 2
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- break: true
+
+- file: 31. Jazda przez miasto.mp4
+  backend: linux
+  duration: 2
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- break: true
+
+- file: 32. Jazda przez miasto.mp4
+  backend: linux
+  duration: 2
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- break: true
+
+- file: 33. Jazda przez miasto.mp4
+  backend: linux
+  duration: 2
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- break: true
+
+- file: 34. Jazda przez miasto.mp4
+  backend: linux
+  duration: 2
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- break: true
+
+- file: 35. Jazda przez miasto.mp4
+  backend: linux
+  duration: 2
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- break: true
+
+- file: 36. Jazda przez miasto.mp4
+  backend: linux
+  duration: 2
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- break: true
+
+- file: 37. Jazda przez miasto.mp4
+  backend: linux
+  duration: 2
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- break: true
+
+- file: 41.51. wjazd na plac_start.jpg
+  backend: linux
+  duration: 3
+  pos: |-
+    horse-drawn cart slowly entering the square from the side, wheels rolling on cobblestones,
+    executioner standing at the pillory shifts weight slightly, turns head to look at arriving cart,
+    crowd standing in silence watching, subtle movement through the crowd, heads turning,
+    medieval town square, tense atmosphere, overcast light
+  neg: |-
+    frozen figures, static people, no movement, teleportation, cart disappearing,
+    extra people on cart, crowd cheering, sudden motion, camera shake
+  width: 1040
+  height: 1040
+
+- file: 41.53. wjazd na plac_end.jpg
+  backend: linux
+  duration: 2
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- break: true
+
+- file: 41.55 woz podjezdza blizej.mp4
+  backend: linux
+  duration: 2
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- break: true
+
+- file: 42.51start.mp4
+  backend: linux
+  duration: 2
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- break: true
+
+- file: 42.61. whipping.mp4
+  backend: linux
+  duration: 2
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- break: true
+
+- file: 42.81. finish.mp4
+  backend: linux
+  duration: 2
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- break: true
+
+- file: 51.51. whipped servant on cart.png
+  backend: linux
+  duration: 2
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- chain:
+    prefix: wyjazd
+    transitions:
+    - duration: 3
+      pos: "horse-drawn cart positioned sideways in foreground slowly begins to move, \nwheels start turning, cart gradually pulls out of frame to the side, \nwomen seated on cart sway and bounce gently with the motion, \ncrowd of people in background shifts slightly, ambient movement, \nmedieval town square, dust rising under wheels, slow steady departure, only coachman and two women on cart\ncinematic wide shot, natural lighting"
+      neg: "teleportation, cart disappearing, sudden jump cut, static frozen scene, \ncamera movement, zoom, blur extra people, additional figures, crowd on cart, more than three people on cart, spectators on cart"
+    - duration: 3
+      pos: "horse-drawn cart positioned sideways in foreground slowly begins to move, \nwheels start turning, cart gradually pulls out of frame to the side, only coachman and two women on cart\nwomen seated on cart sway and bounce gently with the motion, \ncrowd of people in background shifts slightly, ambient movement, \nmedieval town square, dust rising under wheels, slow steady departure, \ncinematic wide shot, natural lighting"
+      neg: "teleportation, cart disappearing, sudden jump cut, static frozen scene, \ncamera movement, zoom, blur extra people, additional figures, crowd on cart, more than three people on cart, spectators on cart"
+    backend: linux
+    fps: 16
+    steps: 6
+    cfg: 2
+    neg: |-
+      static, frozen, no movement
+    width: 1040
+    height: 1040
+
+defaults:
+  auto_blocks_to_swap: true
+  resolution:
+  - 560
+  - 560
+  pre_target_w: 960
+  pre_target_h: 960

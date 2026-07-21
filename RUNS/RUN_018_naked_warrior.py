@@ -1,0 +1,1490 @@
+# -*- coding: utf-8 -*-
+# !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+# AUTO-GENERATED — do NOT edit manually.
+# Edit RUN_018_naked_warrior.yaml and regenerate with:
+#     from app.services.yaml_service import generate_py_from_yaml
+#     generate_py_from_yaml(Path("RUNS/RUN_018_naked_warrior.yaml"))
+# Generated: 2026-07-18 02:53:15
+# !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).parent.parent))
+
+from config_validator import validate_config_or_exit
+from batch_transitions import run_batch_generation
+
+# ============================================================
+# PROJECT CONFIG
+# ============================================================
+
+PROJECT_FOLDER = 'C:\\Users\\abork\\AppData\\Local\\CapCut\\Videos\\__DEVIANT ART\\POCZEKALNIA\\pliki_naked_warrior\\film'
+
+FORCE_RESOLUTION = (
+    448,
+    672,
+)
+DEFAULT_RESOLUTION = (
+    448,
+    672,
+)
+
+DEFAULT_BACKEND        = 'linux'
+DEFAULT_FPS            = 16
+DEFAULT_STEPS          = 6
+DEFAULT_CFG            = 2
+DEFAULT_DURATION       = 2
+DEFAULT_BLOCKS_TO_SWAP      = 20
+DEFAULT_FRAME_INTERPOLATION = True
+DEFAULT_POSITIVE_PROMPT = 'smooth motion, high quality, cinematic'
+DEFAULT_NEGATIVE_PROMPT = 'blurry, distorted, artifacts, watermark, text'
+DEFAULT_AUDIO_PROMPT   = 'ambient sound, environmental audio, natural soundscape, high quality'
+DEFAULT_AUDIO_NEGATIVE_PROMPT = 'music, melody, instruments, singing, low quality, distortion'
+DEFAULT_SEED           = None
+SKIP_MISSING           = True
+SKIP_EXISTED           = True
+IMAGE_QUALITY          = 95
+ASPECT_RATIO_TOLERANCE = 0.13
+ASPECT_RATIO_STRATEGY  = 'most_common'
+DEBUG_LOG              = True
+
+POSTPROCESSING = {'enabled': False}
+
+# ── Linux backend paths ─────────────────────────────────────────
+CONFIG_PATH = 'D:\\streamlit_project\\comfyui_integration\\workflow_configs\\wan_i2v.yaml'
+WORKFLOWS_PATH = 'D:\\streamlit_project\\comfyui_integration\\workflows'
+COMFYUI_OUTPUT_FOLDER = 'D:\\ComfyUI\\output\\Wan22_I2V'
+API_URL = 'http://127.0.0.1:8189'
+
+USE_TEST_FLOW = False
+
+# ============================================================
+# FLOW
+# ============================================================
+
+FLOW_FULL = [
+    {
+        'type': 'scene_break',
+        'name': 'NARODZINY BOHATERKI',
+    },
+    {
+        'file': '08.51 spokojne miasto.mp4',
+        'backend': 'linux',
+        'duration': 2,
+        'pos': 'NONE',
+        'neg': 'NONE',
+    },
+    {"break": True},
+
+    {
+        'file': '09.51. Monster in town.mp4',
+        'backend': 'linux',
+        'duration': 2,
+        'pos': 'NONE',
+        'neg': 'NONE',
+    },
+    {"break": True},
+
+    {
+        'file': '10.01 will defeat the beast.mp4',
+        'backend': 'linux',
+        'duration': 2,
+        'pos': 'NONE',
+        'neg': 'NONE',
+    },
+    {"break": True},
+
+    {
+        'type': 'scene_break',
+        'name': 'SPOTKANIE Z POTWOREM',
+    },
+    {
+        'file': '10.49. Idzie walczyc.mp4',
+        'backend': 'linux',
+        'duration': 2,
+        'pos': 'NONE',
+        'neg': 'NONE',
+    },
+    {"break": True},
+
+    {
+        'file': '10.51. Idzie walczyc .mp4',
+        'backend': 'linux',
+        'duration': 2,
+        'pos': 'NONE',
+        'neg': 'NONE',
+    },
+    {"break": True},
+
+    {
+        'file': '10.53. Potwor podchodzi.mp4',
+        'backend': 'linux',
+        'duration': 2,
+        'pos': 'NONE',
+        'neg': 'NONE',
+    },
+    {"break": True},
+
+    {
+        'type': 'scene_break',
+        'name': 'WALKA',
+    },
+    {
+        'file': '10.55. wojowniczka atakuje.mp4',
+        'backend': 'linux',
+        'duration': 2,
+        'pos': 'NONE',
+        'neg': 'NONE',
+    },
+    {"break": True},
+
+    {
+        'file': '10.57. atak potwora.mp4',
+        'backend': 'linux',
+        'duration': 2,
+        'pos': 'NONE',
+        'neg': 'NONE',
+    },
+    {"break": True},
+
+    {
+        'file': '10.59 rozbicie zbroi na piersi.mp4',
+        'backend': 'linux',
+        'duration': 2,
+        'pos': 'NONE',
+        'neg': 'NONE',
+    },
+    {
+        "chain": [
+            {
+                'duration': 3,
+                'pos': "Woman gets hit hard by monster's hand, flies backwards, falls to the ground, her breastplate breaks off and falls away exposing bare breasts, dynamic action, strong impact, realistic physics",
+                'neg': 'static pose, weak hit, no falling, armor stays on, breasts covered, bad physics, slow motion, deformed body, blurry, low quality, extra limbs, cartoon',
+            },
+        ],
+        "chain_prefix": 'utrata napiersnika',
+        'backend': 'linux',
+        'fps': 16,
+        'steps': 6,
+        'cfg': 2,
+        'neg': 'static, frozen, no movement',
+        'width': 704,
+        'height': 1056,
+    },
+
+    {"break": True},
+
+    {
+        'file': '11.41. wstaje.png',
+        'backend': 'linux',
+        'duration': 4,
+        'pos': 'The warrior woman rises from the ground, pushing herself up to standing, breastplate still fully on her chest. Powerful fluid motion, weight shifting upward, regaining footing.',
+        'neg': 'breastplate falling, armor sliding, beast appearing, camera movement, cut, fade',
+        'width': 704,
+        'height': 1056,
+        'frame_interpolation': False,
+        'audio_prompt': 'metal impact, armor strike, sword clash, weapon hit, sharp blow, hard combat hit, physical impact foley, synchronized with video, crisp, high quality, realistic',
+        'audio_negative_prompt': 'music, melody, ambient drone, sustained atmosphere, continuous background, crowd noise, reverb heavy, low quality, distortion',
+    },
+    {
+        'file': '11.43. wstala.png',
+        'backend': 'linux',
+        'duration': 1,
+        'pos': 'The warrior woman stands upright, breastplate sliding off her chest and falling, armor plate caught mid-air halfway to the ground. A massive beast bursts into frame from the right edge, moving fast and powerfully. Her posture remains firm.',
+        'neg': 'breastplate staying on, armor reattaching, beast absent, static pose, camera movement',
+        'width': 704,
+        'height': 1056,
+        'frame_interpolation': False,
+        'audio_prompt': 'heavy metal plate falling, armor crashing to ground, metallic clanging, metal scraping on floor, armor pieces dropping and rattling, hard surface impact, synchronized with video, crisp, high quality, realistic',
+        'audio_negative_prompt': 'music, melody, ambient drone, sustained tone, continuous background noise, soft sounds, low quality, distortion',
+    },
+    {
+        'file': '11.45. napiersnik spada.png',
+        'backend': 'linux',
+        'duration': 1,
+        'pos': 'The warrior woman stands firm, breastplate completing its fall and hitting the ground. Beast present on the right side of frame, slight movement, looming. She straightens with fierce determination, chest fully exposed in battle-worn undergarment.',
+        'neg': 'breastplate returning, armor floating back up, beast disappearing, static scene, camera movement',
+        'width': 704,
+        'height': 1056,
+        'audio_prompt': 'heavy metal plate falling, armor crashing to ground, metallic clanging, metal scraping on floor, armor pieces dropping and rattling, hard surface impact, synchronized with video, crisp, high quality, realistic',
+        'audio_negative_prompt': 'music, melody, ambient drone, sustained tone, continuous background noise, soft sounds, low quality, distortion',
+    },
+    {
+        'file': '11.53. cios w brzuch 1.png',
+        'backend': 'linux',
+        'duration': 3,
+        'pos': 'Intense combat sequence: huge monstrous creature aggressively strikes a female warrior with its massive left claw. The monster draws back its left paw and smashes it powerfully into her lower belly, heavy impact, visible force and body compression, warrior flinching from the blow, dynamic motion, fast paw movement with motion blur, dramatic cinematic angle, high detail, realistic violence and physics',
+        'neg': 'static pose, slow motion, weak hit, no impact, paw not moving, missing strike, hitting wrong body part, hitting chest or head, deformed monster, extra limbs, bad anatomy, blurry motion, low quality, cartoon, floating paw, unrealistic physics, no reaction from warrior',
+        'audio_prompt': 'metal impact, armor strike, sword clash, weapon hit, sharp blow, hard combat hit, physical impact foley, synchronized with video, crisp, high quality, realistic',
+        'audio_negative_prompt': 'music, melody, ambient drone, sustained atmosphere, continuous background, crowd noise, reverb heavy, low quality, distortion',
+        'frame_interpolation': False,
+        'width': 704,
+        'height': 1056,
+    },
+    {
+        'file': '11.55. cios w brzuch 2.png',
+        'backend': 'linux',
+        'duration': 2,
+        'pos': 'NONE',
+        'neg': 'NONE',
+    },
+    {"break": True},
+
+    {
+        'file': '11.55. cios w brzuch 3.png',
+        'backend': 'linux',
+        'duration': 2,
+        'pos': "Dynamic action sequence: a large monster standing in front of a female warrior. The monster quickly and forcefully pulls back its left arm/claw after a strike. Immediately after, the left side of the warrior's metal armor at her hips breaks and gets torn off, the armor piece falls down heavily to the ground with metallic clanging sound. Dynamic motion, realistic physics, armor piece detaching and dropping, warrior's body slightly reacting, dramatic combat moment, cinematic camera, high detail, intense atmosphere, 4-second video",
+        'neg': 'static scene, slow motion, no armor breaking, armor stays intact, armor not falling, wrong body part, armor falling in wrong direction, deformed armor, floating armor, bad physics, low quality, blurry motion, cartoon, no reaction, weak movement',
+        'frame_interpolation': False,
+        'audio_prompt': 'metal impact, armor strike, sword clash, weapon hit, sharp blow, hard combat hit, physical impact foley, synchronized with video, crisp, high quality, realistic',
+        'audio_negative_prompt': 'music, melody, ambient drone, sustained atmosphere, continuous background, crowd noise, reverb heavy, low quality, distortion',
+        'width': 704,
+        'height': 1056,
+    },
+    {
+        'file': '11.57. cios w brzuch 4.png',
+        'backend': 'linux',
+        'duration': 1,
+        'pos': 'Rest of armor is falling down',
+        'neg': 'static, frozen, no movement, still, motionless, hands at sides, armor staying in place, stiff, rigid',
+        'frame_interpolation': False,
+        'audio_prompt': 'heavy metal plate falling, armor crashing to ground, metallic clanging, metal scraping on floor, armor pieces dropping and rattling, hard surface impact, synchronized with video, crisp, high quality, realistic',
+        'audio_negative_prompt': 'music, melody, ambient drone, sustained tone, continuous background noise, soft sounds, low quality, distortion',
+        'width': 704,
+        'height': 1056,
+    },
+    {
+        'file': '11.59rev2. cios w brzuch 5.png',
+        'backend': 'linux',
+        'duration': 1,
+        'pos': "Continuation of dynamic action: the female warrior is standing, breathing heavily. The remaining pieces of her damaged hip and lower torso armor continue to slide down and fall off completely. Metal armor plates and straps detach and drop heavily to the ground with loud metallic clangs and crashes. Armor falling realistically with weight and motion, exposing more of her body, dramatic slow-motion effect on falling pieces, warrior's body slightly trembling from the impact, cinematic side-front angle, high detail, realistic physics, intense and revealing moment, 4-second video",
+        'neg': 'armor stays on body, armor not falling, static armor, floating armor pieces, armor disappearing without falling, bad physics, no sound of falling metal, deformed armor, low quality, blurry motion, cartoonish falling',
+    },
+    {"break": True},
+
+    {
+        'file': '11.81. Utrata butow _1.png',
+        'backend': 'linux',
+        'duration': 2,
+        'pos': 'NONE',
+        'neg': 'NONE',
+    },
+    {
+        "chain": [
+            {
+                'duration': 3,
+                'pos': "Dynamic 2-second action scene: a large monster aggressively grabs the woman's legs with one of his massive clawed hands and is leaning back. He doesn't catch woman belly breast and no other part of body. The woman desperately tries to crawl away towards the left side of the frame, struggling and attempting to get on all fours while being pulled back. Strong dynamic motion, realistic physics, intense struggle, cinematic camera angle, high detail, dramatic tension",
+                'neg': 'static pose, slow motion, woman standing, no grabbing, bad hand anatomy, deformed body, extra limbs, low quality, blurry motion, weak movement, cartoon, poor physics, monster not grabbing legs',
+                'audio_prompt': 'metal impact, armor strike, sword clash, weapon hit, sharp blow, hard combat hit, physical impact foley, synchronized with video, crisp, high quality, realistic',
+                'audio_negative_prompt': 'music, melody, ambient drone, sustained atmosphere, continuous background, crowd noise, reverb heavy, low quality, distortion',
+            },
+            {
+                'duration': 3,
+                'pos': "Dynamic 3 second action sequence: A large monster is holding a woman suspended horizontally in the air, gripping her legs tightly. The woman struggles violently, kicking and twisting her body. She suddenly breaks free from the monster's grip — her boots remain in the monster's hands and fall out of the frame. The woman falls heavily to the ground, lands on her hands and knees, and quickly crawls away, exiting the frame to the left. Realistic physics, dynamic motion, intense struggle, high detail, cinematic camera work",
+                'neg': 'static pose, woman standing on ground, no struggle, boots not falling, bad physics, deformed body, extra limbs, low quality, blurry motion, slow movement, cartoon, poor anatomy, monster holding whole body',
+                'audio_prompt': 'metal impact, armor strike, sword clash, weapon hit, sharp blow, hard combat hit, physical impact foley, synchronized with video, crisp, high quality, realistic',
+                'audio_negative_prompt': 'music, melody, ambient drone, sustained atmosphere, continuous background, crowd noise, reverb heavy, low quality, distortion',
+            },
+        ],
+        "chain_prefix": 'utrata botow_1',
+        'backend': 'linux',
+        'fps': 16,
+        'steps': 6,
+        'cfg': 2,
+        'neg': 'static, frozen, no movement',
+        'width': 704,
+        'height': 1056,
+        'frame_interpolation': False,
+    },
+
+    {
+        'file': '11.83. Utrata butow_2.png',
+        'backend': 'linux',
+        'duration': 2,
+        'pos': 'Woman crawling fast across the floor, pulling herself forward, arms reaching out, knees dragging, desperate survival crawl, full body in motion, low camera angle, realistic.',
+        'neg': 'static, no movement, frozen, still pose, bad anatomy, low quality, blurry, cartoon, deformed limbs, stiff body',
+        'audio_prompt': 'metal impact, armor strike, sword clash, weapon hit, sharp blow, hard combat hit, physical impact foley, synchronized with video, crisp, high quality, realistic',
+        'audio_negative_prompt': 'music, melody, ambient drone, sustained atmosphere, continuous background, crowd noise, reverb heavy, low quality, distortion',
+        'blocks_to_swap': 10,
+        'frame_interpolation': False,
+        'width': 704,
+        'height': 1056,
+    },
+    {
+        'file': '11.85. Utrata butow_3.png',
+        'backend': 'linux',
+        'duration': 2,
+        'pos': 'NONE',
+        'neg': 'NONE',
+    },
+    {"break": True},
+
+    {
+        'file': '12.49 ostatnia proba 0.png',
+        'backend': 'linux',
+        'duration': 2,
+        'pos': 'Woman rising powerfully from her knees to standing, sword raised in right hand, left arm lifting upward, facing the monster, dramatic movement, warrior rising, fast dynamic motion, cinematic.',
+        'neg': 'static, frozen, kneeling, falling, slow motion, bad anatomy, low quality, cartoon',
+        'audio_prompt': 'metal impact, armor strike, sword clash, weapon hit, sharp blow, hard combat hit, physical impact foley, synchronized with video, crisp, high quality, realistic',
+        'audio_negative_prompt': 'music, melody, ambient drone, sustained atmosphere, continuous background, crowd noise, reverb heavy, low quality, distortion',
+        'width': 704,
+        'height': 1056,
+    },
+    {
+        'file': '12.51 ostatnia proba 1.png',
+        'backend': 'linux',
+        'duration': 2,
+        'pos': "Dynamic combat sequence: the monster pulls back its massive left paw/claw preparing for another powerful strike. At the same moment, the female warrior counterattacks fiercely — she swings her sword with both hands in a strong upward arc, aiming at the monster's body. Fast and aggressive motion from both characters, sword swing with motion blur, monster's paw retracting, intense clash moment, dramatic camera angle, high detail, realistic physics and weight of weapons, cinematic lighting, epic battle atmosphere, 4-second video",
+        'neg': 'static pose, slow motion, no sword attack, weak swing, monster not pulling paw back, bad sword motion, deformed sword, extra limbs, bad anatomy, low quality, blurry action, cartoon, no tension, weak combat',
+        'frame_interpolation': False,
+        'audio_prompt': 'metal impact, armor strike, sword clash, weapon hit, sharp blow, hard combat hit, physical impact foley, synchronized with video, crisp, high quality, realistic',
+        'audio_negative_prompt': 'music, melody, ambient drone, sustained atmosphere, continuous background, crowd noise, reverb heavy, low quality, distortion',
+        'width': 704,
+        'height': 1056,
+    },
+    {
+        'file': '12.53 ostatnia proba 2.png',
+        'backend': 'linux',
+        'duration': 2,
+        'pos': 'Dynamic continuation: after the clash, the monster recoils and quickly retreats backwards, stepping out of the frame to the left. The female warrior, breathing heavily, slowly lowers her sword with a tired but determined motion, letting it drop to her side. Realistic weapon movement, detailed fatigue and tension in her body, cinematic camera following her slightly as the monster disappears from view, dramatic after-battle atmosphere, high detail, smooth motion, 4-second video',
+        'neg': 'monster stays in frame, monster not retreating, static pose, sword not lowering, warrior not moving, bad sword motion, deformed body, low quality, sudden cut, blurry motion, cartoon, no fatigue',
+        'frame_interpolation': False,
+        'audio_prompt': 'metal impact, armor strike, sword clash, weapon hit, sharp blow, hard combat hit, physical impact foley, synchronized with video, crisp, high quality, realistic',
+        'audio_negative_prompt': 'music, melody, ambient drone, sustained atmosphere, continuous background, crowd noise, reverb heavy, low quality, distortion',
+        'width': 704,
+        'height': 1056,
+    },
+    {
+        "chain": [
+            {
+                'duration': 3,
+                'pos': "Dynamic action scene: a large monster counterattacks aggressively, pushing the female warrior away with both of his massive paws. He shoves her hard in the chest and shoulders with powerful force. The woman is thrown backwards, loses balance and falls heavily onto the ground. Realistic physics, strong impact, dynamic motion, detailed movement of the monster's arms and the woman's body flying back and hitting the ground, cinematic camera angle, intense combat atmosphere, high detail, 4-5 second video",
+                'neg': 'weak push, no impact, woman not falling, bad physics, static pose, slow motion, deformed body, extra limbs, low quality, blurry motion, cartoon, floating, poor anatomy',
+                'audio_prompt': 'metal impact, armor strike, sword clash, weapon hit, sharp blow, hard combat hit, physical impact foley, synchronized with video, crisp, high quality, realistic',
+                'audio_negative_prompt': 'music, melody, ambient drone, sustained atmosphere, continuous background, crowd noise, reverb heavy, low quality, distortion',
+            },
+            {
+                'duration': 3,
+                'pos': '1-second dynamic scene with stable camera: a woman tumbling and rolling across the ground, moving from the center towards the bottom left and exiting the frame. She lands heavily on her side near the lower left corner before completely rolling out of view. Realistic rolling motion and natural physics, exhausted body, stable camera position, high detail, cinematic lighting',
+                'neg': 'static pose, standing up, no falling, bad physics, deformed body, slow motion, low quality, blurry, cartoon, woman in center, floating, unnatural movement',
+                'audio_prompt': 'metal impact, armor strike, sword clash, weapon hit, sharp blow, hard combat hit, physical impact foley, synchronized with video, crisp, high quality, realistic',
+                'audio_negative_prompt': 'music, melody, ambient drone, sustained atmosphere, continuous background, crowd noise, reverb heavy, low quality, distortion',
+            },
+        ],
+        "chain_prefix": 'kontratak',
+        'backend': 'linux',
+        'fps': 16,
+        'steps': 6,
+        'cfg': 2,
+        'neg': 'static, frozen, no movement',
+        'width': 704,
+        'height': 1056,
+        'frame_interpolation': False,
+    },
+
+    {"break": True},
+
+    {
+        'file': '12.55 ostatnia proba 3.png',
+        'backend': 'linux',
+        'duration': 2,
+        'pos': 'Woman rising powerfully from her knees to standing, turning back tu camera, ready to run, dramatic movement, warrior rising, fast dynamic motion, cinematic.',
+        'neg': 'static pose, warrior not moving, bad running animation, deformed body, low quality, blurry motion, cartoon, sudden stop',
+        'frame_interpolation': False,
+        'audio_prompt': 'urgent running footsteps on forest floor, leaves and twigs crunching underfoot, branches snapping, fast heavy footfalls on dirt and leaves, synchronized with video, crisp, realistic, high quality',
+        'audio_negative_prompt': 'music, melody, ambient drone, bird sounds, wind loop, sustained atmosphere, continuous background noise, low quality, distortion',
+        'width': 848,
+        'height': 1280,
+    },
+    {
+        'file': '12.57 ucieczka 1.png',
+        'backend': 'linux',
+        'duration': 2,
+        'pos': 'Dynamic action scene: A woman looks over her shoulder while standing, cinematic, high detail, realistic physics, dramatic escape atmosphere, 2-second video',
+        'neg': 'deformed body, low quality, blurry motion, cartoon,',
+        'audio_prompt': 'urgent running footsteps on forest floor, leaves and twigs crunching underfoot, branches snapping, fast heavy footfalls on dirt and leaves, synchronized with video, crisp, realistic, high quality',
+        'audio_negative_prompt': 'music, melody, ambient drone, bird sounds, wind loop, sustained atmosphere, continuous background noise, low quality, distortion',
+        'frame_interpolation': False,
+        'width': 848,
+        'height': 1280,
+    },
+    {
+        'file': '12.59 ucieczka 2.png',
+        'backend': 'linux',
+        'duration': 2,
+        'pos': 'NONE',
+        'neg': 'NONE',
+        'frame_interpolation': False,
+        'width': 848,
+        'height': 1280,
+    },
+    {
+        "chain": [
+            {
+                'duration': 4,
+                'pos': 'Dynamic action scene: The woman turns around, facing away from the camera. The female warrior running at full speed through the forest, exhausted. She continues running. Camera tracking dynamically behind and slightly to the side, trees rushing past, high detail, realistic physics, dramatic atmosphere, 3-second video',
+                'neg': 'sword stays in hand, sword drops straight down, sword falls in front of her, sword flies upward, sword stays in frame, slow sword motion, no sword throwing, bad physics, deformed sword, low quality, blurry motion, cartoon, monster visible',
+                'audio_prompt': 'urgent running footsteps on forest floor, leaves and twigs crunching underfoot, branches snapping, fast heavy footfalls on dirt and leaves, synchronized with video, crisp, realistic, high quality',
+                'audio_negative_prompt': 'music, melody, ambient drone, bird sounds, wind loop, sustained atmosphere, continuous background noise, low quality, distortion',
+            },
+        ],
+        "chain_prefix": 'ucieczka',
+        'backend': 'linux',
+        'fps': 16,
+        'steps': 6,
+        'cfg': 2,
+        'neg': 'static, frozen, no movement',
+        'width': 848,
+        'height': 1280,
+        'frame_interpolation': False,
+    },
+
+    {"break": True},
+
+    {
+        'type': 'scene_break',
+        'name': 'UCIECZKA',
+    },
+    {
+        'file': '13.51 bieg.png',
+        'backend': 'linux',
+        'duration': 2,
+        'pos': 'Dynamic scene: exhausted female warrior running forward through the forest, visible heavy fatigue on her face and body — heavy breathing, sweat on skin, strained expression, slightly unsteady running. Camera is mostly static but with slight handheld shake, focused on her as she runs. The forest background moves rapidly from front to back with strong motion blur and high dynamics, creating sense of speed. Dramatic lighting filtering through trees, intense escape atmosphere, high detail, realistic motion and exhaustion, 4-second video',
+        'neg': 'static background, no motion blur on trees, slow running, no fatigue, fresh and energetic, smiling, camera moving with her, low detail, blurry face, cartoon, low energy, monster visible',
+        'audio_prompt': 'urgent running footsteps on forest floor, leaves and twigs crunching underfoot, branches snapping, fast heavy footfalls on dirt and leaves, synchronized with video, crisp, realistic, high quality',
+        'audio_negative_prompt': 'music, melody, ambient drone, bird sounds, wind loop, sustained atmosphere, continuous background noise, low quality, distortion',
+        'frame_interpolation': True,
+        'fps': 24,
+    },
+    {
+        "chain": [
+            {
+                'duration': 3,
+                'pos': 'Dynamic scene: exhausted female warrior running forward through the forest, visible heavy fatigue on her face and body — heavy breathing, sweat on skin, strained expression, slightly unsteady running. Camera is mostly static but with slight handheld shake, focused on her as she runs. The forest background moves rapidly from front to back with strong motion blur and high dynamics, creating sense of speed. Dramatic lighting filtering through trees, intense escape atmosphere, high detail, realistic motion and exhaustion, 4-second video',
+                'neg': 'static background, no motion blur on trees, slow running, no fatigue, fresh and energetic, smiling, camera moving with her, low detail, blurry face, cartoon, low energy, monster visible',
+                'audio_prompt': 'urgent running footsteps on forest floor, leaves and twigs crunching underfoot, branches snapping, fast heavy footfalls on dirt and leaves, synchronized with video, crisp, realistic, high quality',
+                'audio_negative_prompt': 'music, melody, ambient drone, bird sounds, wind loop, sustained atmosphere, continuous background noise, low quality, distortion',
+            },
+            {
+                'duration': 2,
+                'pos': 'Woman is slowing down exhausted',
+                'neg': '',
+                'audio_prompt': 'slow tired footsteps on forest floor, soft leaves crunching underfoot, heavy labored walking, weight settling sounds, wood creak as sitting on log, body weight on wood, synchronized with video, crisp, high quality, realistic',
+                'audio_negative_prompt': 'music, melody, ambient drone, running, fast footsteps, bird sounds, wind loop, sustained atmosphere, continuous background noise, low quality, distortion',
+            },
+        ],
+        "chain_prefix": 'bieg przez las',
+        'backend': 'linux',
+        'fps': 24,
+        'steps': 6,
+        'cfg': 2,
+        'neg': 'static, frozen, no movement',
+        'width': 848,
+        'height': 1280,
+        'frame_interpolation': False,
+    },
+
+    {"break": True},
+
+    {
+        'type': 'scene_break',
+        'name': 'PODDANIE SIĘ',
+    },
+    {
+        'file': '14.51 poddanie sie 1.png',
+        'backend': 'linux',
+        'duration': 2,
+        'pos': '3-second dynamic scene: exhausted female warrior slowing down her run, gradually coming to a stop in the middle of the forest. She bends forward heavily, placing both hands on her thighs for support, breathing hard with open mouth, visible extreme fatigue, sweat on skin, trembling legs and arms, shoulders rising and falling with heavy breaths. Slight body sway from exhaustion, realistic tired posture, cinematic lighting, high detail, emotional and intense atmosphere',
+        'neg': 'continues running, no stopping, standing straight, no fatigue, energetic pose, hands not on thighs, bad anatomy, low detail, blurry motion, cartoon, sudden stop without slowing down, monster visible',
+        'audio_prompt': 'urgent running footsteps on forest floor, leaves and twigs crunching underfoot, branches snapping, fast heavy footfalls on dirt and leaves, synchronized with video, crisp, realistic, high quality',
+        'audio_negative_prompt': 'music, melody, ambient drone, bird sounds, wind loop, sustained atmosphere, continuous background noise, low quality, distortion',
+        'width': 848,
+        'height': 1280,
+    },
+    {
+        'file': '14.53 poddanie sie 2.png',
+        'backend': 'linux',
+        'duration': 2,
+        'pos': 'Dynamic 4-second scene: very exhausted female warrior slowly turns around, her movements weak and tired. She then slowly kneels down on the grass, first one knee then the other, ending in a kneeling position. Heavy breathing, visible fatigue, slight trembling in her body, head slightly lowered, realistic slow and exhausted motion, cinematic lighting through the forest, high detail, emotional atmosphere',
+        'neg': 'fast movement, sudden turn, standing up, no kneeling, bad anatomy, quick motion, energetic, no fatigue, deformed body, low quality, blurry, cartoon, monster visible',
+        'audio_prompt': 'urgent running footsteps on forest floor, leaves and twigs crunching underfoot, branches snapping, fast heavy footfalls on dirt and leaves, synchronized with video, crisp, realistic, high quality',
+        'audio_negative_prompt': 'music, melody, ambient drone, bird sounds, wind loop, sustained atmosphere, continuous background noise, low quality, distortion',
+        'width': 848,
+        'height': 1280,
+    },
+    {
+        'file': '14.55 poddanie sie 3.png',
+        'backend': 'linux',
+        'duration': 2,
+        'pos': "Zoom on woman's face",
+        'neg': 'NONE',
+        'audio_prompt': 'urgent running footsteps on forest floor, leaves and twigs crunching underfoot, branches snapping, fast heavy footfalls on dirt and leaves, synchronized with video, crisp, realistic, high quality',
+        'audio_negative_prompt': 'music, melody, ambient drone, bird sounds, wind loop, sustained atmosphere, continuous background noise, low quality, distortion',
+        'width': 848,
+        'height': 1280,
+    },
+    {
+        'file': '14.57 poddanie sie 4.png',
+        'backend': 'linux',
+        'duration': 2,
+        'pos': 'NONE',
+        'neg': 'NONE',
+        'width': 848,
+        'height': 1280,
+    },
+    {
+        'type': 'talk',
+        'audio': {
+            'file': 'dont hurt me.mp3',
+            'pos': 'Emotional 4-second scene: the exhausted female warrior is kneeling on the grass. She slowly brings her hands together in front of her chest in a pleading, prayer-like gesture, palms pressed together. Her head is slightly lowered, face shows desperation and exhaustion, heavy breathing, subtle trembling in her arms and body, pleading expression, realistic tired and emotional motion, cinematic forest lighting, high detail, dramatic and intense atmosphere',
+            'neg': 'hands apart, no prayer gesture, standing up, aggressive pose, no fatigue, fast movement, bad hand anatomy, deformed hands, low quality, blurry motion, cartoon, monster visible, happy expression',
+        },
+        'width': 448,
+        'height': 672,
+        'backend': 'linux',
+    },
+
+    {"break": True},
+
+    {
+        'file': '15.51. to have some fun with you.mp4',
+        'backend': 'linux',
+        'duration': 2,
+        'pos': 'NONE',
+        'neg': 'NONE',
+    },
+    {"break": True},
+
+    {
+        'file': '16.51. zgoda.mp4',
+        'backend': 'linux',
+        'duration': 2,
+        'pos': 'NONE',
+        'neg': 'NONE',
+        'audio_prompt': 'urgent running footsteps on forest floor, leaves and twigs crunching underfoot, branches snapping, fast heavy footfalls on dirt and leaves, synchronized with video, crisp, realistic, high quality',
+        'audio_negative_prompt': 'music, melody, ambient drone, bird sounds, wind loop, sustained atmosphere, continuous background noise, low quality, distortion',
+    },
+    {
+        'type': 'talk',
+        'audio': 'you will be pleased.MP3',
+        'width': 544,
+        'height': 816,
+        'backend': 'linux',
+    },
+
+    {"break": True},
+
+    {
+        'type': 'scene_break',
+        'name': 'IGRASZKI',
+    },
+    {
+        'file': '17.51 on your knees.mp4',
+        'backend': 'linux',
+        'duration': 2,
+        'pos': '',
+        'neg': '',
+        'lora_high': '',
+        'lora_low': '',
+        'audio_prompt': 'foley sound effects, physical environment sounds, footsteps, cloth movement, objects, wind bursts, creaking, synchronized with video, crisp, realistic, high quality',
+        'audio_negative_prompt': 'music, melody, instruments, singing, ambient drone, sustained atmosphere, continuous background noise, reverb heavy, low quality, distortion',
+    },
+    {"break": True},
+
+    {
+        'file': '18.53. Igraszki_2.png',
+        'backend': 'linux',
+        'duration': 2,
+        'pos': "Explicit front view scene in the forest: a woman kneeling on all fours on the grass, back arched. A large, massive monster standing behind her and vigorously fucking her in doggystyle position. Strong, deep, rhythmic penetration, monster's hips slamming against her ass. Clear front view showing the woman's face, breasts hanging and bouncing with each thrust, open mouth, wide eyes, intense pleasure and overwhelm expression, heavy breathing. Monster's large clawed hands gripping her waist tightly, dynamic and powerful sex motion, detailed anatomy, realistic penetration, forest setting, dramatic lighting, high detail, erotic atmosphere",
+        'neg': 'side view, back view, wrong camera angle, no penetration, bad anatomy, deformed body, extra limbs, blurry, low quality, censored, clothes on, monster not behind her, weak motion, static pose, cartoon, floating, unrealistic scale, poor connection between bodies',
+        'lora_high': 'WAN2.2_LoraSet/iGoon%20-%20Blink_Front_Doggystyle_I2V_HIGH.safetensors',
+        'lora_low': 'WAN2.2_LoraSet/iGoon%20-%20Blink_Front_Doggystyle_I2V_LOW.safetensors',
+        'width': 848,
+        'height': 1280,
+    },
+    {
+        'file': '18.53. Igraszki_2.png',
+        'backend': 'linux',
+        'duration': 2,
+        'pos': 'NONE',
+        'neg': 'NONE',
+        'width': 848,
+        'height': 1280,
+    },
+    {
+        "chain": [
+            {
+                'duration': 4,
+                'pos': "Explicit front view scene in the forest: a woman kneeling on all fours on the grass, back arched. A large, massive monster standing behind her and vigorously fucking her in doggystyle position. Strong, deep, rhythmic penetration, monster's hips slamming against her ass. Clear front view showing the woman's face, breasts hanging and bouncing with each thrust, open mouth, wide eyes, intense pleasure and overwhelm expression, heavy breathing. Monster's large clawed hands gripping her waist tightly, dynamic and powerful sex motion, detailed anatomy, realistic penetration, forest setting, dramatic lighting, high detail, erotic atmosphere",
+                'neg': 'side view, back view, wrong camera angle, no penetration, bad anatomy, deformed body, extra limbs, blurry, low quality, censored, clothes on, monster not behind her, weak motion, static pose, cartoon, floating, unrealistic scale, poor connection between bodies',
+                'audio_prompt': 'rhythmic skin-on-skin slapping, flesh impact sounds, body weight shifting, wet contact sounds, rhythmic thrusting foley, synchronized with video, crisp, high quality, realistic',
+                'audio_negative_prompt': 'music, melody, ambient drone, moaning, voice, sustained atmosphere, continuous background noise, low quality, distortion',
+                'lora_high': 'WAN2.2_LoraSet/iGoon%20-%20Blink_Front_Doggystyle_I2V_HIGH.safetensors',
+                'lora_low': 'WAN2.2_LoraSet/iGoon%20-%20Blink_Front_Doggystyle_I2V_LOW.safetensors',
+            },
+            {
+                'duration': 4,
+                'pos': "Explicit front view scene in the forest: a woman kneeling on all fours on the grass, back arched. A large, massive monster standing behind her and vigorously fucking her in doggystyle position. Strong, deep, rhythmic penetration, monster's hips slamming against her ass. Clear front view showing the woman's face, breasts hanging and bouncing with each thrust, open mouth, wide eyes, intense pleasure and overwhelm expression, heavy breathing. Monster's large clawed hands gripping her waist tightly, dynamic and powerful sex motion, detailed anatomy, realistic penetration, forest setting, dramatic lighting, high detail, erotic atmosphere",
+                'neg': 'side view, back view, wrong camera angle, no penetration, bad anatomy, deformed body, extra limbs, blurry, low quality, censored, clothes on, monster not behind her, weak motion, static pose, cartoon, floating, unrealistic scale, poor connection between bodies',
+                'audio_prompt': 'rhythmic skin-on-skin slapping, flesh impact sounds, body weight shifting, wet contact sounds, rhythmic thrusting foley, synchronized with video, crisp, high quality, realistic',
+                'audio_negative_prompt': 'music, melody, ambient drone, moaning, voice, sustained atmosphere, continuous background noise, low quality, distortion',
+                'lora_high': 'WAN2.2_LoraSet/iGoon%2520-%2520Blink_Back_Doggystyle_HIGH.safetensors',
+                'lora_low': 'WAN2.2_LoraSet/iGoon%2520-%2520Blink_Back_Doggystyle_LOW.safetensors',
+            },
+        ],
+        "chain_prefix": 'doggy style',
+        'backend': 'linux',
+        'fps': 16,
+        'steps': 6,
+        'cfg': 2,
+        'neg': 'static, frozen, no movement',
+        'width': 848,
+        'height': 1280,
+        'frame_interpolation': False,
+    },
+
+    {"break": True},
+
+    {
+        'file': '18.59. Igraszki_5.png',
+        'backend': 'linux',
+        'duration': 2,
+        'pos': 'NONE',
+        'neg': 'NONE',
+    },
+    {
+        "chain": [
+            {
+                'duration': 4,
+                'pos': """The same woman now having sex in doggystyle position with the monster. From an overhead perspective, she is on all fours with her back facing the camera. A monster is positioned behind her has dark humongous hand with dark fur. his humongous hand with dark fur gripping her hips as he penetrates her from behind. The woman's expression changes throughout the scene, showing moments of pleasure and engagement with her partner. Her legs are spread apart with the man in-between her legs.
+
+she is looking directly at the camera fully facing it.
+
+she looks back at the camera.
+
+she looks at the camera throughout the video.""",
+                'neg': 'side view only, back view, no eye contact, woman not looking at camera, static pose, weak thrusting, bad anatomy, deformed body, extra limbs, blurry motion, low quality, censored, clothes on, poor penetration, unrealistic scale, cartoon',
+                'audio_prompt': 'rhythmic skin-on-skin slapping, flesh impact sounds, body weight shifting, wet contact sounds, rhythmic thrusting foley, synchronized with video, crisp, high quality, realistic',
+                'audio_negative_prompt': 'music, melody, ambient drone, moaning, voice, sustained atmosphere, continuous background noise, low quality, distortion',
+                'lora_high': 'WAN2.2_LoraSet/iGoon%2520-%2520Blink_Back_Doggystyle_HIGH.safetensors',
+                'lora_low': 'WAN2.2_LoraSet/iGoon%2520-%2520Blink_Back_Doggystyle_LOW.safetensors',
+            },
+            {
+                'duration': 3,
+                'pos': """The woman now having sex in doggystyle position with the monster. From an overhead perspective, she is on all fours with her back facing the camera. A monster is positioned behind her has dark humongous hand with dark fur. his humongous hand with dark fur gripping her hips as he penetrates her from behind. The woman's expression changes throughout the scene, showing moments of pleasure and engagement with her partner. Her legs are spread apart with the man in-between her legs.
+
+she is looking directly at the camera fully facing it.
+
+she looks back at the camera.
+
+she looks at the camera throughout the video.""",
+                'neg': 'side view only, back view, no eye contact, woman not looking at camera, static pose, weak thrusting, bad anatomy, deformed body, extra limbs, blurry motion, low quality, censored, clothes on, poor penetration, unrealistic scale, cartoon',
+                'lora_high': 'WAN2.2_LoraSet/iGoon%2520-%2520Blink_Back_Doggystyle_HIGH.safetensors',
+                'lora_low': 'WAN2.2_LoraSet/iGoon%2520-%2520Blink_Back_Doggystyle_LOW.safetensors',
+                'audio_prompt': 'rhythmic skin-on-skin slapping, flesh impact sounds, body weight shifting, wet contact sounds, rhythmic thrusting foley, synchronized with video, crisp, high quality, realistic',
+                'audio_negative_prompt': 'music, melody, ambient drone, moaning, voice, sustained atmosphere, continuous background noise, low quality, distortion',
+            },
+        ],
+        "chain_prefix": 'doggy style back',
+        'backend': 'linux',
+        'fps': 16,
+        'steps': 6,
+        'cfg': 2,
+        'neg': 'static, frozen, no movement',
+        'width': 848,
+        'height': 1280,
+        'frame_interpolation': False,
+    },
+
+    {"break": True},
+
+    {
+        'file': '18.15. Igraszki_8.png',
+        'backend': 'linux',
+        'duration': 2,
+        'pos': 'NONE',
+        'neg': 'NONE',
+    },
+    {
+        "chain": [
+            {
+                'duration': 4,
+                'pos': """The video begins with a close-up of a fully nude woman and the monster. The video then jumpcuts to the same woman now having sex with a same monster with big dark muscular legs in squatting cowgirl position her face fills the screen she is leaning over forwards as she bounces up and down aggressively. Monster erect dark penis is in her vagina.
+
+she looks at the camera throughout the video.
+
+The video is shot from above looking down on the scene.""",
+                'neg': 'fur on woman, woman with fur, furry legs, animal fur on skin, static, frozen, no movement stockings, thigh highs, socks, hosiery, legwear',
+                'lora_high': 'WAN2.2_LoraSet/Blink_Squatting_Cowgirl_Position_I2V_HIGH.safetensors',
+                'lora_low': 'WAN2.2_LoraSet/Blink_Squatting_Cowgirl_Position_I2V_LOW.safetensors',
+            },
+        ],
+        "chain_prefix": 'Squatting Cowgirl',
+        'backend': 'linux',
+        'fps': 16,
+        'steps': 6,
+        'cfg': 2,
+        'neg': 'static, frozen, no movement',
+        'width': 848,
+        'height': 1280,
+    },
+
+    {"break": True},
+
+    {
+        'file': '18.17. Igraszki_9.png',
+        'backend': 'linux',
+        'duration': 2,
+        'pos': 'NONE',
+        'neg': 'NONE',
+    },
+    {
+        "chain": [
+            {
+                'duration': 5,
+                'pos': 'The video begins with a close-up of a woman and monster. The video then immiedately jumpcuts to the same woman now having sex in missionary position with the monster from image. She is lying on her back on the ground in the forest with her legs spread with her knees to her chest. A monster humonogous dark penis is visible entering her vagina from below. The monster is positioned kneeling between her legs infront of her thrusting his penis into her vagina. He has dark large muscular legs. Throughout the scene, she appears to be experiencing pleasure, often with her mouth open or eyes closed as she lies back. Her hands hold onto her thighs spreading her legs.',
+                'neg': '',
+                'audio_prompt': 'rhythmic skin-on-skin slapping, flesh impact sounds, body weight shifting, wet contact sounds, rhythmic thrusting foley, synchronized with video, crisp, high quality, realistic',
+                'audio_negative_prompt': 'music, melody, ambient drone, moaning, voice, sustained atmosphere, continuous background noise, low quality, distortion',
+                'lora_high': 'WAN2.2_LoraSet/iGoon%20-%20Blink_Missionary_I2V_HIGH.safetensors',
+                'lora_low': 'WAN2.2_LoraSet/iGoon%20-%20Blink_Missionary_I2V_LOW.safetensors',
+            },
+            {
+                'duration': 3,
+                'pos': 'Woman now having sex in missionary position. She is lying on her back on the ground in the forest with her legs spread with her knees to her chest. A monster humonogous dark penis is visible entering her vagina from below. The monster is positioned kneeling between her legs infront of her thrusting his penis into her vagina. He has dark large muscular legs. Throughout the scene, she appears to be experiencing pleasure, often with her mouth open or eyes closed as she lies back. Her hands hold onto her thighs spreading her legs.',
+                'neg': '',
+                'lora_high': 'WAN2.2_LoraSet/iGoon%20-%20Blink_Missionary_I2V_HIGH.safetensors',
+                'lora_low': 'WAN2.2_LoraSet/iGoon%20-%20Blink_Missionary_I2V_LOW.safetensors',
+            },
+            {
+                'duration': 5,
+                'pos': 'Woman now having sex in missionary position. She is lying on her back on the ground in the forest with her legs spread with her knees to her chest. A monster humonogous dark penis is visible entering her vagina from below. The monster is positioned kneeling between her legs infront of her thrusting his penis into her vagina. He has dark large muscular legs. Throughout the scene, she appears to be experiencing pleasure, often with her mouth open or eyes closed as she lies back. Her hands hold onto her thighs spreading her legs.',
+                'neg': '',
+                'lora_high': 'WAN2.2_LoraSet/iGoon_Blink_Missionary_I2V_HIGH%20v2.safetensors',
+                'lora_low': 'WAN2.2_LoraSet/iGoon%20-%20Blink_Missionary_I2V_LOW%20v2.safetensors',
+            },
+        ],
+        "chain_prefix": 'missionary',
+        'backend': 'linux',
+        'fps': 16,
+        'steps': 6,
+        'cfg': 2,
+        'neg': 'static, frozen, no movement',
+        'width': 848,
+        'height': 1280,
+        'frame_interpolation': False,
+    },
+
+    {"break": True},
+
+    {
+        'file': '18.19. Igraszki_10.png',
+        'backend': 'linux',
+        'duration': 2,
+        'pos': 'NONE',
+        'neg': 'NONE',
+    },
+    {
+        "chain": [
+            {
+                'duration': 4,
+                'pos': "The video begins with a close-up of a woman and monster. Explicit side view scene in the forest: a woman lying on her side on the grass, legs slightly bent. A large, massive monster lying behind her in spooning position, vigorously fucking her from behind. Strong, deep, rhythmic penetration, monster's hips thrusting forward against her ass. Clear side view showing the woman's face in profile, breasts exposed and bouncing with each thrust, open mouth, eyes rolling back, intense pleasure and overwhelm expression, heavy breathing. Monster's large clawed hand gripping her hip and waist tightly, holding her against his body, dynamic and powerful sex motion, detailed anatomy, realistic penetration, forest setting, dramatic lighting, high detail, erotic atmosphere",
+                'neg': '',
+                'lora_high': 'WAN2.2_LoraSet/mql_casting_sex_spoon_wan22_i2v_v1_high_noise.safetensors',
+                'lora_low': 'WAN2.2_LoraSet/mql_casting_sex_spoon_wan22_i2v_v1_low_noise.safetensors',
+                'audio_prompt': 'rhythmic skin-on-skin slapping, flesh impact sounds, body weight shifting, wet contact sounds, rhythmic thrusting foley, synchronized with video, crisp, high quality, realistic',
+                'audio_negative_prompt': 'music, melody, ambient drone, moaning, voice, sustained atmosphere, continuous background noise, low quality, distortion',
+            },
+        ],
+        "chain_prefix": 'sexspoon',
+        'backend': 'linux',
+        'fps': 16,
+        'steps': 6,
+        'cfg': 2,
+        'neg': 'static, frozen, no movement',
+        'width': 848,
+        'height': 1280,
+    },
+
+    {"break": True},
+
+    {
+        'file': '18.11. igraszki_6.png',
+        'backend': 'linux',
+        'duration': 4,
+        'pos': '',
+        'neg': 'NONE',
+        'frame_interpolation': False,
+        'lora_high': '',
+        'lora_low': '',
+    },
+    {
+        "chain": [
+            {
+                'duration': 4,
+                'pos': 'The video begins with a woman lying on the forest ground. The video then jumpcuts to the same woman now lying down on a same background of the the same location with her breasts positioned around the monster erect dark penis as he thrusts his penis up and down in a titjob motion sliding it between her breasts. she makes various facial expressions during the video she looks like she is talking and has her eyes wide open with a crazy expression. Monster has dark fur legs',
+                'neg': '',
+                'audio_prompt': 'rhythmic skin-on-skin slapping, flesh impact sounds, body weight shifting, wet contact sounds, rhythmic thrusting foley, synchronized with video, crisp, high quality, realistic',
+                'audio_negative_prompt': 'music, melody, ambient drone, moaning, voice, sustained atmosphere, continuous background noise, low quality, distortion',
+                'lora_high': 'WAN2.2_LoraSet/iGoon_Blink_Titjob_I2V_HIGH.safetensors',
+                'lora_low': 'WAN2.2_LoraSet/iGoon_Blink_Titjob_I2V_LOW.safetensors',
+            },
+        ],
+        "chain_prefix": 'tit job',
+        'backend': 'linux',
+        'fps': 16,
+        'steps': 6,
+        'cfg': 2,
+        'neg': 'static, frozen, no movement',
+        'width': 848,
+        'height': 1280,
+        'frame_interpolation': False,
+    },
+
+    {"break": True},
+
+    {
+        'file': '18.21. Igraszki_11.png',
+        'backend': 'linux',
+        'duration': 2,
+        'pos': 'NONE',
+        'neg': 'NONE',
+    },
+    {
+        "chain": [
+            {
+                'duration': 4,
+                'pos': """The video begins with a close-up of a woman. The video then jumpcuts to the same woman now kneeling between a monster's dark muscular legs and big dark feet with her upper body is bent forward over him, and her face is close to his lap. With one hand, she grasps the monsters humonogous erect penis and moves it up and down its shaft in a steady rhythm, performing the handjob. She goes through various facial expressions throughout the video from happy to gasping she looks like she is talking.
+
+She looks at the camera throughout the video
+
+She man's feet are seen in the background""",
+                'neg': '',
+                'lora_low': 'WAN2.2_LoraSet/iGoon%20-%20Blink_Handjob_I2V_LOW.safetensors',
+                'lora_high': 'WAN2.2_LoraSet/iGoon%20-%20Blink_Handjob_I2V_HIGH.safetensors',
+            },
+        ],
+        "chain_prefix": 'hand job',
+        'backend': 'linux',
+        'fps': 16,
+        'steps': 6,
+        'cfg': 2,
+        'neg': 'static, frozen, no movement',
+        'width': 848,
+        'height': 1280,
+    },
+
+    {"break": True},
+
+    {
+        'file': '18.13. Igraszki_7.png',
+        'backend': 'linux',
+        'duration': 2,
+        'pos': 'NONE',
+        'neg': 'NONE',
+    },
+    {
+        "chain": [
+            {
+                'duration': 4,
+                'pos': """The video begins with a close-up of a kneeling woman. The video then jumpcuts to the same woman now kneeling between a monster's muscular fur dark legs wihth bare dark feet with her upper body is bent forward over him, and her face is close to his lap. With one hand, she grasps the man's erect penis and moves it up and down its shaft in a steady rhythm, performing the handjob.  She goes through various facial expressions throughout the video from happy to gasping she looks like she is talking.
+
+She looks at the camera throughout the video
+""",
+                'neg': '',
+                'audio_prompt': 'rhythmic skin-on-skin slapping, flesh impact sounds, body weight shifting, wet contact sounds, rhythmic thrusting foley, synchronized with video, crisp, high quality, realistic',
+                'audio_negative_prompt': 'music, melody, ambient drone, moaning, voice, sustained atmosphere, continuous background noise, low quality, distortion',
+                'lora_high': 'WAN2.2_LoraSet/WAN-2.2-I2V-HandjobBlowjobCombo-HIGH-v1.safetensors',
+                'lora_low': 'WAN2.2_LoraSet/WAN-2.2-I2V-HandjobBlowjobCombo-LOW-v1.safetensors',
+            },
+        ],
+        "chain_prefix": 'Hand job blow job',
+        'backend': 'linux',
+        'fps': 16,
+        'steps': 6,
+        'cfg': 2,
+        'neg': 'static, frozen, no movement',
+        'width': 848,
+        'height': 1280,
+        'frame_interpolation': False,
+    },
+
+    {"break": True},
+
+    {
+        'file': '18.55. Igraszki_3.png',
+        'backend': 'linux',
+        'duration': 2,
+        'pos': 'NONE',
+        'neg': 'NONE',
+    },
+    {
+        "chain": [
+            {
+                'duration': 4,
+                'pos': "A woman passionately kissing a large monster. The video then jumpcuts to the same woman giving a blowjob to the monster standing in the same location. Only penis of monster is visible. She is kneeling in front of him, looking up as she performs the blowjob. She is holding the monster's thick penis with both hands. She looks at the camera the entire time. She shoves the monster's penis deep in her mouth, sucking intensely with visible effort, saliva dripping, cheeks hollowed. Dynamic oral sex, high detail, explicit, realistic anatomy and size difference",
+                'neg': 'bad anatomy, deformed penis, extra limbs, blurry, low quality, censored, small penis, no saliva, closed mouth, no eye contact, bad hand position, teeth visible, static pose, cartoon, plastic skin, poor connection, weak motion',
+                'audio_prompt': '',
+                'audio_negative_prompt': '',
+                'lora_high': 'WAN2.2_LoraSet/iGOON_Blink_Blowjob_I2V_HIGH.safetensors',
+                'lora_low': 'WAN2.2_LoraSet/iGOON_Blink_Blowjob_I2V_LOW.safetensors',
+            },
+            {
+                'duration': 4,
+                'pos': "A woman passionately kissing a large monster. The video then jumpcuts to the same woman giving a blowjob to the monster standing in the same location. Only penis of monster is visible. She is kneeling in front of him, looking up as she performs the blowjob. She is holding the monster's thick penis with both hands. She looks at the camera the entire time. She shoves the monster's penis deep in her mouth, sucking intensely with visible effort, saliva dripping, cheeks hollowed. Dynamic oral sex, high detail, explicit, realistic anatomy and size difference",
+                'neg': 'bad anatomy, deformed penis, extra limbs, blurry, low quality, censored, small penis, no saliva, closed mouth, no eye contact, bad hand position, teeth visible, static pose, cartoon, plastic skin, poor connection, weak motion',
+                'audio_prompt': 'rhythmic skin-on-skin slapping, flesh impact sounds, body weight shifting, wet contact sounds, rhythmic thrusting foley, synchronized with video, crisp, high quality, realistic',
+                'audio_negative_prompt': 'music, melody, ambient drone, moaning, voice, sustained atmosphere, continuous background noise, low quality, distortion',
+                'lora_high': 'WAN2.2_LoraSet/iGOON_Blink_Blowjob_I2V_HIGH.safetensors',
+                'lora_low': 'WAN2.2_LoraSet/iGOON_Blink_Blowjob_I2V_LOW.safetensors',
+            },
+        ],
+        "chain_prefix": 'blow job',
+        'backend': 'linux',
+        'fps': 16,
+        'steps': 6,
+        'cfg': 2,
+        'neg': 'static, frozen, no movement',
+        'width': 848,
+        'height': 1280,
+        'frame_interpolation': False,
+    },
+
+    {"break": True},
+
+    {
+        'file': '18.57. Igraszki_4.png',
+        'backend': 'linux',
+        'duration': 2,
+        'pos': 'NONE',
+        'neg': 'NONE',
+    },
+    {
+        "chain": [
+            {
+                'duration': 4,
+                'pos': "The woman now receiving a facial from a monster's penis. She is kneeling on the floor looking up with a open mouth. The cum shoots all over her face. On the screen appears the monsters's humonogous dark fur hand holds his erect dark penis masturbating his dark penis and shooting the thick white cum directly onto her face, forehead, eyes, cheek and mouth. The thick white cum slowly drips down her face onto her body. An explosion of thick white cum blasts her face. she looks directly at the camera throughout the video.",
+                'neg': '',
+                'lora_high': 'WAN2.2_LoraSet/iGoon%2520-%2520Blink_Facial_I2V_HIGH.safetensors',
+                'lora_low': 'WAN2.2_LoraSet/iGoon%2520-%2520Blink_Facial_I2V_LOW.safetensors',
+            },
+            {
+                'duration': 3,
+                'pos': "The woman now receiving a facial from a monster's penis. She is kneeling on the floor looking up with a open mouth. An explosion of thick white cum blasts on her face continues. she looks directly at the camera throughout the video. The thick white cum slowly drips down her face onto her body. ",
+                'neg': '',
+                'lora_high': 'WAN2.2_LoraSet/iGoon%2520-%2520Blink_Facial_I2V_HIGH.safetensors',
+                'lora_low': 'WAN2.2_LoraSet/iGoon%2520-%2520Blink_Facial_I2V_LOW.safetensors',
+            },
+        ],
+        "chain_prefix": 'grand finale',
+        'backend': 'linux',
+        'fps': 16,
+        'steps': 6,
+        'cfg': 2,
+        'neg': 'static, frozen, no movement',
+        'width': 848,
+        'height': 1280,
+    },
+
+    {"break": True},
+
+    {
+        'type': 'scene_break',
+        'name': 'ODPOCZYNEK',
+    },
+    {
+        'file': '19.31 happy end sit on log.mp4',
+        'backend': 'linux',
+        'duration': 2,
+        'pos': 'NONE',
+        'neg': 'NONE',
+    },
+    {"break": True},
+
+    {
+        'file': '19.39 happy_end_after cum.png',
+        'backend': 'linux',
+        'duration': 4,
+        'pos': '4-second dynamic video: A woman kneeling on the ground slowly stands up with effort. Smooth jump cuts: she is now standing next to a large tree trunk, then another jump cut to her sitting on the tree trunk. Natural, realistic movements, fluid transitions between jump cuts, tired but graceful motion, forest setting, cinematic lighting, high detail, emotional atmosphere The thick white cum slowly drips down her face onto her body.',
+        'neg': 'static pose, sudden movements, bad transitions, deformed body, extra limbs, low quality, blurry motion, cartoon, unrealistic physics, bad anatomy, jerky camera, no jump cuts, too fast movement',
+        'frame_interpolation': False,
+        'lora_high': 'WAN2.2_LoraSet/iGoon%2520-%2520Blink_Facial_I2V_HIGH.safetensors',
+        'lora_low': 'WAN2.2_LoraSet/iGoon%2520-%2520Blink_Facial_I2V_LOW.safetensors',
+        'width': 848,
+        'height': 1280,
+    },
+    {
+        'file': '19.41 happy_end sitting.png',
+        'backend': 'linux',
+        'duration': 2,
+        'pos': 'NONE',
+        'neg': 'NONE',
+    },
+    {"break": True},
+
+    {
+        'file': '19.43 happy_end wait.mp4',
+        'backend': 'linux',
+        'duration': 2,
+        'pos': 'NONE',
+        'neg': 'NONE',
+    },
+    {"break": True},
+
+    {
+        'file': '19.41 happy_end sitting.png',
+        'backend': 'linux',
+        'duration': 3,
+        'pos': '',
+        'neg': '',
+        'lora_high': 'WAN2.2_LoraSet/iGoon%2520-%2520Blink_Facial_I2V_HIGH.safetensors',
+        'lora_low': 'WAN2.2_LoraSet/iGoon%2520-%2520Blink_Facial_I2V_LOW.safetensors',
+    },
+    {
+        "chain": [
+            {
+                'duration': 3,
+                'pos': '3-second explicit video: begins with a close-up of a woman sitting with thick cum on her face, covering her cheeks, lips and chin. Over the course of 5 seconds the cum slowly drips down her face in realistic motion. ',
+                'neg': 'static cum, no dripping, cum disappearing instantly, bad physics, deformed face, low quality, blurry, cartoon, sudden change without transition, extra cum, dry face too early, unrealistic motion',
+                'audio_prompt': 'near silence, very subtle room tone, minimal ambient presence, no distinct sounds',
+                'audio_negative_prompt': 'music, melody, voice, moaning, footsteps, impacts, foley, sound effects, loud sounds, sustained atmosphere, continuous noise, low quality, distortion',
+            },
+            {
+                'duration': 3,
+                'pos': '3-second explicit video: begins with a close-up of a woman sitting with thick cum on her face, covering her cheeks, lips and chin. Over the course of 5 seconds the cum slowly drips down her face in realistic motion. Smooth jump cut near the end to her face completely clean, no cum left. Detailed realistic cum texture and dripping physics, natural lighting, sensual and intimate atmosphere, high detail, cinematic close-up, smooth transitions',
+                'neg': 'static cum, no dripping, cum disappearing instantly, bad physics, deformed face, low quality, blurry, cartoon, sudden change without transition, extra cum',
+                'audio_prompt': 'near silence, very subtle room tone, minimal ambient presence, no distinct sounds',
+                'audio_negative_prompt': 'music, melody, voice, moaning, footsteps, impacts, foley, sound effects, loud sounds, sustained atmosphere, continuous noise, low quality, distortion',
+            },
+        ],
+        "chain_prefix": 'wszystko splywa',
+        'backend': 'linux',
+        'fps': 16,
+        'steps': 6,
+        'cfg': 2,
+        'neg': 'static, frozen, no movement',
+        'width': 848,
+        'height': 1280,
+    },
+
+    {
+        'file': '19.43 happy_end all_clean.png',
+        'backend': 'linux',
+        'duration': 2,
+        'pos': '3-second explicit video: begins with a close-up of a woman sitting with thick cum on her face, covering her cheeks, lips and chin. Over the course of 5 seconds the cum slowly drips down her face in realistic motion. Smooth jump cut near the end to her face completely clean, no cum left. Detailed realistic cum texture and dripping physics, natural lighting, sensual and intimate atmosphere, high detail, cinematic close-up, smooth transitions',
+        'neg': 'NONE',
+    },
+    {"break": True},
+
+    {
+        'type': 'scene_break',
+        'name': 'BŁAGANIE O JESZCZE',
+    },
+    {
+        'file': '19.45 happy_end free to go.mp4',
+        'backend': 'linux',
+        'duration': 2,
+        'pos': 'NONE',
+        'neg': 'NONE',
+    },
+    {"break": True},
+
+    {
+        'file': '19.47. happy end fantastic.png',
+        'backend': 'linux',
+        'duration': 2,
+        'pos': 'NONE',
+        'neg': 'NONE',
+    },
+    {
+        'type': 'talk',
+        'audio': {
+            'file': 'fantastic.MP3',
+            'pos': 'The woman is panting heavily from exhaustion.',
+        },
+        'width': 448,
+        'height': 672,
+        'backend': 'linux',
+        'transition': {
+            'duration': 1,
+            'pos': "1-second cinematic transition: smooth dissolve fade from the woman's current pose to a new pose. The first image slowly fades out while the second image fades in, creating a soft and elegant cross-dissolve effect. Clean blending between two different positions of the same woman, natural lighting, high detail, professional video transition",
+            'neg': 'hard cut, abrupt jump cut, no transition, sudden change, bad blending, visible seam, flickering, glitch, low quality, blurry transition, sharp cut, no fade, cartoonish transition, deformed body during transition',
+        },
+    },
+
+    {"break": True},
+
+    {
+        'file': '19.49. happy end take me with you.png',
+        'backend': 'linux',
+        'duration': 2,
+        'pos': 'NONE',
+        'neg': 'NONE',
+    },
+    {
+        'type': 'talk',
+        'audio': {
+            'file': 'make me you slave.MP3',
+            'pos': 'Woman desperately reaching out with both hands towards the camera, arms fully extended, fingers slightly spread, pleading and emotional gesture, body leaning forward, intense eye contact, detailed realistic hands, cinematic lighting, high detail, emotional atmosphere',
+            'neg': 'hands behind back, one hand only, arms down, clenched fists, bad hand anatomy, deformed fingers, extra fingers, blurry hands, low quality, static pose, cartoon, plastic skin',
+        },
+        'width': 480,
+        'height': 832,
+        'backend': 'linux',
+    },
+
+    {
+        "chain": [
+            {
+                'duration': 2,
+                'pos': 'Woman is in still position waiting',
+                'neg': '',
+                'audio_prompt': 'near silence, very subtle room tone, minimal ambient presence, no distinct sounds',
+                'audio_negative_prompt': 'music, melody, voice, moaning, footsteps, impacts, foley, sound effects, loud sounds, sustained atmosphere, continuous noise, low quality, distortion',
+            },
+        ],
+        "chain_prefix": 'blaganie',
+        'backend': 'linux',
+        'fps': 16,
+        'steps': 6,
+        'cfg': 2,
+        'neg': 'static, frozen, no movement',
+    },
+
+    {"break": True},
+
+    {
+        'file': '19.43 happy_end all_clean.png',
+        'backend': 'linux',
+        'duration': 2,
+        'pos': 'NONE',
+        'neg': 'NONE',
+    },
+    {
+        "chain": [
+            {
+                'duration': 4,
+                'pos': 'Women slowly stands up and bowing her head. Camera zoom in on her face.',
+                'neg': 'cum on facee',
+                'lora_high': '',
+                'lora_low': '',
+                'audio_prompt': 'slow tired footsteps on forest floor, soft leaves crunching underfoot, heavy labored walking, weight settling sounds, wood creak as sitting on log, body weight on wood, synchronized with video, crisp, high quality, realistic',
+                'audio_negative_prompt': 'music, melody, ambient drone, running, fast footsteps, bird sounds, wind loop, sustained atmosphere, continuous background noise, low quality, distortion',
+            },
+        ],
+        "chain_prefix": 'znowu czysta',
+        'backend': 'linux',
+        'fps': 16,
+        'steps': 6,
+        'cfg': 2,
+        'neg': 'static, frozen, no movement',
+        'width': 848,
+        'height': 1280,
+        'frame_interpolation': False,
+    },
+
+    {"break": True},
+
+    {
+        'type': 'scene_break',
+        'name': 'HAPPY END',
+    },
+    {
+        'file': '19.50 happy end invitation.mp4',
+        'backend': 'linux',
+        'duration': 2,
+        'pos': 'NONE',
+        'neg': 'NONE',
+    },
+    {"break": True},
+
+    {
+        'file': '19.51 happy end.png',
+        'backend': 'linux',
+        'duration': 2,
+        'pos': 'NONE',
+        'neg': 'NONE',
+    },
+    {
+        "chain": [
+            {
+                'duration': 3,
+                'pos': 'Cinematic 4-second video: the large monster and the woman walking together away from the camera through the forest. ',
+                'neg': '',
+                'audio_prompt': 'slow tired footsteps on forest floor, soft leaves crunching underfoot, heavy labored walking, weight settling sounds, wood creak as sitting on log, body weight on wood, synchronized with video, crisp, high quality, realistic',
+                'audio_negative_prompt': 'music, melody, ambient drone, running, fast footsteps, bird sounds, wind loop, sustained atmosphere, continuous background noise, low quality, distortion',
+            },
+            {
+                'duration': 4,
+                'pos': 'Cinematic 4-second video: the large monster and the woman walking together away from the camera through the forest. The video then jumpcuts to a beautiful wide shot showing their silhouettes on the edge of the forest. They walk slowly side by side towards the setting sun, golden hour lighting, warm orange and red sky, long dramatic shadows. Peaceful and atmospheric ending, gentle movement, epic and emotional mood, high detail, cinematic composition, realistic silhouettes against the sunset, 8-second video',
+                'neg': 'Dynamic 8-second cinematic sequence: monster and woman walking together away from viewer. Jump cut to wide epic shot — their dark silhouettes walking slowly on the treeline towards a beautiful glowing sunset. Golden sunlight, warm colors, atmospheric forest edge, peaceful and slightly melancholic mood, gentle walking motion, high detail, masterpiece cinematic lighting',
+                'audio_prompt': 'slow walking footsteps on forest floor, soft leaves crunching underfoot, gentle footfalls on dirt path, peaceful walking pace, synchronized with video, crisp, high quality, realistic',
+                'audio_negative_prompt': 'music, melody, ambient drone, running, fast footsteps, bird sounds, wind loop, sustained atmosphere, continuous background noise, low quality, distortion',
+            },
+            {
+                'duration': 3,
+                'pos': 'Couple continue walking towards the setting sun',
+                'neg': 'Jump cut to wide epic shot — their dark silhouettes walking slowly on the treeline towards a beautiful glowing sunset. Golden sunlight, warm colors, atmospheric forest edge, peaceful and slightly melancholic mood, gentle walking motion, high detail, masterpiece cinematic lighting',
+                'audio_prompt': 'slow tired footsteps on forest floor, soft leaves crunching underfoot, heavy labored walking, weight settling sounds, wood creak as sitting on log, body weight on wood, synchronized with video, crisp, high quality, realistic',
+                'audio_negative_prompt': 'music, melody, ambient drone, running, fast footsteps, bird sounds, wind loop, sustained atmosphere, continuous background noise, low quality, distortion',
+            },
+        ],
+        "chain_prefix": 'happy end',
+        'backend': 'linux',
+        'fps': 16,
+        'steps': 6,
+        'cfg': 2,
+        'neg': 'static, frozen, no movement',
+        'width': 848,
+        'height': 1280,
+    },
+
+    {"break": True},
+
+    {
+        'type': 'scene_break',
+        'name': 'BRUDNOPIS',
+    },
+    {
+        'file': '10.61. spadajaca zbroja 1.png',
+        'backend': 'linux',
+        'duration': 2,
+        'pos': 'Woman standing exhausted, chest armor sliding down, subtle natural movement, slight head sway, chest rising and falling with heavy breathing, micro body trembles, weight shifting, realistic idle motion, cinematic',
+        'neg': 'static, frozen, no movement, still pose, motionless, stiff, rigid body, statue, no breathing, no animation, locked in place, zero motion',
+        'frame_interpolation': False,
+        'audio_prompt': 'heavy metal plate falling, armor crashing to ground, metallic clanging, metal scraping on floor, armor pieces dropping and rattling, hard surface impact, synchronized with video, crisp, high quality, realistic',
+        'audio_negative_prompt': 'music, melody, ambient drone, sustained tone, continuous background noise, soft sounds, low quality, distortion',
+        'lora_high': '',
+    },
+    {
+        'file': '10.65. spadajaca zbroja 2.png',
+        'backend': 'linux',
+        'duration': 2,
+        'pos': 'Woman recoiling backwards, upper body leaning back, arms raised defensively, chest armor sliding off her shoulder and falling, head tilting back, slight body sway, heavy breathing, chest rising and falling, weight shifting, natural idle motion, cinematic, high detail, realistic',
+        'neg': 'static, frozen, no movement, still, motionless, stiff, rigid, walking, stepping, running, large movement, jumping, statue, no breathing',
+        'frame_interpolation': False,
+        'audio_prompt': 'heavy metal plate falling, armor crashing to ground, metallic clanging, metal scraping on floor, armor pieces dropping and rattling, hard surface impact, synchronized with video, crisp, high quality, realistic',
+        'audio_negative_prompt': 'music, melody, ambient drone, sustained tone, continuous background noise, soft sounds, low quality, distortion',
+    },
+    {
+        'file': '10.67. spadajaca zbroja 3.png',
+        'backend': 'linux',
+        'duration': 2,
+        'pos': 'NONE',
+        'neg': 'NONE',
+        'audio_prompt': 'heavy metal plate falling, armor crashing to ground, metallic clanging, metal scraping on floor, armor pieces dropping and rattling, hard surface impact, synchronized with video, crisp, high quality, realistic',
+        'audio_negative_prompt': 'music, melody, ambient drone, sustained tone, continuous background noise, soft sounds, low quality, distortion',
+    },
+    {
+        "chain": [
+            {
+                'duration': 2,
+                'pos': 'Woman swiftly drawing her sword upward, raising blade above her head, then shifting into fighting stance, sword held forward and ready, dynamic powerful motion, warrior battle pose, weight shifting forward, intense focused expression, cinematic, high detail, realistic',
+                'neg': 'static, frozen, no movement, still, slow motion, motionless, stiff, sheathing sword, dropping sword, lowering sword, casual pose, relaxed stance',
+                'audio_prompt': 'metal impact, armor strike, sword clash, weapon hit, sharp blow, hard combat hit, physical impact foley, synchronized with video, crisp, high quality, realistic',
+                'audio_negative_prompt': 'music, melody, ambient drone, sustained atmosphere, continuous background, crowd noise, reverb heavy, low quality, distortion',
+            },
+        ],
+        "chain_prefix": 'wznosi miecz',
+        'backend': 'linux',
+        'fps': 16,
+        'steps': 6,
+        'cfg': 2,
+        'neg': 'static, frozen, no movement',
+        'frame_interpolation': False,
+    },
+
+    {"break": True},
+
+    {
+        'file': '11.55. cios w brzuch 3.png',
+        'backend': 'linux',
+        'duration': 2,
+        'pos': "Dynamic action sequence: a large monster standing in front of a female warrior. The monster quickly and forcefully pulls back its left arm/claw after a strike. Immediately after, the left side of the warrior's metal armor at her hips breaks and gets torn off, the armor piece falls down heavily to the ground with metallic clanging sound. Dynamic motion, realistic physics, armor piece detaching and dropping, warrior's body slightly reacting, dramatic combat moment, cinematic camera, high detail, intense atmosphere, 4-second video",
+        'neg': 'static scene, slow motion, no armor breaking, armor stays intact, armor not falling, wrong body part, armor falling in wrong direction, deformed armor, floating armor, bad physics, low quality, blurry motion, cartoon, no reaction, weak movement',
+        'frame_interpolation': False,
+        'audio_prompt': 'metal impact, armor strike, sword clash, weapon hit, sharp blow, hard combat hit, physical impact foley, synchronized with video, crisp, high quality, realistic',
+        'audio_negative_prompt': 'music, melody, ambient drone, sustained atmosphere, continuous background, crowd noise, reverb heavy, low quality, distortion',
+        'width': 704,
+        'height': 1056,
+    },
+    {
+        'file': '11.57. cios w brzuch 4.png',
+        'backend': 'linux',
+        'duration': 2,
+        'pos': "Woman's hands reaching down grabbing at falling waist armor, fingers grasping loosening armor piece, upper body bending slightly forward, desperate attempt to catch armor, natural dynamic movement, armor sliding downward, cinematic, realistic",
+        'neg': 'static, frozen, no movement, still, motionless, hands at sides, armor staying in place, stiff, rigid',
+        'frame_interpolation': False,
+        'audio_prompt': 'heavy metal plate falling, armor crashing to ground, metallic clanging, metal scraping on floor, armor pieces dropping and rattling, hard surface impact, synchronized with video, crisp, high quality, realistic',
+        'audio_negative_prompt': 'music, melody, ambient drone, sustained tone, continuous background noise, soft sounds, low quality, distortion',
+        'width': 704,
+        'height': 1056,
+    },
+    {
+        'file': '11.59. cios w brzuch 5.png',
+        'backend': 'linux',
+        'duration': 2,
+        'pos': 'Part of armor is falling down, woman hide hand',
+        'neg': 'NONE',
+        'audio_prompt': 'heavy metal plate falling, armor crashing to ground, metallic clanging, metal scraping on floor, armor pieces dropping and rattling, hard surface impact, synchronized with video, crisp, high quality, realistic',
+        'audio_negative_prompt': 'music, melody, ambient drone, sustained tone, continuous background noise, soft sounds, low quality, distortion',
+    },
+    {
+        'file': '11.61. cios w brzuch 6.png',
+        'backend': 'linux',
+        'duration': 1,
+        'pos': "Continuation of dynamic action: the female warrior is standing, breathing heavily. The remaining pieces of her damaged hip and lower torso armor continue to slide down and fall off completely. Metal armor plates and straps detach and drop heavily to the ground with loud metallic clangs and crashes. Armor falling realistically with weight and motion, exposing more of her body, dramatic slow-motion effect on falling pieces, warrior's body slightly trembling from the impact, cinematic side-front angle, high detail, realistic physics, intense and revealing moment, 4-second video",
+        'neg': 'armor stays on body, armor not falling, static armor, floating armor pieces, armor disappearing without falling, bad physics, no sound of falling metal, deformed armor, low quality, blurry motion, cartoonish falling',
+    },
+    {
+        "chain": [
+            {
+                'duration': 2,
+                'pos': "Zoom on woman's vagina",
+                'neg': '',
+                'audio_prompt': 'metal impact, armor strike, sword clash, weapon hit, sharp blow, hard combat hit, physical impact foley, synchronized with video, crisp, high quality, realistic',
+                'audio_negative_prompt': 'music, melody, ambient drone, sustained atmosphere, continuous background, crowd noise, reverb heavy, low quality, distortion',
+            },
+        ],
+        "chain_prefix": 'zbliżenie na brzuch',
+        'backend': 'linux',
+        'fps': 16,
+        'steps': 6,
+        'cfg': 2,
+        'neg': 'static, frozen, no movement',
+        'frame_interpolation': False,
+    },
+
+    {"break": True},
+
+    {
+        'file': '99.001 Natural.png',
+        'backend': 'linux',
+        'duration': 2,
+        'pos': 'NONE',
+        'neg': 'NONE',
+    },
+    {
+        "chain": [
+            {
+                'duration': 4,
+                'pos': 'A woman kneeling before man. The video then jumpcuts to the same woman giving a blowjob to the same man standing in the same location. Only penis of man is visible. She is kneeling in front of him, looking up as she performs the blowjob. She is holding the man penis with both hands. She looks at the camera the entire time. She shoves the man penis deep in her mouth, sucking intensely with visible effort, saliva dripping, cheeks hollowed. Dynamic oral sex, high detail, explicit, realistic anatomy and size difference',
+                'neg': 'bad anatomy, deformed penis, extra limbs, blurry, low quality, censored, small penis, no saliva, closed mouth, no eye contact, bad hand position, teeth visible, static pose, cartoon, plastic skin, poor connection, weak motion',
+                'audio_prompt': '',
+                'audio_negative_prompt': '',
+                'lora_high': 'WAN2.2_LoraSet/iGOON_Blink_Blowjob_I2V_HIGH.safetensors',
+                'lora_low': 'WAN2.2_LoraSet/iGOON_Blink_Blowjob_I2V_LOW.safetensors',
+            },
+        ],
+        "chain_prefix": 'blow job_natural 1',
+        'backend': 'linux',
+        'fps': 16,
+        'steps': 6,
+        'cfg': 2,
+        'neg': 'static, frozen, no movement',
+        'frame_interpolation': False,
+    },
+
+    {"break": True},
+
+    {
+        'file': '99.002 Natural.png',
+        'backend': 'linux',
+        'duration': 2,
+        'pos': 'NONE',
+        'neg': 'NONE',
+    },
+    {
+        "chain": [
+            {
+                'duration': 4,
+                'pos': 'A woman kneeling before man. The video then jumpcuts to the same woman giving a blowjob to the same man standing in the same location. Only penis of man is visible. She is kneeling in front of him, looking up as she performs the blowjob. She is holding the man penis with both hands. She looks at the camera the entire time. She shoves the man penis deep in her mouth, sucking intensely with visible effort, saliva dripping, cheeks hollowed. Dynamic oral sex, high detail, explicit, realistic anatomy and size difference',
+                'neg': 'bad anatomy, deformed penis, extra limbs, blurry, low quality, censored, small penis, no saliva, closed mouth, no eye contact, bad hand position, teeth visible, static pose, cartoon, plastic skin, poor connection, weak motion',
+                'audio_prompt': 'wet mouth sounds, oral suction, saliva dripping, lips sliding, rhythmic sucking and slurping, oral motion foley, synchronized with video, crisp, high quality, realistic',
+                'audio_negative_prompt': 'music, melody, ambient drone, moaning, voice, sustained atmosphere, continuous background noise, low quality, distortion',
+                'lora_high': 'WAN2.2_LoraSet/iGOON_Blink_Blowjob_I2V_HIGH.safetensors',
+                'lora_low': 'WAN2.2_LoraSet/iGOON_Blink_Blowjob_I2V_LOW.safetensors',
+            },
+        ],
+        "chain_prefix": 'blow job_natural 2',
+        'backend': 'linux',
+        'fps': 16,
+        'steps': 6,
+        'cfg': 2,
+        'neg': 'static, frozen, no movement',
+        'frame_interpolation': False,
+    },
+
+    {"break": True},
+
+    {
+        'file': '99.002 Natural.png',
+        'backend': 'linux',
+        'duration': 2,
+        'pos': 'NONE',
+        'neg': 'NONE',
+    },
+    {
+        "chain": [
+            {
+                'duration': 5,
+                'pos': "The video begins with a close-up of a woman and man. The video then immiedately jumpcuts to the same woman now having sex in missionary position with the man from image. She is lying on her back on the ground in the same restaurant with her legs spread with her knees to her chest. A man's penis is visible entering her vagina from below. The man is positioned kneeling between her legs infront of her thrusting his penis into her vagina. Throughout the scene, she appears to be experiencing pleasure, often with her mouth open or eyes closed as she lies back. Her hands hold onto her thighs spreading her legs.",
+                'neg': '',
+                'audio_prompt': 'female moaning loud pleasure, rhythmic thrusting sounds, skin slapping wet impact, gasping breath, increasing intensity, climax vocal',
+                'audio_negative_prompt': 'music, melody, speech, words, lyrics, reverb, echo, distortion, cartoon, low quality',
+                'lora_high': 'WAN2.2_LoraSet/iGoon%20-%20Blink_Missionary_I2V_HIGH.safetensors',
+                'lora_low': 'WAN2.2_LoraSet/iGoon%20-%20Blink_Missionary_I2V_LOW.safetensors',
+            },
+        ],
+        "chain_prefix": 'missionary_kopia',
+        'backend': 'linux',
+        'fps': 16,
+        'steps': 6,
+        'cfg': 2,
+        'neg': 'static, frozen, no movement',
+        'frame_interpolation': False,
+    },
+
+    {"break": True},
+
+    {
+        'file': '99.002 Natural.png',
+        'backend': 'linux',
+        'duration': 2,
+        'pos': 'NONE',
+        'neg': 'NONE',
+    },
+    {
+        "chain": [
+            {
+                'duration': 4,
+                'pos': "The video begins with a close-up of a woman. The video then jumpcuts to the same woman now receiving a facial from a man's penis. She is kneeling on the floor looking up with a open mouth. The cum shoots all over her face. The man's hand holds his erect penis masturbating his penis and shooting the thick white cum directly onto her face, forehead, eyes, cheek and mouth. The thick white cum slowly drips down her face onto her body. An explosion of thick white cum blasts her face. she looks directly at the camera throughout the video.",
+                'neg': '',
+                'lora_high': 'WAN2.2_LoraSet/iGoon%2520-%2520Blink_Facial_I2V_HIGH.safetensors',
+                'lora_low': 'WAN2.2_LoraSet/iGoon%2520-%2520Blink_Facial_I2V_LOW.safetensors',
+                'audio_prompt': 'wet splashing sounds, thick liquid impact, fluid spray, viscous liquid dripping and hitting skin, wet surface contact, synchronized with video, crisp, high quality, realistic',
+                'audio_negative_prompt': 'music, melody, ambient drone, moaning, voice, sustained atmosphere, continuous background noise, low quality, distortion',
+            },
+        ],
+        "chain_prefix": 'grand finale_natural_1',
+        'backend': 'linux',
+        'fps': 16,
+        'steps': 6,
+        'cfg': 2,
+        'neg': 'static, frozen, no movement',
+    },
+
+    {"break": True},
+
+]
+
+FLOW = FLOW_FULL
+
+# ============================================================
+# RUN
+# ============================================================
+
+if __name__ == "__main__":
+    config = validate_config_or_exit(globals())
+    run_batch_generation(config)
