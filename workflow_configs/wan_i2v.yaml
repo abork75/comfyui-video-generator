@@ -1,5 +1,5 @@
 workflow_name: "IMAGE2VIDEO FULL wan2.2"
-workflow_file: "_IMAGE2VIDEO_FULL_wan2.2.json"
+workflow_file: "_IMAGE2VIDEO_FULL_wan2.2_3step.json"
 description: "WanVideo 2.2 I2V - dual sampler (high+low noise), RIFE 2x interpolation, Color Match"
 
 parameters:
@@ -45,6 +45,12 @@ parameters:
     node_id: 94
     type: int
     param_name: value
+
+  split_step:
+    node_id: 91
+    type: int
+    param_name: value
+    description: "Split point between HIGH and LOW sampler (half of steps)"
 
   cfg_start:
     node_id: 95

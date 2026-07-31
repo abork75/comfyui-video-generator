@@ -43,8 +43,9 @@ _DEFAULTS: dict[str, Any] = {
             "workflows_path":        "",
             "comfyui_output_folder": "",
             "models": {
-                "video_gen": {"config_path":   ""},
+                "video_gen": {"config_path": "", "lightning_workflow": "_IMAGE2VIDEO_FULL_wan2.2_3step.json", "hq_workflow": "_IMAGE2VIDEO_FULL_wan2.2_hq.json"},
                 "talk":      {"workflow_json": ""},
+                "multitalk": {"workflow_json": ""},
             },
         },
         "windows": {

@@ -176,7 +176,7 @@ ASPECT_RATIO_STRATEGY = "most_common"
 
 # Cloud (Comfy.icu)
 COMFY_ICU_WORKFLOW_ID = "fv9kYUtmjLzC5I8tRR49y"
-WORKFLOW_TEMPLATE_PATH = r"D:\streamlit_project\comfyui_integration\workflows\_IMAGE2VIDEO_FULL_wan2.2.json"
+WORKFLOW_TEMPLATE_PATH = r"D:\streamlit_project\comfyui_integration\workflows\_IMAGE2VIDEO_FULL_wan2.2_3step.json"
 
 # Local (ComfyUI)
 CONFIG_PATH = r"D:\streamlit_project\comfyui_integration\workflow_configs\wan_i2v.yaml"
