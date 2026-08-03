@@ -48,6 +48,7 @@ class ProcessService:
         self._only_transitions: list[str] | None = None   # targeted re-gen filter
         self._force_all:        bool = False               # force regenerate all
         self._mmaudio:          bool = False               # add audio via MMAudio
+        self._lightning_override = None                    # None/True/False override
 
         # Thread-safe input synchronisation
         self._input_event:   threading.Event = threading.Event()
@@ -104,13 +105,14 @@ class ProcessService:
 
     async def start(
         self, filename: str, only: list[str] | None = None, force_all: bool = False,
-        mmaudio: bool = False,
+        mmaudio: bool = False, lightning_override=None,
     ) -> dict:
         if self.is_running:
             return {"ok": False, "error": "Proces już działa — poczekaj lub zatrzymaj."}
         self._only_transitions = only or None
         self._force_all = force_all
         self._mmaudio = mmaudio
+        self._lightning_override = lightning_override
 
         if not filename.startswith("RUN_"):
             return {"ok": False, "error": f"Nieprawidłowa nazwa pliku: {filename}"}
@@ -221,6 +223,7 @@ class ProcessService:
             self._only_transitions  = None
             self._force_all         = False
             self._mmaudio           = False
+            self._lightning_override = None
 
     # ── Internal: synchronous subprocess runner (runs in thread) ─────
 
@@ -234,6 +237,8 @@ class ProcessService:
             env["FORCE_REGEN"] = "1"
         if self._mmaudio:
             env["MMAUDIO_ENABLED"] = "1"
+        if self._lightning_override is not None:
+            env["LIGHTNING_OVERRIDE"] = "1" if self._lightning_override else "0"
 
         # CREATE_NEW_PROCESS_GROUP isolates the subprocess from uvicorn's
         # process group — so uvicorn --reload restarts don't send Ctrl+C/

@@ -10,8 +10,12 @@ backends:
     models:
       video_gen:
         config_path: D:\streamlit_project\comfyui_integration\workflow_configs\wan_i2v.yaml
+        lightning_workflow: _I2V_classic_4s1200_nog4gg.json
+        hq_workflow: _I2V_classic_hq_nog4gg.json
       talk:
         workflow_json: D:\streamlit_project\comfyui_integration\workflow_configs\talk_workflow_api.json
+      multitalk:
+        workflow_json: D:\streamlit_project\comfyui_integration\workflow_configs\multitalk_wanvideo_test_api.json
   windows:
     api_url: http://127.0.0.1:8190
     input_dir: D:\ComfyUI\input
@@ -32,7 +36,6 @@ defaults:
   - 960
   - 1248
   fps: 16
-  steps: 6
   cfg: 2
   duration: 2
   blocks_to_swap: 35
@@ -43,9 +46,14 @@ defaults:
   - max_pixels: 510000
     bts: 20
   - max_pixels: 760000
-    bts: 30
-  - max_pixels: 1100000
-    bts: 35
+    bts: 40
+  - max_pixels: 1250000
+    bts: 40
+  - max_pixels: 2500000
+    bts: 40
   - max_pixels: 9999999
-    bts: 48
+    bts: 40
   frame_interpolation: true
+  steps: 8
+  use_lightning: true
+  steps_hq: 15

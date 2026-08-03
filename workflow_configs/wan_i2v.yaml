@@ -1,5 +1,5 @@
 workflow_name: "IMAGE2VIDEO FULL wan2.2"
-workflow_file: "_IMAGE2VIDEO_FULL_wan2.2_3step.json"
+workflow_file: "_I2V_classic_3step_g4gg.json"
 description: "WanVideo 2.2 I2V - dual sampler (high+low noise), RIFE 2x interpolation, Color Match"
 
 parameters:

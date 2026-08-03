@@ -240,6 +240,23 @@ class FlowParser:
                 prev_config = talk_config
                 continue
 
+            # ===== MULTITALK =====
+            if isinstance(item, dict) and item.get('type') == 'multitalk':
+                clip_name = (item.get('name') or '').strip()
+                if not clip_name:
+                    clip_name = f"multitalk_{id(item) & 0xFFFF}"
+                if not clip_name.endswith('.mp4'):
+                    clip_name += '.mp4'
+                virtual_file = f"transitions/multitalk/{clip_name}"
+
+                multitalk_config = {**item, '_is_multitalk': True, '_source_image': prev_file}
+                current_segment.add_file(virtual_file, multitalk_config)
+                self.all_files.append(FlowFile(virtual_file, multitalk_config))
+
+                prev_file   = virtual_file
+                prev_config = multitalk_config
+                continue
+
             # ===== FILE =====
             if isinstance(item, dict) and 'file' in item:
                 current_file = item['file']
@@ -260,8 +277,7 @@ class FlowParser:
 
                     _should_pair = True
                     if _prev_is_talk:
-                        # talk → file: cut by default; bridge only if talk has 'transition:' key
-                        _should_pair = bool((prev_config or {}).get('transition'))
+                        _should_pair = False  # talk → file: always cut (chain snaps via end frame)
                     elif _prev_is_chain:
                         # chain → file: bridge only when explicitly requested
                         _should_pair = bool((prev_config or {}).get('transition_to_next'))
@@ -342,9 +358,7 @@ class FlowParser:
                         if prev_flow_file.config.get('transition_to_next'):
                             should_add_transition = True
                     elif prev_is_talk:
-                        # Talk → next: bridge only if talk has explicit 'transition:' config
-                        if prev_flow_file.config.get('transition'):
-                            should_add_transition = True
+                        pass
 
                     if should_add_transition:
                         trans_name = f"{Path(prev_file).stem}_{Path(current_file).stem}_transition.mp4"
@@ -409,9 +423,7 @@ class FlowParser:
                         if prev_flow_file.config.get('transition_to_next'):
                             should_add_transition = True
                     elif prev_is_talk:
-                        # Talk → next: bridge only if talk has explicit 'transition:' config
-                        if prev_flow_file.config.get('transition'):
-                            should_add_transition = True
+                        pass
 
                     if should_add_transition:
                         trans_name = f"{Path(prev_file).stem}_{Path(current_file).stem}_transition.mp4"

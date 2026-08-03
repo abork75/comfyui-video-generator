@@ -92,13 +92,19 @@
     "_meta": {"title": "[PATCH] Audio - Osoba 2 (cisza lub mowi)"}
   },
 
+  "50": {
+    "inputs": {"image": "placeholder_start.png"},
+    "class_type": "LoadImage",
+    "_meta": {"title": "[PATCH] Start Image (klatka startowa wideo)"}
+  },
+
   "20": {
     "inputs": {
       "upscale_method": "lanczos",
       "width": 480,
       "height": 832,
       "crop": "disabled",
-      "image": ["10", 0]
+      "image": ["50", 0]
     },
     "class_type": "ImageScale",
     "_meta": {"title": "[PATCH] Resize obrazu (width/height podmieniane przez backend)"}

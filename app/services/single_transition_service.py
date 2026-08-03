@@ -128,10 +128,11 @@ def start_single_transition(run_filename: str, transition_name: str, mmaudio: bo
 
 def _log_gen_params(label, width, height, duration, fps, steps, cfg, seed,
                     bts, bts_src, fi, lora_high=None, lora_low=None,
-                    audio_prompt=None, pos=None):
+                    audio_prompt=None, pos=None, use_lightning=None):
     from app.services.process_service import process_service
     bts_str = f"{bts} ({bts_src})" if bts is not None else f"workflow ({bts_src})"
     fi_str  = "✓" if fi else "✗"
+    mode_str = " | ⚡ light" if use_lightning else " | 🎨 HQ"
     lora_str = ""
     if lora_high or lora_low:
         lh = Path(lora_high).stem if lora_high else "—"
@@ -144,7 +145,7 @@ def _log_gen_params(label, width, height, duration, fps, steps, cfg, seed,
         f"{label}\n"
         f"   📐 {width}×{height} | ⏱ {duration}s | 🎞 {fps}fps | "
         f"🪜 {steps} steps | cfg={cfg} | seed={seed}\n"
-        f"   🔲 bts={bts_str} | RIFE={fi_str}"
+        f"   🔲 bts={bts_str} | RIFE={fi_str}{mode_str}"
         f"{lora_str}{audio_str}{pos_str}"
     )
 
@@ -266,9 +267,10 @@ async def _run(run_filename: str, pair, pf: Path, mmaudio: bool = False) -> None
                 return v
             return default
 
-        # Resolution: from_config > to_config > project > auto-detect
-        _tile_w = _pick("width")
-        _tile_h = _pick("height")
+        # Resolution: from_config only > project > auto-detect
+        # TO config intentionally excluded — end frame is a visual target, not a param source
+        _tile_w = sc_from.get("width")
+        _tile_h = sc_from.get("height")
         if _tile_w and _tile_h:
             target_w = (int(_tile_w) // 16) * 16 or 1024
             target_h = (int(_tile_h) // 16) * 16 or 1024
@@ -322,7 +324,6 @@ async def _run(run_filename: str, pair, pf: Path, mmaudio: bool = False) -> None
 
         _dur        = _pick("duration",            defaults.get("duration", 5))
         _fps        = _pick("fps",                 defaults.get("fps", 16))
-        _steps      = _pick("steps",               defaults.get("steps", 6))
         _cfg        = _pick("cfg",                 defaults.get("cfg", 2.0))
         _seed       = _pick("seed",                -1)
         _fi         = _pick("frame_interpolation", defaults.get("frame_interpolation", True))
@@ -330,6 +331,20 @@ async def _run(run_filename: str, pair, pf: Path, mmaudio: bool = False) -> None
         _ll         = _pick("lora_low")     or None
         _ln         = _pick("lora_name")    or None
         _ls         = _pick("lora_strength") or None
+        _ul         = _pick("use_lightning")
+        _ul         = _ul if _ul is not None else defaults.get("use_lightning", True)
+        if _ul:
+            # Lightning: don't override steps — workflow JSON has correct baked-in count
+            _steps = None
+            _steps_hq = None
+        else:
+            # HQ: steps_hq from file item → project → global → 15
+            _steps_hq = _pick("steps_hq") or defaults.get("steps_hq", 15)
+            _steps = None
+        # Workflow override: project defaults → backend uses global (no per-step field for file tiles)
+        _proj_defs_raw = run_details.get("defaults") or {}
+        _proj_wf_key = 'lightning_workflow' if _ul else 'hq_workflow'
+        _wf_override = (_proj_defs_raw.get(_proj_wf_key) or "").strip() or None
         _ap         = _pick("audio_prompt") or None
         _an         = _pick("audio_negative_prompt") or None
         _pos_full   = _pick("pos") or ""
@@ -352,10 +367,11 @@ async def _run(run_filename: str, pair, pf: Path, mmaudio: bool = False) -> None
         _log_gen_params(
             label=f"🎬 {pair.get_transition_name()}",
             width=target_w, height=target_h,
-            duration=_dur, fps=_fps, steps=_steps, cfg=_cfg, seed=_seed,
+            duration=_dur, fps=_fps, steps=_steps_hq if not _ul else None, cfg=_cfg, seed=_seed,
             bts=_bts, bts_src=_bts_src, fi=_fi,
             lora_high=_lh, lora_low=_ll,
             audio_prompt=_ap, pos=_pos,
+            use_lightning=_ul,
         )
 
         _gt_kwargs = dict(
@@ -365,6 +381,7 @@ async def _run(run_filename: str, pair, pf: Path, mmaudio: bool = False) -> None
             duration=_dur,
             fps=_fps,
             steps=_steps,
+            steps_hq=_steps_hq,
             cfg=_cfg,
             seed=_seed,
             positive_prompt=_pos_full,
@@ -379,6 +396,8 @@ async def _run(run_filename: str, pair, pf: Path, mmaudio: bool = False) -> None
             lora_low=_ll,
             audio_prompt=_ap or "",
             audio_negative_prompt=_an or "",
+            use_lightning=_ul,
+            workflow_override=_wf_override,
         )
 
         import shutil

@@ -158,7 +158,8 @@ class BaseBackend(ABC):
                       width, height, blocks_to_swap=None,
                       frame_interpolation=None, lora_name=None, lora_strength=None,
                       lora_high=None, lora_low=None,
-                      audio_prompt=None, audio_negative_prompt=None):
+                      audio_prompt=None, audio_negative_prompt=None,
+                      use_lightning=True, steps_hq=None, workflow_override=None):
         """
         High-level wrapper for transition generation
 
@@ -206,7 +207,6 @@ class BaseBackend(ABC):
                 'output_path': Path(output_path),
                 'duration': duration,
                 'fps': fps,
-                'steps': steps,
                 'cfg': cfg,
                 'seed': seed,
                 'pos_prompt': positive_prompt,
@@ -236,7 +236,14 @@ class BaseBackend(ABC):
                 params['lora_high'] = lora_high
             if lora_low is not None:
                 params['lora_low'] = lora_low
-            
+            params['use_lightning'] = use_lightning
+            if steps is not None:
+                params['steps'] = steps
+            if steps_hq is not None:
+                params['steps_hq'] = steps_hq
+            if workflow_override is not None:
+                params['workflow_override'] = workflow_override
+
             # Use existing interface (implemented by subclasses)
             inputs = self.prepare_inputs(pair, workflow=None)
             result = self.execute(inputs, params, workflow=None)

@@ -22,9 +22,28 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
+# ── ffprobe result caches ─────────────────────────────────────────────
+# Key: (str(path), mtime_ns) — auto-invalidates when file changes.
+# Values are the parsed results so ffprobe is never re-run for unchanged files.
+_audio_dur_cache:  dict[tuple, float | None] = {}
+_clip_meta_cache:  dict[tuple, dict]         = {}
+
+
+def _cache_key(path: Path) -> tuple | None:
+    """Return (str(path), mtime_ns) or None if file doesn't exist."""
+    try:
+        return (str(path), path.stat().st_mtime_ns)
+    except OSError:
+        return None
+
 
 def _audio_duration_sec(path: Path) -> float | None:
-    """Return audio duration in seconds via ffprobe, or None on failure."""
+    """Return audio duration in seconds via ffprobe, cached by (path, mtime)."""
+    key = _cache_key(path)
+    if key is None:
+        return None
+    if key in _audio_dur_cache:
+        return _audio_dur_cache[key]
     try:
         result = subprocess.run(
             [
@@ -36,9 +55,11 @@ def _audio_duration_sec(path: Path) -> float | None:
             capture_output=True, text=True, timeout=8,
         )
         val = result.stdout.strip()
-        return round(float(val), 1) if val else None
+        value = round(float(val), 1) if val else None
     except Exception:
-        return None
+        value = None
+    _audio_dur_cache[key] = value
+    return value
 
 from app.services.run_file_service import get_run_details, get_run_flow
 
@@ -215,8 +236,11 @@ def get_transition_status(run_filename: str) -> dict | None:
         # TALK
         if item.get("type") == "talk":
             p = talk_path(pf, item)
-            exists = p.exists()
-            has_arch = _has_archived(p.parent, p.stem)
+            # Multi-segment talks are kept as separate _01/_02 files (not concatenated)
+            p_seg1 = p.parent / f"{p.stem}_01.mp4"
+            p_actual = p if p.exists() else (p_seg1 if p_seg1.exists() else p)
+            exists = p.exists() or p_seg1.exists()
+            has_arch = _has_archived(p.parent, p.stem) or _has_archived(p.parent, f"{p.stem}_01")
             audio = item.get("audio", "")
             audio_list = audio if isinstance(audio, list) else [audio]
             # Normalize entries to plain filenames for display
@@ -250,8 +274,28 @@ def get_transition_status(run_filename: str) -> dict | None:
 
             trans_exists = bridge_exists if has_bridge else True
 
+            # Per-segment step info (for per-step playback/regen UX)
+            total_steps = len(audio_list)
+            steps = []
+            for step_i in range(1, total_steps + 1):
+                if total_steps == 1:
+                    sp = p  # single segment uses canonical name
+                else:
+                    sp = p.parent / f"{p.stem}_{step_i:02d}.mp4"
+                step_exists = sp.exists()
+                step_arch   = _has_archived(p.parent, sp.stem)
+                steps.append({
+                    "exists":       step_exists,
+                    "name":         sp.name,
+                    "size_mb":      round(sp.stat().st_size / 1_048_576, 1) if step_exists else None,
+                    "has_archived": step_arch,
+                })
+
+            all_steps_exist = all(s["exists"] for s in steps)
             if not exists:
                 talk_status = "red"
+            elif not all_steps_exist:
+                talk_status = "partial"   # some segments missing
             elif has_bridge and not bridge_exists:
                 talk_status = "partial"   # clip OK, bridge missing
             else:
@@ -261,18 +305,69 @@ def get_transition_status(run_filename: str) -> dict | None:
                 "index":           i_flow,
                 "type":            "talk",
                 "status":          talk_status,
-                "name":            p.name,
+                "name":            p_actual.name,      # actual file (for playback/size)
+                "canonical_name":  p.name,             # always talk_{stem}.mp4 (for job matching)
                 "audio":           audio_names,
                 "audio_durations": audio_durations,
                 "width":           item.get("width"),
                 "height":          item.get("height"),
                 "has_versions":    exists or has_arch,
                 "has_archived":    has_arch,
-                "size_mb":         round(p.stat().st_size / 1_048_576, 1) if exists else None,
-                "path":            str(p) if exists else None,
+                "size_mb":         round(p_actual.stat().st_size / 1_048_576, 1) if exists else None,
+                "path":            str(p_actual) if exists else None,
                 "has_bridge":      has_bridge,
                 "bridge_exists":   bridge_exists,
                 "bridge_name":     bridge_name,
+                "steps":           steps,
+            })
+            continue
+
+        # MULTITALK
+        if item.get("type") == "multitalk":
+            name = item.get("name", "") or ""
+            if not name.endswith(".mp4"):
+                name = name + ".mp4" if name else ""
+            if not name:
+                results.append({
+                    "index": i_flow, "type": "multitalk", "status": "red",
+                    "name": "", "image": item.get("image", ""),
+                    "speaker_idx": item.get("speaker_idx", 0),
+                    "num_persons": item.get("num_persons", 2),
+                    "audio": item.get("audio", ""),
+                    "width": item.get("width"), "height": item.get("height"),
+                    "has_versions": False, "has_archived": False,
+                    "size_mb": None, "path": None,
+                })
+                continue
+            p = pf / "transitions" / "multitalk" / name
+            exists = p.exists()
+            has_arch = _has_archived(p.parent, p.stem)
+            # Collect audio filenames from steps (new format) or legacy root audio
+            _mt_steps = item.get("steps") or []
+            if _mt_steps:
+                _mt_audio_names = [s.get("audio", "") for s in _mt_steps]
+            else:
+                _mt_audio_names = [item.get("audio", "")]
+            _mt_audio_durations = [
+                _audio_duration_sec(pf / fname) if fname else None
+                for fname in _mt_audio_names
+            ]
+            results.append({
+                "index":           i_flow,
+                "type":            "multitalk",
+                "status":          "green" if exists else "red",
+                "name":            name,
+                "image":           item.get("image", ""),
+                "speaker_idx":     item.get("speaker_idx", 0),
+                "num_persons":     item.get("num_persons", 2),
+                "audio":           item.get("audio", ""),
+                "audio_durations": _mt_audio_durations,
+                "width":           item.get("width"),
+                "height":          item.get("height"),
+                "has_versions":    exists or has_arch,
+                "has_archived":    has_arch,
+                "size_mb":         round(p.stat().st_size / 1_048_576, 1) if exists else None,
+                "path":            str(p) if exists else None,
             })
             continue
 
@@ -358,12 +453,17 @@ def get_transition_status(run_filename: str) -> dict | None:
 
 def _get_clip_meta(path: Path) -> dict:
     """
-    Return {duration_s, width, height, fps} for a video/image file via ffprobe.
-    Falls back to None values on any error (ffprobe not found, corrupt file, etc.).
+    Return {duration_s, width, height, fps, has_audio} via ffprobe, cached by (path, mtime).
+    Falls back to None values on any error.
     """
+    empty = {"duration_s": None, "width": None, "height": None, "fps": None, "has_audio": False}
+    key = _cache_key(path)
+    if key is None:
+        return empty
+    if key in _clip_meta_cache:
+        return _clip_meta_cache[key]
+
     meta = {"duration_s": None, "width": None, "height": None, "fps": None, "has_audio": False}
-    if not path.exists():
-        return meta
     try:
         audio_probe = subprocess.run(
             ["ffprobe", "-v", "quiet", "-select_streams", "a:0",
@@ -412,6 +512,7 @@ def _get_clip_meta(path: Path) -> dict:
                     pass
     except Exception:
         pass
+    _clip_meta_cache[key] = meta
     return meta
 
 
@@ -464,22 +565,39 @@ def get_post_clips(run_filename: str) -> list | None:
         # ── TALK ───────────────────────────────────────────────────
         if item.get("type") == "talk":
             p = talk_path(pf, item)
-            exists = p.exists()
-            has_arch = _has_archived(p.parent, p.stem)
-            meta = _get_clip_meta(p) if exists else {"duration_s": None, "width": None, "height": None}
-            clips.append({
-                "seq":          seq,
-                "name":         p.name,
-                "type":         "generated",
-                "subtype":      "talk",
-                "status":       "ok" if exists else "missing",
-                "has_versions": exists or has_arch,
-                "has_archived": has_arch,
-                "size_mb":      round(p.stat().st_size / 1_048_576, 1) if exists else None,
-                "mtime":        int(p.stat().st_mtime) if exists else None,
-                **meta,
-            })
-            seq += 1
+            # Collect actual segment files: canonical single OR numbered _01/_02/…
+            seg_paths: list[Path] = []
+            if p.exists():
+                seg_paths = [p]
+            else:
+                i = 1
+                while True:
+                    sp = p.parent / f"{p.stem}_{i:02d}.mp4"
+                    if sp.exists():
+                        seg_paths.append(sp)
+                        i += 1
+                    else:
+                        break
+            if not seg_paths:
+                # Nothing generated yet — show one missing placeholder
+                seg_paths = [p]
+            for sp in seg_paths:
+                sp_exists = sp.exists()
+                sp_arch = _has_archived(sp.parent, sp.stem)
+                meta = _get_clip_meta(sp) if sp_exists else {"duration_s": None, "width": None, "height": None}
+                clips.append({
+                    "seq":          seq,
+                    "name":         sp.name,
+                    "type":         "generated",
+                    "subtype":      "talk",
+                    "status":       "ok" if sp_exists else "missing",
+                    "has_versions": sp_exists or sp_arch,
+                    "has_archived": sp_arch,
+                    "size_mb":      round(sp.stat().st_size / 1_048_576, 1) if sp_exists else None,
+                    "mtime":        int(sp.stat().st_mtime) if sp_exists else None,
+                    **meta,
+                })
+                seq += 1
 
             # Bridge/transition after talk (talk → next file)
             if item.get("transition"):
@@ -510,6 +628,31 @@ def get_post_clips(run_filename: str) -> list | None:
                     })
                     seq += 1
 
+            continue
+
+        # ── MULTITALK ──────────────────────────────────────────────
+        if item.get("type") == "multitalk":
+            name = (item.get("name") or "").strip()
+            if not name.endswith(".mp4"):
+                name = name + ".mp4"
+            if name and name != ".mp4":
+                p = pf / "transitions" / "multitalk" / name
+                exists = p.exists()
+                has_arch = _has_archived(p.parent, p.stem)
+                meta = _get_clip_meta(p) if exists else {"duration_s": None, "width": None, "height": None}
+                clips.append({
+                    "seq":          seq,
+                    "name":         name,
+                    "type":         "generated",
+                    "subtype":      "multitalk",
+                    "status":       "ok" if exists else "missing",
+                    "has_versions": exists or has_arch,
+                    "has_archived": has_arch,
+                    "size_mb":      round(p.stat().st_size / 1_048_576, 1) if exists else None,
+                    "mtime":        int(p.stat().st_mtime) if exists else None,
+                    **meta,
+                })
+                seq += 1
             continue
 
         # ── CHAIN ──────────────────────────────────────────────────
@@ -794,8 +937,9 @@ def resolve_video(run_filename: str, video_name: str) -> Path | None:
         return None
     for candidate in [
         pf / "transitions" / video_name,
-        pf / "transitions" / "chains" / video_name,
-        pf / "transitions" / "talks"  / video_name,
+        pf / "transitions" / "chains"    / video_name,
+        pf / "transitions" / "talks"     / video_name,
+        pf / "transitions" / "multitalk" / video_name,
     ]:
         if candidate.exists():
             return candidate
@@ -847,7 +991,7 @@ def list_file_versions(run_filename: str, video_name: str) -> dict | None:
     base_stem = _VER_RE.sub("", Path(video_name).stem)  # strip _ver... if any
 
     results = []
-    for search_dir in [pf / "transitions", pf / "transitions" / "chains"]:
+    for search_dir in [pf / "transitions", pf / "transitions" / "chains", pf / "transitions" / "multitalk", pf / "transitions" / "talks"]:
         if not search_dir.exists():
             continue
         # Exact canonical file

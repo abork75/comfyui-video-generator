@@ -193,6 +193,8 @@ def _find_preceding_file(flow: list, chain_idx: int) -> str | None:
     can extract the last frame from the talk video (case 1: talk → chain).
     When talk has an explicit transition and a file follows it (case 2:
     talk → file_B → chain), the file_B item is found first and returned instead.
+    Chain items return the path to their last step's output video (case 3:
+    chain_A → chain_B: chain_B starts from the last frame of chain_A's last step).
     """
     for i in range(chain_idx - 1, -1, -1):
         item = flow[i]
@@ -200,11 +202,20 @@ def _find_preceding_file(flow: list, chain_idx: int) -> str | None:
             continue
         if item.get("break") or item.get("type") == "scene_break":
             return None
+        if "chain" in item:
+            prefix = item.get("chain_prefix", "chain_step")
+            total  = len(item["chain"])
+            return f"transitions/chains/{prefix}_{total:03d}.mp4"
         if item.get("file"):
             return item["file"]
         if item.get("type") == "talk":
             # Don't look further back past talk — chain continues from talk's end.
             return _talk_video_relpath(item)
+        if item.get("type") == "multitalk":
+            clip_name = (item.get("name") or "").strip()
+            if not clip_name.endswith(".mp4"):
+                clip_name += ".mp4"
+            return f"transitions/multitalk/{clip_name}"
     return None
 
 
@@ -304,13 +315,44 @@ def _get_start_frame(
         for ext in ("png", "jpg"):
             end_p = pf / "frames" / f"{stem}_end.{ext}"
             if end_p.exists():
-                return end_p
+                # Validate cached dimensions match target — stale cache causes wrong-image bug
+                # when resolution changed between runs (CapCut VFS hides file from PowerShell
+                # but Python sees it, so the stale file is silently reused without regeneration)
+                try:
+                    from PIL import Image as _PIL
+                    with _PIL.open(end_p) as _chk:
+                        if _chk.size == (target_w, target_h):
+                            return end_p
+                    # Dimensions mismatch: delete stale cache and fall through to regenerate
+                    end_p.unlink(missing_ok=True)
+                except Exception:
+                    return end_p  # Can't verify — use as-is
         src = pf / preceding_file
+        # Multi-audio talks have no canonical file — find last numbered segment.
+        # e.g. "transitions/talks/talk_Foo.mp4" → "talk_Foo_04.mp4"
+        if not src.exists() and src.suffix.lower() == '.mp4':
+            _parent = src.parent
+            _base = src.stem
+            _segs = sorted(_parent.glob(f"{_base}_*.mp4"))
+            if _segs:
+                src = _segs[-1]
+                # Also check if canonical _end.png exists (saved by talk_service as {base}_end.png)
+                for ext in ("png", "jpg"):
+                    end_p = pf / "frames" / f"{_base}_end.{ext}"
+                    if end_p.exists():
+                        try:
+                            from PIL import Image as _PIL
+                            with _PIL.open(end_p) as _chk:
+                                if _chk.size == (target_w, target_h):
+                                    return end_p
+                            end_p.unlink(missing_ok=True)
+                        except Exception:
+                            return end_p
         if src.exists():
             try:
                 from utils.frame_extractor import FrameExtractor
                 return FrameExtractor(project_folder=pf).extract_end_frame(
-                    preceding_file, target_w, target_h
+                    str(src.relative_to(pf)), target_w, target_h
                 )
             except Exception:
                 pass
@@ -348,10 +390,12 @@ def _get_end_frame(pf: Path, end_target: str, target_w: int, target_h: int) -> P
 
 def _log_gen_params(label, width, height, duration, fps, steps, cfg, seed,
                     bts, bts_src, fi, lora_high=None, lora_low=None,
-                    audio_prompt=None, pos=None):
+                    audio_prompt=None, pos=None, use_lightning=None, workflow_name=None):
     from app.services.process_service import process_service
     bts_str = f"{bts} ({bts_src})" if bts is not None else f"workflow ({bts_src})"
     fi_str  = "✓" if fi else "✗"
+    wf_str  = f" [{_Path(workflow_name).stem}]" if workflow_name else ""
+    mode_str = f" | ⚡ light{wf_str}" if use_lightning else f" | 🎨 HQ{wf_str}"
     lora_str = ""
     if lora_high or lora_low:
         lh = _Path(lora_high).stem if lora_high else "—"
@@ -365,7 +409,7 @@ def _log_gen_params(label, width, height, duration, fps, steps, cfg, seed,
         f"{label}\n"
         f"   📐 {width}×{height} | ⏱ {duration}s | 🎞 {fps}fps | "
         f"🪜 {steps} steps | cfg={cfg} | seed={seed}\n"
-        f"   🔲 bts={bts_str} | RIFE={fi_str}"
+        f"   🔲 bts={bts_str} | RIFE={fi_str}{mode_str}"
         f"{lora_str}{audio_str}{pos_str}"
     )
 
@@ -487,12 +531,39 @@ async def _run_chain(
                     _bts, _bts_src = _calc_bts(cur_w, cur_h), "auto"
                 else:
                     _bts, _bts_src = defaults.get("blocks_to_swap"), "global"
+            # Run generation in thread pool (blocking call)
+            sf, ef, op, sc = start_frame, end_frame, out_path, step_cfg
+            _ul = sc.get("use_lightning")
+            _ul = _ul if _ul is not None else defaults.get("use_lightning", True)
+            # Global override from "Generuj wszystkie" / toolbar toggle
+            import os as _os
+            _lo = _os.environ.get("LIGHTNING_OVERRIDE")
+            if _lo is not None:
+                _ul = (_lo == "1")
+            if _ul:
+                # Lightning: don't override — workflow JSON has the correct baked-in step count
+                _steps_val = None
+                _steps_hq_val = None
+            else:
+                # HQ: steps_hq from per-step → chain-level → project → global → 15
+                _steps_hq_val = sc.get("steps_hq") or defaults.get("steps_hq", 15)
+                _steps_val = None  # handled by _swap_to_hq_workflow via steps_hq param
+
+            # Workflow override: per-step → project defaults → backend uses global
+            _step_raw = steps[step_idx - 1]
+            _step_wf = (_step_raw.get("workflow") or "").strip() or None
+            _proj_defs_raw = run_details.get("defaults") or {}
+            _proj_wf_key = 'lightning_workflow' if _ul else 'hq_workflow'
+            _wf_override = _step_wf or (_proj_defs_raw.get(_proj_wf_key) or "").strip() or None
+
+            _vg = app_config_service.get_model('linux', 'video_gen')
+            _wf_name = _wf_override or (_vg.get('lightning_workflow') if _ul else _vg.get('hq_workflow')) or ''
             _log_gen_params(
                 label=f"⛓ {chain_prefix} — step {step_idx}/{total}",
                 width=cur_w, height=cur_h,
                 duration=step_cfg.get("duration", defaults.get("duration", 5)),
                 fps=step_cfg.get("fps", defaults.get("fps", 16)),
-                steps=step_cfg.get("steps", defaults.get("steps", 6)),
+                steps=_steps_hq_val if not _ul else None,
                 cfg=step_cfg.get("cfg", defaults.get("cfg", 2.0)),
                 seed=step_cfg.get("seed", -1),
                 bts=_bts, bts_src=_bts_src,
@@ -501,19 +572,20 @@ async def _run_chain(
                 lora_low=step_cfg.get("lora_low") or None,
                 audio_prompt=step_cfg.get("audio_prompt") or None,
                 pos=(step_cfg.get("pos", "") or "")[:80],
+                use_lightning=_ul,
+                workflow_name=_wf_name,
             )
 
-            # Run generation in thread pool (blocking call)
-            sf, ef, op, sc = start_frame, end_frame, out_path, step_cfg
             success = await loop.run_in_executor(
                 None,
-                lambda sf=sf, ef=ef, op=op, sc=sc: backend.generate_transition(
+                lambda sf=sf, ef=ef, op=op, sc=sc, _ul=_ul, _steps_val=_steps_val, _steps_hq_val=_steps_hq_val, _wf_override=_wf_override: backend.generate_transition(
                     start_frame=sf,
                     end_frame=ef,
                     output_path=op,
                     duration=sc.get("duration", defaults.get("duration", 5)),
                     fps=sc.get("fps", defaults.get("fps", 16)),
-                    steps=sc.get("steps", defaults.get("steps", 6)),
+                    steps=_steps_val,
+                    steps_hq=_steps_hq_val,
                     cfg=sc.get("cfg", defaults.get("cfg", 2.0)),
                     seed=sc.get("seed", -1),
                     positive_prompt=sc.get("pos", "") or "",
@@ -527,6 +599,8 @@ async def _run_chain(
                     ),
                     lora_high=sc.get("lora_high") or None,
                     lora_low=sc.get("lora_low") or None,
+                    use_lightning=_ul,
+                    workflow_override=_wf_override,
                 ),
             )
 

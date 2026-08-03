@@ -131,8 +131,10 @@ def _check_flow_item(item: Any, idx: int) -> list[str]:
         else:
             errors.append(f"flow[{idx}].talk: 'audio' must be a string, dict, or list")
         return errors
+    if item.get("type") == "multitalk":
+        return errors
     if "file" not in item:
-        errors.append(f"flow[{idx}]: must have 'file', 'break', 'chain', or 'type: talk'")
+        errors.append(f"flow[{idx}]: must have 'file', 'break', 'chain', or 'type: talk/multitalk'")
     return errors
 
 
@@ -198,8 +200,8 @@ def _yaml_item_to_internal(item: dict) -> dict:
             "chain":        transitions,
             "chain_prefix": chain_data.get("prefix", "chain"),
         }
-        for k in ("backend", "duration", "fps", "steps", "cfg", "neg", "blocks_to_swap", "width", "height", "frame_interpolation", "atlascloud_resolution", "atlascloud_prompt_extend"):
-            if k in chain_data:
+        for k in ("backend", "duration", "fps", "steps", "cfg", "neg", "blocks_to_swap", "width", "height", "frame_interpolation", "use_lightning", "atlascloud_resolution", "atlascloud_prompt_extend"):
+            if k in chain_data and chain_data[k] is not None:
                 result[k] = chain_data[k]
         return result
     if item.get("type") == "talk":
@@ -229,8 +231,8 @@ def _internal_item_to_yaml(item: dict) -> dict:
             "prefix":      chain_prefix,
             "transitions": item.get("chain", []),
         }
-        for k in ("backend", "duration", "fps", "steps", "cfg", "neg", "blocks_to_swap", "width", "height", "frame_interpolation", "atlascloud_resolution", "atlascloud_prompt_extend"):
-            if k in item:
+        for k in ("backend", "duration", "fps", "steps", "cfg", "neg", "blocks_to_swap", "width", "height", "frame_interpolation", "use_lightning", "atlascloud_resolution", "atlascloud_prompt_extend"):
+            if k in item and item[k] is not None:
                 chain_data[k] = item[k]
         return {"chain": chain_data}
     if item.get("type") == "talk":
@@ -441,15 +443,15 @@ def _flow_list_to_py(flow: list, var_name: str) -> str:
                 lines.append("            },")
             lines.append("        ],")
             lines.append(f'        "chain_prefix": {repr(chain_prefix)},')
-            for k in ("backend", "duration", "fps", "steps", "cfg", "neg", "blocks_to_swap", "width", "height", "frame_interpolation", "atlascloud_resolution", "atlascloud_prompt_extend"):
+            for k in ("backend", "duration", "fps", "steps", "cfg", "neg", "blocks_to_swap", "width", "height", "frame_interpolation", "use_lightning", "atlascloud_resolution", "atlascloud_prompt_extend"):
                 if k in item:
                     vr = _py_val(item[k], 8)
                     lines.append(f'        {repr(k)}: {vr},')
             lines.append("    },")
             lines.append("")
             continue
-        if item.get("type") == "talk":
-            # talk item — render as plain dict
+        if item.get("type") in ("talk", "multitalk"):
+            # talk/multitalk items — render as plain dict
             lines.append("    {")
             for k, v in item.items():
                 vr = _py_val(v, 8)

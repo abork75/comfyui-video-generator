@@ -11,6 +11,11 @@ from app.services.talk_service import (
     cancel_talk,
     suggest_resolution,
 )
+from app.services.talk_transition_service import (
+    get_status as get_talk_transition_status,
+    start_talk_transition,
+    cancel as cancel_talk_transition,
+)
 from app.services.media_service import _project_folder
 from pathlib import Path
 
@@ -49,6 +54,9 @@ async def talk_start(request: Request):
     run_filename = body.get("run_filename")
     talk_item    = body.get("talk_item")
     start_image  = body.get("start_image")
+    from_step    = int(body.get("from_step") or 0)
+    to_step_raw  = body.get("to_step")
+    to_step      = int(to_step_raw) if to_step_raw is not None else None
 
     if not run_filename or not talk_item or not start_image:
         raise HTTPException(
@@ -56,7 +64,7 @@ async def talk_start(request: Request):
             detail="Required fields: run_filename, talk_item, start_image",
         )
 
-    result = start_talk(run_filename, talk_item, start_image)
+    result = start_talk(run_filename, talk_item, start_image, from_step=from_step, to_step=to_step)
     if not result["ok"]:
         raise HTTPException(status_code=400, detail=result["error"])
     return result
@@ -128,3 +136,50 @@ async def talk_suggest_resolution(request: Request):
         raise HTTPException(status_code=500, detail=f"suggest_resolution failed: {exc}")
 
     return {"width": w, "height": h}
+
+
+# ── Talk transition (I2V2I bridge to talk clip) ───────────────────────────────
+
+@router.get("/transition/status")
+async def talk_transition_status():
+    """Current talk-transition job state."""
+    return get_talk_transition_status()
+
+
+@router.post("/transition/start")
+async def talk_transition_start(request: Request):
+    """
+    Generate an I2V2I transition from the preceding clip into a talk clip.
+
+    Body JSON:
+    {
+        "run_filename": "RUN_001.yaml",
+        "talk_item":    { ... },   // full talk tile dict from flow
+        "flow_index":   3          // 0-based index of this talk tile in flow
+    }
+    """
+    try:
+        body = await request.json()
+    except Exception:
+        raise HTTPException(status_code=422, detail="Invalid JSON body")
+
+    run_filename = body.get("run_filename")
+    talk_item    = body.get("talk_item")
+    flow_index   = body.get("flow_index")
+
+    if not run_filename or not talk_item or flow_index is None:
+        raise HTTPException(
+            status_code=422,
+            detail="Required fields: run_filename, talk_item, flow_index",
+        )
+
+    result = start_talk_transition(run_filename, talk_item, int(flow_index))
+    if not result.get("ok"):
+        raise HTTPException(status_code=400, detail=result.get("error"))
+    return result
+
+
+@router.post("/transition/cancel")
+async def talk_transition_cancel():
+    """Cancel the running talk-transition job."""
+    return cancel_talk_transition()

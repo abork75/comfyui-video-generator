@@ -154,6 +154,9 @@ def _build_run_info(path: Path) -> dict:
 _run_info_cache: dict[str, dict] = {}   # filename → parsed info dict
 _scan_cache: list[dict] | None   = None  # cached scan result
 
+# Flow cache: filename → {"mtime_ns": int, "data": dict}
+_flow_cache: dict[str, dict] = {}
+
 
 def invalidate_run_info_cache(filename: str | None = None) -> None:
     """
@@ -165,8 +168,10 @@ def invalidate_run_info_cache(filename: str | None = None) -> None:
     _scan_cache = None
     if filename is None:
         _run_info_cache.clear()
+        _flow_cache.clear()
     else:
         _run_info_cache.pop(filename, None)
+        _flow_cache.pop(filename, None)
 
 
 # ============================================================
@@ -274,10 +279,22 @@ def get_run_flow(filename: str) -> dict | None:
     if not path.exists() or not path.name.startswith("RUN_"):
         return None
 
+    try:
+        mtime_ns = path.stat().st_mtime_ns
+    except OSError:
+        return None
+
+    cached = _flow_cache.get(filename)
+    if cached and cached["mtime_ns"] == mtime_ns:
+        return cached["data"]
+
     # Delegate YAML files to yaml_service
     if path.suffix.lower() == ".yaml":
         from app.services.yaml_service import get_yaml_flow  # lazy import
-        return get_yaml_flow(path)
+        result = get_yaml_flow(path)
+        if result is not None:
+            _flow_cache[filename] = {"mtime_ns": mtime_ns, "data": result}
+        return result
 
     # .py — original AST-based extraction
     content = path.read_text(encoding="utf-8", errors="replace")
@@ -316,7 +333,7 @@ def get_run_flow(filename: str) -> dict | None:
 
     flow = sanitize(flow)
 
-    return {
+    result = {
         "flow":          flow,
         "flow_type":     flow_type,
         "use_test":      use_test,
@@ -324,3 +341,5 @@ def get_run_flow(filename: str) -> dict | None:
         "has_full_flow": has_full,
         "item_count":    len(flow),
     }
+    _flow_cache[filename] = {"mtime_ns": mtime_ns, "data": result}
+    return result

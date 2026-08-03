@@ -52,6 +52,7 @@ async def start_generation(filename: str, request: Request):
     only: list[str] | None = None
     force_all: bool = False
     mmaudio: bool = False
+    lightning_override = None
     try:
         body = await request.json()
         raw = body.get("only")
@@ -61,10 +62,14 @@ async def start_generation(filename: str, request: Request):
             force_all = True
         if body.get("mmaudio"):
             mmaudio = True
+        if "lightning_override" in body:
+            val = body.get("lightning_override")
+            if isinstance(val, bool):
+                lightning_override = val
     except Exception:
         pass
 
-    result = await process_service.start(filename, only=only, force_all=force_all, mmaudio=mmaudio)
+    result = await process_service.start(filename, only=only, force_all=force_all, mmaudio=mmaudio, lightning_override=lightning_override)
     if not result["ok"]:
         raise HTTPException(status_code=400, detail=result["error"])
     return result

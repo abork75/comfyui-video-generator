@@ -61,7 +61,7 @@
         <span class="text-2xl">🎬</span>
         <div>
             <h1 class="font-bold text-base leading-tight">ComfyUI Video Generator</h1>
-            <p class="text-xs text-gray-500 leading-tight">v0.7 — Etap 7</p>
+            <p class="text-xs text-gray-500 leading-tight">v0.7 — Etap 7 &nbsp;·&nbsp; <span class="text-yellow-600" title="Clipboard API wymaga trybu incognito w niektórych konfiguracjach przeglądarki">⚠ działa tylko w trybie incognito</span></p>
         </div>
     </div>
     <div class="flex items-center gap-3">
@@ -347,6 +347,21 @@
                     :class="selectedRun && !isRunning ? 'text-gray-400 hover:text-white cursor-pointer' : 'text-gray-700 cursor-not-allowed'"
                     class="text-sm px-2 py-1.5 rounded transition" title="Odśwież status plików">↻ Status</button>
 
+            <!-- Lightning override toggle (null=auto, true=⚡light, false=🎨HQ) -->
+            <button type="button"
+                    @click="lightningOverride = lightningOverride === null ? false : (lightningOverride === false ? true : null)"
+                    :disabled="isRunning"
+                    :class="lightningOverride === true  ? 'bg-amber-700 text-white' :
+                            lightningOverride === false ? 'bg-teal-700 text-white' :
+                                                         'text-gray-400 border border-gray-600 hover:border-gray-400 hover:text-gray-300'"
+                    class="flex items-center gap-1.5 text-xs px-2.5 py-1.5 rounded-lg transition select-none"
+                    :title="lightningOverride === true  ? 'Nadpisuje per-kafelek: wymuś ⚡ Lightning dla wszystkich' :
+                            lightningOverride === false ? 'Nadpisuje per-kafelek: wymuś 🎨 HQ dla wszystkich' :
+                                                         'Tryb generowania: auto (per-kafelek)'">
+                <span x-text="lightningOverride === true ? '⚡' : lightningOverride === false ? '🎨' : '⚡'"></span>
+                <span x-text="lightningOverride === true ? 'Light' : lightningOverride === false ? 'HQ' : 'Auto'"></span>
+            </button>
+
             <!-- MMAudio toggle -->
             <button type="button" @click="mmAudio = !mmAudio" :disabled="isRunning"
                     :class="mmAudio ? 'bg-violet-700 text-white' : 'text-gray-400 border border-gray-600 hover:border-gray-400 hover:text-gray-300'"
@@ -506,6 +521,7 @@
                     <div>
                         <label class="text-xs text-gray-400 block mb-1">Szablon</label>
                         <select x-model.number="sceneConf.templateIndex"
+                                @change="loadSceneSlots()"
                                 class="w-full bg-gray-800 border border-gray-600 rounded px-3 py-1.5 text-sm text-white">
                             <template x-for="t in sceneConf.templates" :key="t.index">
                                 <option :value="t.index" x-text="t.name"></option>
@@ -514,26 +530,44 @@
                         <p x-show="sceneConf.templates.length === 0" class="text-xs text-gray-600 mt-1">Brak szablonów w RUN_000 - templates.yaml</p>
                     </div>
 
-                    <!-- Start image -->
-                    <div>
-                        <label class="text-xs text-gray-400 block mb-1">Obraz startowy</label>
-                        <button @click="openFsBrowser('image', selectedRun?.project_folder || '', 'Wybierz obraz startowy', (p) => { sceneConf.imagePath = p; sceneConf.imageName = p.split(/[\\/]/).pop(); sceneConf.imagePreview = '/api/fs/image?path=' + encodeURIComponent(p); sceneConf.descriptor = null; sceneConf.generatedFile = null; })"
-                                class="px-3 py-1.5 bg-gray-700 hover:bg-gray-600 text-gray-200 text-xs rounded transition">
-                            📁 Wybierz z dysku…
-                        </button>
-                        <template x-if="sceneConf.imagePreview">
-                            <img :src="sceneConf.imagePreview" class="mt-2 max-h-40 rounded border border-gray-700 object-contain">
+                    <!-- Image slots -->
+                    <div class="space-y-3">
+                        <label class="text-xs text-gray-400 block">Obrazy startowe</label>
+                        <template x-if="sceneConf.slotsLoading">
+                            <p class="text-xs text-gray-600 animate-pulse">Ładowanie slotów…</p>
                         </template>
-                        <p x-show="sceneConf.imageName" class="text-xs text-gray-500 mt-1 font-mono" x-text="sceneConf.imageName"></p>
+                        <template x-if="!sceneConf.slotsLoading && sceneConf.slots.length === 0">
+                            <p class="text-xs text-gray-600">Brak slotów w szablonie</p>
+                        </template>
+                        <template x-for="slot in sceneConf.slots" :key="slot">
+                            <div class="space-y-1">
+                                <p class="text-xs text-gray-500 font-mono" x-text="slot.replace(/\.[^.]+$/, '')"></p>
+                                <button @click="openFsBrowser('image', selectedRun?.project_folder || '', 'Wybierz obraz dla ' + slot, (p) => { sceneConf.imageMap = {...sceneConf.imageMap, [slot]: p}; sceneConf.imageNames = {...sceneConf.imageNames, [slot]: p.split(/[\\/]/).pop()}; sceneConf.imagePreviews = {...sceneConf.imagePreviews, [slot]: '/api/fs/image?path=' + encodeURIComponent(p)}; sceneConf.descriptor = null; })"
+                                        class="px-3 py-1.5 bg-gray-700 hover:bg-gray-600 text-gray-200 text-xs rounded transition">
+                                    📁 Wybierz z dysku…
+                                </button>
+                                <template x-if="sceneConf.imagePreviews[slot]">
+                                    <img :src="sceneConf.imagePreviews[slot]" class="mt-1 max-h-28 rounded border border-gray-700 object-contain" style="max-height:7rem">
+                                </template>
+                                <p x-show="sceneConf.imageNames[slot]" class="text-xs text-gray-500 font-mono" x-text="sceneConf.imageNames[slot]"></p>
+                            </div>
+                        </template>
                     </div>
 
-                    <!-- Analyze button -->
-                    <button @click="sceneConfAnalyze()"
-                            :disabled="sceneConf.analyzing || !sceneConf.imagePath"
-                            class="px-5 py-2 bg-orange-700 hover:bg-orange-600 text-white text-sm rounded transition disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-2">
-                        <span x-show="sceneConf.analyzing" class="animate-spin inline-block">⟳</span>
-                        🔍 Analizuj (Qwen)
-                    </button>
+                    <!-- Analyze buttons -->
+                    <div class="flex gap-2 flex-wrap">
+                        <button @click="sceneConfAnalyze()"
+                                :disabled="sceneConf.analyzing || !sceneConf.slots.length || !sceneConf.imageMap[sceneConf.slots[0]]"
+                                class="px-5 py-2 bg-orange-700 hover:bg-orange-600 text-white text-sm rounded transition disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-2">
+                            <span x-show="sceneConf.analyzing" class="animate-spin inline-block">⟳</span>
+                            🔍 Analizuj (Qwen)
+                        </button>
+                        <button @click="sceneConf.descriptor = {ethnicity: '', skin: '', hair: '', background: ''}; sceneConf.analyzeError = ''"
+                                :disabled="!sceneConf.slots.length || !sceneConf.imageMap[sceneConf.slots[0]]"
+                                class="px-5 py-2 bg-gray-600 hover:bg-gray-500 text-white text-sm rounded transition disabled:opacity-40 disabled:cursor-not-allowed">
+                            📋 Dosłownie
+                        </button>
+                    </div>
                     <p x-show="sceneConf.analyzeError" class="text-xs text-red-400" x-text="sceneConf.analyzeError"></p>
                 </div>
 
@@ -575,6 +609,7 @@
                         <div>
                             <label class="text-xs text-gray-400 block mb-1">Nazwa sceny</label>
                             <input type="text" x-model="sceneConf.sceneName"
+                                   @input="sceneConf.sceneAdded = false"
                                    :placeholder="sceneConf.templates[sceneConf.templateIndex]?.name || 'np. scena_1'"
                                    :class="sceneConfNameTaken() ? 'border-red-500' : 'border-gray-600'"
                                    class="w-full bg-gray-800 border rounded px-3 py-1.5 text-sm text-white">
@@ -592,14 +627,14 @@
                         </template>
 
                         <button @click="sceneConfGenerate()"
-                                :disabled="sceneConf.generating || !selectedRun || !sceneConf.sceneName.trim() || sceneConfNameTaken()"
+                                :disabled="sceneConf.generating || !selectedRun || !sceneConf.sceneName.trim() || sceneConfNameTaken() || sceneConf.slots.some(s => !sceneConf.imageMap[s])"
                                 class="px-5 py-2 bg-green-700 hover:bg-green-600 text-white text-sm rounded transition disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-2">
                             <span x-show="sceneConf.generating" class="animate-spin inline-block">⟳</span>
                             ✅ Dopisz scenę do projektu
                         </button>
                         <p x-show="sceneConf.generateError" class="text-xs text-red-400" x-text="sceneConf.generateError"></p>
                         <div x-show="sceneConf.sceneAdded" class="text-xs text-green-400 space-y-1">
-                            <p>✅ Scena „<span x-text="sceneConf.sceneName"></span>" dopisana</p>
+                            <p>✅ Scena „<span x-text="sceneConf.lastAddedName"></span>" dopisana do projektu</p>
                             <button @click="sceneConfOpenRun()" class="text-orange-400 hover:text-orange-300 transition underline">
                                 → Otwórz Flow
                             </button>
@@ -730,9 +765,8 @@
                                         <!-- Editable segment label -->
                                         <span class="text-xs text-gray-600 font-medium mr-0.5" x-text="(segIdx + 1) + '.'"></span>
                                         <input type="text"
-                                               x-init="if (segLabels[segIdx] === undefined) segLabels[segIdx] = seg.label || ''"
-                                               x-model="segLabels[segIdx]"
-                                               @change="setSegmentLabel(seg, segIdx, segLabels[segIdx])"
+                                               x-effect="if (!$el.matches(':focus')) $el.value = seg.label || ''"
+                                               @change="setSegmentLabel(seg, segIdx, $event.target.value)"
                                                :placeholder="'Ujęcie ' + (segIdx + 1)"
                                                class="flex-1 text-xs bg-transparent border-0 border-b border-transparent focus:border-gray-500 focus:outline-none text-gray-400 placeholder-gray-600 font-medium tracking-wide px-0.5 py-0 min-w-0" />
                                         <!-- Move up/down -->
@@ -855,7 +889,10 @@
                                                         <template x-if="entry.item.blocks_to_swap != null"><span class="px-1.5 py-0.5 bg-indigo-900 rounded text-xs text-indigo-300" x-text="'bts:' + entry.item.blocks_to_swap"></span></template>
                                                         <template x-if="entry.item.frame_interpolation === false"><span class="px-1.5 py-0.5 bg-yellow-900 rounded text-xs text-yellow-500" title="RIFE VFI wyłączone">⏸ no-interp</span></template>
                                                         <template x-if="entry.item.frame_interpolation === true"><span class="px-1.5 py-0.5 bg-blue-900 rounded text-xs text-blue-400" title="RIFE VFI wymuszone włączone">⟳ interp</span></template>
+                                                        <template x-if="entry.item.use_lightning === false"><span class="px-1.5 py-0.5 bg-teal-900 rounded text-xs text-teal-400" title="HQ mode: bez lightx2v">🎨 HQ</span></template>
+                                                        <template x-if="entry.item.use_lightning === true"><span class="px-1.5 py-0.5 bg-amber-900 rounded text-xs text-amber-400" title="Lightning mode: wymuszone">⚡ light</span></template>
                                                         <template x-if="entry.item.width && entry.item.height"><span class="px-1.5 py-0.5 bg-gray-700 rounded text-xs text-yellow-400" x-text="entry.item.width + '×' + entry.item.height"></span></template>
+                                                        <template x-if="!entry.item.width && !entry.item.height && (selectedRun?.force_resolution || selectedRun?.default_resolution)"><span class="px-1.5 py-0.5 bg-gray-700/50 rounded text-xs text-gray-500" x-text="(selectedRun.force_resolution || selectedRun.default_resolution)[0] + '×' + (selectedRun.force_resolution || selectedRun.default_resolution)[1]"></span></template>
                                                     </div>
                                                     <!-- Chain status — each helper called ONCE -->
                                                     <div class="ml-auto flex items-center gap-2">
@@ -1023,7 +1060,9 @@
                                                     <div class="flex-1 min-w-0">
                                                         <!-- Header row -->
                                                         <div class="flex flex-wrap items-center gap-2">
-                                                            <span class="font-mono text-sm text-gray-200 flex-shrink-0" x-text="entry.item.file"></span>
+                                                            <span class="font-mono text-sm text-gray-200 flex-shrink-0"
+                                                                  :title="entry.item.file"
+                                                                  x-text="entry.item.file.split(/[\\/]/).pop()"></span>
                                                             <div class="flex flex-wrap gap-1.5">
                                                                 <!-- Source file dimensions badge: dimCache (actual disk) takes priority, falls back to stored item dimensions -->
                                                                 <template x-if="dimCache[selectedRun.filename + '|' + entry.item.file]?.width">
@@ -1052,6 +1091,10 @@
                                                                 <template x-if="entry.item.blocks_to_swap != null"><span class="px-1.5 py-0.5 bg-indigo-900 rounded text-xs text-indigo-300" x-text="'bts:' + entry.item.blocks_to_swap"></span></template>
                                                                 <template x-if="entry.item.frame_interpolation === false"><span class="px-1.5 py-0.5 bg-yellow-900 rounded text-xs text-yellow-500" title="RIFE VFI wyłączone">⏸ no-interp</span></template>
                                                                 <template x-if="entry.item.frame_interpolation === true"><span class="px-1.5 py-0.5 bg-blue-900 rounded text-xs text-blue-400" title="RIFE VFI wymuszone włączone">⟳ interp</span></template>
+                                                                <template x-if="entry.item.use_lightning === false"><span class="px-1.5 py-0.5 bg-teal-900 rounded text-xs text-teal-400" title="HQ mode: bez lightx2v">🎨 HQ</span></template>
+                                                                <template x-if="entry.item.use_lightning === true"><span class="px-1.5 py-0.5 bg-amber-900 rounded text-xs text-amber-400" title="Lightning mode: wymuszone">⚡ light</span></template>
+                                                                <template x-if="entry.item.width && entry.item.height"><span class="px-1.5 py-0.5 bg-gray-700 rounded text-xs text-yellow-400" x-text="entry.item.width + '×' + entry.item.height"></span></template>
+                                                                <template x-if="!entry.item.width && !entry.item.height && (selectedRun?.force_resolution || selectedRun?.default_resolution)"><span class="px-1.5 py-0.5 bg-gray-700/50 rounded text-xs text-gray-500" x-text="(selectedRun.force_resolution || selectedRun.default_resolution)[0] + '×' + (selectedRun.force_resolution || selectedRun.default_resolution)[1]"></span></template>
                                                                 <template x-if="_si(entry.idx)?.has_audio"><span class="px-1.5 py-0.5 bg-violet-900/60 rounded text-xs text-violet-400" title="Plik ma ścieżkę audio">🔊</span></template>
                                                             </div>
                                                         </div>
@@ -1177,6 +1220,14 @@
                                                      style="background-color:#1a2332"
                                                      :class="editMode ? 'cursor-pointer' : ''"
                                                      @click="if(editMode && !$event.target.closest('button,img,video,a,select,input')) editOpenItem(entry.idx)">
+                                                    <template x-if="entry.item.image">
+                                                        <img :src="frameUrl(entry.item.image, 'start')"
+                                                             class="thumb cursor-pointer"
+                                                             @error="$el.style.display='none'"
+                                                             @click.stop="openFrameModal(entry.item.image)"
+                                                             style="width:36px;height:36px;"
+                                                             title="Kliknij aby powiększyć">
+                                                    </template>
                                                     <span class="text-sm">🎙</span>
                                                     <!-- Name: explicit prefix → else stem from first audio -->
                                                     <span class="font-mono text-sm text-teal-300"
@@ -1185,11 +1236,6 @@
                                                     <template x-if="entry.item.width && entry.item.height">
                                                         <span class="px-1.5 py-0.5 bg-gray-700 rounded text-xs text-gray-300"
                                                               x-text="entry.item.width + '×' + entry.item.height"></span>
-                                                    </template>
-                                                    <!-- Transition badge -->
-                                                    <template x-if="entry.item.transition">
-                                                        <span class="px-1.5 py-0.5 bg-blue-900/60 border border-blue-700 rounded text-xs text-blue-300"
-                                                              title="Tranzycja do następnej sceny skonfigurowana">🎬 trans</span>
                                                     </template>
                                                     <!-- Right side: status + actions + steps count + edit controls -->
                                                     <div class="ml-auto flex items-center gap-1.5">
@@ -1247,9 +1293,20 @@
                                                                 :class="(talkStatus.status === 'running' || talkStatus.status === 'queued' || envStatus.linux !== 'ready') ? 'opacity-30 cursor-not-allowed text-gray-600' : (_si(entry.idx)?.status === 'green' ? 'text-gray-500 hover:text-blue-400' : 'text-teal-500 hover:text-teal-300')"
                                                                 class="text-sm px-1 py-0.5 rounded transition"
                                                                 :title="envStatus.linux !== 'ready' ? '🐧 Linux nieaktywny' : (_si(entry.idx)?.status === 'green' ? 'Re-generuj talk' : 'Generuj Talk')">
-                                                            <span x-show="talkStatus.status === 'running' && talkStatus.talk_name === _si(entry.idx)?.name" class="animate-spin inline-block">⟳</span>
-                                                            <span x-show="!(talkStatus.status === 'running' && talkStatus.talk_name === _si(entry.idx)?.name)">↺</span>
+                                                            <span x-show="talkStatus.status === 'running' && talkStatus.talk_name === (_si(entry.idx)?.canonical_name || _si(entry.idx)?.name)" class="animate-spin inline-block">⟳</span>
+                                                            <span x-show="!(talkStatus.status === 'running' && talkStatus.talk_name === (_si(entry.idx)?.canonical_name || _si(entry.idx)?.name))">↺</span>
                                                         </button>
+                                                        <!-- Transition button: visible when talk is generated -->
+                                                        <template x-if="_si(entry.idx)?.status === 'green' || _si(entry.idx)?.status === 'partial'">
+                                                            <button @click.stop="startTalkTransition(entry.idx)"
+                                                                    :disabled="talkTransitionStatus.status === 'running' || talkTransitionStatus.status === 'queued' || talkStatus.status === 'running' || talkStatus.status === 'queued' || envStatus.linux !== 'ready'"
+                                                                    :class="(talkTransitionStatus.status === 'running' || talkTransitionStatus.status === 'queued' || talkStatus.status === 'running' || talkStatus.status === 'queued' || envStatus.linux !== 'ready') ? 'opacity-30 cursor-not-allowed text-gray-600' : 'text-purple-500 hover:text-purple-300'"
+                                                                    class="text-sm px-1 py-0.5 rounded transition"
+                                                                    :title="'Generuj tranzycję I2V2I do tego talka'">
+                                                                <span x-show="talkTransitionStatus.status === 'running' && talkTransitionStatus.transition_name && talkTransitionStatus.transition_name.startsWith(_si(entry.idx)?.name?.replace('.mp4',''))" class="animate-spin inline-block">⟳</span>
+                                                                <span x-show="!(talkTransitionStatus.status === 'running' && talkTransitionStatus.transition_name && talkTransitionStatus.transition_name.startsWith(_si(entry.idx)?.name?.replace('.mp4','')))">⇌</span>
+                                                            </button>
+                                                        </template>
                                                         <!-- Edit mode controls -->
                                                         <template x-if="editMode">
                                                             <div class="flex items-center gap-1 border-l border-gray-700 pl-2 ml-1">
@@ -1277,7 +1334,28 @@
                                                 <!-- ── Steps body (divide-y like chain) ── -->
                                                 <div class="divide-y divide-gray-700">
                                                     <template x-for="(aud, ai) in (Array.isArray(entry.item.audio) ? entry.item.audio : [entry.item.audio])" :key="ai">
-                                                        <div class="px-4 py-2.5 flex items-start gap-3">
+                                                        <div class="px-4 py-2.5 flex items-start gap-3"
+                                                             x-data="{
+                                                                get _stepInfo()  { return _si(entry.idx)?.steps?.[ai]; },
+                                                                get _stepExists(){ return _si(entry.idx)?.steps?.[ai]?.exists; },
+                                                                get _stepName()  { return _talkStepName(entry.idx, ai); },
+                                                                get _isTalkActive(){ return talkStatus.talk_name === (_si(entry.idx)?.canonical_name || _si(entry.idx)?.name) && (talkStatus.status === 'running' || talkStatus.status === 'queued'); },
+                                                                get _isThisStep(){ return talkStatus.step === (ai + 1); }
+                                                             }">
+                                                            <!-- Thumbnail -->
+                                                            <div class="flex-shrink-0 mt-0.5">
+                                                                <template x-if="ai === 0 && _stepExists">
+                                                                    <img :src="thumbUrl(_stepName, 'start')"
+                                                                         class="thumb"
+                                                                         @error="$el.style.display='none'"
+                                                                         @click="openFrameModal(_stepName)"
+                                                                         title="Kliknij aby powiększyć">
+                                                                </template>
+                                                                <template x-if="ai > 0 || !_stepExists">
+                                                                    <div class="thumb-placeholder text-gray-700">🎙</div>
+                                                                </template>
+                                                            </div>
+                                                            <!-- Content -->
                                                             <div class="flex-1 min-w-0">
                                                                 <div class="flex items-start gap-2">
                                                                     <span class="text-xs text-gray-600 mt-0.5 flex-shrink-0" x-text="'Step ' + (ai+1)"></span>
@@ -1289,6 +1367,11 @@
                                                                         <template x-if="_si(entry.idx)?.audio_durations?.[ai] != null">
                                                                             <span class="px-1 py-0.5 bg-gray-700 rounded text-xs text-gray-400"
                                                                                   x-text="_si(entry.idx).audio_durations[ai] + 's'"></span>
+                                                                        </template>
+                                                                        <!-- size badge -->
+                                                                        <template x-if="_stepInfo?.size_mb">
+                                                                            <span class="px-1 py-0.5 bg-gray-700 rounded text-xs text-green-600"
+                                                                                  x-text="_stepInfo.size_mb + ' MB'"></span>
                                                                         </template>
                                                                     </div>
                                                                 </div>
@@ -1308,6 +1391,175 @@
                                                                         </button>
                                                                         <p x-show="open" class="text-xs text-red-400/60 mt-0.5 leading-relaxed line-clamp-3" x-text="aud.neg"></p>
                                                                     </div>
+                                                                </template>
+                                                            </div>
+                                                            <!-- Per-step actions (right column, mirrors chain) -->
+                                                            <div class="flex-shrink-0 flex items-center gap-1">
+                                                                <template x-if="_stepExists">
+                                                                    <div class="flex gap-1 items-center">
+                                                                        <button @click.stop="openVideoModal(_stepName)"
+                                                                                class="text-green-500 hover:text-green-400 text-sm px-1"
+                                                                                title="Odtwórz">▶</button>
+                                                                        <button @click.stop="regenTalkFrom(entry.idx, ai)"
+                                                                                :disabled="isRunning || _isTalkActive"
+                                                                                :class="(isRunning || _isTalkActive) ? 'opacity-30 cursor-not-allowed text-gray-600' : 'text-gray-500 hover:text-blue-400'"
+                                                                                class="text-sm px-1 transition"
+                                                                                :title="'Re-generuj od step '+(ai+1)+' do '+(Array.isArray(entry.item.audio)?entry.item.audio.length:1)">↺</button>
+                                                                        <button @click.stop="archiveTalkFrom(entry.idx, ai)"
+                                                                                class="text-gray-600 hover:text-red-400 text-sm px-1"
+                                                                                :title="'Archiwizuj od step '+(ai+1)">🗑</button>
+                                                                        <template x-if="_stepInfo?.has_archived">
+                                                                            <button @click.stop="openVersionsModal(_stepName)"
+                                                                                    class="text-gray-500 hover:text-yellow-400 text-sm px-1 transition"
+                                                                                    title="Pokaż wersje archiwalne">📂</button>
+                                                                        </template>
+                                                                    </div>
+                                                                </template>
+                                                                <template x-if="!_stepExists">
+                                                                    <div class="flex items-center gap-1">
+                                                                        <template x-if="_isTalkActive && _isThisStep">
+                                                                            <span class="animate-spin inline-block text-teal-400 text-xs" title="Generowanie…">⟳</span>
+                                                                        </template>
+                                                                        <template x-if="_isTalkActive && !_isThisStep && (ai + 1) > talkStatus.step">
+                                                                            <span class="text-gray-600 text-xs" title="Oczekuje w kolejce">◌</span>
+                                                                        </template>
+                                                                        <template x-if="!_isTalkActive">
+                                                                            <span class="text-red-700 text-xs">○</span>
+                                                                        </template>
+                                                                        <button @click.stop="regenTalkFrom(entry.idx, ai)"
+                                                                                :disabled="isRunning || _isTalkActive"
+                                                                                :class="(isRunning || _isTalkActive) ? 'opacity-30 cursor-not-allowed text-gray-600' : 'text-red-600 hover:text-red-400'"
+                                                                                class="text-sm px-1 transition"
+                                                                                :title="'Generuj od step '+(ai+1)">↺</button>
+                                                                    </div>
+                                                                </template>
+                                                            </div>
+                                                        </div>
+                                                    </template>
+                                                </div>
+                                            </div>
+                                        </template>
+
+                                        <!-- MULTITALK tile -->
+                                        <template x-if="entry.item.type === 'multitalk'">
+                                            <div class="bg-gray-800 border border-gray-700 rounded-lg overflow-hidden"
+                                                 :class="_si(entry.idx)?.status === 'green' ? 'sl-green' : 'sl-red'">
+                                                <div class="px-4 py-2.5 border-b border-gray-700 flex flex-wrap items-center gap-2"
+                                                     style="background-color:#1a2332"
+                                                     :class="editMode ? 'cursor-pointer' : ''"
+                                                     @click="if(editMode && !$event.target.closest('button,img,video,a,select,input')) editOpenItem(entry.idx)">
+                                                    <template x-if="entry.item.image">
+                                                        <img :src="frameUrl(entry.item.image, 'start')"
+                                                             class="thumb cursor-pointer"
+                                                             @error="$el.style.display='none'"
+                                                             @click.stop="openFrameModal(entry.item.image)"
+                                                             style="width:36px;height:36px;"
+                                                             title="Kliknij aby powiększyć">
+                                                    </template>
+                                                    <span class="text-sm">🗣</span>
+                                                    <span class="font-mono text-sm text-purple-300" x-text="entry.item.name || 'multitalk'"></span>
+                                                    <!-- Speaker/steps badge -->
+                                                    <span class="px-1.5 py-0.5 bg-purple-900/60 border border-purple-700 rounded text-xs text-purple-300"
+                                                          x-text="Array.isArray(entry.item.steps) && entry.item.steps.length > 0
+                                                                  ? entry.item.steps.map(s => (s.speaker_idx ?? 0) + 1).join('→') + ' (' + entry.item.steps.length + ' kr.)'
+                                                                  : 'Osoba ' + ((entry.item.speaker_idx ?? 0) + 1) + '/' + (entry.item.num_persons ?? 2)">
+                                                    </span>
+                                                    <!-- Audio badge (single-step only) -->
+                                                    <template x-if="entry.item.audio && !Array.isArray(entry.item.steps)">
+                                                        <span class="px-1.5 py-0.5 bg-gray-700 border border-purple-900 rounded text-xs font-mono text-purple-400"
+                                                              x-text="entry.item.audio"></span>
+                                                    </template>
+                                                    <!-- Resolution badge -->
+                                                    <template x-if="entry.item.width && entry.item.height">
+                                                        <span class="px-1.5 py-0.5 bg-gray-700 rounded text-xs text-gray-300"
+                                                              x-text="entry.item.width + '×' + entry.item.height"></span>
+                                                    </template>
+                                                    <!-- Right side: status + actions -->
+                                                    <div class="ml-auto flex items-center gap-1.5">
+                                                        <template x-if="_si(entry.idx)?.status === 'green'">
+                                                            <div class="flex items-center gap-1">
+                                                                <span class="text-xs text-green-500"
+                                                                      x-text="_si(entry.idx)?.size_mb ? _si(entry.idx).size_mb + ' MB' : ''"></span>
+                                                                <button @click.stop="openVideoModal(_si(entry.idx).name)"
+                                                                        class="text-green-500 hover:text-green-400 text-sm px-1"
+                                                                        title="Odtwórz">▶</button>
+                                                                <button @click.stop="archiveFile(_si(entry.idx).name)"
+                                                                        class="text-gray-600 hover:text-red-400 text-sm px-1"
+                                                                        title="Archiwizuj klip">🗑</button>
+                                                            </div>
+                                                        </template>
+                                                        <template x-if="_si(entry.idx)?.status === 'red'">
+                                                            <span class="text-xs text-red-700">○</span>
+                                                        </template>
+                                                        <template x-if="_si(entry.idx)?.has_versions">
+                                                            <button @click.stop="openVersionsModal(_si(entry.idx).name)"
+                                                                    class="text-gray-500 hover:text-yellow-400 text-sm px-1 transition"
+                                                                    title="Pokaż wersje archiwalne">📂</button>
+                                                        </template>
+                                                        <!-- Generate button -->
+                                                        <button @click.stop="startMultitalkGen(entry.idx)"
+                                                                :disabled="multitalkStatus.status === 'running' || multitalkStatus.status === 'queued' || envStatus.linux !== 'ready'"
+                                                                :class="(multitalkStatus.status === 'running' || multitalkStatus.status === 'queued' || envStatus.linux !== 'ready') ? 'opacity-30 cursor-not-allowed text-gray-600' : (_si(entry.idx)?.status === 'green' ? 'text-gray-500 hover:text-blue-400' : 'text-purple-500 hover:text-purple-300')"
+                                                                class="text-sm px-1 py-0.5 rounded transition"
+                                                                :title="envStatus.linux !== 'ready' ? '🐧 Linux nieaktywny' : (_si(entry.idx)?.status === 'green' ? 'Re-generuj klip' : 'Generuj klip Multitalk')">
+                                                            <span x-show="multitalkStatus.status === 'running' && multitalkStatus.clip_name === _si(entry.idx)?.name" class="animate-spin inline-block">⟳</span>
+                                                            <span x-show="!(multitalkStatus.status === 'running' && multitalkStatus.clip_name === _si(entry.idx)?.name)">↺</span>
+                                                        </button>
+                                                        <!-- Edit mode controls -->
+                                                        <template x-if="editMode">
+                                                            <div class="flex items-center gap-1 border-l border-gray-700 pl-2 ml-1">
+                                                                <button @click.stop="editOpenItem(entry.idx)"
+                                                                        class="text-purple-500 hover:text-purple-300 text-xs px-1.5 py-0.5 rounded hover:bg-purple-900/30 transition"
+                                                                        title="Edytuj multitalk">✎</button>
+                                                                <button @click.stop="editDuplicateItem(entry.idx)"
+                                                                        class="text-gray-500 hover:text-blue-300 text-xs px-1 py-0.5 rounded hover:bg-gray-700 transition"
+                                                                        title="Kopiuj element">⧉</button>
+                                                                <button @click.stop="editMoveItem(entry.idx, -1)"
+                                                                        :disabled="entry.idx === 0"
+                                                                        :class="entry.idx === 0 ? 'opacity-30 cursor-not-allowed' : 'hover:text-white'"
+                                                                        class="text-gray-600 text-xs px-1 py-0.5 rounded hover:bg-gray-700">↑</button>
+                                                                <button @click.stop="editMoveItem(entry.idx, 1)"
+                                                                        :disabled="entry.idx === flowData.flow.length - 1"
+                                                                        :class="entry.idx === flowData.flow.length - 1 ? 'opacity-30 cursor-not-allowed' : 'hover:text-white'"
+                                                                        class="text-gray-600 text-xs px-1 py-0.5 rounded hover:bg-gray-700">↓</button>
+                                                                <button @click.stop="editDeleteItem(entry.idx)"
+                                                                        class="text-gray-600 hover:text-red-400 text-xs px-1 py-0.5 rounded hover:bg-gray-800 transition"
+                                                                        title="Usuń">✕</button>
+                                                            </div>
+                                                        </template>
+                                                    </div>
+                                                </div>
+                                                <!-- Status bar when running this clip -->
+                                                <template x-if="multitalkStatus.status !== 'idle' && multitalkStatus.clip_name === _si(entry.idx)?.name">
+                                                    <div class="px-4 py-1.5 text-xs"
+                                                         :class="multitalkStatus.status === 'error' ? 'text-red-400 bg-red-950/30' : 'text-purple-400 bg-purple-950/20'">
+                                                        <span x-show="multitalkStatus.status === 'running'">⟳
+                                                            <span x-show="multitalkStatus.step_total > 1"
+                                                                  x-text="multitalkStatus.step_current === 'concat' ? 'Scalanie… ' : 'Krok ' + multitalkStatus.step_current + '/' + multitalkStatus.step_total + ' '"></span>
+                                                            <span x-show="!multitalkStatus.step_total || multitalkStatus.step_total <= 1">Generuję… </span>
+                                                            <span x-text="multitalkStatus.elapsed_s ? '(' + multitalkStatus.elapsed_s + 's)' : ''"></span>
+                                                        </span>
+                                                        <span x-show="multitalkStatus.status === 'queued'">⏳ W kolejce…</span>
+                                                        <span x-show="multitalkStatus.status === 'error'" x-text="'❌ ' + multitalkStatus.error"></span>
+                                                    </div>
+                                                </template>
+                                                <!-- Steps body (mirrors talk tile) -->
+                                                <div class="divide-y divide-gray-700">
+                                                    <template x-for="(step, si) in (Array.isArray(entry.item.steps) ? entry.item.steps : [{speaker_idx: entry.item.speaker_idx ?? 0, audio: entry.item.audio}])" :key="si">
+                                                        <div class="px-4 py-2.5 flex items-start gap-3">
+                                                            <div class="flex-1 min-w-0">
+                                                                <div class="flex items-start gap-2 flex-wrap">
+                                                                    <span class="text-xs text-purple-600 flex-shrink-0 mt-0.5"
+                                                                          x-text="'O' + ((step.speaker_idx ?? 0) + 1)"></span>
+                                                                    <span class="px-1.5 py-0.5 bg-gray-700 border border-purple-900 rounded text-xs font-mono text-purple-400"
+                                                                          x-text="step.audio || '—'"></span>
+                                                                    <template x-if="_si(entry.idx)?.audio_durations?.[si] != null">
+                                                                        <span class="px-1 py-0.5 bg-gray-700 rounded text-xs text-gray-400"
+                                                                              x-text="_si(entry.idx).audio_durations[si] + 's'"></span>
+                                                                    </template>
+                                                                </div>
+                                                                <template x-if="step.pos && step.pos !== 'NONE'">
+                                                                    <p class="text-xs text-green-400/80 mt-1 line-clamp-2 leading-relaxed" x-text="step.pos"></p>
                                                                 </template>
                                                             </div>
                                                         </div>
@@ -2323,6 +2575,31 @@
 </div>
 </template>
 
+<!-- ═══ TALK REGEN MODAL ═══════════════════════════════════════════ -->
+<div x-show="talkRegenModal.show" x-cloak
+     class="fixed inset-0 bg-black/85 flex items-center justify-center z-50 p-4"
+     @keydown.escape.window="talkRegenModal._resolve && talkRegenModal._resolve(null); talkRegenModal.show=false">
+    <div class="bg-gray-900 rounded-xl border border-gray-700 w-full max-w-sm p-5 space-y-4">
+        <h3 class="text-sm font-semibold text-gray-200">Re-generuj talk 🎙 step <span class="text-teal-300 font-mono" x-text="talkRegenModal.stepIdx + 1"></span></h3>
+        <p class="text-xs text-gray-400">Talk ma <span x-text="talkRegenModal.totalSteps"></span> segment(ów)</p>
+        <div class="flex flex-col gap-2">
+            <button @click="talkRegenModal._resolve('one'); talkRegenModal.show=false"
+                    class="w-full px-4 py-2 bg-blue-700 hover:bg-blue-600 rounded-lg text-sm text-white transition">
+                Tylko ten step (<span x-text="_talkStepName(talkRegenModal.flowIdx, talkRegenModal.stepIdx)"></span>)
+            </button>
+            <button @click="talkRegenModal._resolve('all'); talkRegenModal.show=false"
+                    class="w-full px-4 py-2 bg-teal-800 hover:bg-teal-700 rounded-lg text-sm text-white transition"
+                    x-show="talkRegenModal.stepIdx < talkRegenModal.totalSteps - 1">
+                Ten i wszystkie kolejne (step <span x-text="talkRegenModal.stepIdx + 1"></span>–<span x-text="talkRegenModal.totalSteps"></span>)
+            </button>
+            <button @click="talkRegenModal._resolve(null); talkRegenModal.show=false"
+                    class="w-full px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg text-sm text-gray-300 transition">
+                Anuluj
+            </button>
+        </div>
+    </div>
+</div>
+
 <!-- ═══ CHAIN REGEN MODAL ══════════════════════════════════════════ -->
 <div x-show="chainRegenModal.show" x-cloak
      class="fixed inset-0 bg-black/85 flex items-center justify-center z-50 p-4"
@@ -2663,7 +2940,7 @@
             </template>
             <template x-if="!trimModal.loading && trimModal.frameImg">
                 <img :src="'data:image/jpeg;base64,' + trimModal.frameImg"
-                     class="max-w-full max-h-full object-contain" />
+                     class="max-w-full object-contain" style="max-height:55vh" />
             </template>
             <template x-if="!trimModal.loading && !trimModal.frameImg && !trimModal.error">
                 <span class="text-gray-600 text-sm">Brak podglądu</span>
@@ -3002,8 +3279,8 @@
                                class="w-full bg-gray-800 border border-gray-600 rounded px-3 py-1.5 text-sm text-gray-200 focus:outline-none focus:border-orange-500">
                     </div>
                     <div>
-                        <label class="block text-xs text-gray-500 mb-1">Steps</label>
-                        <input type="number" x-model.number="globalsModal.data.defaults.steps" min="1" placeholder="6"
+                        <label class="block text-xs text-gray-500 mb-1">Steps HQ</label>
+                        <input type="number" x-model.number="globalsModal.data.defaults.steps_hq" min="1" placeholder="15"
                                class="w-full bg-gray-800 border border-gray-600 rounded px-3 py-1.5 text-sm text-gray-200 focus:outline-none focus:border-orange-500">
                     </div>
                     <div>
@@ -3054,6 +3331,40 @@
                         </button>
                         <span class="text-xs" :class="(globalsModal.data.defaults.frame_interpolation ?? true) ? 'text-orange-400' : 'text-gray-500'"
                               x-text="(globalsModal.data.defaults.frame_interpolation ?? true) ? 'włączone (global)' : 'wyłączone'"></span>
+                    </div>
+                    <div class="col-span-3 flex items-center gap-3 py-1">
+                        <label class="block text-xs text-gray-500 whitespace-nowrap">Tryb generowania (domyślny)</label>
+                        <button type="button" @click="globalsModal.data.defaults.use_lightning = !(globalsModal.data.defaults.use_lightning ?? true)"
+                                class="relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 focus:outline-none"
+                                :class="(globalsModal.data.defaults.use_lightning ?? true) ? 'bg-amber-600' : 'bg-teal-600'">
+                            <span class="inline-block h-4 w-4 transform rounded-full bg-white shadow transition duration-200"
+                                  :class="(globalsModal.data.defaults.use_lightning ?? true) ? 'translate-x-4' : 'translate-x-0'"></span>
+                        </button>
+                        <span class="text-xs" :class="(globalsModal.data.defaults.use_lightning ?? true) ? 'text-amber-400' : 'text-teal-400'"
+                              x-text="(globalsModal.data.defaults.use_lightning ?? true) ? '⚡ Lightning (global)' : '🎨 HQ (global)'"></span>
+                    </div>
+                    <!-- Workflow per-project overrides -->
+                    <div class="col-span-3 grid grid-cols-2 gap-3 pt-1 border-t border-gray-700/40">
+                        <div>
+                            <label class="block text-xs text-gray-500 mb-1">⚡ Lightning — workflow <span class="text-gray-600">(puste = z Ustawień)</span></label>
+                            <select x-model="globalsModal.data.defaults.lightning_workflow"
+                                    class="w-full bg-gray-800 border border-gray-600 rounded px-2 py-1.5 text-xs text-gray-200 font-mono focus:outline-none focus:border-orange-500">
+                                <option value="">— domyślny —</option>
+                                <template x-for="f in (workflowVariants.lightning || [])" :key="f">
+                                    <option :value="f" x-text="f"></option>
+                                </template>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs text-gray-500 mb-1">🎨 HQ — workflow <span class="text-gray-600">(puste = z Ustawień)</span></label>
+                            <select x-model="globalsModal.data.defaults.hq_workflow"
+                                    class="w-full bg-gray-800 border border-gray-600 rounded px-2 py-1.5 text-xs text-gray-200 font-mono focus:outline-none focus:border-orange-500">
+                                <option value="">— domyślny —</option>
+                                <template x-for="f in (workflowVariants.hq || [])" :key="f">
+                                    <option :value="f" x-text="f"></option>
+                                </template>
+                            </select>
+                        </div>
                     </div>
                 </div>
                 <p class="text-xs text-gray-600 mt-2">Szer. i Wys. ustawiają FORCE_RESOLUTION — zostaw puste aby używać domyślnego 1024×1024. Wartości są automatycznie zaokrąglane do wielokrotności 16.</p>
@@ -3155,7 +3466,7 @@
                         <template x-if="editModal.projectFiles.length > 0">
                             <div class="mt-1 bg-gray-950 border border-gray-700 rounded max-h-40 overflow-y-auto">
                                 <template x-for="f in editModal.projectFiles" :key="f">
-                                    <button type="button" @click="editModal.data.file = f; _fetchFileDims(f)"
+                                    <button type="button" @click="editModal.data.file = f; _fetchFileDims(f, false, false)"
                                             :class="editModal.data.file === f
                                                 ? 'bg-blue-900/60 text-blue-200 border-l-2 border-blue-500'
                                                 : 'text-gray-400 hover:bg-gray-800 hover:text-gray-200 border-l-2 border-transparent'"
@@ -3188,8 +3499,8 @@
                                    class="w-full bg-gray-800 border border-gray-600 rounded px-3 py-1.5 text-sm text-gray-200 focus:outline-none focus:border-blue-500">
                         </div>
                         <div>
-                            <label class="block text-xs text-gray-400 mb-1">Steps</label>
-                            <input type="number" x-model.number="editModal.data.steps" min="1" placeholder="domyślne"
+                            <label class="block text-xs text-gray-400 mb-1">Steps HQ</label>
+                            <input type="number" x-model.number="editModal.data.steps_hq" min="1" placeholder="domyślne"
                                    class="w-full bg-gray-800 border border-gray-600 rounded px-3 py-1.5 text-sm text-gray-200 focus:outline-none focus:border-blue-500">
                         </div>
                         <div>
@@ -3214,7 +3525,7 @@
                                 <button type="button" @click="_resoClear()"
                                         :class="!editModal.data.width && !editModal.data.height ? 'bg-gray-600 text-white border-gray-500' : 'border-gray-700 text-gray-500 hover:border-gray-400'"
                                         class="text-xs px-2 py-1 rounded border transition">auto</button>
-                                <template x-for="p in _resoPresets()" :key="p.bts">
+                                <template x-for="p in _resoPresets()" :key="p.w + '_' + p.h">
                                     <button type="button" @click="_resoSetPreset(p.w, p.h)"
                                             :class="editModal.data.width===p.w && editModal.data.height===p.h
                                                     ? 'bg-indigo-700 border-indigo-500 text-white'
@@ -3256,6 +3567,25 @@
                                   x-text="editModal.data.frame_interpolation === false ? 'wyłączone'
                                         : editModal.data.frame_interpolation === true  ? 'włączone'
                                         : effectiveFI(null) ? 'domyślne (włączone)' : 'domyślne (wyłączone)'"></span>
+                        </div>
+                        <div class="col-span-3 flex items-center gap-3 py-0.5">
+                            <label class="text-xs text-gray-400 whitespace-nowrap">Tryb generowania</label>
+                            <button type="button"
+                                    @click="editModal.data.use_lightning = editModal.data.use_lightning === false ? null : (editModal.data.use_lightning === true ? false : true)"
+                                    class="relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 focus:outline-none"
+                                    :class="editModal.data.use_lightning === false ? 'bg-teal-600'
+                                          : editModal.data.use_lightning === true  ? 'bg-amber-500'
+                                          : effectiveUL(null) ? 'bg-amber-700 opacity-70' : 'bg-teal-700 opacity-70'">
+                                <span class="inline-block h-4 w-4 transform rounded-full bg-white shadow transition duration-200"
+                                      :class="(editModal.data.use_lightning === true || (editModal.data.use_lightning == null && effectiveUL(null))) ? 'translate-x-4' : 'translate-x-0'"></span>
+                            </button>
+                            <span class="text-xs"
+                                  :class="editModal.data.use_lightning === false ? 'text-teal-400'
+                                        : editModal.data.use_lightning === true  ? 'text-amber-400'
+                                        : effectiveUL(null) ? 'text-amber-700' : 'text-teal-700'"
+                                  x-text="editModal.data.use_lightning === false ? '🎨 HQ (bez lightx2v)'
+                                        : editModal.data.use_lightning === true  ? '⚡ Lightning'
+                                        : effectiveUL(null) ? 'domyślne (⚡ Lightning)' : 'domyślne (🎨 HQ)'"></span>
                         </div>
                         <div class="col-span-3 flex items-end gap-3">
                             <div class="flex-1">
@@ -3385,8 +3715,8 @@
                                    class="w-full bg-gray-800 border border-gray-600 rounded px-3 py-1.5 text-sm text-gray-200 focus:outline-none focus:border-blue-500">
                         </div>
                         <div>
-                            <label class="block text-xs text-gray-400 mb-1">Steps</label>
-                            <input type="number" x-model.number="editModal.data.steps" min="1" placeholder="domyślne"
+                            <label class="block text-xs text-gray-400 mb-1">Steps HQ</label>
+                            <input type="number" x-model.number="editModal.data.steps_hq" min="1" placeholder="domyślne"
                                    class="w-full bg-gray-800 border border-gray-600 rounded px-3 py-1.5 text-sm text-gray-200 focus:outline-none focus:border-blue-500">
                         </div>
                         <div>
@@ -3409,7 +3739,7 @@
                                 <button type="button" @click="_resoClear()"
                                         :class="!editModal.data.width && !editModal.data.height ? 'bg-gray-600 text-white border-gray-500' : 'border-gray-700 text-gray-500 hover:border-gray-400'"
                                         class="text-xs px-2 py-1 rounded border transition">auto</button>
-                                <template x-for="p in _resoPresets()" :key="p.bts">
+                                <template x-for="p in _resoPresets()" :key="p.w + '_' + p.h">
                                     <button type="button" @click="_resoSetPreset(p.w, p.h)"
                                             :class="editModal.data.width===p.w && editModal.data.height===p.h
                                                     ? 'bg-indigo-700 border-indigo-500 text-white'
@@ -3450,6 +3780,25 @@
                                   x-text="editModal.data.frame_interpolation === false ? 'wyłączone'
                                         : editModal.data.frame_interpolation === true  ? 'włączone'
                                         : effectiveFI(null) ? 'domyślne (włączone)' : 'domyślne (wyłączone)'"></span>
+                        </div>
+                        <div class="col-span-3 flex items-center gap-3 py-0.5">
+                            <label class="text-xs text-gray-400 whitespace-nowrap">Tryb generowania</label>
+                            <button type="button"
+                                    @click="editModal.data.use_lightning = editModal.data.use_lightning === false ? null : (editModal.data.use_lightning === true ? false : true)"
+                                    class="relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 focus:outline-none"
+                                    :class="editModal.data.use_lightning === false ? 'bg-teal-600'
+                                          : editModal.data.use_lightning === true  ? 'bg-amber-500'
+                                          : effectiveUL(null) ? 'bg-amber-700 opacity-70' : 'bg-teal-700 opacity-70'">
+                                <span class="inline-block h-4 w-4 transform rounded-full bg-white shadow transition duration-200"
+                                      :class="(editModal.data.use_lightning === true || (editModal.data.use_lightning == null && effectiveUL(null))) ? 'translate-x-4' : 'translate-x-0'"></span>
+                            </button>
+                            <span class="text-xs"
+                                  :class="editModal.data.use_lightning === false ? 'text-teal-400'
+                                        : editModal.data.use_lightning === true  ? 'text-amber-400'
+                                        : effectiveUL(null) ? 'text-amber-700' : 'text-teal-700'"
+                                  x-text="editModal.data.use_lightning === false ? '🎨 HQ (bez lightx2v)'
+                                        : editModal.data.use_lightning === true  ? '⚡ Lightning'
+                                        : effectiveUL(null) ? 'domyślne (⚡ Lightning)' : 'domyślne (🎨 HQ)'"></span>
                         </div>
                     </div>
                     <!-- AtlasCloud params for chain (shown only when backend = atlascloud) -->
@@ -3506,6 +3855,11 @@
                                     <div>
                                         <label class="block text-xs text-gray-500 mb-0.5">Duration (s)</label>
                                         <input type="number" x-model.number="step.duration" min="0" step="0.5"
+                                               class="w-full bg-gray-900 border border-gray-700 rounded px-2 py-1 text-xs text-gray-200 focus:outline-none focus:border-blue-500">
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs text-gray-500 mb-0.5">Steps HQ</label>
+                                        <input type="number" x-model.number="step.steps_hq" min="1" placeholder="chain"
                                                class="w-full bg-gray-900 border border-gray-700 rounded px-2 py-1 text-xs text-gray-200 focus:outline-none focus:border-blue-500">
                                     </div>
                                     <div>
@@ -3579,6 +3933,43 @@
                                                placeholder="wpisz lub wybierz z listy…">
                                     </div>
                                 </div>
+                                <!-- Per-step mode + workflow -->
+                                <div class="mt-2 pt-2 border-t border-gray-700/50">
+                                    <div class="flex items-center gap-2 mb-1.5">
+                                        <span class="text-xs text-gray-500">Tryb / workflow</span>
+                                        <div class="flex gap-0.5">
+                                            <button type="button" @click="step.use_lightning = null; step.workflow = null"
+                                                    :class="(step.use_lightning === null || step.use_lightning === undefined) ? 'bg-gray-600 text-white' : 'bg-gray-800 text-gray-500 hover:text-gray-300'"
+                                                    class="text-xs px-2 py-0.5 rounded border border-gray-700 transition">domyślny</button>
+                                            <button type="button" @click="step.use_lightning = true; step.workflow = step.workflow || null"
+                                                    :class="step.use_lightning === true ? 'bg-amber-700 text-white border-amber-600' : 'bg-gray-800 text-gray-500 hover:text-gray-300 border-gray-700'"
+                                                    class="text-xs px-2 py-0.5 rounded border transition">⚡ Light</button>
+                                            <button type="button" @click="step.use_lightning = false; step.workflow = step.workflow || null"
+                                                    :class="step.use_lightning === false ? 'bg-teal-800 text-white border-teal-600' : 'bg-gray-800 text-gray-500 hover:text-gray-300 border-gray-700'"
+                                                    class="text-xs px-2 py-0.5 rounded border transition">🎨 HQ</button>
+                                        </div>
+                                    </div>
+                                    <template x-if="step.use_lightning === true">
+                                        <select :value="step.workflow || ''"
+                                                @change="step.workflow = $event.target.value || null"
+                                                class="w-full bg-gray-900 border border-amber-900/60 rounded px-2 py-1 text-xs text-gray-200 font-mono focus:outline-none focus:border-amber-500">
+                                            <option value="">— domyślny —</option>
+                                            <template x-for="f in (workflowVariants.lightning || [])" :key="f">
+                                                <option :value="f" :selected="step.workflow === f" x-text="f"></option>
+                                            </template>
+                                        </select>
+                                    </template>
+                                    <template x-if="step.use_lightning === false">
+                                        <select :value="step.workflow || ''"
+                                                @change="step.workflow = $event.target.value || null"
+                                                class="w-full bg-gray-900 border border-teal-900/60 rounded px-2 py-1 text-xs text-gray-200 font-mono focus:outline-none focus:border-teal-500">
+                                            <option value="">— domyślny —</option>
+                                            <template x-for="f in (workflowVariants.hq || [])" :key="f">
+                                                <option :value="f" :selected="step.workflow === f" x-text="f"></option>
+                                            </template>
+                                        </select>
+                                    </template>
+                                </div>
                             </div>
                         </template>
                     </div>
@@ -3598,6 +3989,27 @@
                         <input type="text" x-model="editModal.data.prefix"
                                class="w-full bg-gray-800 border border-yellow-900 rounded px-2 py-1.5 text-sm text-yellow-200 font-mono focus:outline-none focus:border-yellow-600"
                                placeholder="np. scena1_jeki  (zostaw puste = nazwa z mp3)">
+                    </div>
+
+                    <!-- Start image + continuity toggle -->
+                    <div class="border border-teal-900/50 rounded-lg p-2 bg-gray-900/40 space-y-2">
+                        <label class="block text-xs text-teal-400 mb-0.5">
+                            Obraz startowy
+                            <span class="text-gray-600 font-normal ml-1">(opcjonalny — puste = auto z poprzedniego kafelka)</span>
+                        </label>
+                        <input type="text" x-model="editModal.data.image"
+                               class="w-full bg-gray-800 border border-teal-900 rounded px-2 py-1.5 text-sm text-teal-200 font-mono focus:outline-none focus:border-teal-600"
+                               placeholder="twarz.jpg">
+                        <!-- Image file picker -->
+                        <template x-if="editModal.projectFiles && editModal.projectFiles.length > 0">
+                            <div class="bg-gray-950 border border-gray-700 rounded max-h-24 overflow-y-auto">
+                                <template x-for="f in editModal.projectFiles.filter(f => /\.(jpg|jpeg|png|webp)$/i.test(f))" :key="f">
+                                    <button type="button" @click="editModal.data.image = f"
+                                            class="w-full text-left px-3 py-1 text-xs font-mono text-teal-400 hover:bg-teal-950 hover:text-teal-200 transition truncate block"
+                                            x-text="'🖼 ' + f"></button>
+                                </template>
+                            </div>
+                        </template>
                     </div>
 
                     <!-- Audio steps (chain-style: each has file + pos + neg) -->
@@ -3692,7 +4104,7 @@
                                     class="text-xs px-2 py-1 rounded border transition"
                                     x-text="editModal._projW ? `projekt (${editModal._projW}×${editModal._projH})` : 'projekt'"
                             ></button>
-                            <template x-for="p in _resoPresets()" :key="p.bts">
+                            <template x-for="p in _resoPresets()" :key="p.w + '_' + p.h">
                                 <button type="button" @click="_resoSetPreset(p.w, p.h)"
                                         :class="editModal.data.width===p.w && editModal.data.height===p.h
                                                 ? 'bg-teal-700 border-teal-500 text-white'
@@ -3714,73 +4126,203 @@
                         <p x-show="editModal.resHint" class="text-xs text-teal-600 mt-1" x-text="editModal.resHint"></p>
                     </div>
 
-                    <!-- Transition (optional accordion) -->
-                    <div class="border border-gray-700 rounded-lg overflow-hidden">
-                        <button @click="editModal.showTalkTransition = !editModal.showTalkTransition"
-                                class="w-full flex items-center justify-between px-3 py-2 text-xs text-gray-400 hover:text-gray-200 hover:bg-gray-750 transition">
-                            <span class="flex items-center gap-2">
-                                <span>🎬</span>
-                                <span>Tranzycja do następnej sceny</span>
-                                <span x-show="editModal.data.transition" class="text-blue-400">(skonfigurowana)</span>
-                            </span>
-                            <span x-text="editModal.showTalkTransition ? '▲' : '▼'" class="text-gray-600"></span>
-                        </button>
-                        <div x-show="editModal.showTalkTransition" class="px-3 pb-3 space-y-2 bg-gray-900/40 border-t border-gray-700">
-                            <p class="text-xs text-gray-600 pt-2">I2V bridge: ostatnia klatka talk → pierwsza klatka następnej sceny. Brak konfiguracji = twarde cięcie.</p>
-                            <!-- Duration / FPS / Steps / CFG -->
-                            <div class="grid grid-cols-4 gap-2">
-                                <div>
-                                    <label class="block text-xs text-gray-500 mb-0.5">Duration</label>
-                                    <input type="number" :value="editModal.data.transition?.duration ?? ''"
-                                           @input="editTalkSetTransition('duration', $event.target.value)"
-                                           min="1" max="20" step="1" placeholder="3"
-                                           class="w-full bg-gray-800 border border-gray-700 rounded px-2 py-1 text-xs text-gray-200 text-center focus:outline-none focus:border-blue-600">
-                                </div>
-                                <div>
-                                    <label class="block text-xs text-gray-500 mb-0.5">FPS</label>
-                                    <input type="number" :value="editModal.data.transition?.fps ?? ''"
-                                           @input="editTalkSetTransition('fps', $event.target.value)"
-                                           min="1" max="60" step="1" placeholder="16"
-                                           class="w-full bg-gray-800 border border-gray-700 rounded px-2 py-1 text-xs text-gray-200 text-center focus:outline-none focus:border-blue-600">
-                                </div>
-                                <div>
-                                    <label class="block text-xs text-gray-500 mb-0.5">Steps</label>
-                                    <input type="number" :value="editModal.data.transition?.steps ?? ''"
-                                           @input="editTalkSetTransition('steps', $event.target.value)"
-                                           min="1" max="100" step="1" placeholder="6"
-                                           class="w-full bg-gray-800 border border-gray-700 rounded px-2 py-1 text-xs text-gray-200 text-center focus:outline-none focus:border-blue-600">
-                                </div>
-                                <div>
-                                    <label class="block text-xs text-gray-500 mb-0.5">CFG</label>
-                                    <input type="number" :value="editModal.data.transition?.cfg ?? ''"
-                                           @input="editTalkSetTransition('cfg', $event.target.value)"
-                                           min="0" max="20" step="0.5" placeholder="2"
-                                           class="w-full bg-gray-800 border border-gray-700 rounded px-2 py-1 text-xs text-gray-200 text-center focus:outline-none focus:border-blue-600">
-                                </div>
+                </div>
+            </template>
+
+            <!-- ── MULTITALK EDIT MODAL ──────────────────────────────── -->
+            <template x-if="editModal.kind === 'multitalk'">
+                <div class="space-y-4">
+
+                    <!-- Base image -->
+                    <div>
+                        <label class="block text-xs text-purple-400 mb-1">Obraz źródłowy (scena)</label>
+                        <input type="text" x-model="editModal.data.image"
+                               class="w-full bg-gray-800 border border-purple-900 rounded px-2 py-1.5 text-sm text-purple-200 font-mono focus:outline-none focus:border-purple-600"
+                               placeholder="scena.jpg">
+                        <!-- Image file picker -->
+                        <template x-if="editModal.projectFiles && editModal.projectFiles.length > 0">
+                            <div class="mt-1 bg-gray-950 border border-gray-700 rounded max-h-28 overflow-y-auto">
+                                <template x-for="f in editModal.projectFiles.filter(f => /\.(jpg|jpeg|png|webp)$/i.test(f))" :key="f">
+                                    <button type="button" @click="editModal.data.image = f"
+                                            class="w-full text-left px-3 py-1 text-xs font-mono text-purple-400 hover:bg-purple-950 hover:text-purple-200 transition truncate block"
+                                            x-text="'🖼 ' + f"></button>
+                                </template>
                             </div>
-                            <!-- Pos -->
-                            <div>
-                                <label class="block text-xs text-green-600 mb-0.5">Pos</label>
-                                <textarea rows="2"
-                                          :value="editModal.data.transition?.pos ?? ''"
-                                          @input="editTalkSetTransition('pos', $event.target.value)"
-                                          class="w-full bg-gray-800 border border-gray-700 rounded px-2 py-1 text-xs text-gray-200 font-mono focus:outline-none focus:border-green-600 resize-y"
-                                          placeholder="Smooth transition to next scene..."></textarea>
-                            </div>
-                            <!-- Neg -->
-                            <div>
-                                <label class="block text-xs text-red-400 mb-0.5">Neg</label>
-                                <textarea rows="1"
-                                          :value="editModal.data.transition?.neg ?? ''"
-                                          @input="editTalkSetTransition('neg', $event.target.value)"
-                                          class="w-full bg-gray-800 border border-gray-700 rounded px-2 py-1 text-xs text-gray-200 font-mono focus:outline-none focus:border-red-600 resize-y"
-                                          placeholder="blurry, low quality..."></textarea>
-                            </div>
-                            <!-- Clear -->
-                            <button x-show="editModal.data.transition"
-                                    @click="editModal.data.transition = null"
-                                    class="text-xs text-red-600 hover:text-red-400 transition">✕ Usuń tranzycję</button>
+                        </template>
+                    </div>
+
+                    <!-- Number of persons + Setup -->
+                    <div>
+                        <label class="block text-xs text-purple-400 mb-1">
+                            Liczba osób na scenie
+                            <span class="text-gray-500 font-normal ml-1">(2–8)</span>
+                        </label>
+                        <div class="flex items-center gap-3">
+                            <input type="number" x-model.number="editModal.data.num_persons"
+                                   min="2" max="8" step="1"
+                                   class="w-24 bg-gray-800 border border-purple-900 rounded px-2 py-1.5 text-sm text-purple-200 text-center font-mono focus:outline-none focus:border-purple-600">
+                            <button @click="editMultitalkSetup()"
+                                    :disabled="!editModal.data.image || !editModal.data.num_persons || editModal._mtSetupRunning"
+                                    class="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded border transition"
+                                    :class="!editModal.data.image ? 'opacity-40 cursor-not-allowed border-gray-700 text-gray-500' : 'border-purple-700 text-purple-400 hover:border-purple-500 hover:text-purple-200'">
+                                <span x-show="editModal._mtSetupRunning" class="animate-spin inline-block">⟳</span>
+                                <span>Utwórz kopie osób</span>
+                            </button>
                         </div>
+                        <p x-show="editModal._mtSetupError" class="text-xs text-red-400 mt-1" x-text="editModal._mtSetupError"></p>
+                    </div>
+
+                    <!-- Person mask cards (shown after setup) -->
+                    <template x-if="editModal._mtPersons && editModal._mtPersons.length > 0">
+                        <div>
+                            <div class="flex items-center justify-between mb-1">
+                                <label class="block text-xs text-purple-400">Maski osób</label>
+                                <button @click="editMultitalkCheckMasks()"
+                                        class="text-xs text-gray-500 hover:text-gray-300 border border-gray-700 hover:border-gray-500 rounded px-2 py-0.5 transition">⟳ Odśwież</button>
+                            </div>
+                            <div class="grid grid-cols-2 gap-2">
+                                <template x-for="(person, pi) in editModal._mtPersons" :key="pi">
+                                    <div class="border border-gray-700 rounded-lg p-2 bg-gray-900/60 flex flex-col gap-1.5">
+                                        <div class="flex items-center justify-between">
+                                            <span class="text-xs text-purple-300 font-semibold" x-text="'Osoba ' + (pi+1)"></span>
+                                            <span class="text-xs"
+                                                  :class="person.hasMask ? 'text-green-500' : 'text-gray-600'"
+                                                  :title="person.hasMask ? 'Maska namalowana' : 'Brak maski'"
+                                                  x-text="person.hasMask ? '🎭✓' : '🎭○'"></span>
+                                        </div>
+                                        <img :src="person.imgUrl" class="w-full h-20 object-cover rounded border border-gray-700" alt="">
+                                        <button @click="picOpenPreview(person.imgUrl, 'Osoba ' + (pi+1) + ' — maluj maskę', person.absPath)"
+                                                class="w-full text-xs py-1 rounded border transition"
+                                                :class="person.hasMask ? 'border-green-800 text-green-400 hover:border-green-600 hover:text-green-300' : 'border-purple-800 text-purple-400 hover:border-purple-600 hover:text-purple-200'">
+                                            🖌 <span x-text="person.hasMask ? 'Edytuj maskę' : 'Maluj maskę'"></span>
+                                        </button>
+                                    </div>
+                                </template>
+                            </div>
+                        </div>
+                    </template>
+
+                    <!-- Steps list -->
+                    <div>
+                        <div class="flex items-center justify-between mb-1.5">
+                            <label class="block text-xs text-purple-400">Kroki dialogu</label>
+                            <button type="button"
+                                    @click="editModal.data.steps = [...(editModal.data.steps || []), {speaker_idx: 0, audio: ''}]"
+                                    class="text-xs px-2 py-0.5 rounded border border-purple-800 text-purple-400 hover:border-purple-500 hover:text-purple-200 transition">
+                                + Dodaj krok
+                            </button>
+                        </div>
+                        <div class="space-y-2">
+                            <template x-for="(step, si) in (editModal.data.steps || [])" :key="si">
+                                <div class="border border-gray-700 rounded-lg p-2 bg-gray-900/60">
+                                    <!-- Step header: label + speaker buttons + order/delete -->
+                                    <div class="flex items-center gap-2 mb-1.5">
+                                        <span class="text-xs text-gray-500 font-mono shrink-0" x-text="'Kr.' + (si+1)"></span>
+                                        <div class="flex flex-wrap gap-1 flex-1">
+                                            <template x-for="pi in Array.from({length: editModal.data.num_persons || 2}, (_, i) => i)" :key="pi">
+                                                <button type="button"
+                                                        @click="step.speaker_idx = pi"
+                                                        class="px-2 py-0.5 rounded border text-xs transition font-mono"
+                                                        :class="step.speaker_idx === pi ? 'bg-purple-700 border-purple-500 text-white' : 'border-gray-700 text-gray-400 hover:border-purple-600 hover:text-purple-300'"
+                                                        x-text="'O' + (pi+1)"></button>
+                                            </template>
+                                        </div>
+                                        <div class="flex gap-0.5 shrink-0">
+                                            <button type="button"
+                                                    @click="if(si > 0){ const a=editModal.data.steps.splice(si,1)[0]; editModal.data.steps.splice(si-1,0,a); }"
+                                                    :disabled="si === 0"
+                                                    :class="si === 0 ? 'opacity-30 cursor-not-allowed' : 'hover:text-white hover:bg-gray-700'"
+                                                    class="text-gray-600 text-xs px-1 py-0.5 rounded transition">↑</button>
+                                            <button type="button"
+                                                    @click="if(si < editModal.data.steps.length-1){ const a=editModal.data.steps.splice(si,1)[0]; editModal.data.steps.splice(si+1,0,a); }"
+                                                    :disabled="si >= (editModal.data.steps.length - 1)"
+                                                    :class="si >= (editModal.data.steps.length - 1) ? 'opacity-30 cursor-not-allowed' : 'hover:text-white hover:bg-gray-700'"
+                                                    class="text-gray-600 text-xs px-1 py-0.5 rounded transition">↓</button>
+                                            <button type="button"
+                                                    @click="if(editModal.data.steps.length > 1) editModal.data.steps.splice(si,1)"
+                                                    :disabled="editModal.data.steps.length <= 1"
+                                                    :class="editModal.data.steps.length <= 1 ? 'opacity-30 cursor-not-allowed' : 'hover:text-red-400 hover:bg-gray-700'"
+                                                    class="text-gray-600 text-xs px-1 py-0.5 rounded transition">✕</button>
+                                        </div>
+                                    </div>
+                                    <!-- Audio for this step -->
+                                    <input type="text" x-model="step.audio"
+                                           class="w-full bg-gray-800 border border-purple-900 rounded px-2 py-1 text-xs text-purple-200 font-mono focus:outline-none focus:border-purple-600"
+                                           :placeholder="'glos_osoba' + ((step.speaker_idx ?? 0) + 1) + '.mp3'">
+                                    <template x-if="editModal.audioFiles && editModal.audioFiles.length > 0">
+                                        <div class="mt-1 bg-gray-950 border border-gray-700 rounded max-h-20 overflow-y-auto">
+                                            <template x-for="f in editModal.audioFiles" :key="f">
+                                                <button type="button" @click="step.audio = f"
+                                                        class="w-full text-left px-2 py-0.5 text-xs font-mono text-purple-400 hover:bg-purple-950 hover:text-purple-200 transition truncate block"
+                                                        x-text="'🎵 ' + f"></button>
+                                            </template>
+                                        </div>
+                                    </template>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+
+                    <!-- Continuity toggle -->
+                    <label class="flex items-center gap-2 cursor-pointer select-none">
+                        <input type="checkbox" x-model="editModal.data.use_last_frame"
+                               class="rounded border-gray-600 bg-gray-800 text-purple-600 focus:ring-purple-500">
+                        <span class="text-xs text-gray-400">
+                            Ciągłość — start od ostatniej klatki poprzedniego kroku
+                            <span class="text-gray-600">(eksperymentalne)</span>
+                        </span>
+                    </label>
+
+                    <!-- Output clip name -->
+                    <div>
+                        <label class="block text-xs text-yellow-500 mb-1">
+                            Nazwa klipu wyjściowego
+                            <span class="text-gray-500 font-normal ml-1">→ transitions/<em>nazwa</em>.mp4</span>
+                        </label>
+                        <input type="text" x-model="editModal.data.name"
+                               class="w-full bg-gray-800 border border-yellow-900 rounded px-2 py-1.5 text-sm text-yellow-200 font-mono focus:outline-none focus:border-yellow-600"
+                               placeholder="dialog_01">
+                    </div>
+
+                    <!-- Positive prompt -->
+                    <div>
+                        <label class="block text-xs text-green-500 mb-1">Pos prompt (opcjonalny)</label>
+                        <textarea rows="2" x-model="editModal.data.pos"
+                                  class="w-full bg-gray-800 border border-gray-700 rounded px-2 py-1 text-xs text-gray-200 font-mono focus:outline-none focus:border-green-600 resize-y"
+                                  placeholder="people talking naturally, two people in conversation..."></textarea>
+                    </div>
+
+                    <!-- Resolution -->
+                    <div>
+                        <div class="flex items-center justify-between mb-1">
+                            <label class="block text-xs text-gray-400">Rozdzielczość <span class="text-gray-600 font-normal ml-1">mod 16</span></label>
+                            <button @click="editMultitalkAutoResolve()"
+                                    :disabled="editModal.resolvingRes"
+                                    class="text-xs text-purple-600 hover:text-purple-400 border border-purple-900 hover:border-purple-700 rounded px-2 py-0.5 transition flex items-center gap-1">
+                                <span x-show="editModal.resolvingRes" class="animate-spin inline-block">⟳</span>
+                                <span>Auto-wykryj</span>
+                            </button>
+                        </div>
+                        <div class="flex flex-wrap gap-1.5 mb-2">
+                            <template x-for="p in _resoPresets()" :key="p.w + '_' + p.h">
+                                <button type="button" @click="_resoSetPreset(p.w, p.h)"
+                                        :class="editModal.data.width===p.w && editModal.data.height===p.h
+                                                ? 'bg-purple-700 border-purple-500 text-white'
+                                                : 'border-gray-700 text-gray-400 hover:border-purple-500 hover:text-purple-300'"
+                                        class="text-xs px-2 py-1 rounded border transition font-mono"
+                                        x-text="`${p.w}×${p.h}`"></button>
+                            </template>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <input type="number" x-model.number="editModal.data.width" min="64" max="2048" step="16" placeholder="szer."
+                                   @change="editModal.data.width = editModal.data.width ? Math.round(editModal.data.width/16)*16 : editModal.data.width"
+                                   class="flex-1 bg-gray-800 border border-gray-600 rounded px-2 py-1.5 text-sm text-gray-200 text-center font-mono focus:outline-none focus:border-purple-500">
+                            <span class="text-gray-600">×</span>
+                            <input type="number" x-model.number="editModal.data.height" min="64" max="2048" step="16" placeholder="wys."
+                                   @change="editModal.data.height = editModal.data.height ? Math.round(editModal.data.height/16)*16 : editModal.data.height"
+                                   class="flex-1 bg-gray-800 border border-gray-600 rounded px-2 py-1.5 text-sm text-gray-200 text-center font-mono focus:outline-none focus:border-purple-500">
+                        </div>
+                        <p x-show="editModal.resHint" class="text-xs text-purple-600 mt-1" x-text="editModal.resHint"></p>
                     </div>
 
                 </div>
@@ -4338,6 +4880,10 @@
                     </div>
 
                     <hr class="border-gray-700">
+
+                    <!-- Canvas size debug -->
+                    <p x-show="picMask._canvW" class="text-xs text-gray-600 leading-tight"
+                       x-text="'Maska: ' + picMask._canvW + '×' + picMask._canvH + (picMask._canvW !== picMask._baseW ? ' ✓nat' : ' ?css')"></p>
 
                     <!-- Zoom -->
                     <div>
@@ -7113,12 +7659,45 @@
                         <input type="text" x-model="appCfgModal.data.backends.linux.models.video_gen.config_path"
                                class="w-full text-xs bg-gray-800 text-gray-200 border border-gray-600 rounded px-3 py-1.5 focus:outline-none focus:border-blue-500 font-mono"/>
                     </div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="text-xs text-gray-500 block mb-1">⚡ Lightning — workflow</label>
+                            <select x-model="appCfgModal.data.backends.linux.models.video_gen.lightning_workflow"
+                                    class="w-full text-xs bg-gray-800 text-gray-200 border border-gray-600 rounded px-3 py-1.5 focus:outline-none focus:border-blue-500 font-mono">
+                                <template x-for="f in (appCfgModal.variants.lightning || [])" :key="f">
+                                    <option :value="f" x-text="f"></option>
+                                </template>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="text-xs text-gray-500 block mb-1">🎨 HQ — workflow</label>
+                            <select x-model="appCfgModal.data.backends.linux.models.video_gen.hq_workflow"
+                                    class="w-full text-xs bg-gray-800 text-gray-200 border border-gray-600 rounded px-3 py-1.5 focus:outline-none focus:border-blue-500 font-mono">
+                                <template x-for="f in (appCfgModal.variants.hq || [])" :key="f">
+                                    <option :value="f" x-text="f"></option>
+                                </template>
+                            </select>
+                        </div>
+                    </div>
                     <div>
-                        <label class="text-xs text-gray-500 block mb-1">talk — workflow_json
+                        <label class="text-xs text-gray-500 block mb-1">talk — workflow
                             <span class="text-gray-600">(InfiniteTalk API format)</span>
                         </label>
-                        <input type="text" x-model="appCfgModal.data.backends.linux.models.talk.workflow_json"
-                               class="w-full text-xs bg-gray-800 text-gray-200 border border-gray-600 rounded px-3 py-1.5 focus:outline-none focus:border-blue-500 font-mono"/>
+                        <select x-model="appCfgModal.data.backends.linux.models.talk.workflow_json"
+                                class="w-full text-xs bg-gray-800 text-gray-200 border border-gray-600 rounded px-3 py-1.5 focus:outline-none focus:border-blue-500 font-mono">
+                            <template x-for="f in (appCfgModal.variants.talk || [])" :key="f">
+                                <option :value="f" x-text="f.split('\\').pop().split('/').pop()"></option>
+                            </template>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="text-xs text-gray-500 block mb-1">multitalk — workflow</label>
+                        <select x-model="appCfgModal.data.backends.linux.models.multitalk.workflow_json"
+                                class="w-full text-xs bg-gray-800 text-gray-200 border border-gray-600 rounded px-3 py-1.5 focus:outline-none focus:border-blue-500 font-mono">
+                            <template x-for="f in (appCfgModal.variants.multitalk || [])" :key="f">
+                                <option :value="f" x-text="f.split('\\').pop().split('/').pop()"></option>
+                            </template>
+                        </select>
                     </div>
                 </div>
             </div>
@@ -7151,44 +7730,59 @@
                 <p class="text-xs text-gray-500 font-semibold mt-1">Modele</p>
                 <div class="space-y-2 pl-2 border-l border-gray-700">
                     <div>
-                        <label class="text-xs text-gray-500 block mb-1">upscale_video — workflow_json
-                            <span class="text-gray-600">(RealESRGAN video — fallback na wbudowany template jeśli puste)</span>
+                        <label class="text-xs text-gray-500 block mb-1">upscale_video — workflow
+                            <span class="text-gray-600">(RealESRGAN video)</span>
                         </label>
-                        <input type="text" x-model="appCfgModal.data.backends.windows.models.upscale_video.workflow_json"
-                               class="w-full text-xs bg-gray-800 text-gray-200 border border-gray-600 rounded px-3 py-1.5 focus:outline-none focus:border-yellow-600 font-mono"
-                               placeholder="workflow_configs\upscaler_video.json"/>
+                        <select x-model="appCfgModal.data.backends.windows.models.upscale_video.workflow_json"
+                                class="w-full text-xs bg-gray-800 text-gray-200 border border-gray-600 rounded px-3 py-1.5 focus:outline-none focus:border-yellow-600 font-mono">
+                            <template x-for="f in (appCfgModal.variants.upscale_video || [])" :key="f">
+                                <option :value="f" x-text="f.split('\\').pop().split('/').pop()"></option>
+                            </template>
+                        </select>
                     </div>
                     <div>
-                        <label class="text-xs text-gray-500 block mb-1">upscale_image — workflow_json
-                            <span class="text-gray-600">(RealESRGAN image — do przyszłego wykorzystania)</span>
+                        <label class="text-xs text-gray-500 block mb-1">upscale_image — workflow
+                            <span class="text-gray-600">(RealESRGAN image)</span>
                         </label>
-                        <input type="text" x-model="appCfgModal.data.backends.windows.models.upscale_image.workflow_json"
-                               class="w-full text-xs bg-gray-800 text-gray-200 border border-gray-600 rounded px-3 py-1.5 focus:outline-none focus:border-yellow-600 font-mono"
-                               placeholder="workflow_configs\upscaler_image.json"/>
+                        <select x-model="appCfgModal.data.backends.windows.models.upscale_image.workflow_json"
+                                class="w-full text-xs bg-gray-800 text-gray-200 border border-gray-600 rounded px-3 py-1.5 focus:outline-none focus:border-yellow-600 font-mono">
+                            <template x-for="f in (appCfgModal.variants.upscale_image || [])" :key="f">
+                                <option :value="f" x-text="f.split('\\').pop().split('/').pop()"></option>
+                            </template>
+                        </select>
                     </div>
                     <div>
-                        <label class="text-xs text-gray-500 block mb-1">i2i — workflow_json
+                        <label class="text-xs text-gray-500 block mb-1">i2i — workflow
                             <span class="text-gray-600">(Pic Studio — Image2Image / Inpaint)</span>
                         </label>
-                        <input type="text" x-model="appCfgModal.data.backends.windows.models.i2i.workflow_json"
-                               class="w-full text-xs bg-gray-800 text-gray-200 border border-gray-600 rounded px-3 py-1.5 focus:outline-none focus:border-yellow-600 font-mono"
-                               placeholder="D:\ComfyUI\output\__IMAGE2IMAGE ....json"/>
+                        <select x-model="appCfgModal.data.backends.windows.models.i2i.workflow_json"
+                                class="w-full text-xs bg-gray-800 text-gray-200 border border-gray-600 rounded px-3 py-1.5 focus:outline-none focus:border-yellow-600 font-mono">
+                            <template x-for="f in (appCfgModal.variants.i2i || [])" :key="f">
+                                <option :value="f" x-text="f.split('\\').pop().split('/').pop()"></option>
+                            </template>
+                        </select>
                     </div>
                     <div>
-                        <label class="text-xs text-gray-500 block mb-1">ci_1ref — workflow_json
+                        <label class="text-xs text-gray-500 block mb-1">ci_1ref — workflow
                             <span class="text-gray-600">(Pic Studio — Character Insert z 1 ref)</span>
                         </label>
-                        <input type="text" x-model="appCfgModal.data.backends.windows.models.ci_1ref.workflow_json"
-                               class="w-full text-xs bg-gray-800 text-gray-200 border border-gray-600 rounded px-3 py-1.5 focus:outline-none focus:border-yellow-600 font-mono"
-                               placeholder="D:\ComfyUI\output\__CHARACTER_INSERT_1REF ....json"/>
+                        <select x-model="appCfgModal.data.backends.windows.models.ci_1ref.workflow_json"
+                                class="w-full text-xs bg-gray-800 text-gray-200 border border-gray-600 rounded px-3 py-1.5 focus:outline-none focus:border-yellow-600 font-mono">
+                            <template x-for="f in (appCfgModal.variants.ci_1ref || [])" :key="f">
+                                <option :value="f" x-text="f.split('\\').pop().split('/').pop()"></option>
+                            </template>
+                        </select>
                     </div>
                     <div>
-                        <label class="text-xs text-gray-500 block mb-1">ci_2ref — workflow_json
+                        <label class="text-xs text-gray-500 block mb-1">ci_2ref — workflow
                             <span class="text-gray-600">(Pic Studio — Character Insert z 2 ref)</span>
                         </label>
-                        <input type="text" x-model="appCfgModal.data.backends.windows.models.ci_2ref.workflow_json"
-                               class="w-full text-xs bg-gray-800 text-gray-200 border border-gray-600 rounded px-3 py-1.5 focus:outline-none focus:border-yellow-600 font-mono"
-                               placeholder="D:\ComfyUI\output\__CHARACTER_INSERT ....json"/>
+                        <select x-model="appCfgModal.data.backends.windows.models.ci_2ref.workflow_json"
+                                class="w-full text-xs bg-gray-800 text-gray-200 border border-gray-600 rounded px-3 py-1.5 focus:outline-none focus:border-yellow-600 font-mono">
+                            <template x-for="f in (appCfgModal.variants.ci_2ref || [])" :key="f">
+                                <option :value="f" x-text="f.split('\\').pop().split('/').pop()"></option>
+                            </template>
+                        </select>
                     </div>
                 </div>
             </div>
@@ -7204,8 +7798,9 @@
                                class="w-full text-xs bg-gray-800 text-gray-200 border border-gray-600 rounded px-3 py-1.5 focus:outline-none focus:border-blue-500"/>
                     </div>
                     <div>
-                        <label class="text-xs text-gray-500 block mb-1">Steps</label>
-                        <input type="number" x-model.number="appCfgModal.data.defaults.steps"
+                        <label class="text-xs text-gray-500 block mb-1">Steps HQ</label>
+                        <input type="number" x-model.number="appCfgModal.data.defaults.steps_hq" min="1"
+                               placeholder="15"
                                class="w-full text-xs bg-gray-800 text-gray-200 border border-gray-600 rounded px-3 py-1.5 focus:outline-none focus:border-blue-500"/>
                     </div>
                     <div>
@@ -7250,7 +7845,7 @@
                                         <tr class="border-t border-gray-800">
                                             <td class="py-1 pr-2">
                                                 <template x-if="i < appCfgModal.data.defaults.auto_bts_table.length - 1">
-                                                    <input type="number" x-model.number="row.max_pixels"
+                                                    <input type="number" x-model.number="appCfgModal.data.defaults.auto_bts_table[i].max_pixels"
                                                            class="w-24 bg-gray-800 text-gray-200 border border-gray-700 rounded px-2 py-0.5 focus:outline-none focus:border-indigo-500 text-xs"/>
                                                 </template>
                                                 <template x-if="i === appCfgModal.data.defaults.auto_bts_table.length - 1">
@@ -7258,7 +7853,7 @@
                                                 </template>
                                             </td>
                                             <td class="py-1 px-2">
-                                                <input type="number" x-model.number="row.bts"
+                                                <input type="number" x-model.number="appCfgModal.data.defaults.auto_bts_table[i].bts"
                                                        class="w-14 bg-gray-800 text-indigo-300 border border-gray-700 rounded px-2 py-0.5 focus:outline-none focus:border-indigo-500 text-xs text-center"/>
                                             </td>
                                             <td class="py-1 px-2 text-center text-gray-500 font-mono"
@@ -7290,6 +7885,17 @@
                         </button>
                         <span class="text-xs" :class="appCfgModal.data.defaults.frame_interpolation ? 'text-blue-400' : 'text-gray-500'"
                               x-text="appCfgModal.data.defaults.frame_interpolation ? 'włączone' : 'wyłączone'"></span>
+                    </div>
+                    <div class="col-span-2 flex items-center gap-3 py-1">
+                        <label class="text-xs text-gray-500 whitespace-nowrap">Tryb generowania (domyślny)</label>
+                        <button type="button" @click="appCfgModal.data.defaults.use_lightning = !(appCfgModal.data.defaults.use_lightning ?? true)"
+                                class="relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 focus:outline-none"
+                                :class="(appCfgModal.data.defaults.use_lightning ?? true) ? 'bg-amber-600' : 'bg-teal-600'">
+                            <span class="inline-block h-4 w-4 transform rounded-full bg-white shadow transition duration-200"
+                                  :class="(appCfgModal.data.defaults.use_lightning ?? true) ? 'translate-x-4' : 'translate-x-0'"></span>
+                        </button>
+                        <span class="text-xs" :class="(appCfgModal.data.defaults.use_lightning ?? true) ? 'text-amber-400' : 'text-teal-400'"
+                              x-text="(appCfgModal.data.defaults.use_lightning ?? true) ? '⚡ Lightning' : '🎨 HQ (bez lightx2v)'"></span>
                     </div>
                     <div>
                         <label class="text-xs text-gray-500 block mb-1">Rozdzielczość</label>
@@ -7587,6 +8193,11 @@
                 <span class="text-2xl">🎙️</span>
                 <span class="text-xs text-teal-300">Talk</span>
             </button>
+            <button @click="addItemDo('multitalk')"
+                    class="flex flex-col items-center gap-2 bg-purple-950 hover:bg-purple-900 border border-purple-800 hover:border-purple-600 rounded-lg p-4 transition">
+                <span class="text-2xl">🗣</span>
+                <span class="text-xs text-purple-300">Multitalk</span>
+            </button>
             <button @click="addItemDo('break')"
                     class="flex flex-col items-center gap-2 bg-gray-800 hover:bg-gray-700 border border-gray-600 hover:border-gray-500 rounded-lg p-4 transition">
                 <span class="text-2xl">✂</span>
@@ -7847,8 +8458,9 @@ function app() {
         },
 
         // ─ Global app defaults (fetched once on init) ─────
-        globalDefaults: { frame_interpolation: true },
+        globalDefaults: { frame_interpolation: true, use_lightning: true },
         mmAudio: false,
+        lightningOverride: null,  // null=auto, true=force ⚡, false=force 🎨 HQ
         batchAudioRunning: false,
 
         // Resolve effective frame_interpolation for a clip item:
@@ -7858,6 +8470,14 @@ function app() {
             const proj = this.selectedRun?.default_frame_interpolation;
             if (proj === true || proj === false) return proj;
             const g = this.globalDefaults?.frame_interpolation;
+            return (g === false) ? false : true;
+        },
+
+        // Resolve effective use_lightning for a clip item:
+        // per-clip → global app_config → hard-coded true
+        effectiveUL(itemUL) {
+            if (itemUL === true || itemUL === false) return itemUL;
+            const g = this.globalDefaults?.use_lightning;
             return (g === false) ? false : true;
         },
 
@@ -8105,6 +8725,8 @@ function app() {
                     } else if (item.type === 'talk') {
                         if (item.status !== 'red') names.push(item.name);
                         if (item.bridge_exists && item.bridge_name) names.push(item.bridge_name);
+                    } else if (item.type === 'multitalk') {
+                        if (item.status !== 'red' && item.name) names.push(item.name);
                     }
                 }
                 if (names.length > 0) {
@@ -8131,7 +8753,7 @@ function app() {
             }
 
             try {
-                const body = { ...(this._forceAll ? { force_all: true } : {}), ...(this.mmAudio ? { mmaudio: true } : {}) };
+                const body = { ...(this._forceAll ? { force_all: true } : {}), ...(this.mmAudio ? { mmaudio: true } : {}), ...(this.lightningOverride !== null ? { lightning_override: this.lightningOverride } : {}) };
                 const res = await fetch(`/api/generate/${encodeURIComponent(this.selectedRun.filename)}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -8334,7 +8956,7 @@ function app() {
         fileItemSourceSizeMb(idx) { const mb = this._si(idx)?.source_size_mb; return mb ? `${mb} MB` : ''; },
 
         // chain status — called ONCE each, not 3× per item
-        chainStatusOk(idx)    { return !!(this._si(idx)?.steps); },
+        chainStatusOk(idx)    { const sd = this.statusData; return !!(sd?.items?.[idx]?.steps); },
         chainStatusClass(idx) {
             const st = this._si(idx)?.status;
             if (st === 'green')   return 'text-green-400';
@@ -8423,6 +9045,10 @@ function app() {
                         if (si?.name) return si.name;
                     }
                 }
+                return null;
+            }
+            if (item.type === 'multitalk') {
+                if (si?.status === 'green' && si?.name) return si.name;
                 return null;
             }
             if (item.chain_prefix) {
@@ -9214,6 +9840,8 @@ function app() {
                     if (!si.steps && si.status !== 'green') return true;
                 } else if (item.type === 'talk') {
                     if (si.status !== 'green') return true;
+                } else if (item.type === 'multitalk') {
+                    if (si.status !== 'green') return true;
                 }
             }
             return false;
@@ -9234,24 +9862,33 @@ function app() {
                 if (item.file)              hasMissing = si.status === 'red';
                 else if (item.chain)        hasMissing = si.steps ? si.steps.some(s => !s.exists) : si.status !== 'green';
                 else if (item.type === 'talk') hasMissing = si.status !== 'green';
+                else if (item.type === 'multitalk') hasMissing = si.status !== 'green';
                 if (hasMissing) { firstMissingPos = i; break; }
             }
             if (firstMissingPos < 0) return; // nothing missing
 
-            // Collect all output filenames from firstMissingPos to end
+            // Collect output filenames from firstMissingPos to end.
+            // For chains: start from the first missing step (not step 0) to preserve existing steps.
+            // For file items (source clips): never archive — system can't regenerate them.
             const names = [];
             for (let i = firstMissingPos; i < seg.items.length; i++) {
                 const { item, idx } = seg.items[i];
                 const si = this._si(idx);
-                if (item.file && si?.name) {
-                    names.push(si.name);
+                if (item.file) {
+                    // Source clip — skip, not generated by ComfyUI
                 } else if (item.chain && item.chain_prefix) {
-                    for (let step = 0; step < item.chain.length; step++) {
+                    const steps = si?.steps || [];
+                    // Find first missing step; fall back to 0 if no step info available
+                    let firstMissingStep = steps.findIndex(s => !s.exists);
+                    if (firstMissingStep < 0) firstMissingStep = 0;
+                    for (let step = firstMissingStep; step < item.chain.length; step++) {
                         names.push(`${item.chain_prefix}_${String(step+1).padStart(3,'0')}.mp4`);
                     }
                 } else if (item.type === 'talk' && si?.name) {
-                    if (si.status !== 'partial') names.push(si.name); // skip clip if it already exists
+                    if (si.status !== 'partial') names.push(si.name);
                     if (si.bridge_name) names.push(si.bridge_name);
+                } else if (item.type === 'multitalk' && si?.name) {
+                    names.push(si.name);
                 }
             }
             // Only mp4 output filenames — filter out source image names (e.g. .png after talk tile)
@@ -9452,10 +10089,11 @@ function app() {
         sceneConfMode: false,
         sceneConf: {
             templates: [], templateIndex: 0,
-            imagePath: null, imagePreview: null, imageName: '',
+            slots: [], slotsLoading: false,
+            imageMap: {}, imageNames: {}, imagePreviews: {},
             analyzing: false, analyzeError: '',
             descriptor: null,
-            sceneName: '',
+            sceneName: '', lastAddedName: '',
             generating: false, generateError: '',
             sceneAdded: false,
         },
@@ -9594,6 +10232,8 @@ function app() {
             zoom:     1,
             _baseW:   0,
             _baseH:   0,
+            _canvW:   0,
+            _canvH:   0,
         },
 
         // Scene Blend mask indicator: { [absolute_path]: true }
@@ -9672,8 +10312,12 @@ function app() {
         capcutConfirm:   null,  // null | resolve fn — pending user choice
 
         // ─ Talk generation ────────────────────────────────────
-        talkStatus: { status: 'idle', talk_name: null, segment: null, total_segs: null, error: null, elapsed_s: null },
+        talkStatus: { status: 'idle', talk_name: null, segment: null, total_segs: null, step: null, from_step: 0, error: null, elapsed_s: null },
+        talkRegenModal: { show: false, flowIdx: null, stepIdx: null, totalSteps: 0, _resolve: null },
+        talkTransitionStatus: { status: 'idle', transition_name: null, error: null, elapsed_s: null },
+        multitalkStatus: { status: 'idle', clip_name: null, error: null, elapsed_s: null, flow_idx: null },
         _talkPollTimer: null,
+        _talkTransitionPollTimer: null,
 
         // ─ Chain generation ───────────────────────────────────
         chainJobStatus: { status: 'idle', chain_prefix: null, step: null, total_steps: null, from_step: null, error: null, elapsed_s: null },
@@ -9820,7 +10464,7 @@ function app() {
 
         // ─ Talk generation ────────────────────────────────────────────────
 
-        async startTalkGen(flowIdx) {
+        async startTalkGen(flowIdx, fromStep = 0, toStep = null) {
             if (!this.selectedRun) return;
             const item = this.flowData?.flow?.[flowIdx];
             if (!item || item.type !== 'talk') return;
@@ -9829,7 +10473,8 @@ function app() {
                 return;
             }
 
-            // Find the start frame: chain last step OR previous file item in flow
+            // Find the start frame: scan backwards for previous chain/multitalk/file.
+            // item.image is used only as fallback when nothing precedes this tile.
             let startImage = null;
             for (let i = flowIdx - 1; i >= 0; i--) {
                 const prev = this.flowData.flow[i];
@@ -9838,16 +10483,22 @@ function app() {
                     startImage = `${prev.chain_prefix}_${n}.mp4`;
                     break;
                 }
+                if (prev.type === 'multitalk') {
+                    const mn = (prev.name || '').trim();
+                    startImage = `transitions/multitalk/${mn.endsWith('.mp4') ? mn : mn + '.mp4'}`;
+                    break;
+                }
                 if (prev.file) { startImage = prev.file; break; }
-                if (prev.break) break;
+                if (prev.break || prev.type === 'scene_break') break;
             }
+            if (!startImage && item.image) startImage = item.image;
             if (!startImage) {
-                this.logLine('sys', '❌ Talk: nie znaleziono klatki startowej (poprzedni plik w flow)');
+                this.logLine('sys', '❌ Talk: nie znaleziono klatki startowej — ustaw pole "Obraz startowy" w edycji kafelka');
                 return;
             }
 
-            this.talkStatus = { status: 'queued', talk_name: null, segment: null, total_segs: null, error: null, elapsed_s: null, flow_idx: flowIdx };
-            this.logLine('sys', `🎙️ Startuję Talk: ${startImage} + ${JSON.stringify(item.audio)}`);
+            this.talkStatus = { status: 'queued', talk_name: null, segment: null, total_segs: null, step: null, from_step: fromStep, error: null, elapsed_s: null, flow_idx: flowIdx };
+            this.logLine('sys', `🎙️ Startuję Talk: ${startImage} + ${JSON.stringify(item.audio)}` + (fromStep > 0 ? ` (od step ${fromStep+1})` : ''));
 
             try {
                 const res = await fetch('/api/talk/start', {
@@ -9857,6 +10508,8 @@ function app() {
                         run_filename: this.selectedRun.filename,
                         talk_item:    item,
                         start_image:  startImage,
+                        from_step:    fromStep,
+                        ...(toStep !== null ? { to_step: toStep } : {}),
                     }),
                 });
                 const data = await res.json();
@@ -9906,6 +10559,144 @@ function app() {
             } catch(e) { /* network hiccup — ignore */ }
         },
 
+        // ─ Talk per-step regen / archive ────────────────────────────────────
+
+        _talkStepName(flowIdx, stepIdx) {
+            // stepIdx is 0-indexed
+            const si   = this._si(flowIdx);
+            const steps = si?.steps;
+            if (steps && steps[stepIdx]) return steps[stepIdx].name;
+            // Fallback: construct name from canonical
+            const base = si?.name || '';
+            const stem = base.replace(/\.mp4$/i, '');
+            const total = this._talkAudioCount(flowIdx);
+            return total <= 1 ? base : `${stem}_${String(stepIdx + 1).padStart(2, '0')}.mp4`;
+        },
+
+        _talkAudioCount(flowIdx) {
+            const item = this.flowData?.flow?.[flowIdx];
+            if (!item) return 0;
+            const a = item.audio;
+            return Array.isArray(a) ? a.length : 1;
+        },
+
+        async regenTalkFrom(flowIdx, stepIdx) {
+            if (!this.selectedRun) return;
+            if (this.talkStatus.status === 'running' || this.talkStatus.status === 'queued') {
+                this.logLine('sys', '❌ Talk już trwa — poczekaj lub anuluj'); return;
+            }
+            const total = this._talkAudioCount(flowIdx);
+
+            // Modal "one or all" is only meaningful when there are later steps after this one
+            let choice;
+            if (total > 1 && stepIdx < total - 1) {
+                choice = await new Promise(resolve => {
+                    this.talkRegenModal = { show: true, flowIdx, stepIdx, totalSteps: total, _resolve: resolve };
+                });
+                if (!choice) return;
+            } else {
+                choice = 'one';
+            }
+
+            // Archive what we're about to overwrite
+            const toArchive = choice === 'one' ? [stepIdx] : Array.from({ length: total - stepIdx }, (_, i) => stepIdx + i);
+            const si = this._si(flowIdx);
+            const names = toArchive.map(i => si?.steps?.[i]?.name).filter(n => n && si?.steps?.[i]?.exists);
+            if (names.length) {
+                try {
+                    const res  = await fetch('/api/media/batch-archive', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ run: this.selectedRun.filename, names }),
+                    });
+                    const data = await res.json();
+                    if (res.ok) {
+                        for (const r of data.results)
+                            if (r.ok) this.logLine('sys', `📦 Backup [${data.ts}]: ${r.new_name}`);
+                    } else {
+                        this.logLine('sys', `❌ batch-archive: ${data.detail || res.status}`); return;
+                    }
+                } catch(e) { this.logLine('sys', `❌ batch-archive: ${e.message}`); return; }
+                this.statusData = null; await this.refreshStatus();
+            }
+
+            await this.startTalkGen(flowIdx, stepIdx, choice === 'one' ? stepIdx : null);
+        },
+
+        async archiveTalkFrom(flowIdx, stepIdx, skipConfirm = false) {
+            if (!this.selectedRun) return;
+            const si    = this._si(flowIdx);
+            const steps = si?.steps || [];
+            const names = steps.slice(stepIdx).filter(s => s.exists).map(s => s.name);
+            if (!names.length) return;
+
+            if (!skipConfirm) {
+                const label = names.length === 1 ? names[0] : `${names[0]} … ${names[names.length-1]} (${names.length} pliki)`;
+                if (!confirm(`Archiwizować talk od step ${stepIdx+1}?\n\n${label}\n\nPliki zostaną przemianowane, nie usunięte.`)) return;
+            }
+
+            try {
+                const res  = await fetch('/api/media/batch-archive', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ run: this.selectedRun.filename, names }),
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    for (const r of data.results) {
+                        if (r.ok) this.logLine('sys', `📦 Backup [${data.ts}]: ${r.new_name}`);
+                        else      this.logLine('sys', `⚠ ${r.name}: ${r.error}`);
+                    }
+                } else {
+                    this.logLine('sys', `❌ batch-archive talk: ${data.detail || res.status}`);
+                }
+            } catch(e) { this.logLine('sys', `❌ Archiwizacja talk: ${e.message}`); }
+            this.statusData = null; await this.refreshStatus();
+        },
+
+        // ─ Talk transition (I2V2I) ───────────────────────────────────────────
+
+        async startTalkTransition(flowIdx) {
+            const item = this.flowData.flow[flowIdx];
+            if (!item) return;
+            const res = await fetch('/api/talk/transition/start', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    run_filename: this.selectedRun.filename,
+                    talk_item:    item,
+                    flow_index:   flowIdx,
+                }),
+            });
+            const data = await res.json();
+            if (!res.ok) {
+                this.logLine('sys', `❌ Tranzycja talk: ${data.detail || data.error}`);
+                return;
+            }
+            this.logLine('sys', `🔗 Startuję tranzycje talk (${data.count} złączy)`);
+            this.talkTransitionStatus = { status: 'queued', transition_name: data.transition_name, error: null, elapsed_s: null };
+            if (this._talkTransitionPollTimer) clearInterval(this._talkTransitionPollTimer);
+            this._talkTransitionPollTimer = setInterval(() => this._pollTalkTransitionStatus(), 4000);
+        },
+
+        async _pollTalkTransitionStatus() {
+            try {
+                const res  = await fetch('/api/talk/transition/status');
+                const data = await res.json();
+                this.talkTransitionStatus = { ...data };
+                if (data.status === 'done') {
+                    clearInterval(this._talkTransitionPollTimer);
+                    this._talkTransitionPollTimer = null;
+                    this.logLine('sys', `✅ Tranzycja talk gotowa: ${data.transition_name} (${data.elapsed_s}s)`);
+                    await this.refreshStatus();
+                } else if (data.status === 'error') {
+                    clearInterval(this._talkTransitionPollTimer);
+                    this._talkTransitionPollTimer = null;
+                    this.logLine('sys', `❌ Tranzycja talk błąd: ${data.error}`);
+                }
+            } catch(e) { /* network hiccup */ }
+        },
+
         // ─ Chain polling ─────────────────────────────────────────────────
 
         async _pollChainStatus() {
@@ -9920,6 +10711,7 @@ function app() {
                     this.logLine('sys', `✅ Chain '${data.chain_prefix}' gotowy (${data.elapsed_s}s)`);
                     this.statusData = null;
                     await this.refreshStatus();
+                    setTimeout(() => this.refreshStatus(), 3000); // +3s WSL2 file sync lag
                 } else if (data.status === 'error') {
                     clearInterval(this._chainPollTimer);
                     this._chainPollTimer = null;
@@ -10056,6 +10848,162 @@ function app() {
                     this.editModal.resHint = `⚡ Auto: ${data.width}×${data.height}`;
                 } else {
                     this.editModal.resHint = '⚠ Brak obrazu w katalogu projektu — użyj domyślnego';
+                }
+            } catch(e) {
+                this.editModal.resHint = `❌ ${e.message}`;
+            } finally {
+                this.editModal.resolvingRes = false;
+            }
+        },
+
+        // ─ Multitalk generation ───────────────────────────────────────────────
+
+        async startMultitalkGen(flowIdx) {
+            if (!this.selectedRun) return;
+            const item = this.flowData?.flow?.[flowIdx];
+            if (!item || item.type !== 'multitalk') return;
+            if (this.envStatus.linux !== 'ready') {
+                this.logLine('sys', '❌ 🐧 Linux ComfyUI nie działa (port 8189)');
+                return;
+            }
+            if (!item.image) {
+                this.logLine('sys', '❌ Multitalk: brak pola image');
+                return;
+            }
+            const hasSteps = Array.isArray(item.steps) && item.steps.length > 0;
+            if (!hasSteps && !item.audio) {
+                this.logLine('sys', '❌ Multitalk: brak pola audio');
+                return;
+            }
+            const clipName = (item.name || 'multitalk').replace(/\.mp4$/i, '') + '.mp4';
+            this.multitalkStatus = { status: 'queued', clip_name: clipName, error: null, elapsed_s: null, flow_idx: flowIdx,
+                                     step_current: null, step_total: hasSteps ? item.steps.length : null };
+            const logDesc = hasSteps
+                ? `${item.steps.length} kroków (${item.steps.map(s => 'O' + ((s.speaker_idx ?? 0) + 1)).join('→')})`
+                : `${item.audio} (osoba ${(item.speaker_idx ?? 0) + 1})`;
+            this.logLine('sys', `🗣 Startuję Multitalk: ${item.image} + ${logDesc}`);
+            try {
+                const res = await fetch('/api/multitalk/start', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        run_filename: this.selectedRun.filename,
+                        image: item.image,
+                        item: {
+                            audio:          item.audio,
+                            speaker_idx:    item.speaker_idx ?? 0,
+                            steps:          item.steps,
+                            num_persons:    item.num_persons ?? 2,
+                            width:          item.width,
+                            height:         item.height,
+                            pos:            item.pos || '',
+                            name:           clipName,
+                            use_last_frame: item.use_last_frame ?? false,
+                        },
+                    }),
+                });
+                const data = await res.json();
+                if (!res.ok || !data.ok) {
+                    this.multitalkStatus.status = 'error';
+                    this.multitalkStatus.error  = data.detail || data.error || 'Błąd startu';
+                    this.logLine('sys', `❌ Multitalk error: ${this.multitalkStatus.error}`);
+                    return;
+                }
+                this._multitalkPollTimer = setInterval(() => this._pollMultitalkStatus(), 5000);
+            } catch(e) {
+                this.multitalkStatus = { ...this.multitalkStatus, status: 'error', error: e.message };
+                this.logLine('sys', `❌ Multitalk: ${e.message}`);
+            }
+        },
+
+        async _pollMultitalkStatus() {
+            try {
+                const res  = await fetch('/api/multitalk/status');
+                const data = await res.json();
+                this.multitalkStatus = { ...this.multitalkStatus, ...data };
+                if (data.status === 'done') {
+                    clearInterval(this._multitalkPollTimer);
+                    this._multitalkPollTimer = null;
+                    this.logLine('sys', `✅ Multitalk gotowy: ${data.clip_name} (${data.elapsed_s}s)`);
+                    this.statusData = null;
+                    await this.refreshStatus();
+                } else if (data.status === 'error') {
+                    clearInterval(this._multitalkPollTimer);
+                    this._multitalkPollTimer = null;
+                    this.logLine('sys', `❌ Multitalk błąd: ${data.error}`);
+                }
+            } catch(e) { /* network hiccup — ignore */ }
+        },
+
+        async editMultitalkSetup() {
+            if (!this.selectedRun || !this.editModal.data.image) return;
+            this.editModal._mtSetupRunning = true;
+            this.editModal._mtSetupError   = null;
+            try {
+                const res = await fetch('/api/multitalk/setup', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        run_filename: this.selectedRun.filename,
+                        image:        this.editModal.data.image,
+                        num_persons:  this.editModal.data.num_persons || 2,
+                    }),
+                });
+                const data = await res.json();
+                if (!res.ok || !data.ok) {
+                    this.editModal._mtSetupError = data.detail || data.error || 'Błąd setup';
+                    return;
+                }
+                const run  = encodeURIComponent(this.selectedRun.filename);
+                const stem = this.editModal.data.image.replace(/\.[^.]+$/, '');
+                const ext  = this.editModal.data.image.match(/\.[^.]+$/)?.[0] || '.jpg';
+                const persons = await Promise.all(data.person_images.map(async (absPath, i) => {
+                    const relPath = `multitalk/${stem}/person_${i}${ext}`;
+                    const imgUrl  = `/api/media/frame?run=${run}&file=${encodeURIComponent(relPath)}`;
+                    const maskUrl = `/api/pic/mask?path=${encodeURIComponent(absPath)}`;
+                    let hasMask = false;
+                    try { hasMask = (await fetch(maskUrl)).ok; } catch(_) {}
+                    return { absPath, relPath, imgUrl, hasMask };
+                }));
+                this.editModal._mtPersons = persons;
+                this.logLine('sys', `🗣 Multitalk setup: ${data.num_persons} kopii gotowe`);
+            } catch(e) {
+                this.editModal._mtSetupError = e.message;
+            } finally {
+                this.editModal._mtSetupRunning = false;
+            }
+        },
+
+        async editMultitalkCheckMasks() {
+            if (!this.editModal._mtPersons) return;
+            const updated = await Promise.all(this.editModal._mtPersons.map(async (p) => {
+                let hasMask = false;
+                try { hasMask = (await fetch(`/api/pic/mask?path=${encodeURIComponent(p.absPath)}`)).ok; } catch(_) {}
+                return { ...p, hasMask };
+            }));
+            this.editModal._mtPersons = updated;
+        },
+
+        async editMultitalkAutoResolve() {
+            if (!this.selectedRun || this.editModal.resolvingRes) return;
+            this.editModal.resolvingRes = true;
+            this.editModal.resHint = '';
+            try {
+                const res = await fetch('/api/multitalk/suggest-resolution', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        run_filename: this.selectedRun.filename,
+                        image: this.editModal.data.image || '',
+                    }),
+                });
+                let data = {};
+                try { data = await res.json(); } catch(_) {}
+                if (!res.ok) {
+                    this.editModal.resHint = `❌ ${data.detail || 'Błąd serwera ' + res.status}`;
+                } else if (data.width && data.height) {
+                    this.editModal.data = { ...this.editModal.data, width: data.width, height: data.height };
+                    this.editModal.resHint = `⚡ Auto: ${data.width}×${data.height}`;
                 }
             } catch(e) {
                 this.editModal.resHint = `❌ ${e.message}`;
@@ -10609,9 +11557,11 @@ function app() {
             const kind = item.chain !== undefined ? 'chain'
                        : item.header !== undefined ? 'header'
                        : item.type === 'talk' ? 'talk'
+                       : item.type === 'multitalk' ? 'multitalk'
                        : 'file';
-            const titles    = { chain: '⛓ Edytuj Chain', header: '📌 Edytuj nagłówek', file: '📄 Edytuj plik', talk: '🎙️ Edytuj Talk' };
-            const subtitles = { chain: item.chain_prefix || 'chain', header: item.header || '', file: item.file || '', talk: 'InfiniteTalk' };
+            const titles    = { chain: '⛓ Edytuj Chain', header: '📌 Edytuj nagłówek', file: '📄 Edytuj plik', talk: '🎙️ Edytuj Talk', multitalk: '🗣 Edytuj Multitalk' };
+            const subtitles = { chain: item.chain_prefix || 'chain', header: item.header || '', file: item.file || '', talk: 'InfiniteTalk', multitalk: item.name || 'multitalk' };
+            if (kind === 'chain') this._loadWorkflowVariants();
             this.editModal = {
                 open: true,
                 kind,
@@ -10620,7 +11570,17 @@ function app() {
                 idx,
                 saving: false,
                 error: null,
-                data: JSON.parse(JSON.stringify(item)),
+                origChainPrefix: kind === 'chain' ? (item.chain_prefix || '') : '',
+                data: (() => {
+                    const d = JSON.parse(JSON.stringify(item));
+                    // Synthesize steps array from old single-step format
+                    if (kind === 'multitalk' && !Array.isArray(d.steps)) {
+                        d.steps = [{ speaker_idx: d.speaker_idx ?? 0, audio: d.audio || '' }];
+                        delete d.audio;
+                        delete d.speaker_idx;
+                    }
+                    return d;
+                })(),
                 projectFiles: [],
                 audioFiles: [],
                 loadingFiles: false,
@@ -10631,6 +11591,9 @@ function app() {
                 _ratio: null,
                 _projW: this.globalsModal?._resW || null,
                 _projH: this.globalsModal?._resH || null,
+                _mtPersons: null,
+                _mtSetupRunning: false,
+                _mtSetupError: null,
             };
             // Load project resolution for presets if not already known
             if (!this.editModal._projW && this.selectedRun?.filename) {
@@ -10645,7 +11608,7 @@ function app() {
                     })
                     .catch(() => {});
             }
-            if ((kind === 'file' || kind === 'talk') && this.selectedRun?.filename) {
+            if ((kind === 'file' || kind === 'talk' || kind === 'multitalk') && this.selectedRun?.filename) {
                 this.editModal.loadingFiles = true;
                 fetch(`/api/runs/${encodeURIComponent(this.selectedRun.filename)}/project-files`)
                     .then(r => r.ok ? r.json() : Promise.reject(r.status))
@@ -10658,13 +11621,9 @@ function app() {
                     .catch(() => { })
                     .finally(() => { this.editModal.loadingFiles = false; });
             }
-            // Auto-detect image resolution for file items without existing width/height
-            if (kind === 'file' && item.file && !item.width && !item.height && this.selectedRun?.filename) {
-                this._fetchFileDims(item.file, false);
-            }
         },
 
-        async _fetchFileDims(fname, overwrite = true) {
+        async _fetchFileDims(fname, overwrite = true, writeData = true) {
             if (!fname || !this.selectedRun?.filename) return;
             try {
                 const run = encodeURIComponent(this.selectedRun.filename);
@@ -10679,8 +11638,7 @@ function app() {
                 // snap to nearest 16 px (WAN model requirement)
                 const sw = Math.round(w / 16) * 16;
                 const sh = Math.round(h / 16) * 16;
-                this.editModal.resHint = `wykryto: ${w}×${h} → ${sw}×${sh}`;
-                if (overwrite || (!this.editModal.data.width && !this.editModal.data.height)) {
+                if (writeData && (overwrite || (!this.editModal.data.width && !this.editModal.data.height))) {
                     this.editModal.data.width  = sw;
                     this.editModal.data.height = sh;
                 }
@@ -10692,12 +11650,14 @@ function app() {
             this.editModal.error = null;
             const d = this.editModal.data;
             // Remove empty optional numerics
-            const optionals = ['duration', 'fps', 'steps', 'cfg', 'blocks_to_swap', 'width', 'height'];
+            const optionals = ['duration', 'fps', 'steps', 'steps_hq', 'cfg', 'blocks_to_swap', 'width', 'height'];
             for (const k of optionals) {
                 if (d[k] === '' || d[k] === null || d[k] === undefined) delete d[k];
             }
             // frame_interpolation: null = "domyślne" → remove from data (inherit from global)
             if (d.frame_interpolation === null || d.frame_interpolation === undefined) delete d.frame_interpolation;
+            // use_lightning: null = "domyślne" → remove from data (inherit from global)
+            if (d.use_lightning === null || d.use_lightning === undefined) delete d.use_lightning;
             // generate_count: 1 is default → don't store in YAML
             if (!d.generate_count || d.generate_count <= 1) delete d.generate_count;
             if (Array.isArray(d.chain)) {
@@ -10705,6 +11665,8 @@ function app() {
                     for (const k of optionals) {
                         if (step[k] === '' || step[k] === null || step[k] === undefined) delete step[k];
                     }
+                    if (step.use_lightning === null || step.use_lightning === undefined) delete step.use_lightning;
+                    if (!step.workflow) delete step.workflow;
                 }
             }
             // Normalize talk audio — remove empty entries, simplify if no per-segment prompts
@@ -10728,6 +11690,33 @@ function app() {
                 // Remove legacy global pos/neg (now per-step only)
                 if (typeof d.pos === 'string' && !d.pos.trim()) delete d.pos;
                 if (typeof d.neg === 'string' && !d.neg.trim()) delete d.neg;
+                // image: remove if empty
+                if (!d.image || !(d.image + '').trim()) delete d.image;
+                // use_last_frame no longer used — clean up any saved values
+                delete d.use_last_frame;
+            }
+            // Multitalk validation
+            if (this.editModal.kind === 'multitalk') {
+                if (!d.image) { this.editModal.error = 'Wymagane pole image'; this.editModal.saving = false; return; }
+                if (!d.num_persons || d.num_persons < 2) d.num_persons = 2;
+                if (!d.name) d.name = `multitalk_${Date.now()}`;
+                if (!d.name.endsWith('.mp4')) d.name = d.name.replace(/\.mp4$/i, '');
+                if (typeof d.pos === 'string' && !d.pos.trim()) delete d.pos;
+                // Validate steps (always steps format now)
+                if (!Array.isArray(d.steps) || d.steps.length === 0) {
+                    this.editModal.error = 'Brak kroków dialogu'; this.editModal.saving = false; return;
+                }
+                for (let i = 0; i < d.steps.length; i++) {
+                    if (!d.steps[i].audio) {
+                        this.editModal.error = `Krok ${i + 1}: brak pliku audio`; this.editModal.saving = false; return;
+                    }
+                    if (d.steps[i].speaker_idx === undefined || d.steps[i].speaker_idx === null) d.steps[i].speaker_idx = 0;
+                }
+                // Remove legacy root-level fields from old format
+                delete d.audio;
+                delete d.speaker_idx;
+                // Ensure type is preserved
+                d.type = 'multitalk';
             }
             // Warstwa 1: walidacja unikalności chain_prefix
             if (this.editModal.kind === 'chain' && d.chain_prefix) {
@@ -10738,6 +11727,58 @@ function app() {
                     this.editModal.error = `Nazwa "${d.chain_prefix}" jest już używana przez inny chain — wybierz inną.`;
                     this.editModal.saving = false;
                     return;
+                }
+            }
+            // Warstwa 2: wykryj zmianę chain_prefix i zaproponuj rename plików
+            if (this.editModal.kind === 'chain' && d.chain_prefix &&
+                this.editModal.origChainPrefix && d.chain_prefix !== this.editModal.origChainPrefix) {
+                const oldPfx = this.editModal.origChainPrefix;
+                const newPfx = d.chain_prefix;
+                // Check if any output files exist with old prefix (dry run — no rename yet)
+                let checkRes;
+                try {
+                    checkRes = await fetch('/api/chain/rename-files', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            run_filename: this.selectedRun.filename,
+                            old_prefix: oldPfx,
+                            new_prefix: newPfx,
+                            dry_run: true,
+                        }),
+                    }).then(r => r.json());
+                } catch(e) { checkRes = null; }
+                // If files would be renamed (i.e. they exist), ask user
+                const fileCount = checkRes?.renamed?.length ?? 0;
+                if (fileCount > 0) {
+                    const doRename = confirm(
+                        `Zmieniono nazwę chain z "${oldPfx}" na "${newPfx}".\n\n` +
+                        `Znaleziono ${fileCount} plik(ów) wideo z prefixem "${oldPfx}".\n\n` +
+                        `Czy zmienić też nazwy plików na dysku?\n(Anuluj = zachowaj stare nazwy)`
+                    );
+                    if (doRename) {
+                        this.editModal.saving = true;
+                        try {
+                            const renRes = await fetch('/api/chain/rename-files', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                    run_filename: this.selectedRun.filename,
+                                    old_prefix: oldPfx,
+                                    new_prefix: newPfx,
+                                }),
+                            }).then(r => r.json());
+                            const n = renRes.renamed?.length ?? 0;
+                            const errs = renRes.errors?.length ?? 0;
+                            if (errs > 0) {
+                                this.logLine('warn', `⚠ Zmieniono ${n} plików, błędy: ${renRes.errors.join('; ')}`);
+                            } else {
+                                this.logLine('sys', `✅ Przemianowano ${n} plików: ${oldPfx} → ${newPfx}`);
+                            }
+                        } catch(e) {
+                            this.logLine('warn', `⚠ Błąd rename plików: ${e}`);
+                        }
+                    }
                 }
             }
             const newFlow = JSON.parse(JSON.stringify(this.flowData.flow));
@@ -10785,7 +11826,7 @@ function app() {
             const item = this.flowData?.flow?.[idx];
             if (!item) return;
             const _talkAudioLabel = a => typeof a === 'object' ? (a.file || '?') : (a || '?');
-            const label = item.break ? 'break' : item.header !== undefined ? `nagłówek "${item.header}"` : item.type === 'talk' ? `talk "${Array.isArray(item.audio) ? _talkAudioLabel(item.audio[0]) : _talkAudioLabel(item.audio)}"` : item.chain_prefix ? `chain "${item.chain_prefix}"` : `plik "${item.file}"`;
+            const label = item.break ? 'break' : item.header !== undefined ? `nagłówek "${item.header}"` : item.type === 'talk' ? `talk "${Array.isArray(item.audio) ? _talkAudioLabel(item.audio[0]) : _talkAudioLabel(item.audio)}"` : item.type === 'multitalk' ? `multitalk "${item.name || item.audio || ''}"` : item.chain_prefix ? `chain "${item.chain_prefix}"` : `plik "${item.file}"`;
             if (!confirm(`Usunąć: ${label}?\n\nTa operacja usuwa go z FLOW (pliki wideo na dysku zostają).`)) return;
             const newFlow = JSON.parse(JSON.stringify(this.flowData.flow));
             newFlow.splice(idx, 1);
@@ -10908,6 +11949,7 @@ function app() {
             for (const item of flow) {
                 if (item.break || item.type === 'scene_break' || item.header) { prevFile = null; continue; }
                 if (item.type === 'talk') { prevFile = null; continue; }
+                if (item.type === 'multitalk') { prevFile = null; continue; }
                 if (item.chain !== undefined) { prevFile = null; continue; }
                 if (item.file) {
                     if (prevFile !== null) {
@@ -10943,11 +11985,15 @@ function app() {
             } else if (kind === 'talk') {
                 const _tr = this.selectedRun?.force_resolution || this.selectedRun?.default_resolution || null;
                 newItem = { type: 'talk', audio: ['glos.mp3'], width: _tr ? _tr[0] : 480, height: _tr ? _tr[1] : 832, pos: '', backend: 'linux' };
+            } else if (kind === 'multitalk') {
+                const _tr = this.selectedRun?.force_resolution || this.selectedRun?.default_resolution || null;
+                newItem = { type: 'multitalk', image: '', num_persons: 2, name: 'dialog_01', width: _tr ? _tr[0] : 480, height: _tr ? _tr[1] : 720,
+                            steps: [{ speaker_idx: 0, audio: '' }] };
             } else {
                 newItem = {
                     chain_prefix: this.nextChainPrefix(),
                     chain: [{ duration: 3, pos: 'NONE', neg: '' }],
-                    backend: 'linux', fps: 16, steps: 6, cfg: 2.0,
+                    backend: 'linux', fps: 16, cfg: 2.0,
                     neg: 'static, frozen, no movement',
                 };
             }
@@ -10980,8 +12026,8 @@ function app() {
             const ratio = projW / projH;
             const tbl = (this.appCfgModal.data?.defaults?.auto_bts_table) || [
                 {max_pixels:310000,bts:15},{max_pixels:510000,bts:20},
-                {max_pixels:760000,bts:30},{max_pixels:1100000,bts:40},
-                {max_pixels:9999999,bts:50},
+                {max_pixels:760000,bts:30},{max_pixels:1250000,bts:35},
+                {max_pixels:2500000,bts:40},{max_pixels:9999999,bts:48},
             ];
             return [...tbl].sort((a,b)=>a.max_pixels-b.max_pixels)
                 .filter(t => t.max_pixels < 9999999)
@@ -11015,8 +12061,8 @@ function app() {
             const px = w * h;
             const tbl = (this.appCfgModal.data?.defaults?.auto_bts_table) || [
                 {max_pixels:310000,bts:15},{max_pixels:510000,bts:20},
-                {max_pixels:760000,bts:30},{max_pixels:1100000,bts:40},
-                {max_pixels:9999999,bts:50},
+                {max_pixels:760000,bts:30},{max_pixels:1250000,bts:35},
+                {max_pixels:2500000,bts:40},{max_pixels:9999999,bts:48},
             ];
             const tier = [...tbl].sort((a,b)=>a.max_pixels-b.max_pixels).find(t=>px<=t.max_pixels)
                          || tbl[tbl.length-1];
@@ -11080,6 +12126,9 @@ function app() {
             }
         },
 
+        // ─ Shared workflow variants cache ─────────────────
+        workflowVariants: { lightning: [], hq: [] },
+
         // ─ Global settings modal ──────────────────────────
         globalsModal: {
             open: false, filename: '', loading: false, saving: false,
@@ -11091,18 +12140,31 @@ function app() {
         // ─ App Config modal ───────────────────────────────────
         appCfgModal: {
             open: false, loading: false, saving: false, error: null,
+            variants: {},
             data: {
                 backends: {
                     linux:   { api_url: '', workflows_path: '', comfyui_output_folder: '',
-                               models: { video_gen: { config_path: '' }, talk: { workflow_json: '' } } },
+                               models: { video_gen: { config_path: '', lightning_workflow: '', hq_workflow: '' }, talk: { workflow_json: '' }, multitalk: { workflow_json: '' } } },
                     windows: { api_url: '', input_dir: '', output_dir: '',
-                               models: { upscale: { workflow_json: '' } } },
+                               models: { upscale_video: { workflow_json: '' }, upscale_image: { workflow_json: '' }, i2i: { workflow_json: '' }, ci_1ref: { workflow_json: '' }, ci_2ref: { workflow_json: '' } } },
                 },
                 defaults: { resolution: [1024, 1024], fps: 16, steps: 6, cfg: 2.0, duration: 2, blocks_to_swap: 35, auto_blocks_to_swap: true, frame_interpolation: true },
             },
         },
 
+        async _loadWorkflowVariants() {
+            if ((this.workflowVariants?.lightning || []).length > 0) return;
+            try {
+                const r = await fetch('/api/app-config/workflow-variants');
+                const d = await r.json();
+                this.workflowVariants = { lightning: d.lightning || [], hq: d.hq || [] };
+            } catch(e) {
+                this.workflowVariants = { lightning: [], hq: [] };
+            }
+        },
+
         async openGlobalsModal(filename) {
+            this._loadWorkflowVariants();
             this.globalsModal = {
                 open: true, filename, loading: true, saving: false,
                 error: null, saved: false, _resW: null, _resH: null,
@@ -11119,6 +12181,8 @@ function app() {
                 // Remove resolution from defaults (we handle it separately)
                 const defaults = { ...data.defaults };
                 delete defaults.resolution;
+                if (!defaults.lightning_workflow) defaults.lightning_workflow = '';
+                if (!defaults.hq_workflow) defaults.hq_workflow = '';
                 this.globalsModal = {
                     ...this.globalsModal,
                     loading: false,
@@ -11145,9 +12209,10 @@ function app() {
             // Assemble payload — clean up empty optionals
             const d = this.globalsModal.data;
             const defaults = { ...d.defaults };
-            // Prune null/undefined/empty optional numerics
-            for (const k of ['fps', 'steps', 'cfg', 'duration', 'blocks_to_swap']) {
-                if (defaults[k] === '' || defaults[k] === null || defaults[k] === undefined) delete defaults[k];
+            // Prune null/undefined/NaN/empty optional numerics and strings
+            for (const k of ['fps', 'steps', 'cfg', 'duration', 'blocks_to_swap', 'steps_hq', 'lightning_workflow', 'hq_workflow']) {
+                const v = defaults[k];
+                if (v === '' || v === null || v === undefined || (typeof v === 'number' && isNaN(v))) delete defaults[k];
             }
             // Prune frame_interpolation only if unset (null/undefined) — keep explicit false
             if (defaults.frame_interpolation === null || defaults.frame_interpolation === undefined) delete defaults.frame_interpolation;
@@ -11207,8 +12272,11 @@ function app() {
                 data.backends              = data.backends              || {};
                 data.backends.linux        = data.backends.linux        || {};
                 data.backends.linux.models = data.backends.linux.models || {};
-                data.backends.linux.models.video_gen = data.backends.linux.models.video_gen || { config_path: '' };
+                data.backends.linux.models.video_gen = data.backends.linux.models.video_gen || { config_path: '', lightning_workflow: '', hq_workflow: '' };
+                data.backends.linux.models.video_gen.lightning_workflow = data.backends.linux.models.video_gen.lightning_workflow || '';
+                data.backends.linux.models.video_gen.hq_workflow        = data.backends.linux.models.video_gen.hq_workflow        || '';
                 data.backends.linux.models.talk      = data.backends.linux.models.talk      || { workflow_json: '' };
+                data.backends.linux.models.multitalk = data.backends.linux.models.multitalk || { workflow_json: '' };
                 data.backends.windows          = data.backends.windows          || {};
                 data.backends.windows.models   = data.backends.windows.models   || {};
                 data.backends.windows.models.upscale_video  = data.backends.windows.models.upscale_video  || { workflow_json: '' };
@@ -11220,6 +12288,8 @@ function app() {
                 data.defaults.resolution = data.defaults.resolution || [1024, 1024];
                 if (data.defaults.frame_interpolation === undefined)
                     data.defaults.frame_interpolation = true;
+                if (data.defaults.use_lightning === undefined)
+                    data.defaults.use_lightning = true;
                 if (data.defaults.auto_blocks_to_swap === undefined)
                     data.defaults.auto_blocks_to_swap = true;
                 if (!data.defaults.auto_bts_table || !data.defaults.auto_bts_table.length)
@@ -11230,6 +12300,13 @@ function app() {
                         {max_pixels: 9999999, bts: 40},
                     ];
                 this.appCfgModal.data = data;
+                // Load workflow variants for dropdowns
+                try {
+                    const vres = await fetch('/api/app-config/workflow-variants');
+                    this.appCfgModal.variants = await vres.json();
+                } catch(e) {
+                    this.appCfgModal.variants = {};
+                }
             } catch(e) {
                 this.appCfgModal.error = e.message;
             } finally {
@@ -11241,10 +12318,19 @@ function app() {
             this.appCfgModal.saving = true;
             this.appCfgModal.error = null;
             try {
+                // Strip null/NaN optional numeric defaults — absent key = "inherit from project YAML"
+                const payload = JSON.parse(JSON.stringify(this.appCfgModal.data));
+                const numericDefaults = ['steps', 'steps_hq', 'cfg', 'fps', 'duration', 'blocks_to_swap'];
+                for (const k of numericDefaults) {
+                    const v = payload?.defaults?.[k];
+                    if (v === null || v === undefined || (typeof v === 'number' && isNaN(v))) {
+                        delete payload.defaults[k];
+                    }
+                }
                 const res = await fetch('/api/app-config', {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(this.appCfgModal.data),
+                    body: JSON.stringify(payload),
                 });
                 const data = await res.json();
                 if (res.ok) {
@@ -13838,18 +14924,35 @@ function app() {
                     this.sceneConf.templates = data.templates || [];
                     if (this.sceneConf.templates.length > 0)
                         this.sceneConf.templateIndex = this.sceneConf.templates[0].index;
+                    await this.loadSceneSlots();
                 }
             } catch(e) {}
         },
+        async loadSceneSlots() {
+            const sc = this.sceneConf;
+            sc.slotsLoading = true;
+            sc.slots = []; sc.imageMap = {}; sc.imageNames = {}; sc.imagePreviews = {};
+            sc.descriptor = null;
+            try {
+                const r = await fetch(`/api/scene-conf/template-slots?index=${sc.templateIndex}`);
+                if (r.ok) {
+                    const data = await r.json();
+                    sc.slots = data.slots || [];
+                }
+            } catch(e) {} finally {
+                sc.slotsLoading = false;
+            }
+        },
         async sceneConfAnalyze() {
             const sc = this.sceneConf;
-            if (!sc.imagePath) return;
+            const firstPath = sc.imageMap[sc.slots[0]];
+            if (!firstPath) return;
             sc.analyzing = true; sc.analyzeError = ''; sc.descriptor = null;
             try {
                 const r = await fetch('/api/scene-conf/analyze', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ image_path: sc.imagePath }),
+                    body: JSON.stringify({ image_path: firstPath }),
                 });
                 const data = await r.json();
                 if (!r.ok) { sc.analyzeError = data.detail || 'Błąd analizy'; return; }
@@ -13883,12 +14986,14 @@ function app() {
                         target_filename: this.selectedRun.filename,
                         template_index: sc.templateIndex,
                         descriptor: sc.descriptor,
-                        start_image: sc.imageName,
+                        image_map: sc.imageMap,
                         scene_name: sc.sceneName.trim(),
                     }),
                 });
                 const data = await r.json();
                 if (!r.ok) { sc.generateError = data.detail || 'Błąd generacji'; return; }
+                sc.lastAddedName = sc.sceneName.trim();
+                sc.sceneName = '';
                 sc.sceneAdded = true;
                 await this.loadFlow(this.selectedRun.filename);
             } catch(e) {
@@ -13922,12 +15027,13 @@ function app() {
 // $root is NOT a magic property in Alpine v3 — we capture refs manually.
 function picMaskEditor() {
     return {
-        _drawing: false,
-        _ctx:     null,
-        _imgW:    0,
-        _imgH:    0,
-        _m:       null,   // ref to parent picMask state
-        _p:       null,   // ref to parent picImgPreview state
+        _drawing:    false,
+        _ctx:        null,
+        _imgW:       0,
+        _imgH:       0,
+        _m:          null,   // ref to parent picMask state
+        _p:          null,   // ref to parent picImgPreview state
+        _posLogged:  false,
 
         initRefs(mask, preview) {
             this._m = mask;
@@ -13962,47 +15068,58 @@ function picMaskEditor() {
             if (!img || !canvas) return;
             canvas.width  = img.naturalWidth  || img.offsetWidth;
             canvas.height = img.naturalHeight || img.offsetHeight;
+            // canvas.width attribute also sets a CSS presentation hint (width: Npx) which
+            // overrides the absolute inset-0 auto-sizing → canvas CSS rect ≠ img CSS rect.
+            // Fix: explicitly override with the img's CSS display size so the canvas
+            // covers exactly the visible image area and mouse coords map correctly.
+            canvas.style.width  = img.offsetWidth  + 'px';
+            canvas.style.height = img.offsetHeight + 'px';
             // Store display size at zoom=1 — used by size-placeholder div to enable scrolling at zoom>1
-            this.picMask._baseW = img.offsetWidth;
-            this.picMask._baseH = img.offsetHeight;
-            this._imgW = canvas.width;
-            this._imgH = canvas.height;
-            this._ctx  = canvas.getContext('2d');
+            this.picMask._baseW  = img.offsetWidth;
+            this.picMask._baseH  = img.offsetHeight;
+            this.picMask._canvW  = canvas.width;
+            this.picMask._canvH  = canvas.height;
+            this._imgW      = canvas.width;
+            this._imgH      = canvas.height;
+            this._ctx       = canvas.getContext('2d');
+            this._posLogged = false;
+            this._ctx.clearRect(0, 0, canvas.width, canvas.height);
             const fp = this._m?.filepath || '';
-            if (fp && this._m?.exists) {
-                const maskImg = new Image();
-                maskImg.crossOrigin = 'anonymous';
-                maskImg.onload = () => {
-                    // Convert black/white mask PNG → orange/transparent overlay
-                    // Saved format: white=painted(protected), black=unpainted
-                    // Canvas format: rgba(255,80,0,0.85)=painted, transparent=unpainted
-                    const off = document.createElement('canvas');
-                    off.width  = canvas.width;
-                    off.height = canvas.height;
-                    const offCtx = off.getContext('2d');
-                    offCtx.drawImage(maskImg, 0, 0, canvas.width, canvas.height);
-                    const imgData = offCtx.getImageData(0, 0, canvas.width, canvas.height);
-                    const d = imgData.data;
-                    for (let i = 0; i < d.length; i += 4) {
-                        if (d[i] > 128) {          // bright pixel = painted area
-                            d[i]     = 255;
-                            d[i + 1] = 80;
-                            d[i + 2] = 0;
-                            d[i + 3] = 217;        // ~0.85 opacity
-                        } else {                   // dark pixel = unpainted = transparent
-                            d[i]     = 0;
-                            d[i + 1] = 0;
-                            d[i + 2] = 0;
-                            d[i + 3] = 0;
-                        }
+            if (!fp) return;
+            // Always try to load mask — do not rely on picMask.exists which may be stale
+            const self    = this;
+            const maskImg = new Image();
+            maskImg.crossOrigin = 'anonymous';
+            maskImg.onload = () => {
+                self._m.exists = true;
+                // Convert black/white mask PNG → orange/transparent overlay
+                // Saved format: white=painted(protected), black=unpainted
+                // Canvas format: rgba(255,80,0,0.85)=painted, transparent=unpainted
+                const off = document.createElement('canvas');
+                off.width  = canvas.width;
+                off.height = canvas.height;
+                const offCtx = off.getContext('2d');
+                offCtx.drawImage(maskImg, 0, 0, canvas.width, canvas.height);
+                const imgData = offCtx.getImageData(0, 0, canvas.width, canvas.height);
+                const d = imgData.data;
+                for (let i = 0; i < d.length; i += 4) {
+                    if (d[i] > 128) {          // bright pixel = painted area
+                        d[i]     = 255;
+                        d[i + 1] = 80;
+                        d[i + 2] = 0;
+                        d[i + 3] = 217;        // ~0.85 opacity
+                    } else {                   // dark pixel = unpainted = transparent
+                        d[i]     = 0;
+                        d[i + 1] = 0;
+                        d[i + 2] = 0;
+                        d[i + 3] = 0;
                     }
-                    this._ctx.clearRect(0, 0, canvas.width, canvas.height);
-                    this._ctx.putImageData(imgData, 0, 0);
-                };
-                maskImg.src = '/api/pic/mask?path=' + encodeURIComponent(fp) + '&cb=' + Date.now();
-            } else {
-                this._ctx.clearRect(0, 0, canvas.width, canvas.height);
-            }
+                }
+                self._ctx.clearRect(0, 0, canvas.width, canvas.height);
+                self._ctx.putImageData(imgData, 0, 0);
+            };
+            maskImg.onerror = () => { self._m.exists = false; };
+            maskImg.src = '/api/pic/mask?path=' + encodeURIComponent(fp) + '&cb=' + Date.now();
         },
 
         onImgLoad() {
@@ -14012,9 +15129,20 @@ function picMaskEditor() {
 
         _pos(e) {
             const canvas = this.$refs.maskCanvas;
+            const img    = this.$refs.previewImg;
             const rect   = canvas.getBoundingClientRect();
             const scaleX = canvas.width  / rect.width;
             const scaleY = canvas.height / rect.height;
+            if (!this._posLogged) {
+                this._posLogged = true;
+                console.log('[MASK DEBUG]',
+                    'canvas bitmap:', canvas.width, 'x', canvas.height,
+                    '| canvas CSS rect:', rect.width.toFixed(1), 'x', rect.height.toFixed(1),
+                    '| img natural:', img?.naturalWidth, 'x', img?.naturalHeight,
+                    '| img offset:', img?.offsetWidth, 'x', img?.offsetHeight,
+                    '| scaleX:', scaleX.toFixed(3), 'scaleY:', scaleY.toFixed(3),
+                );
+            }
             return {
                 x: (e.clientX - rect.left) * scaleX,
                 y: (e.clientY - rect.top)  * scaleY,
@@ -14175,6 +15303,7 @@ function picMaskEditor() {
             if (item.file)  return item.file.replace(/^.*[\\/]/, '');
             if (item.chain) return `Chain: ${item.chain_prefix || ''}`;
             if (item.type === 'talk') return `Talk: ${Array.isArray(item.audio) ? item.audio[0] : item.audio || ''}`.slice(0, 40);
+            if (item.type === 'multitalk') return `Multitalk: ${item.name || item.audio || ''}`.slice(0, 40);
             return '—';
         },
 

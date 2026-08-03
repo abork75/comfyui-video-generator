@@ -95,6 +95,18 @@ class LinuxBackend(BaseBackend):
             )
 
             # ============================================================
+            # HQ SWAP: Musi nastąpić zaraz po resecie, PRZED ustawieniem
+            # jakichkolwiek parametrów i obrazów — swap zastępuje cały
+            # runner.workflow, więc cokolwiek ustawione wcześniej jest tracone.
+            # ============================================================
+
+            use_lightning = params.get('use_lightning', True)
+            if not use_lightning:
+                self._swap_to_hq_workflow(self.workflow_runner, params)
+            else:
+                self._maybe_swap_lightning_workflow(self.workflow_runner, params.get('workflow_override'))
+
+            # ============================================================
             # I2V MODE: Odłącz end_image z node 89 i any_01 z Any Switch (116)
             # I2V2I MODE: end_image zostaje, Any Switch używa any_01 (end frame)
             # ============================================================
@@ -247,6 +259,9 @@ class LinuxBackend(BaseBackend):
         """Ustawia parametry wideo przez set_parameter (YAML-driven)"""
         runner = self.workflow_runner
 
+        use_lightning = params.get('use_lightning', True)
+        # HQ swap already done at top of execute() — do not repeat here.
+
         if 'width' in params:
             # Snap to nearest multiple of 16 — WanVideo node 68 (ImageResizeKJv2)
             # has divisible_by=16; passing non-aligned values causes silent adjustment
@@ -268,8 +283,10 @@ class LinuxBackend(BaseBackend):
         if 'fps' in params:
             runner.set_parameter('frame_rate', params['fps'])
 
-        if 'steps' in params:
+        if params.get('steps') is not None:
             runner.set_parameter('steps', params['steps'])
+            if not use_lightning:
+                runner.set_parameter('split_step', params['steps'] // 2)
 
         if 'cfg' in params:
             runner.set_parameter('cfg_start', params['cfg'])
@@ -285,13 +302,13 @@ class LinuxBackend(BaseBackend):
                 multiplier = 2 if fi else 1
                 runner.set_parameter('frame_interpolation', multiplier)
 
-        if 'lora_name' in params and params['lora_name']:
+        if 'lora_name' in params and params['lora_name'] and use_lightning:
             runner.set_parameter('lora_name', params['lora_name'])
             if '97' in runner.workflow:
                 runner.workflow['97']['inputs']['lora'] = params['lora_name']
                 self.logger.info(f"  LoRA pass2 (node 97) lora = {params['lora_name']}")
 
-        if 'lora_strength' in params and params['lora_strength'] is not None:
+        if 'lora_strength' in params and params['lora_strength'] is not None and use_lightning:
             s = float(params['lora_strength'])
             runner.set_parameter('lora_strength', s)
             if '97' in runner.workflow:
@@ -301,14 +318,51 @@ class LinuxBackend(BaseBackend):
 
         lora_high = (params.get('lora_high') or '').strip()
         lora_low  = (params.get('lora_low')  or '').strip() or lora_high
-        if lora_high and '56' in runner.workflow and '97' in runner.workflow:
-            self._inject_content_loras(runner, lora_high, lora_low)
+        if lora_high:
+            self._inject_content_loras(runner, lora_high, lora_low, use_lightning=use_lightning)
 
-    def _inject_content_loras(self, runner, lora_high: str, lora_low: str):
+    def _maybe_swap_lightning_workflow(self, runner, workflow_override=None):
+        """Zamienia workflow JSON na wybrany w app_config lightning_workflow (jeśli różny od domyślnego)."""
+        import json as _json
+        from app.services import app_config_service as _acs
+        _vg = _acs.get_model('linux', 'video_gen')
+        _name = (workflow_override or _vg.get('lightning_workflow', '')).strip()
+        if not _name:
+            return
+        _path = Path(self.workflows_path) / _name
+        if not _path.exists():
+            self.logger.warning(f"  Lightning workflow nie znaleziony: {_path}, używam domyślnego")
+            return
+        with open(_path, encoding='utf-8') as f:
+            runner.workflow = _json.load(f)
+        self.logger.info(f"  ⚡ Lightning workflow: {_name}")
+
+    def _swap_to_hq_workflow(self, runner, params):
+        """Swap workflow JSON to HQ (no lightx2v), adjust steps and split_step."""
+        import json as _json
+        from app.services import app_config_service as _acs
+        _vg = _acs.get_model('linux', 'video_gen')
+        _hq_name = (params.get('workflow_override') or _vg.get('hq_workflow', '_IMAGE2VIDEO_FULL_wan2.2_hq.json'))
+        hq_path = Path(self.workflows_path) / _hq_name
+        if not hq_path.exists():
+            self.logger.error(f"  HQ workflow nie znaleziony: {hq_path}")
+            return
+        with open(hq_path, encoding='utf-8') as f:
+            runner.workflow = _json.load(f)
+        self.logger.info("  🎨 HQ mode: załadowano workflow bez lightx2v")
+
+        from app.services import app_config_service
+        _defs = app_config_service.get_defaults()
+        steps_hq = int(params.get('steps_hq') or _defs.get('steps_hq', 15))
+        runner.set_parameter('steps', steps_hq)
+        runner.set_parameter('split_step', steps_hq // 2)
+        self.logger.info(f"  HQ steps={steps_hq}, split={steps_hq // 2}")
+
+    def _inject_content_loras(self, runner, lora_high: str, lora_low: str, use_lightning: bool = True):
         """Wstrzykuje content LoRA nodes 117 (high) i 118 (low) przed speed LoRA 56/97."""
         wf = runner.workflow
 
-        # Node 117: content LoRA dla high noise (przed node 56)
+        # Node 117: content LoRA HIGH
         wf['117'] = {
             'inputs': {
                 'lora': lora_high,
@@ -319,10 +373,18 @@ class LinuxBackend(BaseBackend):
             'class_type': 'WanVideoLoraSelect',
             '_meta': {'title': 'Content LoRA High Noise'},
         }
-        wf['56']['inputs']['prev_lora'] = ['117', 0]
+        if use_lightning:
+            # light: content → lightx2v(56) → [G4GG(201) →] SetLoRAs(80)
+            wf['56']['inputs']['prev_lora'] = ['117', 0]
+        elif '201' in wf:
+            # HQ + G4GG: content → G4GG(201) → SetLoRAs(80)
+            wf['201']['inputs']['prev_lora'] = ['117', 0]
+        else:
+            # HQ bez G4GG: content → SetLoRAs(80) bezpośrednio
+            wf['80']['inputs']['lora'] = ['117', 0]
         self.logger.info(f"  Content LoRA high (node 117): {lora_high}")
 
-        # Node 118: content LoRA dla low noise (przed node 97)
+        # Node 118: content LoRA LOW
         wf['118'] = {
             'inputs': {
                 'lora': lora_low,
@@ -333,7 +395,15 @@ class LinuxBackend(BaseBackend):
             'class_type': 'WanVideoLoraSelect',
             '_meta': {'title': 'Content LoRA Low Noise'},
         }
-        wf['97']['inputs']['prev_lora'] = ['118', 0]
+        if use_lightning:
+            # light: content → lightx2v(97) → [G4GG(202) →] SetLoRAs(79)
+            wf['97']['inputs']['prev_lora'] = ['118', 0]
+        elif '202' in wf:
+            # HQ + G4GG: content → G4GG(202) → SetLoRAs(79)
+            wf['202']['inputs']['prev_lora'] = ['118', 0]
+        else:
+            # HQ bez G4GG: content → SetLoRAs(79) bezpośrednio
+            wf['79']['inputs']['lora'] = ['118', 0]
         self.logger.info(f"  Content LoRA low  (node 118): {lora_low}")
 
     def _set_seed(self, seed=None):

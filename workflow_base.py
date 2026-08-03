@@ -179,12 +179,12 @@ class WorkflowRunner:
         if not os.path.exists(image_path):
             self.logger.error(f"Plik nie istnieje: {image_path}")
             return None
-        
+
         filename = os.path.basename(image_path)
         self.logger.info(f"Upload obrazu: {filename}")
-        
+
         url = f"{self.api_url}/upload/image"
-        
+
         try:
             with open(image_path, 'rb') as f:
                 files = {'image': (filename, f)}

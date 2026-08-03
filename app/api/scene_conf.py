@@ -23,6 +23,15 @@ async def get_templates():
     return {"templates": svc.list_templates()}
 
 
+@router.get("/template-slots")
+async def get_template_slots(index: int = 0):
+    try:
+        slots = svc.get_template_slots(index)
+    except Exception as e:
+        raise HTTPException(500, str(e))
+    return {"slots": slots}
+
+
 class AnalyzeRequest(BaseModel):
     image_path: str
 
@@ -46,7 +55,7 @@ class GenerateRequest(BaseModel):
     target_filename: str
     template_index: int
     descriptor: dict
-    start_image: str
+    image_map: dict = {}
     scene_name: str = ""
 
 
@@ -57,7 +66,7 @@ async def generate_run(req: GenerateRequest):
             target_filename=req.target_filename,
             template_index=req.template_index,
             descriptor=req.descriptor,
-            start_image=req.start_image,
+            image_map=req.image_map,
             scene_name=req.scene_name,
         )
     except FileNotFoundError as e:

@@ -76,6 +76,7 @@ def _patch_multitalk_workflow(
     height: int,
     positive_prompt: str = "",
     filename_prefix: str = "multitalk",
+    start_image_filename: str | None = None,
 ) -> dict:
     wf = copy.deepcopy(workflow)
 
@@ -86,6 +87,10 @@ def _patch_multitalk_workflow(
     node = _find_node_by_title(wf, "[PATCH] Ten sam obraz + Maska Osoba 2 (namalowana)")
     if node:
         node["inputs"]["image"] = silence_image_filename
+
+    node = _find_node_by_title(wf, "[PATCH] Start Image (klatka startowa wideo)")
+    if node:
+        node["inputs"]["image"] = start_image_filename or speaker_image_filename
 
     node = _find_node_by_title(wf, "[PATCH] Audio - Osoba 1 (mowi)")
     if node:
@@ -149,9 +154,11 @@ def _make_rgba_png_bytes(image_path: Path, mask_array: np.ndarray | None) -> byt
         rgb = img.convert("RGB")
 
     if mask_array is None:
-        alpha = _PILImage.new("L", rgb.size, 0)
+        alpha = _PILImage.new("L", rgb.size, 255)
     else:
-        mask_uint8 = (np.clip(mask_array, 0, 1) * 255).astype(np.uint8)
+        # ComfyUI LoadImage inverts alpha: mask_out = 1 - alpha/255
+        # We need mask_out=1 at face → alpha must be 0 at face → invert here
+        mask_uint8 = (np.clip(1.0 - mask_array, 0, 1) * 255).astype(np.uint8)
         alpha_img = _PILImage.fromarray(mask_uint8, "L")
         if alpha_img.size != rgb.size:
             alpha_img = alpha_img.resize(rgb.size, _PILImage.LANCZOS)
@@ -280,16 +287,58 @@ def _newest_mp4_added_after(directory: Path, known: set[str]) -> Path | None:
     return max(candidates, key=lambda p: p.stat().st_mtime) if candidates else None
 
 
+# ── Frame extraction & concatenation ────────────────────────────────────────
+
+def _extract_last_frame(video_path: Path, output_path: Path) -> None:
+    """Extract the very last frame from a video as PNG (Windows ffmpeg)."""
+    r = subprocess.run(
+        ["ffmpeg", "-y", "-sseof", "-1", "-i", str(video_path),
+         "-vframes", "1", "-q:v", "1", str(output_path)],
+        capture_output=True, timeout=30,
+    )
+    if r.returncode != 0 or not output_path.exists():
+        raise RuntimeError(
+            f"Cannot extract last frame from {video_path.name}: "
+            + r.stderr.decode("utf-8", errors="replace")[-400:]
+        )
+
+
+async def _concatenate_clips(clips: list[Path], output: Path, loop: asyncio.AbstractEventLoop) -> None:
+    """Concatenate MP4 clips with ffmpeg concat demuxer (stream copy)."""
+    concat_list = output.parent / f"_concat_{output.stem}.txt"
+    concat_list.write_text(
+        "\n".join(f"file '{p.as_posix()}'" for p in clips),
+        encoding="utf-8",
+    )
+    def _run():
+        r = subprocess.run(
+            ["ffmpeg", "-y", "-f", "concat", "-safe", "0",
+             "-i", str(concat_list), "-c", "copy", str(output)],
+            capture_output=True, timeout=120,
+        )
+        if r.returncode != 0:
+            raise RuntimeError(
+                "ffmpeg concat failed: "
+                + r.stderr.decode("utf-8", errors="replace")[-400:]
+            )
+    try:
+        await loop.run_in_executor(None, _run)
+    finally:
+        concat_list.unlink(missing_ok=True)
+
+
 # ── Global job state ─────────────────────────────────────────────────────────
 
 _state: dict = {
-    "status":       "idle",
-    "prompt_id":    None,
-    "run_filename": None,
-    "clip_name":    None,
-    "error":        None,
-    "started_at":   None,
-    "elapsed_s":    None,
+    "status":        "idle",
+    "prompt_id":     None,
+    "run_filename":  None,
+    "clip_name":     None,
+    "error":         None,
+    "started_at":    None,
+    "elapsed_s":     None,
+    "step_current":  None,
+    "step_total":    None,
 }
 
 _task: asyncio.Task | None = None
@@ -304,13 +353,15 @@ def get_multitalk_status() -> dict:
 
 def _reset_state() -> None:
     _state.update({
-        "status":    "idle",
-        "prompt_id": None,
+        "status":       "idle",
+        "prompt_id":    None,
         "run_filename": None,
-        "clip_name": None,
-        "error":     None,
-        "started_at": None,
-        "elapsed_s": None,
+        "clip_name":    None,
+        "error":        None,
+        "started_at":   None,
+        "elapsed_s":    None,
+        "step_current": None,
+        "step_total":   None,
     })
 
 
@@ -329,30 +380,39 @@ async def _generate_clip(
     height:         int,
     positive_prompt: str,
     prefix:         str,
+    start_image:    Path | None = None,
 ) -> Path:
-    """
-    Submit one multitalk clip to ComfyUI and return the output mp4 path.
+    """Submit one multitalk clip to ComfyUI and return the output mp4 path.
+
+    base_image  — original image; always used for RGBA/mask PNGs so masks align.
+    start_image — video start frame (extracted last frame when use_last_frame=True).
+                  Defaults to base_image when None.
     """
     import os as _os
     _os.makedirs(str(input_dir), exist_ok=True)
 
     ts = datetime.now().strftime("%Y%m%d%H%M%S%f")
 
-    # Build speaker RGBA PNG (image + speaker face mask as alpha)
+    # Build speaker RGBA PNG: base_image RGB + speaker face mask as alpha
     speaker_png_bytes = _make_rgba_png_bytes(base_image, speaker_mask)
     tmp_speaker = input_dir / f"mt_speaker_{ts}.png"
     tmp_speaker.write_bytes(speaker_png_bytes)
 
-    # Build silence RGBA PNG (image + merged silent-faces mask as alpha)
+    # Build silence RGBA PNG: base_image RGB + merged silent-faces mask as alpha
     silence_png_bytes = _make_rgba_png_bytes(base_image, silence_mask)
     tmp_silence = input_dir / f"mt_silence_{ts}.png"
     tmp_silence.write_bytes(silence_png_bytes)
+
+    # Start image for video generation (separate from mask reference)
+    _start_src = start_image if start_image is not None else base_image
+    tmp_start = input_dir / f"mt_start_{ts}.png"
+    shutil.copy2(str(_start_src), str(tmp_start))
 
     # Copy audio
     tmp_audio = input_dir / f"mt_audio_{ts}{audio_path.suffix}"
     shutil.copy2(str(audio_path), str(tmp_audio))
 
-    # Generate silence WAV
+    # Short silence — just enough for model to know those faces start still
     audio_dur = _audio_duration(audio_path)
     silence_dur = max(0.5, audio_dur * 0.1)
     tmp_silence_wav = input_dir / f"mt_sil_{ts}.wav"
@@ -374,6 +434,7 @@ async def _generate_clip(
             height=height,
             positive_prompt=positive_prompt,
             filename_prefix=prefix,
+            start_image_filename=tmp_start.name,
         )
 
         def _submit():
@@ -481,7 +542,7 @@ async def _generate_clip(
         return out_video_path
 
     finally:
-        for p in (tmp_speaker, tmp_silence, tmp_audio, tmp_silence_wav):
+        for p in (tmp_speaker, tmp_silence, tmp_audio, tmp_silence_wav, tmp_start):
             try:
                 if p.exists():
                     p.unlink()
@@ -562,6 +623,14 @@ async def _run_multitalk(
         except Exception:
             pass
 
+        # Save last frame so a chain after this multitalk can snap to it
+        try:
+            frames_dir = project_folder / "frames"
+            frames_dir.mkdir(parents=True, exist_ok=True)
+            _extract_last_frame(dest_path, frames_dir / f"{dest_path.stem}_end.png")
+        except Exception:
+            pass
+
         _state.update({
             "status":    "done",
             "clip_name": clip_name,
@@ -572,20 +641,141 @@ async def _run_multitalk(
         _state.update({"status": "error", "error": str(exc)})
 
 
+# ── Multi-step background task ───────────────────────────────────────────────
+
+async def _run_multitalk_steps(
+    project_folder:  Path,
+    original_image:  Path,
+    steps:           list[dict],   # [{"speaker_idx": int, "audio_path": Path}, ...]
+    num_persons:     int,
+    dest_path:       Path,
+    run_filename:    str,
+    clip_name:       str,
+    width:           int,
+    height:          int,
+    positive_prompt: str,
+    use_last_frame:  bool = False,
+) -> None:
+    loop       = asyncio.get_running_loop()
+    url        = settings.comfyui_url
+    input_dir  = Path(settings.comfyui_linux_input_dir)
+    output_dir = Path(settings.comfyui_linux_output_dir)
+
+    _state["status"]     = "running"
+    _state["step_total"] = len(steps)
+
+    # Load all person masks from original image's multitalk dir — never changes between steps
+    person_masks: list[np.ndarray | None] = []
+    for i in range(num_persons):
+        pimg = person_image_path(project_folder, original_image, i)
+        mp   = _mask_path(pimg)
+        person_masks.append(_load_mask_array(mp))
+
+    step_clips:  list[Path] = []
+    frame_temps: list[Path] = []
+    current_image = original_image
+
+    try:
+        for step_idx, step in enumerate(steps):
+            _state["step_current"] = step_idx + 1
+            speaker_idx = int(step["speaker_idx"])
+            audio_path  = step["audio_path"]
+
+            speaker_mask  = person_masks[speaker_idx]
+            silence_masks = [m for i, m in enumerate(person_masks) if i != speaker_idx]
+            silence_mask  = _merge_masks(silence_masks)
+
+            prefix = f"mt_s{step_idx}_{Path(dest_path).stem}"
+            clip = await _generate_clip(
+                loop=loop,
+                comfyui_url=url,
+                input_dir=input_dir,
+                output_dir=output_dir,
+                base_image=original_image,
+                start_image=current_image if use_last_frame else None,
+                speaker_mask=speaker_mask,
+                silence_mask=silence_mask,
+                audio_path=audio_path,
+                width=width,
+                height=height,
+                positive_prompt=positive_prompt,
+                prefix=prefix,
+            )
+
+            # Save step clip to stable local path (output_dir file may get gc'd)
+            step_clip = dest_path.parent / f"_step{step_idx}_{dest_path.name}"
+            dest_path.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(str(clip), str(step_clip))
+            try:
+                clip.unlink()
+            except Exception:
+                pass
+            step_clips.append(step_clip)
+
+            # Extract last frame for next step (only when use_last_frame=True)
+            if use_last_frame and step_idx < len(steps) - 1:
+                ts = datetime.now().strftime("%H%M%S%f")
+                frame_tmp = dest_path.parent / f"_mt_frame_{step_idx}_{ts}.png"
+                frame_src = step_clip
+                def _extr(src=frame_src, dst=frame_tmp):
+                    _extract_last_frame(src, dst)
+                await loop.run_in_executor(None, _extr)
+                if not frame_tmp.exists():
+                    raise RuntimeError(f"Ekstrakcja klatki końcowej kroku {step_idx + 1} nie powiodła się")
+                frame_temps.append(frame_tmp)
+                current_image = frame_tmp
+
+        # Concatenate step clips → final output
+        _state["step_current"] = "concat"
+        tmp_dest = dest_path.parent / f"_tmp_{dest_path.name}"
+
+        if len(step_clips) == 1:
+            shutil.copy2(str(step_clips[0]), str(tmp_dest))
+        else:
+            await _concatenate_clips(step_clips, tmp_dest, loop)
+
+        if dest_path.exists():
+            dest_path.unlink()
+        tmp_dest.rename(dest_path)
+
+        # Save last frame so a chain after this multitalk can snap to it
+        try:
+            frames_dir = project_folder / "frames"
+            frames_dir.mkdir(parents=True, exist_ok=True)
+            _extract_last_frame(dest_path, frames_dir / f"{dest_path.stem}_end.png")
+        except Exception:
+            pass
+
+        _state.update({
+            "status":    "done",
+            "clip_name": clip_name,
+            "elapsed_s": round(time.time() - _state["started_at"], 1),
+        })
+
+    except Exception as exc:
+        _state.update({"status": "error", "error": str(exc)})
+
+    finally:
+        for p in step_clips + frame_temps:
+            try:
+                if p.exists():
+                    p.unlink()
+            except Exception:
+                pass
+
+
 # ── Public API ───────────────────────────────────────────────────────────────
 
 def start_multitalk(run_filename: str, item: dict, image_filename: str) -> dict:
     """
-    Start a multitalk clip generation.
+    Start a multitalk clip generation (single-step or multi-step).
 
-    item fields:
-        audio       : str    audio filename (relative to project_folder)
-        speaker_idx : int    0-based index of the speaking person
-        num_persons : int    total number of people in the scene
-        width       : int    (optional, auto-detected from image if missing)
-        height      : int    (optional)
-        pos         : str    (optional) positive prompt
-        name        : str    (optional) output clip name
+    Single-step item fields (backward compat):
+        audio, speaker_idx, num_persons, width, height, pos, name
+
+    Multi-step item fields:
+        steps: [{speaker_idx, audio}, ...]
+        num_persons, width, height, pos, name
     """
     global _task
 
@@ -600,17 +790,7 @@ def start_multitalk(run_filename: str, item: dict, image_filename: str) -> dict:
     if not base_image.exists():
         return {"ok": False, "error": f"Nie znaleziono obrazu: {image_filename}"}
 
-    audio_name = item.get("audio", "")
-    if not audio_name:
-        return {"ok": False, "error": "Brak pola audio"}
-    audio_path = pf / audio_name
-    if not audio_path.exists():
-        return {"ok": False, "error": f"Nie znaleziono audio: {audio_name}"}
-
-    speaker_idx = int(item.get("speaker_idx", 0))
     num_persons = int(item.get("num_persons", 2))
-    if speaker_idx >= num_persons:
-        return {"ok": False, "error": f"speaker_idx={speaker_idx} >= num_persons={num_persons}"}
 
     # Verify person images exist
     for i in range(num_persons):
@@ -630,35 +810,97 @@ def start_multitalk(run_filename: str, item: dict, image_filename: str) -> dict:
     if not clip_name.endswith(".mp4"):
         clip_name += ".mp4"
 
-    dest_path = pf / "transitions" / clip_name
+    dest_path = pf / "transitions" / "multitalk" / clip_name
 
-    _reset_state()
-    _state.update({
-        "status":       "queued",
-        "run_filename": run_filename,
-        "clip_name":    clip_name,
-        "started_at":   time.time(),
-    })
+    use_last_frame = bool(item.get("use_last_frame", False))
+    raw_steps = item.get("steps")
+    is_multi  = isinstance(raw_steps, list) and len(raw_steps) > 0
 
-    try:
-        _task = asyncio.create_task(
-            _run_multitalk(
-                project_folder=pf,
-                base_image=base_image,
-                speaker_idx=speaker_idx,
-                num_persons=num_persons,
-                audio_path=audio_path,
-                dest_path=dest_path,
-                run_filename=run_filename,
-                clip_name=clip_name,
-                width=width,
-                height=height,
-                positive_prompt=positive_prompt,
+    if is_multi:
+        # Multi-step mode
+        steps: list[dict] = []
+        for i, s in enumerate(raw_steps):
+            audio_name = str(s.get("audio", "") or "")
+            if not audio_name:
+                return {"ok": False, "error": f"Krok {i + 1}: brak pola audio"}
+            audio_path = pf / audio_name
+            if not audio_path.exists():
+                return {"ok": False, "error": f"Krok {i + 1}: nie znaleziono audio: {audio_name}"}
+            speaker_idx = int(s.get("speaker_idx", 0))
+            if speaker_idx >= num_persons:
+                return {"ok": False, "error": f"Krok {i + 1}: speaker_idx={speaker_idx} >= num_persons={num_persons}"}
+            steps.append({"speaker_idx": speaker_idx, "audio_path": audio_path})
+
+        _reset_state()
+        _state.update({
+            "status":       "queued",
+            "run_filename": run_filename,
+            "clip_name":    clip_name,
+            "started_at":   time.time(),
+            "step_current": 0,
+            "step_total":   len(steps),
+        })
+
+        try:
+            _task = asyncio.create_task(
+                _run_multitalk_steps(
+                    project_folder=pf,
+                    original_image=base_image,
+                    steps=steps,
+                    num_persons=num_persons,
+                    dest_path=dest_path,
+                    run_filename=run_filename,
+                    clip_name=clip_name,
+                    width=width,
+                    height=height,
+                    positive_prompt=positive_prompt,
+                    use_last_frame=use_last_frame,
+                )
             )
-        )
-    except RuntimeError as e:
-        _state.update({"status": "error", "error": str(e)})
-        return {"ok": False, "error": str(e)}
+        except RuntimeError as e:
+            _state.update({"status": "error", "error": str(e)})
+            return {"ok": False, "error": str(e)}
+
+    else:
+        # Single-step mode (backward compat)
+        audio_name = item.get("audio", "")
+        if not audio_name:
+            return {"ok": False, "error": "Brak pola audio"}
+        audio_path = pf / audio_name
+        if not audio_path.exists():
+            return {"ok": False, "error": f"Nie znaleziono audio: {audio_name}"}
+
+        speaker_idx = int(item.get("speaker_idx", 0))
+        if speaker_idx >= num_persons:
+            return {"ok": False, "error": f"speaker_idx={speaker_idx} >= num_persons={num_persons}"}
+
+        _reset_state()
+        _state.update({
+            "status":       "queued",
+            "run_filename": run_filename,
+            "clip_name":    clip_name,
+            "started_at":   time.time(),
+        })
+
+        try:
+            _task = asyncio.create_task(
+                _run_multitalk(
+                    project_folder=pf,
+                    base_image=base_image,
+                    speaker_idx=speaker_idx,
+                    num_persons=num_persons,
+                    audio_path=audio_path,
+                    dest_path=dest_path,
+                    run_filename=run_filename,
+                    clip_name=clip_name,
+                    width=width,
+                    height=height,
+                    positive_prompt=positive_prompt,
+                )
+            )
+        except RuntimeError as e:
+            _state.update({"status": "error", "error": str(e)})
+            return {"ok": False, "error": str(e)}
 
     return {"ok": True, "clip_name": clip_name, "width": width, "height": height}
 

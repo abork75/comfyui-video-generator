@@ -264,6 +264,7 @@ def run_batch_generation(config):
                 'lora_high':     transition_to_next.get('lora_high',     chain_config.get('lora_high')),
                 'lora_low':      transition_to_next.get('lora_low',      chain_config.get('lora_low')),
                 'generate_count': transition_to_next.get('generate_count', chain_config.get('generate_count', 1)),
+                'use_lightning':  transition_to_next.get('use_lightning',  chain_config.get('use_lightning')),
 
                 # Mark as normal I2V2I (not chain I2V)
                 'is_i2v_mode': False,
@@ -313,6 +314,7 @@ def run_batch_generation(config):
                     'lora_high':     to_config.get('lora_high',     from_config.get('lora_high')),
                     'lora_low':      to_config.get('lora_low',      from_config.get('lora_low')),
                     'generate_count': to_config.get('generate_count', from_config.get('generate_count', 1)),
+                    'use_lightning':  to_config.get('use_lightning'),
                     'is_i2v_mode': True,  # Chain is always I2V
                     'atlascloud_resolution':    to_config.get('atlascloud_resolution',    from_config.get('atlascloud_resolution')),
                     'atlascloud_prompt_extend': to_config.get('atlascloud_prompt_extend', from_config.get('atlascloud_prompt_extend')),
@@ -346,6 +348,7 @@ def run_batch_generation(config):
                     'lora_high':     from_config.get('lora_high',     to_config.get('lora_high')),
                     'lora_low':      from_config.get('lora_low',      to_config.get('lora_low')),
                     'generate_count': from_config.get('generate_count', to_config.get('generate_count', 1)),
+                    'use_lightning':  from_config.get('use_lightning',  to_config.get('use_lightning')),
                     'is_i2v_mode': False,
                     'atlascloud_resolution':    from_config.get('atlascloud_resolution',    to_config.get('atlascloud_resolution')),
                     'atlascloud_prompt_extend': from_config.get('atlascloud_prompt_extend', to_config.get('atlascloud_prompt_extend')),
@@ -1316,6 +1319,14 @@ def run_batch_generation(config):
                                 'success': False, 'is_chain': is_chain_step})
                 continue
 
+            # Resolve use_lightning: tile config → LIGHTNING_OVERRIDE env var → default True
+            _use_lightning = trans_config.get('use_lightning')
+            _lo = os.environ.get('LIGHTNING_OVERRIDE', '').strip()
+            if _lo:
+                _use_lightning = (_lo == '1')
+            if _use_lightning is None:
+                _use_lightning = True
+
             _gt_kwargs = dict(
                 start_frame=start_frame,
                 end_frame=end_frame,
@@ -1337,6 +1348,7 @@ def run_batch_generation(config):
                 lora_low=trans_config.get('lora_low'),
                 audio_prompt=trans_config.get('audio_prompt', ''),
                 audio_negative_prompt=trans_config.get('audio_negative_prompt', ''),
+                use_lightning=_use_lightning,
             )
             # Pass AtlasCloud-specific per-item overrides (ignored by other backends)
             if backend_type == 'atlascloud':

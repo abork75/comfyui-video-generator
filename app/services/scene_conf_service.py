@@ -128,6 +128,19 @@ def _build_qwen_workflow(image_filename: str, seed: int | None = None) -> dict:
 
 # ── Template parsing ───────────────────────────────────────────────────────────
 
+def get_template_slots(template_index: int) -> list[str]:
+    """Return ordered list of unique 'file' values from template flow items."""
+    flow_slice, _ = _get_template_slice(template_index)
+    seen: list[str] = []
+    for item in flow_slice:
+        if not isinstance(item, dict) or item.get("type") == "scene_break":
+            continue
+        f = item.get("file")
+        if f and f not in seen:
+            seen.append(f)
+    return seen
+
+
 def list_templates() -> list[dict]:
     """Return list of {name, index} for each scene_break in templates file."""
     if not TEMPLATES_FILE.exists():
@@ -261,10 +274,14 @@ def append_scene(
     target_filename: str,
     template_index: int,
     descriptor: dict,
-    start_image: str,
+    image_map: dict,
     scene_name: str = "",
 ) -> None:
-    """Append template scene (scene_break + file + chains) to an existing RUN yaml."""
+    """Append template scene (scene_break + file + chains) to an existing RUN yaml.
+
+    image_map: {original_filename_in_template: real_path_chosen_by_user}
+    Every 'file' entry in the template is substituted via this map.
+    """
     from app.services.yaml_service import save_yaml_flow, yaml_flow_to_internal
     from app.services.run_file_service import RUNS_FOLDER, invalidate_run_info_cache
 
@@ -297,7 +314,6 @@ def append_scene(
         raise ValueError(f"Scena '{effective_name}' już istnieje w tym projekcie")
 
     new_items: list = []
-    first_file_replaced = False
 
     for item in flow_slice:
         item = copy.deepcopy(item)
@@ -307,9 +323,9 @@ def append_scene(
             item["name"] = effective_name
             new_items.append(item)
             continue
-        if "file" in item and not first_file_replaced:
-            item["file"] = start_image
-            first_file_replaced = True
+        if "file" in item:
+            orig = item["file"]
+            item["file"] = image_map.get(orig, orig)
             new_items.append(item)
             continue
         if "chain" in item:

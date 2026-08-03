@@ -28,6 +28,7 @@ SETUP REQUIRED:
 import asyncio
 import copy
 import json
+import re
 import shutil
 import subprocess
 import sys
@@ -103,6 +104,13 @@ def _audio_duration(path: Path) -> float:
 def _round32(n: int) -> int:
     """Round down to nearest multiple of 32 (diffusion model requirement)."""
     return max(32, (n // 32) * 32)
+
+
+def _ascii_safe(name: str, max_len: int = 40) -> str:
+    """Strip non-ASCII chars so filenames are safe on Linux ComfyUI (WSL2)."""
+    safe = re.sub(r'[^\x20-\x7E]', '', name)        # keep printable ASCII only
+    safe = re.sub(r'[^\w\-.]', '_', safe)            # replace remaining specials
+    return safe[:max_len].strip('_') or "x"
 
 
 def suggest_resolution(image_path: Path, audio_paths: list[Path]) -> tuple[int, int]:
@@ -312,6 +320,8 @@ def _reset_state() -> None:
         "talk_name":    None,
         "segment":      None,
         "total_segs":   None,
+        "step":         None,
+        "from_step":    0,
         "output_name":  None,
         "error":        None,
         "started_at":   None,
@@ -471,10 +481,11 @@ def _color_correct_to_source(video_path: Path, source_image: Path) -> bool:
 def _extract_last_frame(mp4_path: Path, out_path: Path) -> bool:
     """Extract last frame of mp4 to out_path (PNG). Returns True on success."""
     try:
+        # -update 1: ffmpeg overwrites out_path with each decoded frame,
+        # leaving the last frame when done — reliable regardless of video length.
         subprocess.run(
-            ["ffmpeg", "-y", "-sseof", "-2", "-i", str(mp4_path),
-             "-vframes", "1", str(out_path)],
-            capture_output=True, timeout=30,
+            ["ffmpeg", "-y", "-i", str(mp4_path), "-update", "1", str(out_path)],
+            capture_output=True, timeout=60,
         )
         return out_path.exists() and out_path.stat().st_size > 0
     except Exception:
@@ -505,8 +516,11 @@ async def _generate_segment(
     # round on top of whatever compression the source already has.
     _jpeg_exts = {".jpg", ".jpeg"}
     _img_ext   = ".png" if image_path.suffix.lower() in _jpeg_exts else image_path.suffix
-    tmp_img   = input_dir / f"talk_img_{ts}_{image_path.stem}{_img_ext}"
-    tmp_audio = input_dir / f"talk_aud_{ts}_{audio_path.name}"
+    # Use ASCII-safe names: ComfyUI runs on Linux (WSL2) and may reject non-ASCII filenames.
+    _safe_stem = _ascii_safe(image_path.stem)
+    _safe_audio = _ascii_safe(audio_path.stem)
+    tmp_img   = input_dir / f"talk_img_{ts}_{_safe_stem}{_img_ext}"
+    tmp_audio = input_dir / f"talk_aud_{ts}_{_safe_audio}{audio_path.suffix}"
 
     # os.makedirs is more reliable than Path.mkdir for UNC and network paths
     import os as _os
@@ -707,6 +721,57 @@ async def _generate_segment(
                 pass
 
 
+# ── Chain→talk fade-in ───────────────────────────────────────────────────────
+
+def _logsys(msg: str) -> None:
+    try:
+        from app.services.process_service import process_service as _ps
+        _ps.log_sys(msg)
+    except Exception:
+        print(msg)
+
+
+def _apply_chain_fade_in(video_path: Path, ref_frame: Path, fade_sec: float = 0.4) -> None:
+    """Blend the first `fade_sec` seconds of video_path from ref_frame (chain last frame)."""
+    tmp = video_path.parent / f"_fade_{video_path.name}"
+    _logsys(f"  [fade] applying {fade_sec}s: {ref_frame.name} → {video_path.name}")
+    try:
+        subprocess.run(
+            [
+                "ffmpeg", "-y",
+                "-loop", "1", "-t", "1.0", "-i", str(ref_frame),
+                "-i", str(video_path),
+                "-filter_complex",
+                f"[0:v]fps=24,format=yuv420p[s];[1:v]format=yuv420p[v1];[s][v1]xfade=transition=fade:duration={fade_sec}:offset=0.04[v]",
+                "-map", "[v]", "-map", "1:a?",
+                "-c:v", "libx264", "-crf", "18", "-preset", "fast",
+                "-c:a", "copy",
+                str(tmp),
+            ],
+            check=True,
+            capture_output=True,
+            timeout=120,
+        )
+        video_path.unlink()
+        tmp.rename(video_path)
+        _logsys(f"  ✓ fade-in {fade_sec}s → {video_path.name}")
+    except subprocess.CalledProcessError as e:
+        stderr_tail = (e.stderr or b"").decode("utf-8", errors="replace")[-600:]
+        _logsys(f"  [fade] ffmpeg błąd (kod {e.returncode}): {stderr_tail[-300:]}")
+        if tmp.exists():
+            try:
+                tmp.unlink()
+            except Exception:
+                pass
+    except Exception as e:
+        _logsys(f"  [fade] błąd: {e}")
+        if tmp.exists():
+            try:
+                tmp.unlink()
+            except Exception:
+                pass
+
+
 # ── Background task ──────────────────────────────────────────────────────────
 
 async def _run_talk(
@@ -718,6 +783,8 @@ async def _run_talk(
     width:          int,
     height:         int,
     *,
+    from_step:      int = 0,          # 0-indexed; skip earlier audio entries and resolve start image
+    total_audio:    int | None = None, # full segment count (for correct file numbering); defaults to len(audio_entries)
     # Optional overrides — used by generate_talk_clip_sync() for batch scripts.
     # When None the values are read from app settings (default web-app path).
     _comfyui_url:  str | None  = None,
@@ -732,19 +799,31 @@ async def _run_talk(
     try:
         segment_paths: list[Path] = []
         total = len(audio_entries)
-        _state["total_segs"] = total
+        # total_audio = full segment count across the whole talk tile (for correct numbering)
+        _total_audio = total_audio if total_audio is not None else (from_step + total)
+        _state["total_segs"] = _total_audio
 
+        # When re-generating from an intermediate step, try to use the last frame
+        # of the preceding segment so continuity is preserved.
         current_image = source_image
+        if from_step > 0:
+            prev_frame = input_dir / f"talk_lastframe_{Path(dest_path).stem}_{from_step:02d}.png"
+            if prev_frame.exists():
+                current_image = prev_frame
+        # last_frames[i] = last frame of segment i (used for inter-segment fade)
+        last_frames: list[Path | None] = []
 
         for idx, entry in enumerate(audio_entries, 1):
             audio_path = entry["path"]
             seg_pos    = entry.get("pos", "")
             seg_neg    = entry.get("neg", "")
 
-            _state["segment"] = f"{idx}/{total} ({audio_path.name})"
+            abs_step = from_step + idx   # 1-indexed absolute step number
+            _state["segment"] = f"{abs_step}/{_total_audio} ({audio_path.name})"
+            _state["step"]    = abs_step
             _state["status"]  = "running"
 
-            prefix  = f"Talk_{Path(dest_path).stem}_{idx:02d}"
+            prefix  = f"Talk_{_ascii_safe(Path(dest_path).stem)}_{abs_step:02d}"
             seg_out = await _generate_segment(
                 loop=loop,
                 comfyui_url=url,
@@ -760,16 +839,55 @@ async def _run_talk(
             )
             segment_paths.append(seg_out)
 
-            # Each subsequent segment anchors on the last frame of the previous one
+            # Each subsequent segment anchors on the last frame of the previous one.
+            # Use abs_step so the lastframe file is always named by absolute segment index.
             if idx < total:
-                frame_path = input_dir / f"talk_lastframe_{Path(dest_path).stem}_{idx:02d}.png"
-                if _extract_last_frame(seg_out, frame_path):
+                frame_path = input_dir / f"talk_lastframe_{Path(dest_path).stem}_{abs_step:02d}.png"
+                ok = _extract_last_frame(seg_out, frame_path)
+                try:
+                    from app.services.process_service import process_service as _ps2
+                    _ps2.log_sys(
+                        f"  [seg{abs_step}→{abs_step+1}] extract_last_frame: seg_out={seg_out} "
+                        f"ok={ok} frame={frame_path} exists={frame_path.exists()}"
+                    )
+                except Exception:
+                    pass
+                if ok:
                     current_image = frame_path
+                    last_frames.append(frame_path)
+                else:
+                    last_frames.append(None)
+
+        # Apply inter-segment cross-fades: smooth the junction between each pair of segments.
+        # last_frames[i] is the last frame of segment i; apply it as fade-in to segment i+1.
+        try:
+            from app.services.process_service import process_service as _ps
+            _ps.log_sys(f"  [fade] segments={len(segment_paths)} last_frames={len(last_frames)}")
+        except Exception:
+            pass
+        for seg_idx, (seg_path, ref_frame) in enumerate(zip(segment_paths[1:], last_frames), 1):
+            try:
+                from app.services.process_service import process_service as _ps
+                _ps.log_sys(f"  [fade] seg{seg_idx+1}: ref={ref_frame}, exists={ref_frame.exists() if ref_frame else False}")
+            except Exception:
+                pass
+            if ref_frame and ref_frame.exists():
+                _apply_chain_fade_in(seg_path, ref_frame, fade_sec=0.4)
+
+        # Extract end frame NOW while last segment is still at the Linux output path.
+        # After moving to dest_path (CapCut VFS), ffmpeg can't open it.
+        # input_dir is on the WSL filesystem — accessible to both Python and ffmpeg.
+        _end_frame_tmp = input_dir / f"talk_endframe_{dest_path.stem}.png"
+        _extract_last_frame(segment_paths[-1], _end_frame_tmp)
 
         # Merge segments (or just move if only one)
         dest_path.parent.mkdir(parents=True, exist_ok=True)
 
-        if len(segment_paths) == 1:
+        # Total segments in the full talk (original count, not just what we generated now)
+        total_original = _total_audio
+
+        if total_original == 1:
+            # True single-segment talk — use canonical name
             tmp_dest = dest_path.parent / f"_tmp_talk_{dest_path.name}"
             shutil.copy2(str(segment_paths[0]), str(tmp_dest))
             if dest_path.exists():
@@ -779,33 +897,44 @@ async def _run_talk(
                 segment_paths[0].unlink()
             except Exception:
                 pass
+            final_paths = [dest_path]
         else:
-            # Concatenate with ffmpeg
-            concat_list = dest_path.parent / f"_concat_{dest_path.stem}.txt"
-            try:
-                lines = [f"file '{p}'\n" for p in segment_paths]
-                concat_list.write_text("".join(lines), encoding="utf-8")
-                subprocess.run(
-                    [
-                        "ffmpeg", "-y",
-                        "-f", "concat", "-safe", "0",
-                        "-i", str(concat_list),
-                        "-c", "copy",
-                        str(dest_path),
-                    ],
-                    check=True,
-                    capture_output=True,
-                )
-            finally:
+            # Multi-segment: keep each segment as a separate numbered file.
+            # When from_step > 0 the absolute index starts at from_step+1.
+            # e.g. from_step=1, seg_i=1 → _02.mp4
+            final_paths = []
+            for seg_i, seg_src in enumerate(segment_paths, 1):
+                abs_seg = from_step + seg_i
+                seg_dest = dest_path.parent / f"{dest_path.stem}_{abs_seg:02d}.mp4"
+                tmp_seg  = dest_path.parent / f"_tmp_{seg_dest.name}"
+                shutil.copy2(str(seg_src), str(tmp_seg))
+                if seg_dest.exists():
+                    seg_dest.unlink()
+                tmp_seg.rename(seg_dest)
                 try:
-                    concat_list.unlink()
+                    seg_src.unlink()
                 except Exception:
                     pass
-                for p in segment_paths:
-                    try:
-                        p.unlink()
-                    except Exception:
-                        pass
+                final_paths.append(seg_dest)
+
+        # Save last frame of the last segment so a following chain can snap to it.
+        # Prefer the pre-extracted temp frame (Linux path, ffmpeg-accessible) over
+        # final_paths[-1] which may be in CapCut VFS (inaccessible to ffmpeg).
+        pf = dest_path.parent.parent.parent
+        frames_dir = pf / "frames"
+        frames_dir.mkdir(parents=True, exist_ok=True)
+        try:
+            _end_dst = frames_dir / f"{dest_path.stem}_end.png"
+            if _end_frame_tmp.exists():
+                shutil.copy2(str(_end_frame_tmp), str(_end_dst))
+                try:
+                    _end_frame_tmp.unlink()
+                except Exception:
+                    pass
+            else:
+                _extract_last_frame(final_paths[-1], _end_dst)
+        except Exception:
+            pass
 
         elapsed = round(time.time() - _state["started_at"], 1)
         _state.update({
@@ -827,6 +956,8 @@ def start_talk(
     run_filename: str,
     talk_item:    dict,
     start_image:  str,
+    from_step:    int = 0,          # 0-indexed: first segment to generate
+    to_step:      int | None = None,  # 0-indexed inclusive: last segment to generate (None = to end)
 ) -> dict:
     """
     Queue a talk generation job.
@@ -848,9 +979,23 @@ def start_talk(
     if pf is None:
         return {"ok": False, "error": f"Nie znaleziono project_folder dla: {run_filename}"}
 
-    # Width/height needed early for on-the-fly frame extraction
-    width  = int(talk_item.get("width", 480))
-    height = int(talk_item.get("height", 832))
+    # Width/height: tile > project defaults > hardcoded fallback
+    # (mirrors chain_service resolution logic so chain→talk uses the same resolution)
+    _tile_w = talk_item.get("width")
+    _tile_h = talk_item.get("height")
+    if _tile_w and _tile_h:
+        width  = (int(_tile_w) // 16) * 16 or 480
+        height = (int(_tile_h) // 16) * 16 or 832
+    else:
+        from app.services.run_file_service import get_run_details
+        _run_details = get_run_details(run_filename) or {}
+        _proj_res = _run_details.get("force_resolution") or _run_details.get("default_resolution")
+        if _proj_res:
+            width  = (int(_proj_res[0]) // 16) * 16 or 480
+            height = (int(_proj_res[1]) // 16) * 16 or 832
+        else:
+            width  = 480
+            height = 832
 
     # Resolve start image.
     # If the caller passed a video filename, use the extracted end-frame JPEG
@@ -926,6 +1071,14 @@ def start_talk(
     if not audio_entries:
         return {"ok": False, "error": "Brak pliku audio"}
 
+    # Slice audio_entries when regenerating from/to an intermediate step
+    total_audio = len(audio_entries)   # full count (needed for correct file numbering)
+    if from_step > 0 or to_step is not None:
+        if from_step >= total_audio:
+            return {"ok": False, "error": f"from_step={from_step} >= total segments ({total_audio})"}
+        end = (to_step + 1) if (to_step is not None) else total_audio
+        audio_entries = audio_entries[from_step:end]
+
     dest_path = talk_path(pf, talk_item)
     talk_name = dest_path.name
 
@@ -949,13 +1102,15 @@ def start_talk(
         "status":       "queued",
         "run_filename": run_filename,
         "talk_name":    talk_name,
+        "from_step":    from_step,
         "started_at":   time.time(),
     })
 
     try:
         _task = asyncio.create_task(
             _run_talk(img_path, audio_entries, dest_path,
-                      run_filename, talk_name, width, height)
+                      run_filename, talk_name, width, height,
+                      from_step=from_step, total_audio=total_audio)
         )
     except RuntimeError as e:
         _state.update({"status": "error", "error": str(e)})

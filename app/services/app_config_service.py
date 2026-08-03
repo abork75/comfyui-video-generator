@@ -43,7 +43,7 @@ _DEFAULTS: dict[str, Any] = {
             "workflows_path":        "",
             "comfyui_output_folder": "",
             "models": {
-                "video_gen": {"config_path": "", "lightning_workflow": "_IMAGE2VIDEO_FULL_wan2.2_3step.json", "hq_workflow": "_IMAGE2VIDEO_FULL_wan2.2_hq.json"},
+                "video_gen": {"config_path": "", "lightning_workflow": "_I2V_dasiwa_3step_nog4gg.json", "hq_workflow": "_I2V_classic_hq_nog4gg.json"},
                 "talk":      {"workflow_json": ""},
                 "multitalk": {"workflow_json": ""},
             },
@@ -64,7 +64,6 @@ _DEFAULTS: dict[str, Any] = {
     "defaults": {
         "resolution":           [1024, 1024],
         "fps":                  16,
-        "steps":                6,
         "cfg":                  2.0,
         "duration":             2,
         "blocks_to_swap":       35,
@@ -90,6 +89,9 @@ def _deep_merge(base: dict, override: dict) -> dict:
     return result
 
 
+_load_cache: dict = {}  # {"data": ..., "mtime_ns": int}
+
+
 def _load_raw() -> dict:
     try:
         text = APP_CONFIG_PATH.read_text(encoding="utf-8")
@@ -100,8 +102,19 @@ def _load_raw() -> dict:
 
 
 def load() -> dict:
-    """Return merged config: hard-coded defaults ← app_config.yaml."""
-    return _deep_merge(_DEFAULTS, _load_raw())
+    """Return merged config: hard-coded defaults ← app_config.yaml, cached by mtime."""
+    try:
+        mtime_ns = APP_CONFIG_PATH.stat().st_mtime_ns
+    except OSError:
+        return _deep_merge(_DEFAULTS, {})
+
+    if _load_cache.get("mtime_ns") == mtime_ns:
+        return _load_cache["data"]
+
+    merged = _deep_merge(_DEFAULTS, _load_raw())
+    _load_cache["mtime_ns"] = mtime_ns
+    _load_cache["data"] = merged
+    return merged
 
 
 def save(data: dict) -> None:
