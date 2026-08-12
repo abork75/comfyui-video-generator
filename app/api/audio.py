@@ -132,8 +132,10 @@ async def _run_sequence_audio_bg(
     prompt: str,
     negative_prompt: str,
     api_url: str,
+    clip_names: list[str],
+    clip_durations: list[float],
 ) -> None:
-    import subprocess, tempfile
+    import json, subprocess, tempfile
     from utils.mmaudio_utils import add_audio as _add_audio
     logger = _LogBridge()
 
@@ -184,12 +186,125 @@ async def _run_sequence_audio_bg(
             logger.error(f"ffmpeg audio extract failed: {r2.stderr.decode()[:200]}")
             return
 
+        # Save sidecar JSON with clip metadata for sync
+        offsets = []
+        acc = 0.0
+        for d in clip_durations:
+            offsets.append(round(acc, 4))
+            acc += d
+        sidecar = output_mp3.with_suffix('.json')
+        sidecar.write_text(json.dumps({
+            "clips": clip_names,
+            "clip_durations": [round(d, 4) for d in clip_durations],
+            "offsets": offsets,
+        }, ensure_ascii=False, indent=2), encoding='utf-8')
+
         logger.success(f"Ambient audio zapisane: {output_mp3.name}")
         process_service.log_sys(f"[AMBIENT_READY] {output_mp3.name}")
 
     finally:
         concat_list.unlink(missing_ok=True)
         concat_video.unlink(missing_ok=True)
+
+
+def _podklad_dir(project_folder: Path) -> Path:
+    d = project_folder / "transitions" / "podklad"
+    d.mkdir(parents=True, exist_ok=True)
+    return d
+
+
+def _ambient_path(project_folder: Path, filename: str) -> Path | None:
+    """Resolve ambient mp3: check transitions/podklad/ then project root (legacy)."""
+    p = project_folder / "transitions" / "podklad" / filename
+    if p.exists():
+        return p
+    p2 = project_folder / filename
+    if p2.exists():
+        return p2
+    return None
+
+
+@router.get("/ambient/{run_filename}")
+async def list_ambient_files(run_filename: str):
+    """List sequence_ambient_*.mp3 files (from transitions/podklad/ and project root legacy)."""
+    import json
+    yaml_path = RUNS_FOLDER / run_filename
+    if not yaml_path.exists():
+        raise HTTPException(status_code=404, detail=f"Plik nie istnieje: {run_filename}")
+    globals_data = get_yaml_globals(yaml_path)
+    if not globals_data:
+        raise HTTPException(status_code=400, detail="Nie można odczytać YAML")
+    project_folder = Path(globals_data.get("project_folder") or "")
+    if not project_folder or not project_folder.exists():
+        return {"files": []}
+
+    # Collect from both locations; podklad/ takes priority
+    seen: set[str] = set()
+    all_files: list[Path] = []
+    podklad = project_folder / "transitions" / "podklad"
+    if podklad.exists():
+        for p in podklad.glob("sequence_ambient_*.mp3"):
+            all_files.append(p)
+            seen.add(p.name)
+    for p in project_folder.glob("sequence_ambient_*.mp3"):
+        if p.name not in seen:
+            all_files.append(p)
+
+    all_files.sort(key=lambda p: p.stat().st_mtime, reverse=True)
+
+    result = []
+    for p in all_files:
+        sidecar = p.with_suffix('.json')
+        clips, offsets = [], []
+        if sidecar.exists():
+            try:
+                data = json.loads(sidecar.read_text(encoding='utf-8'))
+                clips = data.get("clips", [])
+                offsets = data.get("offsets", [])
+            except Exception:
+                pass
+        result.append({
+            "name": p.name,
+            "size_mb": round(p.stat().st_size / 1_048_576, 2),
+            "clips": clips,
+            "offsets": offsets,
+        })
+    return {"files": result}
+
+
+@router.get("/ambient/{run_filename}/{filename}")
+async def serve_ambient_file(run_filename: str, filename: str):
+    """Serve a sequence_ambient_*.mp3 file."""
+    from fastapi.responses import FileResponse
+    yaml_path = RUNS_FOLDER / run_filename
+    globals_data = get_yaml_globals(yaml_path) if yaml_path.exists() else None
+    if not globals_data:
+        raise HTTPException(status_code=404)
+    if not filename.startswith("sequence_ambient_") or not filename.endswith(".mp3"):
+        raise HTTPException(status_code=404)
+    project_folder = Path(globals_data.get("project_folder") or "")
+    p = _ambient_path(project_folder, filename)
+    if not p:
+        raise HTTPException(status_code=404)
+    return FileResponse(str(p), media_type="audio/mpeg")
+
+
+@router.delete("/ambient/{run_filename}/{filename}")
+async def delete_ambient_file(run_filename: str, filename: str):
+    """Delete a sequence_ambient_*.mp3 file and its sidecar JSON."""
+    yaml_path = RUNS_FOLDER / run_filename
+    globals_data = get_yaml_globals(yaml_path) if yaml_path.exists() else None
+    if not globals_data:
+        raise HTTPException(status_code=404)
+    if not filename.startswith("sequence_ambient_") or not filename.endswith(".mp3"):
+        raise HTTPException(status_code=404)
+    project_folder = Path(globals_data.get("project_folder") or "")
+    p = _ambient_path(project_folder, filename)
+    if not p:
+        raise HTTPException(status_code=404)
+    p.unlink()
+    p.with_suffix('.json').unlink(missing_ok=True)
+    return {"ok": True}
 
 
 @router.post("/sequence/{run_filename}")
@@ -244,11 +359,25 @@ async def generate_sequence_audio(run_filename: str, request: Request):
     lb = globals_data.get("linux_backend") or {}
     api_url = lb.get("api_url") or cfg_get_backend("linux").get("api_url", "http://127.0.0.1:8189")
 
+    # Get clip durations for sidecar JSON (used for sync in frontend)
+    from utils.video_utils import get_video_info
+    clip_durations: list[float] = []
+    for cp in clips:
+        try:
+            info = get_video_info(cp)
+            clip_durations.append(float(info.get("duration") or 0.0))
+        except Exception:
+            clip_durations.append(0.0)
+
     from datetime import datetime
     ts = datetime.now().strftime("%y%m%d%H%M%S")
-    output_mp3 = project_folder / f"sequence_ambient_{ts}.mp3"
+    podklad = _podklad_dir(project_folder)
+    output_mp3 = podklad / f"sequence_ambient_{ts}.mp3"
 
-    asyncio.create_task(_run_sequence_audio_bg(clips, output_mp3, audio_prompt, audio_negative_prompt, api_url))
+    asyncio.create_task(_run_sequence_audio_bg(
+        clips, output_mp3, audio_prompt, audio_negative_prompt, api_url,
+        clip_names=clip_names, clip_durations=clip_durations,
+    ))
     return {"ok": True, "output": output_mp3.name}
 
 

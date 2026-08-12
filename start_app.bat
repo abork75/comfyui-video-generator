@@ -1,4 +1,5 @@
 @echo off
+title Video Configurator
 cd /d "%~dp0"
 
 echo.

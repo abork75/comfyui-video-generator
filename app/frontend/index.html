@@ -1010,6 +1010,9 @@
                                                                             <button @click="regenAudio(fname, step.audio_prompt, step.audio_negative_prompt)"
                                                                                     class="text-violet-600 hover:text-violet-400 text-sm px-1 transition"
                                                                                     :title="step.audio_prompt ? 'Re-generuj audio [custom prompt]' : 'Re-generuj samo audio (MMAudio)'">🔊</button>
+                                                                            <button @click="removeAudioFromClip(fname)"
+                                                                                    class="text-gray-600 hover:text-orange-400 text-sm px-1 transition"
+                                                                                    title="Usuń audio z klipu">🔇</button>
                                                                             <button @click="archiveChainFrom(entry.item.chain_prefix, si, entry.item.chain.length)"
                                                                                     class="text-gray-600 hover:text-red-400 text-sm px-1"
                                                                                     :title="'Archiwizuj od step '+(si+1)+' do '+entry.item.chain.length">🗑</button>
@@ -1182,6 +1185,11 @@
                                                                         class="text-sm px-1 py-0.5 rounded transition"
                                                                         :title="entry.item.audio_prompt ? 'Re-generuj audio [custom prompt]' : 'Re-generuj samo audio (MMAudio)'"
                                                                         >🔊</button>
+                                                                <button @click="removeAudioFromClip(fileItemName(entry.idx))"
+                                                                        :disabled="isRunning"
+                                                                        :class="isRunning ? 'opacity-30 cursor-not-allowed text-gray-600' : 'text-gray-600 hover:text-orange-400'"
+                                                                        class="text-sm px-1 py-0.5 rounded transition"
+                                                                        title="Usuń audio z klipu">🔇</button>
                                                                 <button @click="openColorGradeModal(entry, seg)"
                                                                         class="text-gray-600 hover:text-purple-400 text-sm px-1 py-0.5 rounded transition"
                                                                         title="Korekcja koloru z fade (MKL)">🎨</button>
@@ -2243,8 +2251,8 @@
                                    class="flex-1 w-full min-h-0 object-contain"
                                    @ended="postPlayNext()"
                                    @timeupdate="postUpdateProgress()"
-                                   @play="postIsPlaying=true"
-                                   @pause="postIsPlaying=false">
+                                   @play="postIsPlaying=true; _resumeAmbient()"
+                                   @pause="postIsPlaying=false; _pauseAmbient()">
                             </video>
                             <!-- Hidden preloader for next clip -->
                             <video x-ref="postPreloader" class="hidden" preload="auto"></video>
@@ -2423,6 +2431,44 @@
                                      style="font-size:9px" x-text="clip.name"></div>
                             </div>
                         </template>
+                    </div>
+
+                    <!-- ── AUDIO TRACK ROW ── -->
+                    <audio x-ref="ambientPlayer" preload="none" class="hidden"></audio>
+                    <div class="flex-shrink-0 border-t border-gray-800 bg-gray-950 px-3 py-1.5 flex items-center gap-2 overflow-x-auto"
+                         style="min-height:44px">
+                        <!-- Label + mute -->
+                        <span class="text-gray-600 text-xs flex-shrink-0 select-none" style="font-size:10px">🎵 Ambient</span>
+                        <button @click="toggleAmbientMute()"
+                                :title="ambientMuted ? 'Włącz ambient' : 'Wycisz ambient'"
+                                :class="ambientMuted ? 'text-red-500 hover:text-red-400' : 'text-gray-500 hover:text-white'"
+                                class="text-xs flex-shrink-0 px-1 transition">
+                            <span x-text="ambientMuted ? '🔇' : '🔊'"></span>
+                        </button>
+
+                        <template x-if="ambientFiles.length === 0">
+                            <span class="text-gray-700 text-xs italic flex-shrink-0">brak plików — zaznacz klipy i kliknij "Ambient audio"</span>
+                        </template>
+                        <template x-for="(af, afi) in ambientFiles" :key="af.name">
+                            <div class="flex items-center gap-1.5 bg-gray-900 border rounded px-2 py-1 flex-shrink-0 transition"
+                                 :class="afi === 0 ? 'border-violet-700' : 'border-gray-700'">
+                                <!-- Active indicator (newest = index 0) -->
+                                <span x-show="afi === 0" class="text-violet-400 flex-shrink-0" style="font-size:9px" title="Aktywny (synchronizowany z playerem)">● SYNC</span>
+                                <span class="text-gray-400 text-xs truncate max-w-28" x-text="af.name.replace('sequence_ambient_','').replace('.mp3','')" :title="af.name"></span>
+                                <span x-show="af.clips && af.clips.length > 0" class="text-gray-600" style="font-size:9px" x-text="af.clips.length + ' klipów'"></span>
+                                <span class="text-gray-700" style="font-size:9px" x-text="af.size_mb + ' MB'"></span>
+                                <audio controls preload="none"
+                                       :src="`/api/audio/ambient/${encodeURIComponent(selectedRun?.filename)}/${encodeURIComponent(af.name)}`"
+                                       class="h-6 flex-shrink-0"
+                                       style="width:160px; accent-color:#7c3aed"></audio>
+                                <button @click="deleteAmbientFile(af.name)"
+                                        class="text-gray-600 hover:text-red-400 text-xs flex-shrink-0 px-1 transition"
+                                        title="Usuń">✕</button>
+                            </div>
+                        </template>
+                        <button @click="loadAmbientFiles()"
+                                class="ml-auto text-gray-700 hover:text-gray-400 text-xs flex-shrink-0 px-1.5 py-0.5 rounded hover:bg-gray-800 transition"
+                                title="Odśwież listę">⟳</button>
                     </div>
 
                 </div>
@@ -8730,6 +8776,10 @@ function app() {
                         setTimeout(() => this.refreshStatus(), 500);
                         return;
                     }
+                    if (t.startsWith('[AMBIENT_READY]')) {
+                        setTimeout(() => this.loadAmbientFiles(), 500);
+                        return;
+                    }
                     // Auto-open versions modal after multi-generate completes
                     if (t.startsWith('[VERSIONS_READY]')) {
                         const fname = t.slice('[VERSIONS_READY]'.length).trim();
@@ -9788,6 +9838,21 @@ function app() {
             } catch(e) { this.logLine('sys', `❌ ${e.message}`); }
         },
 
+        async removeAudioFromClip(name) {
+            if (!name || !this.selectedRun) return;
+            if (!confirm(`Usunąć audio z klipu:\n${name}\n\nOryginalny plik zostanie zarchiwizowany.`)) return;
+            try {
+                const res = await fetch('/api/trim/apply', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ run: this.selectedRun.filename, clip: name, start_frame: 0, end_frame: -1, remove_audio: true }),
+                });
+                const d = await res.json();
+                if (!res.ok) { this.logLine('sys', `❌ Usuń audio: ${d.detail || 'błąd'}`); }
+                else { this.logLine('sys', `🔇 Audio usunięte z ${name}`); await this.refreshStatus(); }
+            } catch(e) { this.logLine('sys', `❌ Usuń audio: ${e.message}`); }
+        },
+
         // Re-generate a chain step AND all subsequent steps.
         // fromSi: 0-based index of the step to start from.
         // totalSteps: item.chain.length
@@ -10473,6 +10538,8 @@ function app() {
         _prePolling:    null,
 
         // ─ Post-processing ────────────────────────────────
+        ambientFiles:      [],   // [{name, size_mb, clips:[], offsets:[]}]
+        ambientMuted:      false,
         postClips:         [],
         postClipOffsets:   [],   // cumulative seconds before clip[i]
         postCurrentIndex:  -1,
@@ -11192,6 +11259,86 @@ function app() {
             }
         },
 
+        async loadAmbientFiles() {
+            if (!this.selectedRun) return;
+            try {
+                const res = await fetch(`/api/audio/ambient/${encodeURIComponent(this.selectedRun.filename)}`);
+                if (res.ok) { const d = await res.json(); this.ambientFiles = d.files || []; }
+            } catch(e) { console.error('ambient files fetch error', e); }
+        },
+
+        async deleteAmbientFile(name) {
+            if (!this.selectedRun) return;
+            try {
+                await fetch(`/api/audio/ambient/${encodeURIComponent(this.selectedRun.filename)}/${encodeURIComponent(name)}`, { method: 'DELETE' });
+                await this.loadAmbientFiles();
+            } catch(e) { console.error('delete ambient error', e); }
+        },
+
+        // ─ Ambient sync helpers ──────────────────────────────
+        _ambientFor(clipName) {
+            // Returns {af, clipAmbientOffset} for newest ambient containing clipName, or null
+            for (const af of this.ambientFiles) {
+                const idx = (af.clips || []).indexOf(clipName);
+                if (idx >= 0) return { af, clipAmbientOffset: af.offsets[idx] ?? 0 };
+            }
+            return null;
+        },
+
+        _syncAmbient(clipName) {
+            const ap = this.$refs.ambientPlayer;
+            if (!ap || !this.selectedRun) return;
+            const found = this._ambientFor(clipName);
+            if (!found) { ap.pause(); return; }
+            const { af, clipAmbientOffset } = found;
+            const src = `/api/audio/ambient/${encodeURIComponent(this.selectedRun.filename)}/${encodeURIComponent(af.name)}`;
+            if (ap.dataset.ambientSrc !== src) {
+                ap.src = src;
+                ap.dataset.ambientSrc = src;
+                ap.load();
+            }
+            ap.currentTime = clipAmbientOffset;
+            ap.muted = this.ambientMuted;
+            ap.play().catch(() => {});
+        },
+
+        _pauseAmbient() {
+            const ap = this.$refs.ambientPlayer;
+            if (ap) ap.pause();
+        },
+
+        _resumeAmbient() {
+            const ap = this.$refs.ambientPlayer;
+            if (!ap || !this.selectedRun) return;
+            const clip = this.postClips[this.postCurrentIndex];
+            if (!clip) return;
+            const found = this._ambientFor(clip.name);
+            if (!found) { ap.pause(); return; }
+            const { af, clipAmbientOffset } = found;
+            const src = `/api/audio/ambient/${encodeURIComponent(this.selectedRun.filename)}/${encodeURIComponent(af.name)}`;
+            if (ap.dataset.ambientSrc !== src) {
+                // Different file — seek and play
+                ap.src = src;
+                ap.dataset.ambientSrc = src;
+                ap.load();
+                ap.currentTime = clipAmbientOffset;
+                ap.muted = this.ambientMuted;
+                ap.play().catch(() => {});
+            } else if (ap.paused) {
+                // Same file, resume at correct position
+                const videoEl = this.$refs.postPlayer;
+                ap.currentTime = clipAmbientOffset + (videoEl?.currentTime ?? 0);
+                ap.muted = this.ambientMuted;
+                ap.play().catch(() => {});
+            }
+        },
+
+        toggleAmbientMute() {
+            this.ambientMuted = !this.ambientMuted;
+            const ap = this.$refs.ambientPlayer;
+            if (ap) ap.muted = this.ambientMuted;
+        },
+
         async loadPostClips(preserveScroll = false) {
             if (!this.selectedRun) return;
             // Save filmstrip scroll position before refresh
@@ -11207,9 +11354,12 @@ function app() {
                 this.postFilmPosition  = 0;
             }
             try {
-                const res = await fetch(`/api/runs/${encodeURIComponent(this.selectedRun.filename)}/postclips`);
-                if (res.ok) {
-                    this.postClips = await res.json();
+                const [clipsRes] = await Promise.all([
+                    fetch(`/api/runs/${encodeURIComponent(this.selectedRun.filename)}/postclips`),
+                    this.loadAmbientFiles(),
+                ]);
+                if (clipsRes.ok) {
+                    this.postClips = await clipsRes.json();
                     // Build cumulative offsets: postClipOffsets[i] = seconds before clip i
                     const offsets = [];
                     let acc = 0;
@@ -11262,6 +11412,7 @@ function app() {
                 p.src = url;
                 p.load();
             }
+            this._syncAmbient(clip.name);
             p.play().catch(() => {});
             this._postScrollTo(i);
             this._postPreloadNext(i);
