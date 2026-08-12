@@ -201,19 +201,86 @@ def _detect_resolution(pf: Path, flow: list) -> tuple[int, int]:
         return 1024, 1024
 
 
-def _get_start_frame(pf: Path, from_file: str, target_w: int, target_h: int) -> Path | None:
+def _find_predecessor_video(flow: list, from_file: str, pf: Path) -> Path | None:
+    """Return the video that ends just before from_file in the flow, or None."""
+    from app.services.chain_service import _talk_video_relpath
+
+    from_stem = Path(from_file).stem
+
+    # Find index of from_file in flow
+    from_idx = None
+    for i, item in enumerate(flow):
+        f = item.get("file") if isinstance(item, dict) else (item if isinstance(item, str) else None)
+        if f == from_file:
+            from_idx = i
+            break
+    if from_idx is None or from_idx == 0:
+        return None
+
+    # Walk backwards to find the nearest predecessor
+    for i in range(from_idx - 1, -1, -1):
+        item = flow[i]
+        if not isinstance(item, dict):
+            if isinstance(item, str):
+                item = {"file": item}
+            else:
+                continue
+
+        if item.get("break") or item.get("type") == "scene_break":
+            return None
+
+        if "chain" in item:
+            prefix = item.get("chain_prefix", "chain_step")
+            total = len(item["chain"])
+            return pf / "transitions" / "chains" / f"{prefix}_{total:03d}.mp4"
+
+        if item.get("type") == "talk":
+            return pf / _talk_video_relpath(item)
+
+        if item.get("type") == "multitalk":
+            clip_name = (item.get("name") or "").strip()
+            if not clip_name.endswith(".mp4"):
+                clip_name += ".mp4"
+            return pf / "transitions" / "multitalk" / clip_name
+
+        if item.get("file"):
+            pred_file = item["file"]
+            if pred_file.lower().endswith(".mp4"):
+                return pf / pred_file
+            pred_stem = Path(pred_file).stem
+            return pf / "transitions" / f"{pred_stem}_{from_stem}_transition.mp4"
+
+    return None
+
+
+def _get_start_frame(flow: list, pf: Path, from_file: str, target_w: int, target_h: int) -> Path | None:
+    from utils.frame_extractor import FrameExtractor
+
+    pred_video = _find_predecessor_video(flow, from_file, pf)
+    if pred_video and pred_video.exists():
+        try:
+            real_p = pf / "frames" / f"{Path(from_file).stem}_real.png"
+            real_p.parent.mkdir(parents=True, exist_ok=True)
+            FrameExtractor(project_folder=pf).extract_last_frame_to(
+                pred_video, target_w, target_h, real_p
+            )
+            print(f"  🎯 start_frame: extracted from {pred_video.name}")
+            if real_p.exists():
+                return real_p
+        except Exception as _e:
+            print(f"  ⚠ extract_last_frame_to failed: {_e}")
+
+    # Fallback: static source image
     stem = Path(from_file).stem
-    real_p = pf / "frames" / f"{stem}_real.png"
-    if real_p.exists():
-        return real_p
     for ext in ("png", "jpg"):
         end_p = pf / "frames" / f"{stem}_end.{ext}"
         if end_p.exists():
+            print(f"  ℹ️  start_frame: _end.{ext} fallback ({end_p.name})")
             return end_p
     src = pf / from_file
     if src.exists():
         try:
-            from utils.frame_extractor import FrameExtractor
+            print(f"  ℹ️  start_frame: extract_end_frame z źródła ({from_file})")
             return FrameExtractor(project_folder=pf).extract_end_frame(
                 from_file, target_w, target_h
             )
@@ -282,12 +349,6 @@ async def _run(run_filename: str, pair, pf: Path, mmaudio: bool = False) -> None
             else:
                 target_w, target_h = _detect_resolution(pf, flow)
 
-        import os
-        if mmaudio:
-            os.environ["MMAUDIO_ENABLED"] = "1"
-        elif "MMAUDIO_ENABLED" in os.environ:
-            del os.environ["MMAUDIO_ENABLED"]
-
         defaults = app_config_service.get_defaults()
         # Merge project-level defaults on top (project overrides app globals)
         proj_defs = run_details.get("defaults") or {}
@@ -295,6 +356,12 @@ async def _run(run_filename: str, pair, pf: Path, mmaudio: bool = False) -> None
             defaults = {**defaults, **{k: v for k, v in proj_defs.items() if v is not None}}
 
         _backend_name = _pick("backend") or "linux"
+
+        import os
+        if mmaudio and _backend_name != "atlascloud":
+            os.environ["MMAUDIO_ENABLED"] = "1"
+        elif "MMAUDIO_ENABLED" in os.environ:
+            del os.environ["MMAUDIO_ENABLED"]
         _ac_res = _pick("atlascloud_resolution")
         _ac_pe  = _pick("atlascloud_prompt_extend")
 
@@ -304,7 +371,7 @@ async def _run(run_filename: str, pair, pf: Path, mmaudio: bool = False) -> None
         # Resolve frames
         start_frame = await loop.run_in_executor(
             None,
-            lambda: _get_start_frame(pf, pair.from_file, target_w, target_h),
+            lambda: _get_start_frame(flow, pf, pair.from_file, target_w, target_h),
         )
         if not start_frame or not Path(start_frame).exists():
             raise RuntimeError(
@@ -341,10 +408,10 @@ async def _run(run_filename: str, pair, pf: Path, mmaudio: bool = False) -> None
             # HQ: steps_hq from file item → project → global → 15
             _steps_hq = _pick("steps_hq") or defaults.get("steps_hq", 15)
             _steps = None
-        # Workflow override: project defaults → backend uses global (no per-step field for file tiles)
+        # Workflow override: tile > project defaults > global
         _proj_defs_raw = run_details.get("defaults") or {}
         _proj_wf_key = 'lightning_workflow' if _ul else 'hq_workflow'
-        _wf_override = (_proj_defs_raw.get(_proj_wf_key) or "").strip() or None
+        _wf_override = (_pick('workflow') or _proj_defs_raw.get(_proj_wf_key) or "").strip() or None
         _ap         = _pick("audio_prompt") or None
         _an         = _pick("audio_negative_prompt") or None
         _pos_full   = _pick("pos") or ""
@@ -418,6 +485,20 @@ async def _run(run_filename: str, pair, pf: Path, mmaudio: bool = False) -> None
 
         if not success:
             raise RuntimeError("Backend zwrócił błąd")
+
+        # Save actual last frame as _real.png so the next item (chain, talk,
+        # or another transition) starts from where this video actually ended,
+        # not from the static source image (which WAN may not have reached).
+        try:
+            from utils.frame_extractor import FrameExtractor
+            _real_out = pf / "frames" / f"{Path(pair.to_file).stem}_real.png"
+            _real_out.parent.mkdir(parents=True, exist_ok=True)
+            FrameExtractor(project_folder=pf).extract_last_frame_to(
+                out_path, target_w, target_h, _real_out
+            )
+            print(f"  💾 _real.png saved for {pair.to_file}")
+        except Exception as _e:
+            print(f"  ⚠ Nie udało się zapisać _real.png: {_e}")
 
         elapsed = round(time.time() - _state["started_at"], 1)
         _state.update({"status": "done", "elapsed_s": elapsed})

@@ -546,6 +546,334 @@ def _patch_ci_workflow(
     return wf
 
 
+_DEFAULT_FLUX_LORAS: list[dict] = [
+    {"name": "Feet_v2.safetensors", "strength": 0.5},
+]
+
+
+def _inject_loras(wf: dict, loras: list[dict]) -> None:
+    """Insert LoraLoaderModelOnly nodes between UNETLoader and whatever consumes its model output (in-place).
+    Works for both flux_inpaint (UNET→DifferentialDiffusion→KSampler) and flux_i2i (UNET→KSampler)."""
+    if not loras:
+        return
+    unet_id = next((nid for nid, n in wf.items() if isinstance(n, dict) and n.get("class_type") == "UNETLoader"), None)
+    if not unet_id:
+        return
+    # Find the first node that takes [unet_id, 0] as its "model" input
+    dd_id = next(
+        (nid for nid, n in wf.items()
+         if isinstance(n, dict) and n.get("inputs", {}).get("model") == [unet_id, 0]),
+        None,
+    )
+    if not dd_id:
+        return
+    prev_id = unet_id
+    for i, lora in enumerate(loras):
+        new_id = f"__lora_{i}"
+        wf[new_id] = {
+            "inputs": {
+                "lora_name": lora["name"],
+                "strength_model": float(lora.get("strength", 1.0)),
+                "model": [prev_id, 0],
+            },
+            "class_type": "LoraLoaderModelOnly",
+            "_meta": {"title": f"LoRA {lora['name']}"},
+        }
+        prev_id = new_id
+    wf[dd_id]["inputs"]["model"] = [prev_id, 0]
+
+
+def _patch_flux_inpaint_workflow(
+    workflow:        dict,
+    image_filename:  str,
+    positive:        str,
+    steps:           int,
+    denoise:         float,
+    filename_prefix: str,
+    loras:           list[dict] | None = None,
+) -> dict:
+    wf = copy.deepcopy(workflow)
+
+    # LoadImage — RGBA PNG with alpha as mask
+    nid, node = _find_node(wf, "LoadImage")
+    if nid:
+        node["inputs"]["image"] = image_filename
+
+    # Positive prompt (CLIPTextEncode with "Positive" in title)
+    for node in wf.values():
+        if isinstance(node, dict) and node.get("class_type") == "CLIPTextEncode":
+            title = node.get("_meta", {}).get("title", "")
+            if "Positive" in title or "positive" in title.lower():
+                node["inputs"]["text"] = positive
+                break
+
+    # KSampler
+    nid, node = _find_node(wf, "KSampler")
+    if nid:
+        node["inputs"]["seed"]    = random.randint(0, 2 ** 32 - 1)
+        node["inputs"]["steps"]   = steps
+        node["inputs"]["denoise"] = denoise
+
+    # SaveImage prefix
+    nid, node = _find_node(wf, "SaveImage")
+    if nid:
+        node["inputs"]["filename_prefix"] = filename_prefix
+
+    # Dynamic LoRA chain
+    _inject_loras(wf, loras if loras is not None else _DEFAULT_FLUX_LORAS)
+
+    return wf
+
+
+async def _generate_flux_inpaint_one(
+    loop:              "asyncio.AbstractEventLoop",
+    comfyui_url:       str,
+    input_dir:         "Path",
+    comfyui_output:    "Path",
+    workflow_template: dict,
+    rgba_path:         "Path",
+    positive:          str,
+    steps:             int,
+    denoise:           float,
+    loras:             list[dict] | None,
+    dest_path:         "Path",
+    label:             str = "",
+) -> None:
+    ts           = datetime.now().strftime("%Y%m%d%H%M%S%f")
+    img_tmp_name = f"pic_{ts}_flux_{rgba_path.name}"
+    img_tmp_in   = input_dir / img_tmp_name
+    prefix       = f"pic_out/pic_{ts}"
+
+    pic_out_dir = comfyui_output / "pic_out"
+    existing_pngs: set[str] = (
+        {p.name for p in pic_out_dir.glob("*.png")} if pic_out_dir.exists() else set()
+    )
+
+    try:
+        input_dir.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(str(rgba_path), str(img_tmp_in))
+
+        wf = _patch_flux_inpaint_workflow(
+            workflow_template,
+            image_filename=img_tmp_name,
+            positive=positive,
+            steps=steps,
+            denoise=denoise,
+            filename_prefix=prefix,
+            loras=loras,
+        )
+
+        def _submit():
+            try:
+                return _http_post(f"{comfyui_url}/prompt", {"prompt": wf})
+            except OSError as exc:
+                if getattr(exc, "errno", None) in (10061, 111):
+                    raise RuntimeError("ComfyUI niedostępny") from exc
+                raise
+
+        resp      = await loop.run_in_executor(None, _submit)
+        prompt_id = resp.get("prompt_id")
+        if not prompt_id:
+            raise RuntimeError(f"ComfyUI did not return prompt_id: {resp}")
+
+        out_path: Path | None = None
+        for _ in range(400):
+            await asyncio.sleep(3)
+            try:
+                def _check(pid=prompt_id):
+                    return _http_get(f"{comfyui_url}/history/{pid}")
+                history  = await loop.run_in_executor(None, _check)
+                if prompt_id in history:
+                    job     = history[prompt_id]
+                    outputs = job.get("outputs", {})
+                    img     = _find_image_in_outputs(outputs)
+                    if img:
+                        candidate = comfyui_output / img.get("subfolder", "") / img["filename"]
+                        if candidate.exists():
+                            out_path = candidate
+                            break
+                    if job.get("status", {}).get("status_str") == "error":
+                        msgs = job["status"].get("messages", [])
+                        err  = next(
+                            (m[1].get("exception_message", str(m))
+                             for m in msgs if m[0] == "execution_error"),
+                            "ComfyUI error",
+                        )
+                        raise RuntimeError(err)
+            except RuntimeError:
+                raise
+            except Exception:
+                pass
+            if pic_out_dir.exists():
+                new_pngs = [p for p in pic_out_dir.glob("*.png") if p.name not in existing_pngs]
+                if new_pngs:
+                    out_path = max(new_pngs, key=lambda p: p.stat().st_mtime)
+                    break
+
+        if out_path is None:
+            raise RuntimeError("Timeout: Flux inpaint nie zakończył się w 20 min")
+
+        dest_path.parent.mkdir(parents=True, exist_ok=True)
+        for _attempt in range(10):
+            try:
+                shutil.copy2(str(out_path), str(dest_path))
+                break
+            except Exception:
+                await asyncio.sleep(1)
+    finally:
+        try:
+            img_tmp_in.unlink(missing_ok=True)
+        except Exception:
+            pass
+
+
+_DEFAULT_SCENE_LORAS: list[dict] = [
+    {"name": "FLUX1D\\FluxNaked_1D_NSFW20V3.safetensors", "strength": 1.0},
+]
+
+
+def _patch_flux_i2i_workflow(
+    workflow:        dict,
+    image_filename:  str,
+    positive:        str,
+    steps:           int,
+    denoise:         float,
+    filename_prefix: str,
+    loras:           list[dict] | None = None,
+) -> dict:
+    wf = copy.deepcopy(workflow)
+
+    # LoadImage
+    nid, node = _find_node(wf, "LoadImage")
+    if nid:
+        node["inputs"]["image"] = image_filename
+
+    # Positive prompt (CLIPTextEncode — any single one that's not zeroed-out)
+    for node in wf.values():
+        if isinstance(node, dict) and node.get("class_type") == "CLIPTextEncode":
+            node["inputs"]["text"] = positive
+            break
+
+    # KSampler
+    nid, node = _find_node(wf, "KSampler")
+    if nid:
+        node["inputs"]["seed"]    = random.randint(0, 2 ** 32 - 1)
+        node["inputs"]["steps"]   = steps
+        node["inputs"]["denoise"] = denoise
+
+    # SaveImage prefix
+    nid, node = _find_node(wf, "SaveImage")
+    if nid:
+        node["inputs"]["filename_prefix"] = filename_prefix
+
+    # Dynamic LoRA chain
+    _inject_loras(wf, loras if loras is not None else _DEFAULT_SCENE_LORAS)
+
+    return wf
+
+
+async def _generate_flux_i2i_one(
+    loop:              "asyncio.AbstractEventLoop",
+    comfyui_url:       str,
+    input_dir:         "Path",
+    comfyui_output:    "Path",
+    workflow_template: dict,
+    source_path:       "Path",
+    positive:          str,
+    steps:             int,
+    denoise:           float,
+    loras:             list[dict] | None,
+    dest_path:         "Path",
+    label:             str = "",
+) -> None:
+    ts           = datetime.now().strftime("%Y%m%d%H%M%S%f")
+    img_tmp_name = f"pic_{ts}_i2i_{source_path.name}"
+    img_tmp_in   = input_dir / img_tmp_name
+    prefix       = f"pic_out/pic_{ts}"
+
+    pic_out_dir = comfyui_output / "pic_out"
+    existing_pngs: set[str] = (
+        {p.name for p in pic_out_dir.glob("*.png")} if pic_out_dir.exists() else set()
+    )
+
+    try:
+        input_dir.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(str(source_path), str(img_tmp_in))
+
+        wf = _patch_flux_i2i_workflow(
+            workflow_template,
+            image_filename=img_tmp_name,
+            positive=positive,
+            steps=steps,
+            denoise=denoise,
+            filename_prefix=prefix,
+            loras=loras,
+        )
+
+        def _submit():
+            try:
+                return _http_post(f"{comfyui_url}/prompt", {"prompt": wf})
+            except OSError as exc:
+                if getattr(exc, "errno", None) in (10061, 111):
+                    raise RuntimeError("ComfyUI niedostępny") from exc
+                raise
+
+        resp      = await loop.run_in_executor(None, _submit)
+        prompt_id = resp.get("prompt_id")
+        if not prompt_id:
+            raise RuntimeError(f"ComfyUI did not return prompt_id: {resp}")
+
+        out_path: Path | None = None
+        for _ in range(400):
+            await asyncio.sleep(3)
+            try:
+                def _check(pid=prompt_id):
+                    return _http_get(f"{comfyui_url}/history/{pid}")
+                history  = await loop.run_in_executor(None, _check)
+                if prompt_id in history:
+                    job     = history[prompt_id]
+                    outputs = job.get("outputs", {})
+                    img     = _find_image_in_outputs(outputs)
+                    if img:
+                        candidate = comfyui_output / img.get("subfolder", "") / img["filename"]
+                        if candidate.exists():
+                            out_path = candidate
+                            break
+                    if job.get("status", {}).get("status_str") == "error":
+                        msgs = job["status"].get("messages", [])
+                        err  = next(
+                            (m[1].get("exception_message", str(m))
+                             for m in msgs if m[0] == "execution_error"),
+                            "ComfyUI error",
+                        )
+                        raise RuntimeError(err)
+            except RuntimeError:
+                raise
+            except Exception:
+                pass
+            if pic_out_dir.exists():
+                new_pngs = [p for p in pic_out_dir.glob("*.png") if p.name not in existing_pngs]
+                if new_pngs:
+                    out_path = max(new_pngs, key=lambda p: p.stat().st_mtime)
+                    break
+
+        if out_path is None:
+            raise RuntimeError("Timeout: Flux i2i nie zakończył się w 20 min")
+
+        dest_path.parent.mkdir(parents=True, exist_ok=True)
+        for _attempt in range(10):
+            try:
+                shutil.copy2(str(out_path), str(dest_path))
+                break
+            except Exception:
+                await asyncio.sleep(1)
+    finally:
+        try:
+            img_tmp_in.unlink(missing_ok=True)
+        except Exception:
+            pass
+
+
 # ── Paste Character helpers ───────────────────────────────────────────────────
 
 def _archive_step(source: Path, archive_dir: Path, stem: str) -> None:
@@ -692,14 +1020,29 @@ def archive_paste_slot(
     archive_dir  = work_dir / "archive"
     n_chars      = len(slot.get("characters", []))
 
+    def _archive_both(robocze_path: "Path") -> bool:
+        """Archive from robocze/ and also remove finalized copy from output_dir root."""
+        found = False
+        if robocze_path.exists():
+            _archive_path_to(robocze_path, archive_dir)
+            found = True
+        # If finalize copied the file to output_dir, move that too so status refreshes correctly
+        output_copy = output_dir / robocze_path.name
+        if output_copy.exists():
+            _archive_path_to(output_copy, archive_dir)
+            found = True
+        return found
+
     if stage is not None:
         src = _stage_linear_to_path(work_dir, output_id, stage, n_chars)
-        if not src.exists():
-            # Legacy fallback: old _s{stage} naming (output_dir root)
-            src = _stage_path(output_dir, output_id, stage)
-        if src.exists():
-            _archive_path_to(src, archive_dir)
+        # Always call _archive_both — it handles both robocze/ and output_dir/ copies
+        if _archive_both(src):
             return [str(src)]
+        # Legacy fallback: old _s{stage} naming (output_dir root)
+        legacy = _stage_path(output_dir, output_id, stage)
+        if legacy.exists():
+            _archive_path_to(legacy, archive_dir)
+            return [str(legacy)]
         return []
 
     # Archive all: every char's pil + edge, then scene
@@ -707,13 +1050,11 @@ def archive_paste_slot(
     for ci in range(n_chars):
         for path in (_char_pil_path(work_dir, output_id, ci),
                      _char_edge_path(work_dir, output_id, ci)):
-            if path.exists():
+            if _archive_both(path):
                 archived.append(str(path))
-                _archive_path_to(path, archive_dir)
     scene = _scene_path(work_dir, output_id)
-    if scene.exists():
+    if _archive_both(scene):
         archived.append(str(scene))
-        _archive_path_to(scene, archive_dir)
     # Legacy fallback: old _s0/_s1/_s2 if nothing found above
     if not archived:
         for s in range(3):
@@ -1846,6 +2187,7 @@ async def _run_paste_character_async(
     eb_steps    = int(_eb_p.get("steps", 30))
     eb_cfg      = float(tile["edge_blend_cfg"])    if tile.get("edge_blend_cfg")    is not None else float(_eb_p.get("cfg",    8.0))
     eb_denoise  = float(tile["edge_blend_denoise"]) if tile.get("edge_blend_denoise") is not None else float(_eb_p.get("denoise", 0.6))
+    eb_loras    = tile.get("edge_blend_loras") or None   # None → use _DEFAULT_FLUX_LORAS
     eb_wf = eb_url = eb_in_dir = eb_out_dir = None
 
     sb_enabled  = bool(tile.get("scene_blend_enabled", False))
@@ -1860,21 +2202,20 @@ async def _run_paste_character_async(
     sb_wf = sb_url = sb_in_dir = sb_out_dir = None
 
     # Load ComfyUI workflows only for i2i mode
+    _WF_CONFIGS = Path(__file__).parent.parent.parent / "workflow_configs"
     if eb_positive and eb_mode == "i2i":
         win        = app_config_service.get_backend("windows")
         eb_url     = win.get("api_url")    or settings.comfyui_upscale_url
         eb_in_dir  = Path(win.get("input_dir")  or settings.comfyui_upscale_input_dir)
         eb_out_dir = Path(win.get("output_dir") or settings.comfyui_upscale_output_dir)
-        wf_str = win.get("models", {}).get("ci_1ref", {}).get("workflow_json", "")
-        if wf_str:
-            wf_p = Path(wf_str)
-            if wf_p.exists():
-                eb_wf = json.loads(wf_p.read_text(encoding="utf-8"))
-                _log(f"  \U0001f4cb Edge Blend workflow: {wf_p.name}")
-            else:
-                _log(f"  ⚠ Edge Blend workflow nie istnieje: {wf_p} — edge wyłączony")
+        # Flux inpaint: try backend config key first, then standard path
+        wf_str = win.get("models", {}).get("flux_inpaint", {}).get("workflow_json", "")
+        wf_p   = Path(wf_str) if wf_str else (_WF_CONFIGS / "flux_inpaint.json")
+        if wf_p.exists():
+            eb_wf = json.loads(wf_p.read_text(encoding="utf-8"))
+            _log(f"  \U0001f4cb Edge Blend workflow: {wf_p.name}")
         else:
-            _log("  ⚠ Edge Blend: brak ścieżki ci_1ref — edge wyłączony")
+            _log(f"  ⚠ Edge Blend workflow nie istnieje: {wf_p} — edge wyłączony")
 
     if sb_positive and sb_mode == "i2i":
         win        = app_config_service.get_backend("windows")
@@ -2141,11 +2482,18 @@ async def _run_paste_character_async(
                             scene_rgba = Image.open(current_path).convert("RGBA")
                             if scene_rgba.size != (W, H):
                                 scene_rgba = scene_rgba.resize((W, H), Image.LANCZOS)
-                            scene_rgba.putalpha(ImageOps.invert(edge_mask))
+                            # Belt-only mask: only the transition border ring, not the character interior.
+                            # Erode edge_mask by eb_px to get character interior, subtract to get belt only.
+                            _interior = edge_mask.copy()
+                            for _ in range(eb_px):
+                                _interior = _interior.filter(ImageFilter.MinFilter(3))
+                            from PIL import ImageChops as _IC
+                            _belt = _IC.subtract(edge_mask, _interior)
+                            # alpha=0 (transparent) = inpaint this pixel; alpha=255 = keep
+                            scene_rgba.putalpha(ImageOps.invert(_belt))
 
                             ts       = datetime.now().strftime("%Y%m%d%H%M%S%f")
                             rgba_tmp = working_dir / f"_tmp_rgba_{ts}_{ci}.png"
-                            eb_tmp   = working_dir / f"_tmp_eb_{ts}_{ci}.png"
                             scene_rgba.save(rgba_tmp, "PNG")
 
                             c_edge = _char_edge_path(working_dir, output_id, ci)
@@ -2166,21 +2514,20 @@ async def _run_paste_character_async(
                                     wan_size=_eb_ac_wan_size, ref_path=_eb_ref,
                                 )
                             else:
-                                _log(f"  ✂️ [{idx}] {char_label} — edge blend "
-                                     f"(maska {eb_px}px  steps={eb_steps}  cfg={eb_cfg}  denoise={eb_denoise}) ...")
+                                _log(f"  ✂️ [{idx}] {char_label} — edge blend Flux "
+                                     f"(maska {eb_px}px  steps={eb_steps}  denoise={eb_denoise}) ...")
                                 try:
-                                    await _generate_ci_one(
+                                    await _generate_flux_inpaint_one(
                                         loop, eb_url, eb_in_dir, eb_out_dir,
-                                        eb_wf, rgba_tmp, model_path,
-                                        eb_positive, eb_negative,
-                                        eb_steps, eb_cfg, eb_denoise,
-                                        eb_tmp,
+                                        eb_wf, rgba_tmp,
+                                        eb_positive,
+                                        eb_steps, eb_denoise,
+                                        eb_loras,
+                                        c_edge,
                                         label=f"edge_blend {char_label}",
                                     )
-                                    shutil.copy2(str(eb_tmp), str(c_edge))
                                 finally:
                                     rgba_tmp.unlink(missing_ok=True)
-                                    eb_tmp.unlink(missing_ok=True)
 
                             current_path = c_edge
                             _log(f"  ✂️ [{idx}] {char_label}: c{ci}_edge -> {c_edge.name}")
@@ -2223,7 +2570,6 @@ async def _run_paste_character_async(
                     _log(f"  \U0001f3a8 [{idx}/{len(slots_to_run)}] {label} — scene blend "
                          f"(steps={sb_steps}  cfg={sb_cfg}  denoise={_eff_sb_den}"
                          + ("  ⚙custom" if _has_ov else "") + ") ...")
-                    # Apply user-drawn scene blend mask if painted on PIL or Edge output
                     _sb_input  = _apply_user_mask(current_path, working_dir, current_path)
                     _sb_masked = _sb_input != current_path
                     if _sb_masked:

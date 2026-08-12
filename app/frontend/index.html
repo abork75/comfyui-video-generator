@@ -730,6 +730,14 @@
                                                    class="flex-1 min-w-0 bg-transparent text-xs font-semibold text-teal-300 outline-none border-b border-transparent focus:border-teal-600 transition placeholder-teal-800" />
                                             <div class="h-px w-8 opacity-40 flex-shrink-0" style="background:linear-gradient(90deg,#34d399,transparent)"></div>
                                         </div>
+                                        <button @click="generateMissingAudioForScene(seg.sceneBreak.idx)"
+                                                :disabled="isRunning || batchAudioRunning"
+                                                :class="(isRunning || batchAudioRunning) ? 'opacity-30 cursor-not-allowed text-gray-600' : 'text-violet-600 hover:text-violet-400 hover:bg-violet-900/30'"
+                                                class="text-xs px-1.5 py-0.5 rounded transition flex-shrink-0"
+                                                title="Generuj brakujące audio dla całej sceny">🔊</button>
+                                        <button @click="copySceneToClipboard(seg.sceneBreak.idx)"
+                                                class="text-gray-500 hover:text-blue-300 text-xs px-1 py-0.5 rounded hover:bg-gray-700 transition flex-shrink-0"
+                                                title="Kopiuj całą scenę do schowka (wklej przez + wstaw element → 📋)">📋</button>
                                         <template x-if="editMode">
                                             <div class="flex items-center gap-1 flex-shrink-0">
                                                 <button @click="editMoveItem(seg.sceneBreak.idx, -1)"
@@ -788,6 +796,14 @@
                                                 📋 Kopiuj ujęcie
                                             </button>
                                         </template>
+                                        <!-- Audio brakujące dla ujęcia -->
+                                        <button @click="generateMissingAudioForSegment(segIdx)"
+                                                :disabled="isRunning || batchAudioRunning"
+                                                :class="(isRunning || batchAudioRunning) ? 'text-gray-600 border-gray-700 cursor-not-allowed' : 'text-violet-600 border-violet-800 hover:text-violet-400 hover:border-violet-600'"
+                                                class="text-xs border rounded px-2 py-0.5 transition"
+                                                title="Generuj brakujące audio dla tego ujęcia">
+                                            🔊 Audio
+                                        </button>
                                         <!-- Regeneruj -->
                                         <button @click="regenSegment(seg, segIdx)"
                                                 :disabled="isRunning || !segmentHasMissing(seg)"
@@ -817,8 +833,8 @@
                                                     <div class="flex items-center gap-1 flex-shrink-0">
                                                         <button @click="editOpenItem(entry.idx)"
                                                                 class="text-violet-400 hover:text-violet-200 text-xs px-1.5 py-0.5 rounded hover:bg-violet-900/40 transition" title="Edytuj nagłówek">✎</button>
-                                                        <button @click="editDuplicateItem(entry.idx)"
-                                                                class="text-gray-500 hover:text-blue-300 text-xs px-1 py-0.5 rounded hover:bg-gray-700 transition" title="Kopiuj element do schowka (wklej przez + wstaw element → 📋)">📋</button>
+                                                        <button @click="copySceneToClipboard(entry.idx)"
+                                                                class="text-gray-500 hover:text-blue-300 text-xs px-1 py-0.5 rounded hover:bg-gray-700 transition" title="Kopiuj całą scenę do schowka (wklej przez + wstaw element → 📋)">📋</button>
                                                         <button @click="editMoveItem(entry.idx, -1)" :disabled="entry.idx === 0"
                                                                 :class="entry.idx === 0 ? 'opacity-30 cursor-not-allowed' : 'hover:text-white'"
                                                                 class="text-gray-600 text-xs px-1 py-0.5 rounded hover:bg-gray-700">↑</button>
@@ -845,8 +861,6 @@
                                                     <div class="flex items-center gap-1 flex-shrink-0">
                                                         <button @click="editOpenItem(entry.idx)"
                                                                 class="text-teal-400 hover:text-teal-200 text-xs px-1.5 py-0.5 rounded hover:bg-teal-900/40 transition" title="Edytuj scenę">✎</button>
-                                                        <button @click="editDuplicateItem(entry.idx)"
-                                                                class="text-gray-500 hover:text-blue-300 text-xs px-1 py-0.5 rounded hover:bg-gray-700 transition" title="Kopiuj element do schowka (wklej przez + wstaw element → 📋)">📋</button>
                                                         <button @click="editMoveItem(entry.idx, -1)" :disabled="entry.idx === 0"
                                                                 :class="entry.idx === 0 ? 'opacity-30 cursor-not-allowed' : 'hover:text-white'"
                                                                 class="text-gray-600 text-xs px-1 py-0.5 rounded hover:bg-gray-700">↑</button>
@@ -1194,6 +1208,11 @@
                                                             <div class="flex items-center gap-1">
                                                                 <template x-if="/\.(mp4|mov|avi|mkv|webm)$/i.test(entry.item.file || '')">
                                                                     <span class="text-xs text-blue-600" x-text="fileItemSourceSizeMb(entry.idx)"></span>
+                                                                </template>
+                                                                <template x-if="/\.(mp4|mov|avi|mkv|webm)$/i.test(entry.item.file || '')">
+                                                                    <button @click="openTrimModal(entry.item.file)"
+                                                                            class="text-gray-600 hover:text-yellow-400 text-sm px-1 py-0.5 rounded transition"
+                                                                            title="Przytnij klip (frame-accurate)">✂️</button>
                                                                 </template>
                                                                 <template x-if="!/\.(mp4|mov|avi|mkv|webm)$/i.test(entry.item.file || '')">
                                                                     <span class="text-gray-600 text-xs" title="Ten plik nie generuje przejścia">—</span>
@@ -3587,6 +3606,33 @@
                                         : editModal.data.use_lightning === true  ? '⚡ Lightning'
                                         : effectiveUL(null) ? 'domyślne (⚡ Lightning)' : 'domyślne (🎨 HQ)'"></span>
                         </div>
+                        <!-- Workflow selector (tylko gdy tryb jest jawnie ustawiony) -->
+                        <template x-if="editModal.data.use_lightning === true">
+                            <div class="col-span-3">
+                                <label class="block text-xs text-amber-400 mb-1">⚡ Lightning — workflow <span class="text-gray-600">(puste = domyślny)</span></label>
+                                <select :value="editModal.data.workflow || ''"
+                                        @change="editModal.data.workflow = $event.target.value || null"
+                                        class="w-full bg-gray-800 border border-amber-900/60 rounded px-2 py-1 text-xs text-gray-200 focus:outline-none focus:border-amber-500">
+                                    <option value="">— domyślny —</option>
+                                    <template x-for="f in (workflowVariants.lightning || [])" :key="f">
+                                        <option :value="f" :selected="editModal.data.workflow === f" x-text="f"></option>
+                                    </template>
+                                </select>
+                            </div>
+                        </template>
+                        <template x-if="editModal.data.use_lightning === false">
+                            <div class="col-span-3">
+                                <label class="block text-xs text-teal-400 mb-1">🎨 HQ — workflow <span class="text-gray-600">(puste = domyślny)</span></label>
+                                <select :value="editModal.data.workflow || ''"
+                                        @change="editModal.data.workflow = $event.target.value || null"
+                                        class="w-full bg-gray-800 border border-teal-900/60 rounded px-2 py-1 text-xs text-gray-200 focus:outline-none focus:border-teal-500">
+                                    <option value="">— domyślny —</option>
+                                    <template x-for="f in (workflowVariants.hq || [])" :key="f">
+                                        <option :value="f" :selected="editModal.data.workflow === f" x-text="f"></option>
+                                    </template>
+                                </select>
+                            </div>
+                        </template>
                         <div class="col-span-3 flex items-end gap-3">
                             <div class="flex-1">
                                 <label class="block text-xs text-amber-400 mb-1">Generuj N× <span class="text-gray-600">(2+ = wersje do wyboru)</span></label>
@@ -3849,6 +3895,17 @@
                                                 class="text-gray-600 hover:text-blue-400 text-xs px-1" title="Duplikuj step">⧉</button>
                                         <button @click="editRemoveChainStep(si)"
                                                 class="text-gray-600 hover:text-red-400 text-xs px-1">✕</button>
+                                        <!-- Split / merge buttons -->
+                                        <template x-if="si === 0">
+                                            <button @click="editMergePrevChain()"
+                                                    :disabled="!_hasPrevChain()"
+                                                    :class="!_hasPrevChain() ? 'opacity-30 cursor-not-allowed' : 'hover:text-purple-400'"
+                                                    class="text-gray-600 text-xs px-1" title="Doklej ten chain do poprzedniego chainu">⬆</button>
+                                        </template>
+                                        <template x-if="si > 0">
+                                            <button @click="editSplitChainStep(si)"
+                                                    class="text-gray-600 hover:text-orange-400 text-xs px-1" title="Podziel chain — od tego stepu nowy chain">✂</button>
+                                        </template>
                                     </div>
                                 </div>
                                 <div class="grid grid-cols-3 gap-2 mb-2">
@@ -9027,7 +9084,7 @@ function app() {
             this.videoModal = {
                 open: true,
                 name: filename,
-                url: `/api/media/source-video?run=${encodeURIComponent(this.selectedRun.filename)}&name=${encodeURIComponent(filename)}`,
+                url: `/api/media/source-video?run=${encodeURIComponent(this.selectedRun.filename)}&name=${encodeURIComponent(filename)}&t=${Date.now()}`,
             };
         },
         closeVideoModal() {
@@ -9510,24 +9567,17 @@ function app() {
             } catch(e) { this.logLine('sys', `❌ ${e.message}`); }
         },
 
-        async generateMissingAudio() {
-            if (!this.selectedRun || this.isRunning || this.batchAudioRunning) return;
-            if (!this.statusData) { this.logLine('sys', '❌ Brak statusData — odśwież widok'); return; }
-
-            // Collect clips: video exists + no audio track
-            // audio_prompt from YAML if set, otherwise project/global default
-            const clips = [];
+        _collectMissingAudioClips(flowIndices) {
             const flow = this.flowData?.flow || [];
             const defPos = this.runAudioDefaults.audio_prompt;
             const defNeg = this.runAudioDefaults.audio_negative_prompt;
-            for (let idx = 0; idx < flow.length; idx++) {
+            const clips = [];
+            for (const idx of flowIndices) {
                 const item = flow[idx];
                 if (!item || typeof item !== 'object') continue;
                 const si = this._si(idx);
                 if (!si) continue;
-
                 if (item.chain_prefix && Array.isArray(item.chain)) {
-                    // Chain: iterate per step
                     const steps = si.steps || [];
                     for (let s = 0; s < item.chain.length; s++) {
                         const stepSi = steps[s];
@@ -9541,7 +9591,6 @@ function app() {
                         });
                     }
                 } else {
-                    // Regular transition
                     if (si.status !== 'ok' && si.status !== 'green') continue;
                     if (si.has_audio) continue;
                     if (!si.name) continue;
@@ -9552,8 +9601,12 @@ function app() {
                     });
                 }
             }
-            if (!clips.length) { this.logLine('sys', '🔊 Brak klipów do uzupełnienia audio'); return; }
-            this.logLine('sys', `🔊 Generuję brakujące audio: ${clips.length} klipów...`);
+            return clips;
+        },
+
+        async _runBatchAudio(clips, label) {
+            if (!clips.length) { this.logLine('sys', `🔊 Brak klipów do uzupełnienia audio [${label}]`); return; }
+            this.logLine('sys', `🔊 Generuję brakujące audio [${label}]: ${clips.length} klipów...`);
             this.batchAudioRunning = true;
             try {
                 const res = await fetch(`/api/audio/batch_missing/${encodeURIComponent(this.selectedRun.filename)}`, {
@@ -9567,7 +9620,6 @@ function app() {
                     this.batchAudioRunning = false;
                 } else {
                     this.logLine('sys', `🔊 Batch audio uruchomione w tle (${clips.length} klipów)`);
-                    // Poll until done
                     const poll = setInterval(async () => {
                         try {
                             const r = await fetch(`/api/audio/batch_missing_status`);
@@ -9575,7 +9627,7 @@ function app() {
                             if (d.status === 'done' || d.status === 'idle') {
                                 clearInterval(poll);
                                 this.batchAudioRunning = false;
-                                this.logLine('sys', `✅ Batch audio zakończone`);
+                                this.logLine('sys', `✅ Batch audio zakończone [${label}]`);
                                 await this.refreshStatus();
                             } else if (d.status === 'error') {
                                 clearInterval(poll);
@@ -9589,6 +9641,40 @@ function app() {
                 this.logLine('sys', `❌ ${e.message}`);
                 this.batchAudioRunning = false;
             }
+        },
+
+        async generateMissingAudio() {
+            if (!this.selectedRun || this.isRunning || this.batchAudioRunning) return;
+            if (!this.statusData) { this.logLine('sys', '❌ Brak statusData — odśwież widok'); return; }
+            const flow = this.flowData?.flow || [];
+            const clips = this._collectMissingAudioClips(flow.map((_, i) => i));
+            await this._runBatchAudio(clips, 'wszystko');
+        },
+
+        async generateMissingAudioForScene(sceneBreakIdx) {
+            if (!this.selectedRun || this.isRunning || this.batchAudioRunning) return;
+            if (!this.statusData) { this.logLine('sys', '❌ Brak statusData — odśwież widok'); return; }
+            const flow = this.flowData?.flow || [];
+            const indices = [];
+            for (let i = sceneBreakIdx + 1; i < flow.length; i++) {
+                if (flow[i].type === 'scene_break') break;
+                indices.push(i);
+            }
+            const sceneName = flow[sceneBreakIdx]?.name || 'Scena';
+            const clips = this._collectMissingAudioClips(indices);
+            await this._runBatchAudio(clips, sceneName);
+        },
+
+        async generateMissingAudioForSegment(segIdx) {
+            if (!this.selectedRun || this.isRunning || this.batchAudioRunning) return;
+            if (!this.statusData) { this.logLine('sys', '❌ Brak statusData — odśwież widok'); return; }
+            const segs = this.flowSegments();
+            const seg = segs[segIdx];
+            if (!seg) return;
+            const indices = seg.items.map(e => e.idx);
+            const label = seg.label || `ujęcie ${segIdx + 1}`;
+            const clips = this._collectMissingAudioClips(indices);
+            await this._runBatchAudio(clips, label);
         },
 
         async regenAudio(name, audioPrompt='', audioNegPrompt='') {
@@ -11567,6 +11653,7 @@ function app() {
             const titles    = { chain: '⛓ Edytuj Chain', header: '📌 Edytuj nagłówek', file: '📄 Edytuj plik', talk: '🎙️ Edytuj Talk', multitalk: '🗣 Edytuj Multitalk' };
             const subtitles = { chain: item.chain_prefix || 'chain', header: item.header || '', file: item.file || '', talk: 'InfiniteTalk', multitalk: item.name || 'multitalk' };
             if (kind === 'chain') this._loadWorkflowVariants();
+            this._loadWorkflowVariants();
             this.editModal = {
                 open: true,
                 kind,
@@ -11868,6 +11955,23 @@ function app() {
             }
         },
 
+        async copySceneToClipboard(sceneBreakIdx) {
+            const flow = this.flowData?.flow;
+            if (!flow) return;
+            const items = [];
+            for (let i = sceneBreakIdx; i < flow.length; i++) {
+                if (i > sceneBreakIdx && flow[i].type === 'scene_break') break;
+                items.push(flow[i]);
+            }
+            try {
+                await navigator.clipboard.writeText(JSON.stringify(items, null, 2));
+                const sceneName = flow[sceneBreakIdx].name || 'Scena';
+                this.logLine('sys', `📋 Skopiowano scenę "${sceneName}" (${items.length} elementów) do schowka`);
+            } catch(e) {
+                this.logLine('sys', `❌ Schowek niedostępny — uruchom w trybie incognito`);
+            }
+        },
+
         async pasteFromClipboard(afterIdx) {
             this.addItemModal.open = false;
             let text;
@@ -12137,6 +12241,159 @@ function app() {
             const steps = this.editModal.data.chain;
             const copy = JSON.parse(JSON.stringify(steps[si]));
             steps.splice(si + 1, 0, copy);
+        },
+
+        // Returns true when the flow contains a chain item before the currently-edited chain
+        _hasPrevChain() {
+            const flow = this.flowData?.flow;
+            const idx  = this.editModal.idx;
+            if (!flow || idx === null) return false;
+            for (let i = idx - 1; i >= 0; i--) {
+                if (flow[i].chain !== undefined) return true;
+                if (flow[i].break || flow[i].type === 'scene_break') return false;
+            }
+            return false;
+        },
+
+        // Split chain at step si (0-based). Steps 0..si-1 stay; steps si..end go to a new chain.
+        async editSplitChainStep(si) {
+            if (si === 0) return;
+            const currentPrefix = this.editModal.data.chain_prefix;
+            const currentChain  = this.editModal.data.chain;
+            if (si >= currentChain.length) return;
+
+            const suggestedPrefix = currentPrefix + '_b';
+            const newPrefix = prompt(`Nazwa nowego chain (steps ${si + 1}–${currentChain.length}):`, suggestedPrefix);
+            if (!newPrefix || !newPrefix.trim()) return;
+            const trimmedPrefix = newPrefix.trim();
+
+            const flow = this.flowData?.flow;
+            if (!flow) return;
+            const usedPrefixes = new Set(flow.filter(i => i.chain !== undefined).map(i => i.chain_prefix));
+            if (usedPrefixes.has(trimmedPrefix)) {
+                alert(`Prefix "${trimmedPrefix}" jest już używany przez inny chain!`);
+                return;
+            }
+
+            // Rename existing video files: old_prefix_{si+1..N} → new_prefix_{1..N-si}
+            try {
+                const r = await fetch('/api/chain/split', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        run_filename: this.selectedRun.filename,
+                        old_prefix:  currentPrefix,
+                        new_prefix:  trimmedPrefix,
+                        from_step:   si + 1,
+                        to_step:     currentChain.length,
+                        new_start:   1,
+                    }),
+                });
+                const res = await r.json();
+                if (res.errors?.length)
+                    this.logLine('warn', `⚠ Błędy rename: ${res.errors.join('; ')}`);
+                else if (res.renamed?.length)
+                    this.logLine('sys', `✂ Przemianowano ${res.renamed.length} plików`);
+            } catch(e) {
+                this.logLine('warn', `⚠ Błąd rename chain split: ${e}`);
+            }
+
+            // Build updated flow
+            const newFlow = JSON.parse(JSON.stringify(flow));
+            const currentIdx = this.editModal.idx;
+
+            // First part — stays in original chain (with any unsaved edits applied)
+            newFlow[currentIdx] = {
+                ...newFlow[currentIdx],
+                chain_prefix: currentPrefix,
+                chain: JSON.parse(JSON.stringify(currentChain.slice(0, si))),
+            };
+
+            // Second part — new chain item inserted right after
+            const newChainItem = {
+                chain_prefix: trimmedPrefix,
+                chain: JSON.parse(JSON.stringify(currentChain.slice(si))),
+            };
+            // Inherit top-level chain settings (backend, use_lightning, workflow, etc.)
+            for (const k of ['backend', 'use_lightning', 'workflow', 'lora_name', 'lora_strength']) {
+                if (this.editModal.data[k] !== undefined && this.editModal.data[k] !== null)
+                    newChainItem[k] = this.editModal.data[k];
+            }
+            newFlow.splice(currentIdx + 1, 0, newChainItem);
+
+            const ok = await this._saveFlow(newFlow);
+            if (ok) {
+                this.flowData.flow = newFlow;
+                this.editModal.open = false;
+                this.logLine('sys', `✂ Podzielono chain: "${currentPrefix}" (${si} step${si > 1 ? 's' : ''}) + "${trimmedPrefix}" (${currentChain.length - si} step${currentChain.length - si > 1 ? 's' : ''})`);
+                this.frameVersion = Date.now();
+                this.statusData = null; await this.refreshStatus();
+            }
+        },
+
+        // Merge the currently-edited chain into the nearest preceding chain.
+        async editMergePrevChain() {
+            if (!this._hasPrevChain()) return;
+            const flow = this.flowData?.flow;
+            if (!flow) return;
+
+            const currentPrefix = this.editModal.data.chain_prefix;
+            const currentChain  = this.editModal.data.chain;
+            const currentIdx    = this.editModal.idx;
+
+            // Find preceding chain (skip non-chain, stop at breaks)
+            let prevIdx = -1;
+            for (let i = currentIdx - 1; i >= 0; i--) {
+                if (flow[i].chain !== undefined) { prevIdx = i; break; }
+                if (flow[i].break || flow[i].type === 'scene_break') break;
+            }
+            if (prevIdx === -1) { alert('Nie znaleziono poprzedniego chainu!'); return; }
+
+            const prevPrefix = flow[prevIdx].chain_prefix;
+            const prevChain  = flow[prevIdx].chain || [];
+            const prevLen    = prevChain.length;
+
+            if (!confirm(`Dokleić "${currentPrefix}" (${currentChain.length} step${currentChain.length > 1 ? 's' : ''}) do "${prevPrefix}" (${prevLen} step${prevLen > 1 ? 's' : ''})?`)) return;
+
+            // Rename files: current_prefix_001..N → prev_prefix_{prevLen+1..prevLen+N}
+            try {
+                const r = await fetch('/api/chain/split', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        run_filename: this.selectedRun.filename,
+                        old_prefix:  currentPrefix,
+                        new_prefix:  prevPrefix,
+                        from_step:   1,
+                        to_step:     currentChain.length,
+                        new_start:   prevLen + 1,
+                    }),
+                });
+                const res = await r.json();
+                if (res.errors?.length)
+                    this.logLine('warn', `⚠ Błędy rename: ${res.errors.join('; ')}`);
+                else if (res.renamed?.length)
+                    this.logLine('sys', `⬆ Przemianowano ${res.renamed.length} plików`);
+            } catch(e) {
+                this.logLine('warn', `⚠ Błąd rename chain merge: ${e}`);
+            }
+
+            // Build updated flow: append steps, remove current chain item
+            const newFlow = JSON.parse(JSON.stringify(flow));
+            newFlow[prevIdx] = {
+                ...newFlow[prevIdx],
+                chain: [...prevChain, ...JSON.parse(JSON.stringify(currentChain))],
+            };
+            newFlow.splice(currentIdx, 1);
+
+            const ok = await this._saveFlow(newFlow);
+            if (ok) {
+                this.flowData.flow = newFlow;
+                this.editModal.open = false;
+                this.logLine('sys', `⬆ Doklejono "${currentPrefix}" do "${prevPrefix}" (łącznie ${prevLen + currentChain.length} steps)`);
+                this.frameVersion = Date.now();
+                this.statusData = null; await this.refreshStatus();
+            }
         },
 
         async setChainBackend(idx, value) {

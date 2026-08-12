@@ -1,0 +1,174 @@
+{
+  "6": {
+    "inputs": {
+      "text": "SanFedraet,tt-mark, nude women has cane mark on buttocks. Enhance the overall photorealism of the entire image to the highest possible level while keeping the scene 100% unchanged. Dramatically improve skin texture, skin pores, micro skin details, realistic subsurface scattering, natural skin imperfections, realistic eye details, hair strands, fabric texture and material details. Add natural cinematic lighting, realistic shadows, subtle ambient occlusion and depth. Increase overall sharpness, clarity and photographic quality to look like a real high-end photo taken with a professional camera. Strictly preserve everything else: Do not change the scene, background, lighting direction or atmosphere. Do not change camera position, angle or perspective. Do not change any person's pose, position or expression. Do not change any clothing, outfit, accessories or fabric. Do not add or remove any objects. Only enhance photorealism, texture quality and natural details. Make it look like an ultra-realistic photograph, 8k, extremely detailed, photorealistic, masterpiece, best quality",
+      "clip": [
+        "38",
+        0
+      ]
+    },
+    "class_type": "CLIPTextEncode",
+    "_meta": {
+      "title": "Prompt"
+    }
+  },
+  "8": {
+    "inputs": {
+      "tile_size": 512,
+      "overlap": 64,
+      "temporal_size": 64,
+      "temporal_overlap": 8,
+      "samples": [
+        "31",
+        0
+      ],
+      "vae": [
+        "39",
+        0
+      ]
+    },
+    "class_type": "VAEDecodeTiled",
+    "_meta": {
+      "title": "VAE Decode Tiled"
+    }
+  },
+  "31": {
+    "inputs": {
+      "seed": 910861104050036,
+      "steps": 20,
+      "cfg": 1,
+      "sampler_name": "euler",
+      "scheduler": "simple",
+      "denoise": 0.25,
+      "model": [
+        "37",
+        0
+      ],
+      "positive": [
+        "35",
+        0
+      ],
+      "negative": [
+        "135",
+        0
+      ],
+      "latent_image": [
+        "124",
+        0
+      ]
+    },
+    "class_type": "KSampler",
+    "_meta": {
+      "title": "KSampler"
+    }
+  },
+  "35": {
+    "inputs": {
+      "guidance": 3.5,
+      "conditioning": [
+        "6",
+        0
+      ]
+    },
+    "class_type": "FluxGuidance",
+    "_meta": {
+      "title": "FluxGuidance"
+    }
+  },
+  "37": {
+    "inputs": {
+      "unet_name": "flux1-dev.safetensors",
+      "weight_dtype": "default"
+    },
+    "class_type": "UNETLoader",
+    "_meta": {
+      "title": "Load Diffusion Model"
+    }
+  },
+  "38": {
+    "inputs": {
+      "clip_name1": "clip_l.safetensors",
+      "clip_name2": "t5xxl_fp8_e4m3fn_scaled.safetensors",
+      "type": "flux",
+      "device": "default"
+    },
+    "class_type": "DualCLIPLoader",
+    "_meta": {
+      "title": "DualCLIPLoader"
+    }
+  },
+  "39": {
+    "inputs": {
+      "vae_name": "ae.safetensors"
+    },
+    "class_type": "VAELoader",
+    "_meta": {
+      "title": "Load VAE"
+    }
+  },
+  "124": {
+    "inputs": {
+      "pixels": [
+        "210",
+        0
+      ],
+      "vae": [
+        "39",
+        0
+      ]
+    },
+    "class_type": "VAEEncode",
+    "_meta": {
+      "title": "VAE Encode"
+    }
+  },
+  "135": {
+    "inputs": {
+      "conditioning": [
+        "6",
+        0
+      ]
+    },
+    "class_type": "ConditioningZeroOut",
+    "_meta": {
+      "title": "ConditioningZeroOut"
+    }
+  },
+  "136": {
+    "inputs": {
+      "filename_prefix": "FluxNSFW_i2i",
+      "images": [
+        "8",
+        0
+      ]
+    },
+    "class_type": "SaveImage",
+    "_meta": {
+      "title": "Save Image"
+    }
+  },
+  "190": {
+    "inputs": {
+      "image": "bez_ekranu.png"
+    },
+    "class_type": "LoadImage",
+    "_meta": {
+      "title": "Load Image"
+    }
+  },
+  "210": {
+    "inputs": {
+      "upscale_method": "lanczos",
+      "megapixels": 4,
+      "resolution_steps": 8,
+      "image": [
+        "190",
+        0
+      ]
+    },
+    "class_type": "ImageScaleToTotalPixels",
+    "_meta": {
+      "title": "Scale Image to Total Pixels"
+    }
+  }
+}

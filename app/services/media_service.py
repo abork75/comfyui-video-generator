@@ -940,6 +940,7 @@ def resolve_video(run_filename: str, video_name: str) -> Path | None:
         pf / "transitions" / "chains"    / video_name,
         pf / "transitions" / "talks"     / video_name,
         pf / "transitions" / "multitalk" / video_name,
+        pf / video_name,
     ]:
         if candidate.exists():
             return candidate
