@@ -124,6 +124,134 @@ async def add_audio_to_clip(run_filename: str, request: Request):
     return {"ok": True}
 
 
+# ── Sequence ambient audio ───────────────────────────────────────────────────
+
+async def _run_sequence_audio_bg(
+    clips: list[Path],
+    output_mp3: Path,
+    prompt: str,
+    negative_prompt: str,
+    api_url: str,
+) -> None:
+    import subprocess, tempfile
+    from utils.mmaudio_utils import add_audio as _add_audio
+    logger = _LogBridge()
+
+    # Build ffmpeg concat list
+    with tempfile.NamedTemporaryFile(mode='w', suffix='.txt', delete=False, encoding='utf-8') as f:
+        for p in clips:
+            f.write(f"file '{str(p).replace(chr(39), chr(39)+chr(92)+chr(39)+chr(39))}'\n")
+        concat_list = Path(f.name)
+
+    concat_video = output_mp3.parent / (output_mp3.stem + '_concat_tmp.mp4')
+    try:
+        logger.info(f"Concat {len(clips)} klipów...")
+        r = subprocess.run(
+            ['ffmpeg', '-y', '-f', 'concat', '-safe', '0', '-i', str(concat_list),
+             '-c', 'copy', str(concat_video)],
+            capture_output=True, timeout=300,
+        )
+        if r.returncode != 0:
+            logger.error(f"ffmpeg concat failed: {r.stderr.decode()[:200]}")
+            return
+
+        from utils.video_utils import get_video_info
+        info = get_video_info(concat_video)
+        duration = float(info.get("duration") or 10.0)
+
+        logger.info(f"MMAudio na {duration:.1f}s sekwencji...")
+        ok = await asyncio.get_running_loop().run_in_executor(None, lambda: _add_audio(
+            video_path=concat_video,
+            prompt=prompt,
+            negative_prompt=negative_prompt,
+            api_url=api_url,
+            duration=duration,
+            steps=25,
+            cfg=4.5,
+            seed=-1,
+            logger=logger,
+        ))
+        if not ok:
+            logger.error("MMAudio nie wygenerował audio")
+            return
+
+        # Extract audio → mp3
+        r2 = subprocess.run(
+            ['ffmpeg', '-y', '-i', str(concat_video), '-vn', '-q:a', '2', str(output_mp3)],
+            capture_output=True, timeout=120,
+        )
+        if r2.returncode != 0:
+            logger.error(f"ffmpeg audio extract failed: {r2.stderr.decode()[:200]}")
+            return
+
+        logger.success(f"Ambient audio zapisane: {output_mp3.name}")
+        process_service.log_sys(f"[AMBIENT_READY] {output_mp3.name}")
+
+    finally:
+        concat_list.unlink(missing_ok=True)
+        concat_video.unlink(missing_ok=True)
+
+
+@router.post("/sequence/{run_filename}")
+async def generate_sequence_audio(run_filename: str, request: Request):
+    """
+    Generate continuous ambient audio for a sequence of clips.
+    Concatenates clips, runs MMAudio, extracts audio → sequence_ambient_XXXXXX.mp3
+    Body: { "clips": ["a_b_transition.mp4", ...], "audio_prompt"?: "...", "audio_negative_prompt"?: "..." }
+    """
+    try:
+        body = await request.json()
+    except Exception:
+        body = {}
+
+    clip_names: list[str] = body.get("clips") or []
+    if not clip_names:
+        raise HTTPException(status_code=400, detail="Brak listy klipów")
+
+    yaml_path = RUNS_FOLDER / run_filename
+    if not yaml_path.exists():
+        raise HTTPException(status_code=404, detail=f"Plik nie istnieje: {run_filename}")
+
+    globals_data = get_yaml_globals(yaml_path)
+    if not globals_data:
+        raise HTTPException(status_code=400, detail="Nie można odczytać YAML")
+
+    project_folder = Path(globals_data.get("project_folder") or "")
+    if not project_folder or not project_folder.exists():
+        raise HTTPException(status_code=400, detail=f"Folder projektu nie istnieje")
+
+    from app.services.media_service import resolve_video
+    clips: list[Path] = []
+    for name in clip_names:
+        p = resolve_video(run_filename, name)
+        if p and p.exists():
+            clips.append(p)
+        else:
+            raise HTTPException(status_code=404, detail=f"Klip nie znaleziony: {name}")
+
+    defs = globals_data.get("defaults") or {}
+    audio_prompt = (
+        body.get("audio_prompt")
+        or defs.get("default_audio_prompt")
+        or _FALLBACK_AUDIO_PROMPT
+    )
+    audio_negative_prompt = (
+        body.get("audio_negative_prompt")
+        or defs.get("default_audio_negative_prompt")
+        or _FALLBACK_AUDIO_NEG_PROMPT
+    )
+
+    lb = globals_data.get("linux_backend") or {}
+    api_url = lb.get("api_url") or cfg_get_backend("linux").get("api_url", "http://127.0.0.1:8189")
+
+    from datetime import datetime
+    ts = datetime.now().strftime("%y%m%d%H%M%S")
+    output_mp3 = project_folder / f"sequence_ambient_{ts}.mp3"
+
+    asyncio.create_task(_run_sequence_audio_bg(clips, output_mp3, audio_prompt, audio_negative_prompt, api_url))
+    return {"ok": True, "output": output_mp3.name}
+
+
 # ── Batch missing audio ───────────────────────────────────────────────────────
 
 _batch_state: dict = {"status": "idle", "done": 0, "total": 0, "error": None}

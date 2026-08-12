@@ -883,6 +883,12 @@
                                                      :class="editMode ? 'cursor-pointer' : ''"
                                                      @click="if(editMode && !$event.target.closest('button,img,video,a,select,input')) editOpenItem(entry.idx)">
                                                     <span class="text-sm">⛓</span>
+                                                    <template x-if="chainStatusOk(entry.idx)">
+                                                        <input type="checkbox"
+                                                               :checked="selectedClips.has('chain:' + entry.item.chain_prefix)"
+                                                               @click.stop="selectedClips.has('chain:' + entry.item.chain_prefix) ? selectedClips.delete('chain:' + entry.item.chain_prefix) : selectedClips.add('chain:' + entry.item.chain_prefix); selectedClips = new Set(selectedClips)"
+                                                               class="accent-violet-500 w-3.5 h-3.5 flex-shrink-0 cursor-pointer">
+                                                    </template>
                                                     <span class="font-mono text-sm text-blue-300" x-text="entry.item.chain_prefix || 'chain'"></span>
                                                     <template x-if="isChainPrefixDuplicate(entry.item.chain_prefix)">
                                                         <span class="px-1.5 py-0.5 bg-yellow-900/60 border border-yellow-700 rounded text-xs text-yellow-400 font-semibold">⚠ duplikat nazwy</span>
@@ -1074,6 +1080,12 @@
                                                     <div class="flex-1 min-w-0">
                                                         <!-- Header row -->
                                                         <div class="flex flex-wrap items-center gap-2">
+                                                            <template x-if="fileItemIsGreen(entry.idx)">
+                                                                <input type="checkbox"
+                                                                       :checked="selectedClips.has(fileItemName(entry.idx))"
+                                                                       @click.stop="selectedClips.has(fileItemName(entry.idx)) ? selectedClips.delete(fileItemName(entry.idx)) : selectedClips.add(fileItemName(entry.idx)); selectedClips = new Set(selectedClips)"
+                                                                       class="accent-violet-500 w-3.5 h-3.5 flex-shrink-0 cursor-pointer">
+                                                            </template>
                                                             <span class="font-mono text-sm text-gray-200 flex-shrink-0"
                                                                   :title="entry.item.file"
                                                                   x-text="entry.item.file.split(/[\\/]/).pop()"></span>
@@ -2934,6 +2946,24 @@
 <!-- shared LoRA datalist (used by chain step + file tile combo inputs) -->
 <datalist id="loraDatalist"
           x-html="loraList.map(f => `<option value='${f}'>`).join('')"></datalist>
+
+<!-- ═══ SELECTION ACTION BAR ═══════════════════════════════════════ -->
+<div x-show="selectedClips.size > 0" x-cloak
+     class="fixed bottom-0 left-0 right-0 z-40 bg-gray-900 border-t border-violet-700 px-4 py-2.5 flex items-center gap-3 shadow-lg">
+    <span class="text-xs text-violet-400 font-semibold flex-shrink-0"
+          x-text="selectedClips.size + ' zaznaczon' + (selectedClips.size === 1 ? 'y' : 'ych')"></span>
+    <button @click="generateAmbientAudio()"
+            :disabled="ambientModal.busy"
+            class="px-3 py-1.5 bg-violet-700 hover:bg-violet-600 disabled:opacity-40 text-white text-xs rounded transition">
+        🎵 Ambient audio
+    </button>
+    <span x-show="ambientModal.busy" class="text-xs text-violet-400 animate-pulse">generuję...</span>
+    <span x-show="ambientModal.error" class="text-xs text-red-400" x-text="ambientModal.error"></span>
+    <button @click="selectedClips = new Set()"
+            class="ml-auto text-gray-500 hover:text-white text-xs px-2 py-1 rounded hover:bg-gray-700 transition">
+        ✕ wyczyść
+    </button>
+</div>
 
 <!-- ═══ TRIM MODAL ══════════════════════════════════════════════════ -->
 <div x-show="trimModal.open" x-cloak
@@ -8453,6 +8483,8 @@ function app() {
         comfyuiUrl: 'http://127.0.0.1:8189',
         runs: [], runsLoading: true, runsError: null,
         selectedRun: null,
+        selectedClips: new Set(),
+        ambientModal: { open: false, busy: false, error: '' },
         // ─ Nowy projekt ───────────────────────────────────────
         newRunOpen: false, newRunName: '', newRunCreating: false, newRunError: null,
         flowData: null, flowLoading: false, flowError: null,
@@ -9675,6 +9707,63 @@ function app() {
             const label = seg.label || `ujęcie ${segIdx + 1}`;
             const clips = this._collectMissingAudioClips(indices);
             await this._runBatchAudio(clips, label);
+        },
+
+        async generateAmbientAudio() {
+            if (!this.selectedRun || this.selectedClips.size === 0) return;
+            // Collect clips in flow order
+            const orderedClips = [];
+            let firstPrompt = '';
+            let firstNeg = '';
+            const allEntries = this.flowSegments().flatMap(s => s.items);
+            for (const entry of allEntries) {
+                const item = entry.item || {};
+                if (item.chain && item.chain_prefix) {
+                    const key = 'chain:' + item.chain_prefix;
+                    if (this.selectedClips.has(key)) {
+                        const si = this._si(entry.idx);
+                        if (si?.steps) {
+                            si.steps.forEach((s, i) => {
+                                if (s.exists) orderedClips.push(`${item.chain_prefix}_${String(i+1).padStart(3,'0')}.mp4`);
+                            });
+                        }
+                        if (!firstPrompt) { firstPrompt = item.audio_prompt || ''; firstNeg = item.audio_negative_prompt || ''; }
+                    }
+                } else if (item.file) {
+                    const name = this.fileItemName(entry.idx);
+                    if (name && this.selectedClips.has(name)) {
+                        orderedClips.push(name);
+                        if (!firstPrompt) { firstPrompt = item.audio_prompt || ''; firstNeg = item.audio_negative_prompt || ''; }
+                    }
+                }
+            }
+            if (orderedClips.length === 0) return;
+            this.ambientModal.busy = true;
+            this.ambientModal.error = '';
+            this.logLine('sys', `🎵 Generuję ambient audio dla ${orderedClips.length} klipów...`);
+            try {
+                const body = { clips: orderedClips };
+                if (firstPrompt)  body.audio_prompt          = firstPrompt;
+                if (firstNeg)     body.audio_negative_prompt = firstNeg;
+                const res = await fetch(`/api/audio/sequence/${encodeURIComponent(this.selectedRun.filename)}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body),
+                });
+                const data = await res.json();
+                if (!res.ok) {
+                    this.ambientModal.error = data.detail || 'Błąd';
+                    this.logLine('sys', `❌ Ambient audio błąd: ${this.ambientModal.error}`);
+                } else {
+                    this.logLine('sys', `🎵 Ambient audio uruchomione w tle → ${data.output || '...'}`);
+                    this.selectedClips = new Set();
+                }
+            } catch(e) {
+                this.ambientModal.error = e.message;
+                this.logLine('sys', `❌ ${e.message}`);
+            } finally {
+                this.ambientModal.busy = false;
+            }
         },
 
         async regenAudio(name, audioPrompt='', audioNegPrompt='') {
