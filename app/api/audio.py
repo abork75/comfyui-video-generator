@@ -20,8 +20,10 @@ from app.services.yaml_service import get_yaml_globals
 PROJECT_ROOT = Path(__file__).parent.parent.parent
 RUNS_FOLDER  = PROJECT_ROOT / "RUNS"
 
-_FALLBACK_AUDIO_PROMPT    = "foley sound effects, physical environment sounds, footsteps, cloth movement, objects, wind bursts, creaking, synchronized with video, crisp, realistic, high quality"
-_FALLBACK_AUDIO_NEG_PROMPT = "music, melody, instruments, singing, ambient drone, sustained atmosphere, continuous background noise, reverb heavy, low quality, distortion"
+_FALLBACK_AUDIO_PROMPT         = "foley sound effects, physical interactions, footsteps, cloth movement, object handling, impacts, synchronized with video, crisp, realistic"
+_FALLBACK_AUDIO_NEG_PROMPT     = "music, melody, ambient drone, continuous atmosphere, background noise, reverb, sustained tones, low quality, distortion"
+_FALLBACK_AMBIENT_PROMPT       = "natural environment ambience, continuous atmospheric sound, wind, room tone, immersive background, seamless"
+_FALLBACK_AMBIENT_NEG_PROMPT   = "music, melody, instruments, sudden impacts, foley, footsteps, cloth, synchronized effects, stingers, low quality, distortion"
 
 router = APIRouter(prefix="/api/audio", tags=["audio"])
 
@@ -134,6 +136,9 @@ async def _run_sequence_audio_bg(
     api_url: str,
     clip_names: list[str],
     clip_durations: list[float],
+    *,
+    prompt_used: str = "",
+    negative_prompt_used: str = "",
 ) -> None:
     import json, subprocess, tempfile
     from utils.mmaudio_utils import add_audio as _add_audio
@@ -197,6 +202,8 @@ async def _run_sequence_audio_bg(
             "clips": clip_names,
             "clip_durations": [round(d, 4) for d in clip_durations],
             "offsets": offsets,
+            "prompt_used": prompt_used or prompt,
+            "negative_prompt_used": negative_prompt_used or negative_prompt,
         }, ensure_ascii=False, indent=2), encoding='utf-8')
 
         logger.success(f"Ambient audio zapisane: {output_mp3.name}")
@@ -238,12 +245,15 @@ async def list_ambient_files(run_filename: str):
     if not project_folder or not project_folder.exists():
         return {"files": []}
 
-    # Collect from both locations; podklad/ takes priority
+    # Collect from both locations; podklad/ takes priority (exclude archiwum subdir)
     seen: set[str] = set()
     all_files: list[Path] = []
     podklad = project_folder / "transitions" / "podklad"
+    archivum = podklad / "archiwum"
     if podklad.exists():
-        for p in podklad.glob("sequence_ambient_*.mp3"):
+        for p in podklad.glob("*.mp3"):
+            if archivum in p.parents:
+                continue  # skip archived files
             all_files.append(p)
             seen.add(p.name)
     for p in project_folder.glob("sequence_ambient_*.mp3"):
@@ -280,7 +290,7 @@ async def serve_ambient_file(run_filename: str, filename: str):
     globals_data = get_yaml_globals(yaml_path) if yaml_path.exists() else None
     if not globals_data:
         raise HTTPException(status_code=404)
-    if not filename.startswith("sequence_ambient_") or not filename.endswith(".mp3"):
+    if not filename.endswith(".mp3"):
         raise HTTPException(status_code=404)
     project_folder = Path(globals_data.get("project_folder") or "")
     p = _ambient_path(project_folder, filename)
@@ -296,7 +306,7 @@ async def delete_ambient_file(run_filename: str, filename: str):
     globals_data = get_yaml_globals(yaml_path) if yaml_path.exists() else None
     if not globals_data:
         raise HTTPException(status_code=404)
-    if not filename.startswith("sequence_ambient_") or not filename.endswith(".mp3"):
+    if not filename.endswith(".mp3"):
         raise HTTPException(status_code=404)
     project_folder = Path(globals_data.get("project_folder") or "")
     p = _ambient_path(project_folder, filename)
@@ -304,6 +314,34 @@ async def delete_ambient_file(run_filename: str, filename: str):
         raise HTTPException(status_code=404)
     p.unlink()
     p.with_suffix('.json').unlink(missing_ok=True)
+    return {"ok": True}
+
+
+@router.post("/ambient/{run_filename}/archive/{filename}")
+async def archive_ambient_file(run_filename: str, filename: str):
+    """Move ambient mp3+json to /podklad/archiwum/ instead of deleting."""
+    yaml_path = RUNS_FOLDER / run_filename
+    globals_data = get_yaml_globals(yaml_path) if yaml_path.exists() else None
+    if not globals_data:
+        raise HTTPException(status_code=404)
+    if not filename.endswith(".mp3"):
+        raise HTTPException(status_code=404)
+    project_folder = Path(globals_data.get("project_folder") or "")
+    p = _ambient_path(project_folder, filename)
+    if not p:
+        raise HTTPException(status_code=404)
+    archivum = project_folder / "transitions" / "podklad" / "archiwum"
+    archivum.mkdir(parents=True, exist_ok=True)
+    dst = archivum / filename
+    # Avoid overwrite in archive
+    if dst.exists():
+        stem, suffix = filename.rsplit('.', 1)
+        import time
+        dst = archivum / f"{stem}_{int(time.time())}.{suffix}"
+    p.rename(dst)
+    sidecar = p.with_suffix('.json')
+    if sidecar.exists():
+        sidecar.rename(dst.with_suffix('.json'))
     return {"ok": True}
 
 
@@ -345,15 +383,18 @@ async def generate_sequence_audio(run_filename: str, request: Request):
             raise HTTPException(status_code=404, detail=f"Klip nie znaleziony: {name}")
 
     defs = globals_data.get("defaults") or {}
+    # Ambient prompt hierarchy: request body → YAML ambient default → YAML FX default → system ambient fallback
     audio_prompt = (
         body.get("audio_prompt")
+        or defs.get("default_ambient_audio_prompt")
         or defs.get("default_audio_prompt")
-        or _FALLBACK_AUDIO_PROMPT
+        or _FALLBACK_AMBIENT_PROMPT
     )
     audio_negative_prompt = (
         body.get("audio_negative_prompt")
+        or defs.get("default_ambient_audio_negative_prompt")
         or defs.get("default_audio_negative_prompt")
-        or _FALLBACK_AUDIO_NEG_PROMPT
+        or _FALLBACK_AMBIENT_NEG_PROMPT
     )
 
     lb = globals_data.get("linux_backend") or {}
@@ -369,10 +410,13 @@ async def generate_sequence_audio(run_filename: str, request: Request):
         except Exception:
             clip_durations.append(0.0)
 
-    from datetime import datetime
-    ts = datetime.now().strftime("%y%m%d%H%M%S")
     podklad = _podklad_dir(project_folder)
-    output_mp3 = podklad / f"sequence_ambient_{ts}.mp3"
+    output_name: str = (body.get("output_name") or "").strip()
+    if not output_name or not output_name.endswith(".mp3"):
+        from datetime import datetime
+        ts = datetime.now().strftime("%y%m%d%H%M%S")
+        output_name = f"sequence_ambient_{ts}.mp3"
+    output_mp3 = podklad / output_name
 
     asyncio.create_task(_run_sequence_audio_bg(
         clips, output_mp3, audio_prompt, audio_negative_prompt, api_url,

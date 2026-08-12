@@ -886,8 +886,17 @@
                                                     <template x-if="chainStatusOk(entry.idx)">
                                                         <input type="checkbox"
                                                                :checked="selectedClips.has('chain:' + entry.item.chain_prefix)"
-                                                               @click.stop="selectedClips.has('chain:' + entry.item.chain_prefix) ? selectedClips.delete('chain:' + entry.item.chain_prefix) : selectedClips.add('chain:' + entry.item.chain_prefix); selectedClips = new Set(selectedClips)"
+                                                               @click.stop="handleClipCheckbox('chain:' + entry.item.chain_prefix, $event)"
                                                                class="accent-violet-500 w-3.5 h-3.5 flex-shrink-0 cursor-pointer">
+                                                    </template>
+                                                    <!-- Chain ambient badge -->
+                                                    <template x-if="clipAmbientBadge(entry.item.chain_prefix + '_001.mp4') === 'start'">
+                                                        <span class="text-violet-400 cursor-default select-none" style="font-size:11px"
+                                                              :title="ambientFiles.find(af => af.clips[0] === entry.item.chain_prefix + '_001.mp4')?.name || 'ambient'">♫▶</span>
+                                                    </template>
+                                                    <template x-if="clipAmbientBadge(entry.item.chain_prefix + '_001.mp4') === 'mid'">
+                                                        <span class="text-violet-700 cursor-default select-none" style="font-size:11px"
+                                                              :title="ambientFiles.find(af => (af.clips||[]).includes(entry.item.chain_prefix + '_001.mp4'))?.name || 'ambient'">♫</span>
                                                     </template>
                                                     <span class="font-mono text-sm text-blue-300" x-text="entry.item.chain_prefix || 'chain'"></span>
                                                     <template x-if="isChainPrefixDuplicate(entry.item.chain_prefix)">
@@ -1086,7 +1095,7 @@
                                                             <template x-if="fileItemIsGreen(entry.idx)">
                                                                 <input type="checkbox"
                                                                        :checked="selectedClips.has(fileItemName(entry.idx))"
-                                                                       @click.stop="selectedClips.has(fileItemName(entry.idx)) ? selectedClips.delete(fileItemName(entry.idx)) : selectedClips.add(fileItemName(entry.idx)); selectedClips = new Set(selectedClips)"
+                                                                       @click.stop="handleClipCheckbox(fileItemName(entry.idx), $event)"
                                                                        class="accent-violet-500 w-3.5 h-3.5 flex-shrink-0 cursor-pointer">
                                                             </template>
                                                             <span class="font-mono text-sm text-gray-200 flex-shrink-0"
@@ -1171,6 +1180,17 @@
                                                         <template x-if="fileItemIsGreen(entry.idx)">
                                                             <div class="flex items-center gap-1">
                                                                 <span class="text-xs text-green-500" x-text="fileItemSizeMb(entry.idx)"></span>
+                                                                <!-- Ambient badge -->
+                                                                <template x-if="clipAmbientBadge(fileItemName(entry.idx)) === 'start'">
+                                                                    <span class="text-violet-400 flex-shrink-0 cursor-default select-none"
+                                                                          style="font-size:11px"
+                                                                          :title="ambientFiles.find(af => af.clips[0] === fileItemName(entry.idx))?.name || 'ambient'"">♫▶</span>
+                                                                </template>
+                                                                <template x-if="clipAmbientBadge(fileItemName(entry.idx)) === 'mid'">
+                                                                    <span class="text-violet-700 flex-shrink-0 cursor-default select-none"
+                                                                          style="font-size:11px"
+                                                                          :title="ambientFiles.find(af => (af.clips||[]).includes(fileItemName(entry.idx)))?.name || 'ambient'">♫</span>
+                                                                </template>
                                                                 <button @click="openVideoModal(fileItemName(entry.idx))"
                                                                         class="text-green-500 hover:text-green-400 text-sm px-1 py-0.5 rounded"
                                                                         title="Odtwórz film">▶</button>
@@ -3485,20 +3505,36 @@
 
             <!-- Audio prompt section -->
             <div class="bg-gray-800 rounded-lg p-4 space-y-3">
-                <h4 class="text-xs font-semibold text-violet-400 uppercase tracking-wider">Audio (MMAudio)</h4>
+                <h4 class="text-xs font-semibold text-violet-400 uppercase tracking-wider">Audio FX (MMAudio — per klip)</h4>
                 <div>
-                    <label class="block text-xs text-gray-400 mb-1">Positive prompt audio</label>
+                    <label class="block text-xs text-gray-400 mb-1">Positive prompt FX</label>
                     <textarea x-model="globalsModal.data.defaults.default_audio_prompt"
-                              rows="3" placeholder="domyślnie: ambient sound, environmental audio, natural soundscape, high quality"
+                              rows="2" :placeholder="runAudioDefaults.audio_prompt"
                               class="w-full bg-gray-700 text-white text-xs rounded px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-violet-500 resize-none font-mono"></textarea>
                 </div>
                 <div>
-                    <label class="block text-xs text-gray-400 mb-1">Negative prompt audio</label>
+                    <label class="block text-xs text-gray-400 mb-1">Negative prompt FX</label>
                     <textarea x-model="globalsModal.data.defaults.default_audio_negative_prompt"
-                              rows="2" placeholder="domyślnie: music, melody, instruments, singing, low quality, distortion"
+                              rows="2" :placeholder="runAudioDefaults.audio_negative_prompt"
                               class="w-full bg-gray-700 text-white text-xs rounded px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-violet-500 resize-none font-mono"></textarea>
                 </div>
-                <p class="text-xs text-gray-600">Używany gdy klikniesz 🔊 Audio przed generacją. Positive — fallback na positive prompt klipu gdy puste.</p>
+                <p class="text-xs text-gray-600">Zdarzenia synchroniczne (uderzenia, kroki, szmery). Pusty = system default.</p>
+            </div>
+            <div class="bg-gray-800 rounded-lg p-4 space-y-3">
+                <h4 class="text-xs font-semibold text-violet-400 uppercase tracking-wider">Audio Ambient (MMAudio — sekwencje)</h4>
+                <div>
+                    <label class="block text-xs text-gray-400 mb-1">Positive prompt ambient</label>
+                    <textarea x-model="globalsModal.data.defaults.default_ambient_audio_prompt"
+                              rows="2" :placeholder="runAudioDefaults.ambient_audio_prompt"
+                              class="w-full bg-gray-700 text-white text-xs rounded px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-violet-500 resize-none font-mono"></textarea>
+                </div>
+                <div>
+                    <label class="block text-xs text-gray-400 mb-1">Negative prompt ambient</label>
+                    <textarea x-model="globalsModal.data.defaults.default_ambient_audio_negative_prompt"
+                              rows="2" :placeholder="runAudioDefaults.ambient_audio_negative_prompt"
+                              class="w-full bg-gray-700 text-white text-xs rounded px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-violet-500 resize-none font-mono"></textarea>
+                </div>
+                <p class="text-xs text-gray-600">Atmosfera ciągła (szum lasu, wiatr, tło). Pusty = system default ambient.</p>
             </div>
 
         </div>
@@ -3771,9 +3807,10 @@
                             <span class="text-xs text-gray-600">— zostaw puste = użyj domyślnych projektu</span>
                         </div>
                         <div class="space-y-2">
+                            <p class="text-xs text-gray-600 font-semibold uppercase tracking-wide">FX (per klip)</p>
                             <div>
                                 <label class="flex items-center gap-2 text-xs text-violet-300 mb-1">
-                                    Audio prompt (pozytywny)
+                                    Audio FX prompt (pozytywny)
                                     <button @click="openPromptPickerForField((p) => { editModal.data.audio_prompt = p.positive; if(p.negative) editModal.data.audio_negative_prompt = p.negative; }, 'mmaudio')"
                                             class="text-purple-400 hover:text-purple-300 border border-purple-800 hover:border-purple-500 rounded px-1.5 py-0 transition text-xs leading-4">📚 Biblioteka</button>
                                     <button type="button" x-show="editModal.data.audio_prompt || editModal.data.audio_negative_prompt"
@@ -3783,16 +3820,32 @@
                                 <textarea x-model="editModal.data.audio_prompt" rows="2"
                                           class="w-full bg-gray-800 border border-violet-900 rounded px-3 py-2 text-sm text-gray-200 font-mono focus:outline-none focus:border-violet-500 resize-y"
                                           :placeholder="`domyślny: ${runAudioDefaults.audio_prompt}`"></textarea>
-                                <p x-show="!editModal.data.audio_prompt" class="text-xs text-gray-600 mt-1 font-mono truncate"
-                                   x-text="`domyślny prompt: ${runAudioDefaults.audio_prompt}`"></p>
                             </div>
                             <div>
-                                <label class="block text-xs text-violet-300 mb-1">Audio prompt (negatywny)</label>
-                                <textarea x-model="editModal.data.audio_negative_prompt" rows="2"
+                                <label class="block text-xs text-violet-300 mb-1">Audio FX prompt (negatywny)</label>
+                                <textarea x-model="editModal.data.audio_negative_prompt" rows="1"
                                           class="w-full bg-gray-800 border border-violet-900 rounded px-3 py-2 text-sm text-gray-200 font-mono focus:outline-none focus:border-violet-500 resize-y"
                                           :placeholder="`domyślny: ${runAudioDefaults.audio_negative_prompt}`"></textarea>
-                                <p x-show="!editModal.data.audio_negative_prompt" class="text-xs text-gray-600 mt-1 font-mono truncate"
-                                   x-text="`domyślny prompt: ${runAudioDefaults.audio_negative_prompt}`"></p>
+                            </div>
+                            <p class="text-xs text-gray-600 font-semibold uppercase tracking-wide pt-1">Ambient (sekwencja)</p>
+                            <div>
+                                <label class="flex items-center gap-2 text-xs text-violet-300 mb-1">
+                                    Ambient prompt (pozytywny)
+                                    <button @click="openPromptPickerForField((p) => { editModal.data.ambient_audio_prompt = p.positive; if(p.negative) editModal.data.ambient_audio_negative_prompt = p.negative; }, 'mmaudio')"
+                                            class="text-purple-400 hover:text-purple-300 border border-purple-800 hover:border-purple-500 rounded px-1.5 py-0 transition text-xs leading-4">📚 Biblioteka</button>
+                                    <button type="button" x-show="editModal.data.ambient_audio_prompt || editModal.data.ambient_audio_negative_prompt"
+                                            @click="editModal.data.ambient_audio_prompt = ''; editModal.data.ambient_audio_negative_prompt = ''"
+                                            class="px-1.5 py-0.5 bg-gray-700 hover:bg-gray-600 text-gray-400 text-xs rounded transition">✕ wyczyść</button>
+                                </label>
+                                <textarea x-model="editModal.data.ambient_audio_prompt" rows="2"
+                                          class="w-full bg-gray-800 border border-violet-900 rounded px-3 py-2 text-sm text-gray-200 font-mono focus:outline-none focus:border-violet-500 resize-y"
+                                          :placeholder="`domyślny: ${runAudioDefaults.ambient_audio_prompt}`"></textarea>
+                            </div>
+                            <div>
+                                <label class="block text-xs text-violet-300 mb-1">Ambient prompt (negatywny)</label>
+                                <textarea x-model="editModal.data.ambient_audio_negative_prompt" rows="1"
+                                          class="w-full bg-gray-800 border border-violet-900 rounded px-3 py-2 text-sm text-gray-200 font-mono focus:outline-none focus:border-violet-500 resize-y"
+                                          :placeholder="`domyślny: ${runAudioDefaults.ambient_audio_negative_prompt}`"></textarea>
                             </div>
                         </div>
                     </div>
@@ -9045,17 +9098,20 @@ function app() {
         },
 
         async _loadRunAudioDefaults(filename) {
-            const SYS_POS = 'ambient sound, environmental audio, natural soundscape, high quality';
-            const SYS_NEG = 'music, melody, instruments, singing, low quality, distortion';
+            const D = this.runAudioDefaults;
             try {
                 const res = await fetch(`/api/runs/${encodeURIComponent(filename)}/globals`);
                 if (!res.ok) return;
                 const data = await res.json();
+                const defs = data.defaults || {};
                 this.runAudioDefaults = {
-                    audio_prompt:          data.defaults?.default_audio_prompt          || SYS_POS,
-                    audio_negative_prompt: data.defaults?.default_audio_negative_prompt || SYS_NEG,
+                    audio_prompt:                  defs.default_audio_prompt                  || D.audio_prompt,
+                    audio_negative_prompt:         defs.default_audio_negative_prompt         || D.audio_negative_prompt,
+                    ambient_audio_prompt:          defs.default_ambient_audio_prompt          || D.ambient_audio_prompt,
+                    ambient_audio_negative_prompt: defs.default_ambient_audio_negative_prompt || D.ambient_audio_negative_prompt,
                 };
             } catch(e) { /* zostają system defaults */ }
+            await this.loadAmbientFiles();
         },
         async loadFlow(filename) {
             this.flowLoading = true; this.flowError = null;
@@ -9761,52 +9817,100 @@ function app() {
 
         async generateAmbientAudio() {
             if (!this.selectedRun || this.selectedClips.size === 0) return;
-            // Collect clips in flow order
-            const orderedClips = [];
-            let firstPrompt = '';
-            let firstNeg = '';
+
+            // ── 1. Collect ALL entries in flow order, find selected range ──
             const allEntries = this.flowSegments().flatMap(s => s.items);
+
+            // Map each entry to {key, clips[], label, isBreak, ambientPrompt}
+            const flowItems = [];
             for (const entry of allEntries) {
                 const item = entry.item || {};
-                if (item.chain && item.chain_prefix) {
+                if (item.break || item.type === 'scene_break') {
+                    flowItems.push({ isBreak: true });
+                    continue;
+                }
+                if (item.chain && item.chain_prefix && this.chainStatusOk(entry.idx)) {
                     const key = 'chain:' + item.chain_prefix;
-                    if (this.selectedClips.has(key)) {
-                        const si = this._si(entry.idx);
-                        if (si?.steps) {
-                            si.steps.forEach((s, i) => {
-                                if (s.exists) orderedClips.push(`${item.chain_prefix}_${String(i+1).padStart(3,'0')}.mp4`);
-                            });
-                        }
-                        if (!firstPrompt) { firstPrompt = item.audio_prompt || ''; firstNeg = item.audio_negative_prompt || ''; }
-                    }
-                } else if (item.file) {
+                    const si = this._si(entry.idx);
+                    const clips = si?.steps ? si.steps.filter(s => s.exists).map((s, i) => `${item.chain_prefix}_${String(i+1).padStart(3,'0')}.mp4`) : [];
+                    const lastStep = si?.steps ? si.steps.length : 0;
+                    flowItems.push({ key, clips, label: `${item.chain_prefix}_1_${lastStep}`, selected: this.selectedClips.has(key), ambientPrompt: item.ambient_audio_prompt || '', ambientNeg: item.ambient_audio_negative_prompt || '', entry });
+                } else if (item.file && this.fileItemIsGreen(entry.idx)) {
                     const name = this.fileItemName(entry.idx);
-                    if (name && this.selectedClips.has(name)) {
-                        orderedClips.push(name);
-                        if (!firstPrompt) { firstPrompt = item.audio_prompt || ''; firstNeg = item.audio_negative_prompt || ''; }
-                    }
+                    if (!name) continue;
+                    flowItems.push({ key: name, clips: [name], label: this._clipLabel(entry), selected: this.selectedClips.has(name), ambientPrompt: item.ambient_audio_prompt || '', ambientNeg: item.ambient_audio_negative_prompt || '', entry });
                 }
             }
+
+            // ── 2. Find first/last selected index ──
+            const selectable = flowItems.filter(fi => !fi.isBreak);
+            const firstSelIdx = selectable.findIndex(fi => fi.selected);
+            const lastSelIdx  = selectable.map(fi => fi.selected).lastIndexOf(true);
+            if (firstSelIdx < 0) return;
+
+            // ── 3. Check for scene_break between first and last ──
+            const firstKey = selectable[firstSelIdx].key;
+            const lastKey  = selectable[lastSelIdx].key;
+            const firstFlowIdx = flowItems.findIndex(fi => fi.key === firstKey);
+            const lastFlowIdx  = flowItems.map(fi => fi.key).lastIndexOf(lastKey);
+            for (let i = firstFlowIdx; i <= lastFlowIdx; i++) {
+                if (flowItems[i]?.isBreak) {
+                    this.ambientModal.error = 'Zaznaczenie przecina granicę sceny (scene_break). Zaznacz klipy w obrębie jednej sceny.';
+                    return;
+                }
+            }
+
+            // ── 4. Gap filling — include all selectable between first and last ──
+            const sequence = selectable.slice(firstSelIdx, lastSelIdx + 1);
+            const added = sequence.filter(fi => !fi.selected).map(fi => fi.key);
+            if (added.length > 0) {
+                this.logLine('sys', `⚠️ Uzupełniono luki: ${added.join(', ')}`);
+            }
+
+            const orderedClips = sequence.flatMap(fi => fi.clips);
             if (orderedClips.length === 0) return;
+
+            // ── 5. Conflict detection ──
+            const conflicts = this.ambientFiles.filter(af =>
+                (af.clips || []).some(c => orderedClips.includes(c))
+            );
+            if (conflicts.length > 0) {
+                const names = conflicts.map(af => af.name).join('\n');
+                const ok = confirm(`Klipy mają już przypisany ambient:\n${names}\n\nZarchiwizować i zastąpić nowym?`);
+                if (!ok) return;
+                for (const af of conflicts) await this.archiveAmbientFile(af.name);
+            }
+
+            // ── 6. Build output name from first+last clip label ──
+            const firstLabel = sequence[0].label;
+            const lastLabel  = sequence[sequence.length - 1].label;
+            const safeName   = (firstLabel === lastLabel ? firstLabel : `${firstLabel}_${lastLabel}`)
+                .replace(/[<>:"/\\|?*]/g, '_').substring(0, 120);
+            const outputName = `${safeName}.mp3`;
+
+            // ── 7. Ambient prompt from first selected item ──
+            const firstSelected = sequence.find(fi => fi.selected) || sequence[0];
+            const ambientPrompt = firstSelected.ambientPrompt;
+            const ambientNeg    = firstSelected.ambientNeg;
+
             this.ambientModal.busy = true;
             this.ambientModal.error = '';
-            this.logLine('sys', `🎵 Generuję ambient audio dla ${orderedClips.length} klipów...`);
+            this.logLine('sys', `🎵 Generuję ambient audio dla ${orderedClips.length} klipów → ${outputName}`);
             try {
-                const body = { clips: orderedClips };
-                if (firstPrompt)  body.audio_prompt          = firstPrompt;
-                if (firstNeg)     body.audio_negative_prompt = firstNeg;
+                const body = { clips: orderedClips, output_name: outputName };
+                if (ambientPrompt) body.audio_prompt          = ambientPrompt;
+                if (ambientNeg)    body.audio_negative_prompt = ambientNeg;
                 const res = await fetch(`/api/audio/sequence/${encodeURIComponent(this.selectedRun.filename)}`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(body),
+                    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body),
                 });
                 const data = await res.json();
                 if (!res.ok) {
                     this.ambientModal.error = data.detail || 'Błąd';
                     this.logLine('sys', `❌ Ambient audio błąd: ${this.ambientModal.error}`);
                 } else {
-                    this.logLine('sys', `🎵 Ambient audio uruchomione w tle → ${data.output || '...'}`);
+                    this.logLine('sys', `🎵 Ambient audio uruchomione → ${data.output}`);
                     this.selectedClips = new Set();
+                    this._lastClickedClipKey = null;
                 }
             } catch(e) {
                 this.ambientModal.error = e.message;
@@ -10526,7 +10630,12 @@ function app() {
         preSelected:    {},     // { [clip.name]: true }
         preQueue:       [],     // [{ clip, status, elapsed_s, error }]
         preQueueStatus: {},     // { [clip.name]: 'pending'|'running'|'done'|'error' }
-        runAudioDefaults: { audio_prompt: 'foley sound effects, physical environment sounds, footsteps, cloth movement, objects, wind bursts, creaking, synchronized with video, crisp, realistic, high quality', audio_negative_prompt: 'music, melody, instruments, singing, ambient drone, sustained atmosphere, continuous background noise, reverb heavy, low quality, distortion' },
+        runAudioDefaults: {
+            audio_prompt:                    'foley sound effects, physical interactions, footsteps, cloth movement, object handling, impacts, synchronized with video, crisp, realistic',
+            audio_negative_prompt:           'music, melody, ambient drone, continuous atmosphere, background noise, reverb, sustained tones, low quality, distortion',
+            ambient_audio_prompt:            'natural environment ambience, continuous atmospheric sound, wind, room tone, immersive background, seamless',
+            ambient_audio_negative_prompt:   'music, melody, instruments, sudden impacts, foley, footsteps, cloth, synchronized effects, stingers, low quality, distortion',
+        },
         mmAudioPresets: [
             { label: 'Standard FX', pos: 'foley sound effects, physical environment sounds, footsteps, cloth movement, objects, wind bursts, creaking, synchronized with video, crisp, realistic, high quality', neg: 'music, melody, instruments, singing, ambient drone, sustained atmosphere, continuous background noise, reverb heavy, low quality, distortion' },
             { label: 'Spanking',    pos: 'sharp slap impact, flesh impact sound, skin contact, crisp smack, physical strike, body percussion, high quality, realistic foley',                                  neg: 'music, melody, ambient drone, echo, reverb, wet sound, low quality, distortion' },
@@ -10540,6 +10649,7 @@ function app() {
         // ─ Post-processing ────────────────────────────────
         ambientFiles:      [],   // [{name, size_mb, clips:[], offsets:[]}]
         ambientMuted:      false,
+        _lastClickedClipKey: null,
         postClips:         [],
         postClipOffsets:   [],   // cumulative seconds before clip[i]
         postCurrentIndex:  -1,
@@ -11265,6 +11375,66 @@ function app() {
                 const res = await fetch(`/api/audio/ambient/${encodeURIComponent(this.selectedRun.filename)}`);
                 if (res.ok) { const d = await res.json(); this.ambientFiles = d.files || []; }
             } catch(e) { console.error('ambient files fetch error', e); }
+        },
+
+        async archiveAmbientFile(name) {
+            if (!this.selectedRun) return;
+            await fetch(`/api/audio/ambient/${encodeURIComponent(this.selectedRun.filename)}/archive/${encodeURIComponent(name)}`, { method: 'POST' });
+            await this.loadAmbientFiles();
+        },
+
+        // Ordered list of selectable clip keys (file→file green + chain headers)
+        _selectableClipKeys() {
+            const keys = [];
+            for (const seg of this.flowSegments()) {
+                for (const entry of seg.items) {
+                    const item = entry.item || {};
+                    if (item.chain && item.chain_prefix && this.chainStatusOk(entry.idx)) {
+                        keys.push('chain:' + item.chain_prefix);
+                    } else if (item.file && this.fileItemIsGreen(entry.idx)) {
+                        const name = this.fileItemName(entry.idx);
+                        if (name) keys.push(name);
+                    }
+                }
+            }
+            return keys;
+        },
+
+        // Human-readable label for ambient mp3 naming
+        _clipLabel(entry, si = null) {
+            const item = entry.item || {};
+            if (si !== null) return `${item.chain_prefix}_${si + 1}`;
+            const name = this.fileItemName(entry.idx) || '';
+            return name.replace(/_transition\.mp4$/i, '').replace(/\.mp4$/i, '');
+        },
+
+        // Shift+click range checkbox handler
+        handleClipCheckbox(key, event) {
+            if (event.shiftKey && this._lastClickedClipKey && this._lastClickedClipKey !== key) {
+                const keys = this._selectableClipKeys();
+                const a = keys.indexOf(this._lastClickedClipKey);
+                const b = keys.indexOf(key);
+                if (a >= 0 && b >= 0) {
+                    const [from, to] = a < b ? [a, b] : [b, a];
+                    for (let i = from; i <= to; i++) this.selectedClips.add(keys[i]);
+                    this.selectedClips = new Set(this.selectedClips);
+                    return;
+                }
+            }
+            if (this.selectedClips.has(key)) this.selectedClips.delete(key);
+            else this.selectedClips.add(key);
+            this._lastClickedClipKey = key;
+            this.selectedClips = new Set(this.selectedClips);
+        },
+
+        // Badge: 'start' | 'mid' | null for a clip video filename
+        clipAmbientBadge(clipName) {
+            for (const af of this.ambientFiles) {
+                const idx = (af.clips || []).indexOf(clipName);
+                if (idx === 0) return 'start';
+                if (idx > 0) return 'mid';
+            }
+            return null;
         },
 
         async deleteAmbientFile(name) {
