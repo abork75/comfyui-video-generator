@@ -202,6 +202,139 @@ def _video_material(path: Path, dur_us: int, width: int, height: int, mat_id: st
     }
 
 
+def _audio_material(path: Path, dur_us: int, mat_id: str) -> dict:
+    """Build an audio material dict for a local mp3 file (matches CapCut's extract_music format)."""
+    path_str = str(path)
+    return {
+        "id":                       mat_id,
+        "unique_id":                "",
+        "type":                     "extract_music",
+        "name":                     path.name,
+        "duration":                 dur_us,
+        "path":                     path_str,
+        "category_name":            "local",
+        "wave_points":              [],
+        "music_id":                 str(_uuid_mod.uuid4()),
+        "app_id":                   0,
+        "text_id":                  "",
+        "tone_type":                "",
+        "source_platform":          0,
+        "video_id":                 "",
+        "effect_id":                "",
+        "resource_id":              "",
+        "third_resource_id":        "",
+        "category_id":              "",
+        "intensifies_path":         "",
+        "formula_id":               "",
+        "check_flag":               1,
+        "team_id":                  "",
+        "local_material_id":        str(_uuid_mod.uuid4()),
+        "tone_speaker":             "",
+        "mock_tone_speaker":        "",
+        "tone_effect_id":           "",
+        "tone_effect_name":         "",
+        "tone_platform":            "",
+        "cloned_model_type":        "",
+        "tone_category_id":         "",
+        "tone_category_name":       "",
+        "tone_second_category_id":  "",
+        "tone_second_category_name": "",
+        "tone_emotion_name_key":    "",
+        "tone_emotion_style":       "",
+        "tone_emotion_role":        "",
+        "tone_emotion_selection":   "",
+        "tone_emotion_scale":       0.0,
+        "moyin_emotion":            "",
+        "request_id":               "",
+        "query":                    "",
+        "search_id":                "",
+        "sound_separate_type":      "",
+        "is_text_edit_overdub":     False,
+        "is_ugc":                   False,
+        "is_ai_clone_tone":         False,
+        "is_ai_clone_tone_post":    False,
+        "source_from":              "",
+        "copyright_limit_type":     "none",
+        "aigc_history_id":          "",
+        "aigc_item_id":             "",
+        "music_source":             "",
+        "pgc_id":                   "",
+        "pgc_name":                 "",
+        "similiar_music_info":      {"original_song_id": "", "original_song_name": ""},
+        "ai_music_type":            0,
+        "ai_music_enter_from":      "",
+        "lyric_type":               0,
+        "tts_task_id":              "",
+        "tts_generate_scene":       "",
+        "ai_music_generate_scene":  0,
+        "tts_benefit_info": {
+            "benefit_type": "none",
+            "benefit_log_id": "",
+            "benefit_log_extra": "",
+            "benefit_amount": -1,
+        },
+    }
+
+
+def _audio_segment(mat_id: str, seg_id: str, src_start_us: int, dur_us: int, start_us: int) -> dict:
+    """Build a timeline audio segment placed at start_us (matches CapCut's native audio segment format)."""
+    return {
+        "id":                           seg_id,
+        "source_timerange":             {"start": src_start_us, "duration": dur_us},
+        "target_timerange":             {"start": start_us,     "duration": dur_us},
+        "render_timerange":             {"start": 0, "duration": 0},
+        "desc":                         "",
+        "state":                        0,
+        "speed":                        1.0,
+        "is_loop":                      False,
+        "is_tone_modify":               False,
+        "reverse":                      False,
+        "intensifies_audio":            False,
+        "cartoon":                      False,
+        "volume":                       1.0,
+        "last_nonzero_volume":          1.0,
+        "clip":                         None,
+        "uniform_scale":                None,
+        "material_id":                  mat_id,
+        "extra_material_refs":          [],
+        "render_index":                 0,
+        "keyframe_refs":                [],
+        "enable_lut":                   False,
+        "enable_adjust":                False,
+        "enable_hsl":                   False,
+        "visible":                      True,
+        "group_id":                     "",
+        "enable_color_curves":          True,
+        "enable_hsl_curves":            True,
+        "track_render_index":           0,
+        "hdr_settings":                 None,
+        "enable_color_wheels":          True,
+        "track_attribute":              0,
+        "is_placeholder":               False,
+        "template_id":                  "",
+        "enable_smart_color_adjust":    False,
+        "template_scene":               "default",
+        "common_keyframes":             [],
+        "caption_info":                 None,
+        "responsive_layout": {
+            "enable": False, "target_follow": "",
+            "size_layout": 0, "horizontal_pos_layout": 0, "vertical_pos_layout": 0,
+        },
+        "enable_color_match_adjust":    False,
+        "enable_color_correct_adjust":  False,
+        "enable_adjust_mask":           False,
+        "raw_segment_id":               "",
+        "lyric_keyframes":              None,
+        "enable_video_mask":            True,
+        "digital_human_template_group_id": "",
+        "color_correct_alg_result":     "",
+        "source":                       "segmentsourcenormal",
+        "enable_mask_stroke":           False,
+        "enable_mask_shadow":           False,
+        "enable_color_adjust_pro":      False,
+    }
+
+
 def _video_segment(mat_id: str, seg_id: str, dur_us: int, start_us: int) -> dict:
     """Build a timeline segment dict in CapCut's native format."""
     return {
@@ -492,6 +625,7 @@ def generate_capcut_project(
     # ── Build materials + segments from run clips ────────────────────────────
     video_materials: list[dict] = []
     segments:        list[dict] = []
+    clip_timeline:   dict[str, int] = {}   # clip name → timeline start (µs)
     cursor_us = 0
 
     for clip in existing:
@@ -518,6 +652,7 @@ def generate_capcut_project(
         width  = int(clip.get("width")  or 1920)
         height = int(clip.get("height") or 1080)
 
+        clip_timeline[name] = cursor_us
         mat_id = _new_id()
         seg_id = _new_id()
         video_materials.append(_video_material(clip_path, dur_us, width, height, mat_id))
@@ -530,6 +665,48 @@ def generate_capcut_project(
     total_us = cursor_us
     canvas_w = video_materials[0]["width"]
     canvas_h = video_materials[0]["height"]
+
+    # ── Load ambient audio files from podklad/ ───────────────────────────────
+    podklad_dir = pf / "transitions" / "podklad"
+    audio_materials: list[dict] = []
+    audio_tracks:    list[dict] = []
+
+    if podklad_dir.exists():
+        for sidecar in sorted(podklad_dir.glob("*.json")):
+            mp3_path = sidecar.with_suffix(".mp3")
+            if not mp3_path.exists():
+                continue
+            try:
+                meta = json.loads(sidecar.read_text(encoding="utf-8"))
+            except Exception:
+                continue
+            clip_names: list[str] = meta.get("clips") or []
+            if not clip_names:
+                continue
+            # Find where the first clip starts in the timeline
+            timeline_start_us = None
+            for cn in clip_names:
+                if cn in clip_timeline:
+                    timeline_start_us = clip_timeline[cn]
+                    break
+            if timeline_start_us is None:
+                continue  # none of the clips are in the timeline
+            dur_us = _ffprobe_duration_us(mp3_path)
+            if dur_us <= 0:
+                continue
+            # Clamp: don't exceed the video timeline
+            dur_us = min(dur_us, total_us - timeline_start_us)
+            if dur_us <= 0:
+                continue
+            mat_id = _new_id()
+            seg_id = _new_id()
+            audio_materials.append(_audio_material(mp3_path, dur_us, mat_id))
+            audio_tracks.append({
+                "attribute": 0, "flag": 0, "id": _new_id(),
+                "is_default_name": True, "name": "",
+                "type": "audio",
+                "segments": [_audio_segment(mat_id, seg_id, 0, dur_us, timeline_start_us)],
+            })
 
     # ── Clone TEMPLATE → project_dir ─────────────────────────────────────────
     shutil.copytree(str(template_dir), str(project_dir))
@@ -548,17 +725,14 @@ def generate_capcut_project(
     dc["canvas_config"]["width"]  = canvas_w
     dc["canvas_config"]["height"] = canvas_h
     dc["materials"]["videos"] = video_materials
+    dc["materials"]["audios"] = audio_materials
     dc["tracks"] = [
         {
             "attribute": 0, "flag": 0, "id": _new_id(),
             "is_default_name": True, "name": "",
             "segments": segments, "type": "video",
         },
-        {
-            "attribute": 0, "flag": 0, "id": _new_id(),
-            "is_default_name": True, "name": "",
-            "segments": [], "type": "audio",
-        },
+        *audio_tracks,
     ]
 
     content_text = json.dumps(dc, ensure_ascii=False, indent=2)
@@ -602,8 +776,9 @@ def generate_capcut_project(
 
     return {
         "ok": True,
-        "project_dir": str(project_dir),
+        "project_dir":  str(project_dir),
         "project_name": project_name,
-        "clip_count": len(segments),
-        "duration_s": round(total_us / 1_000_000, 1),
+        "clip_count":   len(segments),
+        "audio_count":  len(audio_tracks),
+        "duration_s":   round(total_us / 1_000_000, 1),
     }

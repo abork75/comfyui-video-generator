@@ -1098,6 +1098,13 @@
                                                                        @click.stop="handleClipCheckbox(fileItemName(entry.idx), $event)"
                                                                        class="accent-violet-500 w-3.5 h-3.5 flex-shrink-0 cursor-pointer">
                                                             </template>
+                                                            <!-- Checkbox for .mp4 source tiles (gray/red/null status) — ambient sequence selection -->
+                                                            <template x-if="!fileItemIsGreen(entry.idx) && /\.(mp4|mov|avi|mkv|webm)$/i.test(entry.item.file || '')">
+                                                                <input type="checkbox"
+                                                                       :checked="selectedClips.has(entry.item.file)"
+                                                                       @click.stop="handleClipCheckbox(entry.item.file, $event)"
+                                                                       class="accent-violet-500 w-3.5 h-3.5 flex-shrink-0 cursor-pointer">
+                                                            </template>
                                                             <span class="font-mono text-sm text-gray-200 flex-shrink-0"
                                                                   :title="entry.item.file"
                                                                   x-text="entry.item.file.split(/[\\/]/).pop()"></span>
@@ -1246,6 +1253,15 @@
                                                         </template>
                                                         <template x-if="fileItemIsGray(entry.idx)">
                                                             <div class="flex items-center gap-1">
+                                                                <!-- Ambient badge -->
+                                                                <template x-if="/\.(mp4|mov|avi|mkv|webm)$/i.test(entry.item.file || '') && clipAmbientBadge(entry.item.file) === 'start'">
+                                                                    <span class="text-violet-400 cursor-default select-none" style="font-size:11px"
+                                                                          :title="ambientFiles.find(af => af.clips[0] === entry.item.file)?.name || 'ambient'">♫▶</span>
+                                                                </template>
+                                                                <template x-if="/\.(mp4|mov|avi|mkv|webm)$/i.test(entry.item.file || '') && clipAmbientBadge(entry.item.file) === 'mid'">
+                                                                    <span class="text-violet-700 cursor-default select-none" style="font-size:11px"
+                                                                          :title="ambientFiles.find(af => (af.clips||[]).includes(entry.item.file))?.name || 'ambient'">♫</span>
+                                                                </template>
                                                                 <template x-if="/\.(mp4|mov|avi|mkv|webm)$/i.test(entry.item.file || '')">
                                                                     <span class="text-xs text-blue-600" x-text="fileItemSourceSizeMb(entry.idx)"></span>
                                                                 </template>
@@ -9839,6 +9855,10 @@ function app() {
                     const name = this.fileItemName(entry.idx);
                     if (!name) continue;
                     flowItems.push({ key: name, clips: [name], label: this._clipLabel(entry), selected: this.selectedClips.has(name), ambientPrompt: item.ambient_audio_prompt || '', ambientNeg: item.ambient_audio_negative_prompt || '', entry });
+                } else if (item.file && !this.fileItemIsGreen(entry.idx) && /\.(mp4|mov|avi|mkv|webm)$/i.test(item.file)) {
+                    const f = item.file;
+                    const stem = f.replace(/\.[^.]+$/, '').split(/[\\/]/).pop();
+                    flowItems.push({ key: f, clips: [f], label: stem, selected: this.selectedClips.has(f), ambientPrompt: item.ambient_audio_prompt || '', ambientNeg: item.ambient_audio_negative_prompt || '', entry });
                 }
             }
 
@@ -10803,7 +10823,8 @@ function app() {
                 );
                 const data = await res.json();
                 if (res.ok) {
-                    const msg = `✅ CapCut: ${data.clip_count} klipów, ${data.duration_s}s → ${data.project_name}`;
+                    const audioInfo = data.audio_count > 0 ? `, ${data.audio_count} ambient` : '';
+                    const msg = `✅ CapCut: ${data.clip_count} klipów${audioInfo}, ${data.duration_s}s → ${data.project_name}`;
                     this.capcutResult = msg;
                     this.logLine('sys', msg);
                     this.logLine('sys', `   📂 ${data.project_dir}`);
@@ -11383,7 +11404,7 @@ function app() {
             await this.loadAmbientFiles();
         },
 
-        // Ordered list of selectable clip keys (file→file green + chain headers)
+        // Ordered list of selectable clip keys (file→file green + chain headers + gray .mp4)
         _selectableClipKeys() {
             const keys = [];
             for (const seg of this.flowSegments()) {
@@ -11394,6 +11415,8 @@ function app() {
                     } else if (item.file && this.fileItemIsGreen(entry.idx)) {
                         const name = this.fileItemName(entry.idx);
                         if (name) keys.push(name);
+                    } else if (item.file && !this.fileItemIsGreen(entry.idx) && /\.(mp4|mov|avi|mkv|webm)$/i.test(item.file)) {
+                        keys.push(item.file);
                     }
                 }
             }
