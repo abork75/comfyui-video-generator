@@ -48,7 +48,6 @@ flow:
       neg: static pose, sudden sitting, fast movement, jerky motion, bad anatomy, deformed body, extra limbs, distorted proportions, bent awkwardly, falling, unbalanced pose, stiff posture, no hip movement, flat back, hunched shoulders, looking away from camera, ugly face, deformed hands, blurry, low quality, artifacts, rubbery motion, unnatural physics, ball deformation, ball moving too much, floating, bad lighting, overexposed, underexposed, cartoonish, plastic skin, low detail, different clothing, modest pose, unsexy movement, boring pose, legs closed, knees together
     backend: linux
     fps: 16
-    steps: 6
     cfg: 2
     neg: static, frozen, no movement
 - file: 11.53. siedzi na pilce.png
@@ -71,7 +70,6 @@ flow:
       neg: glued to ball, stuck to ball, ball attached to body, woman and ball moving as one rigid object, no separation between woman and ball, floating together, unnatural ball physics, ball not compressing, ball not rebounding, ball deformed unnaturally, static ball, minimal bouncing, bad physics, rubbery motion, jerky movement, stiff body, bad anatomy, deformed ball, exaggerated floating, woman not lifting off ball, ball stuck to buttocks, low quality motion, artifacts, blurry
     backend: linux
     fps: 16
-    steps: 6
     cfg: 2
     neg: static, frozen, no movement
 - file: 11.55. siedzi na pilce 2.png
@@ -92,7 +90,6 @@ flow:
       neg: ''
     backend: linux
     fps: 16
-    steps: 6
     cfg: 2
     neg: static, frozen, no movement
 - file: 12.53. przedpokoj.png
@@ -115,7 +112,6 @@ flow:
       neg: ''
     backend: linux
     fps: 16
-    steps: 6
     cfg: 2
     neg: static, frozen, no movement
 defaults:
@@ -169,19 +165,10 @@ pic_flow:
         steps: 30
         cfg: 8
         denoise: 1
-  scene_dirs: []
-  characters_dirs: []
-  scene_slots: []
-  paste_slots: []
-  edge_blend_enabled: false
-  edge_blend_px: 15
   edge_blend_cfg: null
   edge_blend_denoise: null
-  edge_blend_prompts: []
-  scene_blend_enabled: false
   scene_blend_cfg: null
   scene_blend_denoise: null
-  scene_blend_prompts: []
   output_dir: C:\Users\abork\AppData\Local\CapCut\Videos\muszelka_pliki\EM\skakanie_na_pilce\modelEM_modele
   global_suffix: ''
   crop_to_subject: true
@@ -255,19 +242,10 @@ pic_flow:
         steps: 30
         cfg: 8
         denoise: 1
-  scene_dirs: []
-  characters_dirs: []
-  scene_slots: []
-  paste_slots: []
-  edge_blend_enabled: false
-  edge_blend_px: 15
   edge_blend_cfg: null
   edge_blend_denoise: null
-  edge_blend_prompts: []
-  scene_blend_enabled: false
   scene_blend_cfg: null
   scene_blend_denoise: null
-  scene_blend_prompts: []
   output_dir: C:\Users\abork\AppData\Local\CapCut\Videos\muszelka_pliki\EM\skakanie_na_pilce\modelEM_modele
   global_suffix: ''
   crop_to_subject: true
@@ -275,8 +253,6 @@ pic_flow:
   id: modelem_-_nowe_pozy
 - type: character_insert
   name: Umieszczanie na scenie - free
-  source_dirs: []
-  image_slots: []
   scene_dirs:
   - C:\Users\abork\AppData\Local\CapCut\Videos\muszelka_pliki\EM\skakanie_na_pilce\scena
   characters_dirs:
@@ -330,16 +306,10 @@ pic_flow:
         steps: 30
         cfg: 8
         denoise: 1
-  paste_slots: []
-  edge_blend_enabled: false
-  edge_blend_px: 15
   edge_blend_cfg: null
   edge_blend_denoise: null
-  edge_blend_prompts: []
-  scene_blend_enabled: false
   scene_blend_cfg: null
   scene_blend_denoise: null
-  scene_blend_prompts: []
   output_dir: C:\Users\abork\AppData\Local\CapCut\Videos\muszelka_pliki\EM\skakanie_na_pilce\postacie_na_scenie
   global_suffix: ''
   crop_to_subject: false
@@ -347,11 +317,6 @@ pic_flow:
   id: umieszczanie_na_scenie_-_free
 - type: paste_character
   name: Umieszczanie na scenie - deterministyczne
-  source_dirs: []
-  image_slots: []
-  scene_dirs: []
-  characters_dirs: []
-  scene_slots: []
   paste_slots:
   - id: 0efcc604-f7bc-4eba-81e1-b1070c7599e1
     output_id: 66f62127-4676-490d-a519-189cc01392ed
@@ -470,19 +435,15 @@ pic_flow:
         steps: 30
         cfg: 8
         denoise: 1
-  scene_dirs: []
-  characters_dirs: []
-  scene_slots: []
-  paste_slots: []
-  edge_blend_enabled: false
-  edge_blend_px: 15
+        atlascloud_model: qwen/qwen-image-2.0-pro/edit
+        seed: -1
+        thinking_mode: false
+        wan_size: 2K
+      mode: i2i
   edge_blend_cfg: null
   edge_blend_denoise: null
-  edge_blend_prompts: []
-  scene_blend_enabled: false
   scene_blend_cfg: null
   scene_blend_denoise: null
-  scene_blend_prompts: []
   output_dir: C:\Users\abork\AppData\Local\CapCut\Videos\muszelka_pliki\EM\skakanie_na_pilce\postacie_na_scenie
   global_suffix: ''
   crop_to_subject: false

@@ -1,7 +1,6 @@
 project_folder: C:\Users\abork\AppData\Local\CapCut\Videos\muszelka_pliki\MKK\praca w postapo\film
 defaults:
   fps: 16
-  steps: 6
   cfg: 2
   duration: 2
   blocks_to_swap: 35
@@ -43,7 +42,6 @@ flow:
       neg: ''
     backend: linux
     fps: 16
-    steps: 6
     cfg: 2
     neg: ''
 - break: true
@@ -110,7 +108,6 @@ flow:
       neg: "camera shake, shaky cam, jitter, stuttering, sudden movements, fast motion, quick pan, rapid zoom, jerky movement, \nwoman moving, breathing, blinking, hair moving, body twitching, leg movement, arm movement, \ndeformed anatomy, extra limbs, missing limbs, distorted body, bad proportions, \nlow quality, blurry motion, motion blur, artifact, glitch, flickering, \ntext, watermark, logo, overlay, \noverexposed, underexposed, wrong lighting, warm colors, \nmultiple angles, split screen, changing camera angle too fast, \nunnatural camera movement, orbiting too quickly, spinning camera"
     backend: linux
     fps: 16
-    steps: 6
     cfg: 2
     neg: static, frozen, no movement, distorted, walking towards camera, facing camera, approaching viewer, coming closer, teleporting, jumping, blurry, low quality
 - break: true
@@ -161,7 +158,6 @@ flow:
       neg: ''
     backend: linux
     fps: 16
-    steps: 6
     cfg: 2
     neg: static, frozen, no movement
 - break: true
@@ -204,7 +200,6 @@ flow:
       neg: ''
     backend: linux
     fps: 16
-    steps: 6
     cfg: 2
     neg: static, frozen, no movement
 - break: true
@@ -221,7 +216,6 @@ flow:
       neg: ''
     backend: linux
     fps: 16
-    steps: 6
     cfg: 2
     neg: static, frozen, no movement
 - break: true
@@ -255,7 +249,6 @@ flow:
       neg: ''
     backend: linux
     fps: 16
-    steps: 6
     cfg: 2
     neg: static, frozen, no movement
 - break: true
@@ -298,7 +291,6 @@ flow:
       neg: ''
     backend: linux
     fps: 16
-    steps: 6
     cfg: 2
     neg: static, frozen, no movement
 - break: true
@@ -315,7 +307,6 @@ flow:
       neg: ''
     backend: linux
     fps: 16
-    steps: 6
     cfg: 2
     neg: static, frozen, no movement
 - break: true
@@ -404,7 +395,6 @@ flow:
       neg: static pose, no movement, woman staying on bed, man appearing suddenly, teleporting, bad transition, deformed motion, extra limbs, distorted body, wrong pose, low quality motion, jerky movement, floating, bad anatomy, different clothing, lighting inconsistency, blurry motionstatic pose, no movement, woman staying on bed, man appearing suddenly, teleporting, bad transition, deformed motion, extra limbs, distorted body, wrong pose, low quality motion, jerky movement, floating, bad anatomy, different clothing, lighting inconsistency, blurry motion
     backend: linux
     fps: 16
-    steps: 6
     cfg: 2
     neg: static, frozen, no movement
 - break: true
@@ -472,7 +462,6 @@ flow:
       neg: ''
     backend: linux
     fps: 16
-    steps: 6
     cfg: 2
     neg: static, frozen, no movement
 - break: true

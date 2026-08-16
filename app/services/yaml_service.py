@@ -133,8 +133,10 @@ def _check_flow_item(item: Any, idx: int) -> list[str]:
         return errors
     if item.get("type") == "multitalk":
         return errors
+    if item.get("type") == "dubit":
+        return errors
     if "file" not in item:
-        errors.append(f"flow[{idx}]: must have 'file', 'break', 'chain', or 'type: talk/multitalk'")
+        errors.append(f"flow[{idx}]: must have 'file', 'break', 'chain', or 'type: talk/multitalk/dubit'")
     return errors
 
 

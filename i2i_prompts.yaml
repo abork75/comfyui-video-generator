@@ -50,6 +50,10 @@ categories:
   name: Taniec
   icon: 🎭
   order: 201
+- id: pozy
+  name: POZY
+  icon: 🗂
+  order: 202
 defaults:
   steps: 30
   cfg: 8
@@ -1063,4 +1067,54 @@ prompts:
     steps: 30
     cfg: 8.0
     denoise: 1.0
-last_id: 99
+- id: p0000100
+  category: fotorealizm
+  name: Uzupełnianie brakow
+  note: Uwaga. Napisany pod konrketną scenę wymaga modyfikacji przy użyciu.
+  positive: Fill in all missing or incomplete areas of the image with a natural background of dry, fallen leaves lying on the ground, and complete the model's feet realistically in the photo. Strictly preserve the exact original composition, framing, pose, lighting, and all existing elements without any changes. Seamlessly blend the added dry leaves and feet so they match the style, perspective, and atmosphere of the original image.
+  negative: ''
+  params:
+    steps: 30
+    cfg: 8.0
+    denoise: 1.0
+- id: p0000101
+  category: pozy
+  name: shoe shop
+  note: ekspedientka naked podaje but klientce
+  positive: "Interior of an elegant shoe store. On the left side stands a tall wooden wardrobe filled with women's boots and high-heeled shoes.\n\nIn the center of the frame a completely nude female shop employee is kneeling on the floor, wearing only red high heels. \n\nA wealthy, elegantly dressed woman is sitting on a chair in front of her. The seated woman is extending and offering her left leg toward the kneeling woman.\n\nThe kneeling woman is holding the seated woman's left foot (still wearing an exclusive high leather boot) with both hands, preparing to remove the boot for cleaning.\n\nNext to them on the floor lie shoe polish, a polishing brush and a cleaning cloth. The seated woman is pointing at the kneeling employee with her right hand in an urging gesture.\n\nIn the soft-focused background several other blurred customers are visible inside the store. High detail, realistic skin textures, natural lighting, cinematic composition."
+  negative: ''
+  params:
+    steps: 30
+    cfg: 8.0
+    denoise: 1.0
+- id: p0000102
+  category: mmaudio
+  name: Radosne Okrzyki
+  note: ''
+  positive: Excited joyful crowd cheers and shouts at an MMA event, energetic happy yelling, celebratory crowd reactions, people cheering loudly with enthusiasm
+  negative: ambient sound, background noise, music, commentary, announcer, fighting sounds, punches, kicks, low rumble, room tone, silence, distant noise
+  params:
+    steps: 30
+    cfg: 8.0
+    denoise: 1.0
+- id: p0000103
+  category: mmaudio
+  name: Rzucanie czaru
+  note: ''
+  positive: Soft magical spell sounds, gentle glowing energy whooshes, subtle crystalline chimes, light mystical humming, quiet sparkling particles, soft female voice whispering an arcane formula in a strange fictional language
+  negative: ambient sounds, background noise, room tone, wind, footsteps, continuous atmosphere, music, heavy bass, explosions, screaming, talking in normal language, silence, distorted audio
+  params:
+    steps: 30
+    cfg: 8.0
+    denoise: 1.0
+- id: p0000104
+  category: mmaudio
+  name: eksklusive shoeshop
+  note: ''
+  positive: Quiet exclusive shoe store ambience, soft footsteps on wooden floor, gentle rustling of tissue paper, quiet voices in the distance, soft door chime, subtle clothing and shoe movement sounds, calm refined atmosphere, low-level ambient room tone
+  negative: supermarket, hypermarket, loud announcements, shopping carts, beeping scanners, crowded noise, loud music, heavy bass, traffic, street noise, strong reverb, distorted audio
+  params:
+    steps: 30
+    cfg: 8.0
+    denoise: 1.0
+last_id: 104

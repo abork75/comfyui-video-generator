@@ -265,7 +265,6 @@ flow:
       audio_negative_prompt: music, melody, ambient drone, loud impact, hard footsteps, slap, sustained atmosphere, low quality, distortion
     backend: linux
     fps: 16
-    steps: 6
     cfg: 2
     neg: |-
       static, frozen, no movement
@@ -303,7 +302,6 @@ flow:
       audio_negative_prompt: music, melody, ambient drone, loud impact, hard footsteps, slap, sustained atmosphere, low quality, distortion
     backend: linux
     fps: 16
-    steps: 6
     cfg: 2
     neg: |-
       static, frozen, no movement
@@ -351,7 +349,6 @@ flow:
       audio_negative_prompt: music, melody, ambient drone, loud impact, hard footsteps, slap, sustained atmosphere, low quality, distortion
     backend: linux
     fps: 16
-    steps: 6
     cfg: 2
     neg: |-
       static, frozen, no movement
@@ -384,7 +381,6 @@ flow:
       audio_negative_prompt: music, melody, instruments, singing, ambient drone, sustained atmosphere, continuous background noise, reverb heavy, low quality, distortion
     backend: linux
     fps: 16
-    steps: 6
     cfg: 2
     neg: |-
       static, frozen, no movement

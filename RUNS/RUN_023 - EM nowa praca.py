@@ -4,7 +4,7 @@
 # Edit RUN_023 - EM nowa praca.yaml and regenerate with:
 #     from app.services.yaml_service import generate_py_from_yaml
 #     generate_py_from_yaml(Path("RUNS/RUN_023 - EM nowa praca.yaml"))
-# Generated: 2026-07-21 14:20:50
+# Generated: 2026-08-10 14:09:52
 # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 import sys
@@ -31,7 +31,7 @@ DEFAULT_RESOLUTION = (
 
 DEFAULT_BACKEND        = 'linux'
 DEFAULT_FPS            = 16
-DEFAULT_STEPS          = 6
+DEFAULT_STEPS          = 8
 DEFAULT_CFG            = 2
 DEFAULT_DURATION       = 2
 DEFAULT_BLOCKS_TO_SWAP      = 20
@@ -63,6 +63,8 @@ USE_TEST_FLOW = False
 # ============================================================
 
 FLOW_FULL = [
+    {"break": True},
+
     {
         'type': 'scene_break',
         'name': 'WYJSCIE Z DOMU',
@@ -98,6 +100,36 @@ FLOW_FULL = [
         'name': 'NIGHT CLUB',
     },
     {
+        'type': 'multitalk',
+        'image': '98.002 night club.png',
+        'num_persons': 2,
+        'name': 'zapoznanie',
+        'width': 448,
+        'height': 672,
+        'steps': [
+            {
+                'speaker_idx': 1,
+                'audio': '010 jestem z mezem.mp3',
+            },
+            {
+                'speaker_idx': 0,
+                'audio': '011. wersja premium.mp3',
+            },
+            {
+                'speaker_idx': 1,
+                'audio': '012. na cala noc.mp3',
+            },
+            {
+                'speaker_idx': 0,
+                'audio': '013. Zatanczymy.mp3',
+            },
+        ],
+        'use_last_frame': False,
+    },
+
+    {"break": True},
+
+    {
         'file': '98.002 night club.png',
         'backend': 'linux',
         'duration': 2,
@@ -120,7 +152,6 @@ FLOW_FULL = [
         "chain_prefix": 'night club',
         'backend': 'linux',
         'fps': 16,
-        'steps': 6,
         'cfg': 2,
         'neg': 'static, frozen, no movement',
     },
@@ -159,7 +190,6 @@ FLOW_FULL = [
         "chain_prefix": 'taksówka',
         'backend': 'linux',
         'fps': 16,
-        'steps': 6,
         'cfg': 2,
         'neg': 'static, frozen, no movement',
     },
@@ -210,7 +240,6 @@ FLOW_FULL = [
         "chain_prefix": 'blow job_natural 1_kopia',
         'backend': 'linux',
         'fps': 16,
-        'steps': 6,
         'cfg': 2,
         'neg': 'static, frozen, no movement',
         'frame_interpolation': False,
@@ -271,7 +300,6 @@ FLOW_FULL = [
         "chain_prefix": 'sexspoon doggy_MODELKAEM_1MIN',
         'backend': 'linux',
         'fps': 16,
-        'steps': 6,
         'cfg': 2,
         'neg': 'static, frozen, no movement',
     },
@@ -300,7 +328,6 @@ FLOW_FULL = [
         "chain_prefix": 'sexspoon doggy_MODELKAEM_1MIN_2',
         'backend': 'linux',
         'fps': 16,
-        'steps': 6,
         'cfg': 2,
         'neg': 'static, frozen, no movement',
     },
@@ -327,7 +354,6 @@ FLOW_FULL = [
         "chain_prefix": 'man is kneeling down',
         'backend': 'linux',
         'fps': 16,
-        'steps': 6,
         'cfg': 2,
         'neg': 'static, frozen, no movement',
     },
@@ -355,7 +381,7 @@ FLOW_FULL = [
                 'audio_negative_prompt': 'music, melody, speech, words, lyrics, reverb, echo, distortion, cartoon, low quality',
             },
             {
-                'duration': 6,
+                'duration': 2,
                 'pos': "Caucasian woman, light skin, slightly wrinkled face, medium brown shoulder-length straight hair. Woman kneeling on all fours on the ground, back arched. A naked man standing behind her and vigorously fucking her in doggystyle position. Strong, deep, rhythmic penetration, man's hips slamming against her ass. Clear front view showing the woman's face, breasts hanging and bouncing with each thrust, open mouth, wide eyes, intense pleasure and overwhelm expression, heavy breathing. Man's hands gripping her waist tightly, dynamic and powerful sex motion, detailed anatomy, realistic penetration, forest setting, dramatic lighting, high detail, erotic atmosphere same background as the first frame, wooden floor, white walls, red accent wall, potted plant.",
                 'neg': 'side view, back view, wrong camera angle, no penetration, bad anatomy, deformed body, extra limbs, blurry, low quality, censored, clothes on, monster not behind her, weak motion, static pose, cartoon, floating, unrealistic scale, poor connection between bodies',
                 'lora_high': 'WAN2.2_LoraSet/iGoon%20-%20Blink_Front_Doggystyle_I2V_HIGH.safetensors',
@@ -367,9 +393,42 @@ FLOW_FULL = [
         "chain_prefix": 'doggy_MODELKAEM_1MIN',
         'backend': 'linux',
         'fps': 16,
-        'steps': 6,
         'cfg': 2,
         'neg': 'static, frozen, no movement',
+        'width': 704,
+        'height': 1056,
+        'frame_interpolation': False,
+        'use_lightning': False,
+    },
+
+    {
+        'file': '99.023a next customer.png',
+        'backend': 'linux',
+        'duration': 2,
+        'pos': 'NONE',
+        'neg': 'NONE',
+    },
+    {
+        "chain": [
+            {
+                'duration': 3,
+                'pos': "Caucasian woman, light skin, slightly wrinkled face, medium brown shoulder-length straight hair. The video begins with a close-up of a woman. Jumpcut to a same woman kneeling on all fours on the ground, back arched. A naked man standing behind her and vigorously fucking her in doggystyle position. Strong, deep, rhythmic penetration, man's hips slamming against her ass. Clear front view showing the woman's face, breasts hanging and bouncing with each thrust, open mouth, wide eyes, intense pleasure and overwhelm expression, heavy breathing. Man's hands gripping her waist tightly, dynamic and powerful sex motion, detailed anatomy, realistic penetration, forest setting, dramatic lighting, high detail, erotic atmosphere same background as the first frame, wooden floor, white walls, red accent wall, potted plant.",
+                'neg': 'side view, back view, wrong camera angle, no penetration, bad anatomy, deformed body, extra limbs, blurry, low quality, censored, clothes on, monster not behind her, weak motion, static pose, cartoon, floating, unrealistic scale, poor connection between bodies',
+                'lora_high': 'WAN2.2_LoraSet/iGoon%20-%20Blink_Front_Doggystyle_I2V_HIGH.safetensors',
+                'lora_low': 'WAN2.2_LoraSet/iGoon%20-%20Blink_Front_Doggystyle_I2V_LOW.safetensors',
+                'audio_prompt': 'female moaning loud pleasure, rhythmic thrusting sounds, skin slapping wet impact, gasping breath, increasing intensity, climax vocal',
+                'audio_negative_prompt': 'music, melody, speech, words, lyrics, reverb, echo, distortion, cartoon, low quality',
+            },
+        ],
+        "chain_prefix": 'doggy_MODELKAEM_1MIN_2',
+        'backend': 'linux',
+        'fps': 16,
+        'cfg': 2,
+        'neg': 'static, frozen, no movement',
+        'width': 704,
+        'height': 1056,
+        'frame_interpolation': False,
+        'use_lightning': False,
     },
 
     {"break": True},
@@ -395,10 +454,12 @@ she looks back at the camera.
 
 she looks at the camera throughout the video. same background as the first frame, wooden floor, white walls, red accent wall, potted plant.""",
                 'neg': 'side view only, back view, no eye contact, woman not looking at camera, static pose, weak thrusting, bad anatomy, deformed body, extra limbs, blurry motion, low quality, censored, clothes on, poor penetration, unrealistic scale, cartoon',
-                'audio_prompt': 'rhythmic skin-on-skin slapping, flesh impact sounds, body weight shifting, wet contact sounds, rhythmic thrusting foley, synchronized with video, crisp, high quality, realistic',
-                'audio_negative_prompt': 'music, melody, ambient drone, moaning, voice, sustained atmosphere, continuous background noise, low quality, distortion',
+                'audio_prompt': 'female moaning loud pleasure, rhythmic thrusting sounds, skin slapping wet impact, gasping breath, increasing intensity, climax vocal',
+                'audio_negative_prompt': 'music, melody, speech, words, lyrics, reverb, echo, distortion, cartoon, low quality',
                 'lora_high': 'WAN2.2_LoraSet/iGoon%2520-%2520Blink_Back_Doggystyle_HIGH.safetensors',
                 'lora_low': 'WAN2.2_LoraSet/iGoon%2520-%2520Blink_Back_Doggystyle_LOW.safetensors',
+                'use_lightning': True,
+                'workflow': '_I2V_dasiwa_3step_nog4gg.json',
             },
             {
                 'duration': 6,
@@ -414,12 +475,13 @@ she looks at the camera throughout the video. same background as the first frame
                 'audio_negative_prompt': 'music, melody, speech, words, lyrics, reverb, echo, distortion, cartoon, low quality',
                 'lora_high': 'WAN2.2_LoraSet/iGoon%2520-%2520Blink_Back_Doggystyle_HIGH.safetensors',
                 'lora_low': 'WAN2.2_LoraSet/iGoon%2520-%2520Blink_Back_Doggystyle_LOW.safetensors',
+                'use_lightning': True,
+                'workflow': '_I2V_dasiwa_3step_nog4gg.json',
             },
         ],
         "chain_prefix": 'doggyback_MODELKAEM_1MIN',
         'backend': 'linux',
         'fps': 16,
-        'steps': 6,
         'cfg': 2,
         'neg': 'static, frozen, no movement',
     },
@@ -470,7 +532,6 @@ The video is shot from above looking down on the scene. same background as the f
         "chain_prefix": 'SquatCowgirl missionary_MODELKAEM_1MIN',
         'backend': 'linux',
         'fps': 16,
-        'steps': 6,
         'cfg': 2,
         'neg': 'static, frozen, no movement',
     },
@@ -551,7 +612,6 @@ She looks at the camera throughout the video
         "chain_prefix": 'titjob_hndjob_blwhnd_blow_finale_MODELKAEM_1MIN',
         'backend': 'linux',
         'fps': 16,
-        'steps': 6,
         'cfg': 2,
         'neg': 'static, frozen, no movement',
         'frame_interpolation': False,
@@ -598,9 +658,20 @@ St0p_l1ck, a man licks furiously from the chin to the forehead of a frozen woman
         "chain_prefix": 'licking cum',
         'backend': 'linux',
         'fps': 16,
-        'steps': 6,
         'cfg': 2,
         'neg': 'static, frozen, no movement',
+    },
+
+    {"break": True},
+
+    {
+        'type': 'talk',
+        'audio': 'Teraz maz.mp3',
+        'width': 448,
+        'height': 672,
+        'backend': 'linux',
+        'image': '99.015 Natural.png',
+        'prefix': 'a teraz maz',
     },
 
     {"break": True},
@@ -623,11 +694,19 @@ St0p_l1ck, a man licks furiously from the chin to the forehead of a frozen woman
                 'audio_prompt': 'rhythmic skin-on-skin slapping, flesh impact sounds, body weight shifting, wet contact sounds, rhythmic thrusting foley, synchronized with video, crisp, high quality, realistic',
                 'audio_negative_prompt': 'music, melody, ambient drone, moaning, voice, sustained atmosphere, continuous background noise, low quality, distortion',
             },
+            {
+                'duration': 4,
+                'pos': 'A woman and a man embrace and begin to kiss.',
+                'neg': 'no penis deformed penis',
+                'lora_high': '',
+                'lora_low': '',
+                'audio_prompt': 'rhythmic skin-on-skin slapping, flesh impact sounds, body weight shifting, wet contact sounds, rhythmic thrusting foley, synchronized with video, crisp, high quality, realistic',
+                'audio_negative_prompt': 'music, melody, ambient drone, moaning, voice, sustained atmosphere, continuous background noise, low quality, distortion',
+            },
         ],
         "chain_prefix": 'penis lora',
         'backend': 'linux',
         'fps': 16,
-        'steps': 6,
         'cfg': 2,
         'neg': 'static, frozen, no movement',
     },
@@ -656,7 +735,6 @@ St0p_l1ck, a man licks furiously from the chin to the forehead of a frozen woman
         "chain_prefix": 'doggy_MODELKAEM_Husband',
         'backend': 'linux',
         'fps': 16,
-        'steps': 6,
         'cfg': 2,
         'neg': 'static, frozen, no movement',
     },
@@ -698,7 +776,6 @@ The video is shot from above looking down on the scene. same background as the f
         "chain_prefix": 'SquatCowgirl missionary_MODELKAEM_HUSBAND',
         'backend': 'linux',
         'fps': 16,
-        'steps': 6,
         'cfg': 2,
         'neg': 'static, frozen, no movement',
     },
@@ -770,7 +847,6 @@ She looks at the camera throughout the video
         "chain_prefix": 'titjob_hndjob_blwhnd_blow_finale_MODELKAEM_HUSBAND',
         'backend': 'linux',
         'fps': 16,
-        'steps': 6,
         'cfg': 2,
         'neg': 'static, frozen, no movement',
         'frame_interpolation': False,
@@ -802,9 +878,11 @@ She looks at the camera throughout the video
         "chain_prefix": 'lezy wyczerpana',
         'backend': 'linux',
         'fps': 16,
-        'steps': 6,
         'cfg': 2,
         'neg': 'static, frozen, no movement',
+        'width': 704,
+        'height': 1056,
+        'use_lightning': False,
     },
 
     {
@@ -827,8 +905,8 @@ She looks at the camera throughout the video
                 'pos': 'Woman is touching her breast and vagina sligtly moves',
             },
         ],
-        'width': 448,
-        'height': 672,
+        'width': 704,
+        'height': 1056,
         'backend': 'linux',
     },
 
@@ -836,7 +914,7 @@ She looks at the camera throughout the video
         "chain": [
             {
                 'duration': 3,
-                'pos': 'A woman lying on the floor curls up into a ball.',
+                'pos': 'A woman lying on the floor turns onto her side, resting her head on her hand.',
                 'neg': '',
                 'audio_prompt': 'rhythmic skin-on-skin slapping, flesh impact sounds, body weight shifting, wet contact sounds, rhythmic thrusting foley, synchronized with video, crisp, high quality, realistic',
                 'audio_negative_prompt': 'music, melody, ambient drone, moaning, voice, sustained atmosphere, continuous background noise, low quality, distortion',
@@ -845,9 +923,11 @@ She looks at the camera throughout the video
         "chain_prefix": 'zwija w klebek',
         'backend': 'linux',
         'fps': 16,
-        'steps': 6,
         'cfg': 2,
         'neg': 'static, frozen, no movement',
+        'width': 704,
+        'height': 1056,
+        'use_lightning': False,
     },
 
     {"break": True},
@@ -899,13 +979,6 @@ She looks at the camera throughout the video
 
     {"break": True},
 
-    {
-        'file': '99.017 next customers.png',
-        'backend': 'linux',
-        'duration': 2,
-        'pos': 'NONE',
-        'neg': 'NONE',
-    },
     {
         'type': 'scene_break',
         'name': 'NEXT CUSTOMERS',
@@ -978,7 +1051,6 @@ she looks at the camera throughout the video. same background as the first frame
         "chain_prefix": 'doggyback_MODELKAEM_NEXT1_kopia',
         'backend': 'linux',
         'fps': 16,
-        'steps': 6,
         'cfg': 2,
         'neg': 'static, frozen, no movement',
     },
@@ -1003,6 +1075,47 @@ she looks at the camera throughout the video. same background as the first frame
         'width': 448,
         'height': 672,
         'backend': 'linux',
+    },
+
+    {
+        "chain": [
+            {
+                'duration': 3,
+                'pos': 'Man is approaching woman from left side of image an kneeling at woman buttocks',
+                'neg': '',
+            },
+        ],
+        "chain_prefix": 'maz podchodzi_1',
+        'backend': 'linux',
+        'fps': 16,
+        'cfg': 2,
+        'neg': 'static, frozen, no movement',
+    },
+
+    {
+        'file': '19.018 licking.png',
+        'backend': 'linux',
+        'duration': 2,
+        'pos': 'NONE',
+        'neg': 'NONE',
+    },
+    {
+        "chain": [
+            {
+                'duration': 3,
+                'pos': """A man is furiously licking the nose and philtrum of a woman. His tongue flicks in and out of her nostrils, and he purses his lips to suck on her nose. He brings his face so close to hers that they almost touch. The camera slowly zooms in on the woman's face.
+
+St0p_l1ck, a man licks furiously from the chin to the forehead of a frozen woman. His right hand grips the nape of her neck and chin, forcing her head back. His tongue leaves a wide, wet trail from her chin to the corner of her mouth.""",
+                'neg': '',
+                'lora_high': 'WAN2.2_LoraSet/SleepingKissLick_HIGH.safetensors',
+                'lora_low': 'WAN2.2_LoraSet/SleepingKissLick_LOW.safetensors',
+            },
+        ],
+        "chain_prefix": 'licking 1',
+        'backend': 'linux',
+        'fps': 16,
+        'cfg': 2,
+        'neg': 'static, frozen, no movement',
     },
 
     {"break": True},
@@ -1052,7 +1165,6 @@ she looks at the camera throughout the video. same background as the first frame
         "chain_prefix": 'doggyback_MODELKAEM_NEXT1',
         'backend': 'linux',
         'fps': 16,
-        'steps': 6,
         'cfg': 2,
         'neg': 'static, frozen, no movement',
     },
@@ -1065,8 +1177,6 @@ she looks at the camera throughout the video. same background as the first frame
         'duration': 2,
         'pos': 'NONE',
         'neg': 'NONE',
-        'width': 1120,
-        'height': 1680,
     },
     {
         'type': 'talk',
@@ -1079,6 +1189,47 @@ she looks at the camera throughout the video. same background as the first frame
         'backend': 'linux',
     },
 
+    {
+        "chain": [
+            {
+                'duration': 3,
+                'pos': 'Man is approaching woman from left side of image an kneeling at woman vagina',
+                'neg': '',
+            },
+        ],
+        "chain_prefix": 'wyliz dokladnie 2',
+        'backend': 'linux',
+        'fps': 16,
+        'cfg': 2,
+        'neg': 'static, frozen, no movement',
+    },
+
+    {
+        'file': '19.017. licking.png',
+        'backend': 'linux',
+        'duration': 2,
+        'pos': 'NONE',
+        'neg': 'NONE',
+    },
+    {
+        "chain": [
+            {
+                'duration': 3,
+                'pos': "A man is furiously licking the nose and philtrum of a woman. His tongue flicks in and out of her nostrils, and he purses his lips to suck on her nose. He brings his face so close to hers that they almost touch. The camera slowly zooms in on the woman's face. St0p_l1ck, a man licks furiously from the chin to the forehead of a frozen woman. His right hand grips the nape of her neck and chin, forcing her head back. His tongue leaves a wide, wet trail from her chin to the corner of her mouth.",
+                'neg': '',
+                'lora_high': 'WAN2.2_LoraSet/SleepingKissLick_HIGH.safetensors',
+                'lora_low': 'WAN2.2_LoraSet/SleepingKissLick_LOW.safetensors',
+                'audio_prompt': 'rhythmic skin-on-skin slapping, flesh impact sounds, body weight shifting, wet contact sounds, rhythmic thrusting foley, synchronized with video, crisp, high quality, realistic',
+                'audio_negative_prompt': 'music, melody, ambient drone, moaning, voice, sustained atmosphere, continuous background noise, low quality, distortion',
+            },
+        ],
+        "chain_prefix": 'licking 2',
+        'backend': 'linux',
+        'fps': 16,
+        'cfg': 2,
+        'neg': 'static, frozen, no movement',
+    },
+
     {"break": True},
 
     {
@@ -1087,8 +1238,6 @@ she looks at the camera throughout the video. same background as the first frame
         'duration': 2,
         'pos': 'NONE',
         'neg': 'NONE',
-        'width': 1264,
-        'height': 1680,
     },
     {
         "chain": [
@@ -1114,7 +1263,6 @@ she looks at the camera throughout the video. same background as the first frame
         "chain_prefix": 'Missionary_MODELKAEM_3rd customer',
         'backend': 'linux',
         'fps': 16,
-        'steps': 6,
         'cfg': 2,
         'neg': 'static, frozen, no movement',
     },
@@ -1131,8 +1279,6 @@ she looks at the camera throughout the video. same background as the first frame
         'duration': 2,
         'pos': 'NONE',
         'neg': 'NONE',
-        'width': 1328,
-        'height': 3152,
     },
     {
         'type': 'talk',
@@ -1148,23 +1294,18 @@ she looks at the camera throughout the video. same background as the first frame
     {"break": True},
 
     {
-        'file': '99.015 Natural.png',
-        'backend': 'linux',
-        'duration': 2,
-        'pos': 'NONE',
-        'neg': 'NONE',
+        'type': 'multitalk',
+        'image': '99.026 trhee customers.png',
+        'num_persons': 2,
+        'name': 'zatanczysz',
         'width': 448,
         'height': 672,
-    },
-    {
-        'type': 'talk',
-        'audio': {
-            'file': '15. zatanczysz.mp3',
-            'pos': 'Man is looking at camera and is calm and steady',
-        },
-        'width': 448,
-        'height': 672,
-        'backend': 'linux',
+        'steps': [
+            {
+                'speaker_idx': 0,
+                'audio': '15. zatanczysz.mp3',
+            },
+        ],
     },
 
     {"break": True},
@@ -1175,8 +1316,6 @@ she looks at the camera throughout the video. same background as the first frame
         'duration': 2,
         'pos': 'NONE',
         'neg': 'NONE',
-        'width': 1680,
-        'height': 2512,
     },
     {
         'type': 'talk',
@@ -1193,20 +1332,26 @@ she looks at the camera throughout the video. same background as the first frame
     {"break": True},
 
     {
-        'file': '99.015 Natural.png',
-        'backend': 'linux',
-        'duration': 2,
-        'pos': 'NONE',
-        'neg': 'NONE',
+        'type': 'multitalk',
+        'image': '99.026 trhee customers.png',
+        'num_persons': 3,
+        'name': 'zmien_ubranie',
         'width': 448,
         'height': 672,
-    },
-    {
-        'type': 'talk',
-        'audio': '17. Jak tania dziwka.mp3',
-        'width': 448,
-        'height': 672,
-        'backend': 'linux',
+        'steps': [
+            {
+                'speaker_idx': 0,
+                'audio': '17. Jak tania dziwka.mp3',
+            },
+            {
+                'speaker_idx': 1,
+                'audio': '17a. dokładnie tak.mp3',
+            },
+            {
+                'speaker_idx': 2,
+                'audio': '17b. nie inaczej.mp3',
+            },
+        ],
     },
 
     {"break": True},
@@ -1217,8 +1362,6 @@ she looks at the camera throughout the video. same background as the first frame
         'duration': 2,
         'pos': 'NONE',
         'neg': 'NONE',
-        'width': 1680,
-        'height': 2512,
     },
     {
         'type': 'talk',
@@ -1237,6 +1380,1351 @@ she looks at the camera throughout the video. same background as the first frame
         'width': 448,
         'height': 672,
         'backend': 'linux',
+    },
+
+    {"break": True},
+
+    {
+        'file': '99.027 dance.png',
+        'backend': 'linux',
+        'duration': 5,
+        'pos': """Caucasian woman with brown hair, fair skin with subtle freckles, medium brown shoulder-length straight hair. Create a 5-second cinematic erotic dance video, highly detailed and hyper-realistic
+
+Action sequence (5 seconds total, fluid and provocative movements):
+
+0-1 second (Introduction):
+- She stands center-frame facing camera at medium shot, hips swaying seductively side-to-side.
+- Slowly tosses her long hair back dramatically with both hands, arching her back slightly, lips parted in invitation.
+
+1-3 seconds (Build-up):
+- Raises both arms gracefully, interlacing fingers behind her head, elbows out - thrusting her chest forward prominently.
+- Body undulates in slow waves: shoulders roll, torso twists erotically, hips circle teasingly while maintaining arched posture.
+
+3-4 seconds (Intensification):
+- Hands glide down sensually from behind head, tracing neck, over shoulders, down sides of body.
+- Fingers trail provocatively over breasts, then lower to caress inner thighs and intimate areas through sheer fabric - lingering touches with slight hip thrusts.
+
+4-5 seconds (Climax):
+- Both hands cup and squeeze her full breasts firmly from below, lifting and presenting them to camera.
+- Ends with a sultry gaze directly into lens, biting lower lip, body frozen in this pose as subtle hip sway fades out.
+
+Camera work:
+- Starts with smooth tracking shot circling from front at eye level.
+- Transitions to slight low-angle tilt-up emphasizing curves and movements.
+- Static hold in final second for intimate close-up on face and bust.
+- Realistic motion blur, depth of field with sharp focus on body, bokeh lights in background. same background as the first frame, wooden floor, white walls, bookshelf with books and plant.""",
+        'neg': 'NONE',
+        'width': 448,
+        'height': 672,
+        'audio_prompt': 'subtle body movement, soft weight shift, quiet fabric rustle, gentle shuffling feet on floor, light position change, soft clothing sounds, natural movement foley, realistic, high quality',
+        'audio_negative_prompt': 'music, melody, ambient drone, loud impact, hard footsteps, slap, sustained atmosphere, low quality, distortion',
+    },
+    {
+        'file': '99.027 dance.png',
+        'backend': 'linux',
+        'duration': 5,
+        'pos': """Caucasian woman with brown hair, fair skin with subtle freckles, medium brown shoulder-length straight hair. Create a 10-second hyper-detailed cinematic erotic dance video, 8K realistic animation, 60fps smooth motion.
+
+Scene setup:
+
+Precise 10-second sequence focusing purely on body movements:
+0-2s: Places both hands behind head, elbows wide, hips sway seductively side-to-side, chest thrust forward.
+2-4s: Slowly pivots 180 degrees turning back to camera, arches back, pushes buttocks out prominently.
+4-7s: Maintains rear pose, circles hips/ass in wide deliberate rolls, adds short teasing up-down bounces making buttocks jiggle enticingly.
+7-10s: Swings back to face camera, intense eye contact, hands glide provocatively over breasts, down stomach to caress inner thighs and intimate areas through fabric.
+Camera: Static medium shot eye-level, subtle zoom to hips during rear section, full body visible. Fluid natural motions only, high detail. same background as the first frame, wooden floor, white walls, bookshelf with books and plant.""",
+        'neg': 'NONE',
+        'width': 448,
+        'height': 672,
+        'audio_prompt': 'subtle body movement, soft weight shift, quiet fabric rustle, gentle shuffling feet on floor, light position change, soft clothing sounds, natural movement foley, realistic, high quality',
+        'audio_negative_prompt': 'music, melody, ambient drone, loud impact, hard footsteps, slap, sustained atmosphere, low quality, distortion',
+    },
+    {
+        'file': '99.028 dance.png',
+        'backend': 'linux',
+        'duration': 5,
+        'pos': """Caucasian woman with brown hair, fair skin with subtle freckles, medium brown shoulder-length straight hair. A sensual female dancer performs an intimate, slow-motion erotic dance in a luxurious dimly lit bedroom, 10-second cinematic video with fluid progression.
+
+Action sequence (smooth 10-second progression at 24fps, slow-motion 0.25x speed):
+• 0-3s: Starts in a standing pose facing camera at 45-degree angle, hands slowly rising from hips, tracing up her sides with fingertips grazing ribs, then cupping and caressing her full breasts sensually, arching back slightly as camera orbits clockwise from low angle to emphasize cleavage and curve of torso
+• 3-6s: Hands glide downward in fluid waves over her toned abdomen, fingers splaying and pressing into soft skin, body undulating in hypnotic hip sways, camera pulls back to medium shot tracking her movements, side lighting casting erotic highlights on muscles flexing
+• 6-10s: Hands descend teasingly between her thighs, one palm pressing inward while the other traces inner legs, knees bending into a deep sensual squat with legs parting slowly, head tilting back in pleasure; camera dolly zooms in from front low angle to intimate close-up on hands and face, ending with a lingering hold same background as the first frame, wooden floor, white walls, bookshelf with books and plant.""",
+        'neg': 'NONE',
+        'audio_prompt': 'subtle body movement, soft weight shift, quiet fabric rustle, gentle shuffling feet on floor, light position change, soft clothing sounds, natural movement foley, realistic, high quality',
+        'audio_negative_prompt': 'music, melody, ambient drone, loud impact, hard footsteps, slap, sustained atmosphere, low quality, distortion',
+    },
+    {
+        'file': '99.029 dance.png',
+        'backend': 'linux',
+        'duration': 2,
+        'pos': 'Woman is sensually lifting her skirt',
+        'neg': 'NONE',
+        'width': 448,
+        'height': 672,
+        'audio_prompt': 'subtle body movement, soft weight shift, quiet fabric rustle, gentle shuffling feet on floor, light position change, soft clothing sounds, natural movement foley, realistic, high quality',
+        'audio_negative_prompt': 'music, melody, ambient drone, loud impact, hard footsteps, slap, sustained atmosphere, low quality, distortion',
+    },
+    {
+        'file': '99.030 dance end.png',
+        'backend': 'linux',
+        'duration': 2,
+        'pos': 'NONE',
+        'neg': 'NONE',
+    },
+    {
+        'type': 'talk',
+        'audio': {
+            'file': '20 ochota zatanczyc.mp3',
+            'pos': 'The woman slowly hikes up her dress.',
+        },
+        'width': 448,
+        'height': 672,
+        'backend': 'linux',
+    },
+
+    {"break": True},
+
+    {
+        'type': 'scene_break',
+        'name': 'TANIEC NA DRĄGU',
+    },
+    {
+        'type': 'multitalk',
+        'image': '99.026 trhee customers.png',
+        'num_persons': 3,
+        'name': 'wypnij_sie',
+        'width': 448,
+        'height': 672,
+        'steps': [
+            {
+                'speaker_idx': 1,
+                'audio': '21 wypnij sie.mp3',
+            },
+        ],
+    },
+
+    {
+        "chain": [
+            {
+                'duration': 3,
+                'pos': 'Man sitting in the middle is standing up and going towards camera',
+                'neg': '',
+                'audio_prompt': 'subtle body movement, soft weight shift, quiet fabric rustle, gentle shuffling feet on floor, light position change, soft clothing sounds, natural movement foley, realistic, high quality',
+                'audio_negative_prompt': 'music, melody, ambient drone, loud impact, hard footsteps, slap, sustained atmosphere, low quality, distortion',
+            },
+        ],
+        "chain_prefix": 'wstaje',
+        'backend': 'linux',
+        'fps': 16,
+        'cfg': 2,
+        'neg': 'static, frozen, no movement',
+        'frame_interpolation': False,
+    },
+
+    {"break": True},
+
+    {
+        'file': '99.031 dance end.png',
+        'backend': 'linux',
+        'duration': 2,
+        'pos': 'NONE',
+        'neg': 'NONE',
+        'width': 576,
+        'height': 864,
+    },
+    {
+        "chain": [
+            {
+                'duration': 3,
+                'pos': """The video begins with a close-up of a woman and man. The video then jumpcuts to the focus on same woman and man now having sex with a exact same man in doggystyle position in the the same location. Woman dress same clothes, woman's dress is hiked up high. She is positioned standing, while the man stands behind her, The man is muscular his hands are wrapped around the womans's stomach holding her upright while embracing her from behind, he holds her close as he thrusts into her. As the scene progresses, she moves rhythmically with him. The man aggressively rams his hips into her.
+
+Woman and man keep theri positiion while having sex""",
+                'neg': '',
+                'lora_high': 'WAN2.2_LoraSet/iGoon%20-%20Blink_Front_Doggystyle_I2V_HIGH.safetensors',
+                'lora_low': 'WAN2.2_LoraSet/iGoon%20-%20Blink_Front_Doggystyle_I2V_LOW.safetensors',
+                'audio_prompt': 'female moaning loud pleasure, rhythmic thrusting sounds, skin slapping wet impact, gasping breath, increasing intensity, climax vocal',
+                'audio_negative_prompt': 'music, melody, speech, words, lyrics, reverb, echo, distortion, cartoon, low quality',
+            },
+            {
+                'duration': 5,
+                'pos': """Woman and man now having sex with a exact same man in doggystyle position in the the same location. Woman dress same clothes, woman's dress is hiked up high. She is positioned standing, while the man stands behind her, The man is muscular his hands are wrapped around the womans's stomach holding her upright while embracing her from behind, he holds her close as he thrusts into her. As the scene progresses, she moves rhythmically with him. The man aggressively rams his hips into her.
+
+Woman and man keep theri positiion while having sex""",
+                'neg': '',
+                'lora_high': 'WAN2.2_LoraSet/iGoon%20-%20Blink_Front_Doggystyle_I2V_HIGH.safetensors',
+                'lora_low': 'WAN2.2_LoraSet/iGoon%20-%20Blink_Front_Doggystyle_I2V_LOW.safetensors',
+                'audio_prompt': 'female moaning loud pleasure, rhythmic thrusting sounds, skin slapping wet impact, gasping breath, increasing intensity, climax vocal',
+                'audio_negative_prompt': 'music, melody, speech, words, lyrics, reverb, echo, distortion, cartoon, low quality',
+            },
+        ],
+        "chain_prefix": 'doggy style standing',
+        'backend': 'linux',
+        'fps': 16,
+        'cfg': 2,
+        'neg': 'static, frozen, no movement',
+        'width': 896,
+        'height': 1344,
+    },
+
+    {"break": True},
+
+    {
+        'type': 'multitalk',
+        'image': '99.032 nastepny.png',
+        'num_persons': 2,
+        'name': 'też skorzysta',
+        'width': 448,
+        'height': 672,
+        'steps': [
+            {
+                'speaker_idx': 1,
+                'audio': '22. to ja tez skorzystam.mp3',
+            },
+        ],
+        'pos': 'Sitting still',
+    },
+
+    {"break": True},
+
+    {
+        'type': 'multitalk',
+        'image': '99.033 zmeczona.png',
+        'num_persons': 2,
+        'name': 'przygotuj sie',
+        'width': 448,
+        'height': 672,
+        'steps': [
+            {
+                'speaker_idx': 0,
+                'audio': '23. nie koniec zabawy.mp3',
+            },
+        ],
+        'use_last_frame': True,
+        'pos': 'Man is looking at the woman while talking',
+    },
+
+    {
+        "chain": [
+            {
+                'duration': 5,
+                'pos': 'A woman struggles to turn over from a position lying on the floor—shifting from a view aligned with the camera to one where her head faces the camera and her legs are spread apart.',
+                'neg': 'jerky movement, passing through walls, unnatural body positioning',
+                'audio_prompt': 'subtle body movement, soft weight shift, quiet fabric rustle, gentle shuffling feet on floor, light position change, soft clothing sounds, natural movement foley, realistic, high quality',
+                'audio_negative_prompt': 'music, melody, ambient drone, loud impact, hard footsteps, slap, sustained atmosphere, low quality, distortion',
+            },
+        ],
+        "chain_prefix": 'zmiana pozycji',
+        'backend': 'linux',
+        'fps': 16,
+        'cfg': 2,
+        'neg': 'static, frozen, no movement',
+    },
+
+    {
+        'file': '99.034 gotowa na nastepnego.png',
+        'backend': 'linux',
+        'duration': 2,
+        'pos': 'NONE',
+        'neg': 'NONE',
+    },
+    {
+        "chain": [
+            {
+                'duration': 5,
+                'pos': 'Woman stands up and goes with man upstairs',
+                'neg': '',
+                'audio_prompt': 'slow tired footsteps on forest floor, soft leaves crunching underfoot, heavy labored walking, weight settling sounds, wood creak as sitting on log, body weight on wood, synchronized with video, crisp, high quality, realistic',
+                'audio_negative_prompt': 'music, melody, ambient drone, running, fast footsteps, bird sounds, wind loop, sustained atmosphere, continuous background noise, low quality, distortion',
+            },
+            {
+                'duration': 5,
+                'pos': 'Woman stands up and goes with man upstairs',
+                'neg': '',
+                'audio_prompt': 'slow tired footsteps on forest floor, soft leaves crunching underfoot, heavy labored walking, weight settling sounds, wood creak as sitting on log, body weight on wood, synchronized with video, crisp, high quality, realistic',
+                'audio_negative_prompt': 'music, melody, ambient drone, running, fast footsteps, bird sounds, wind loop, sustained atmosphere, continuous background noise, low quality, distortion',
+            },
+        ],
+        "chain_prefix": 'idzie na górę',
+        'backend': 'linux',
+        'fps': 16,
+        'cfg': 2,
+        'neg': 'static, frozen, no movement',
+    },
+
+    {
+        'type': 'talk',
+        'audio': {
+            'file': '24. na lozku.mp3',
+            'pos': 'Man is looking at woman',
+        },
+        'width': 448,
+        'height': 672,
+        'backend': 'linux',
+    },
+
+    {"break": True},
+
+    {
+        'file': '99.030 dance end.png',
+        'backend': 'linux',
+        'duration': 2,
+        'pos': 'NONE',
+        'neg': 'NONE',
+    },
+    {
+        "chain": [
+            {
+                'duration': 3,
+                'pos': """The video begins with a close-up of a woman. The video then jumpcuts to the same woman now having sex in missionary position. She is lying on her back on a floor with a patterned bed spread and pillow with her legs spread wide. A man's large penis is visible entering her vagina from below. The man is positioned kneeling between her legs infront of her thrusting his penis into her vagina. Throughout the scene, she appears to be experiencing pleasure, often with her mouth open or eyes closed as she lies back. Her hands hold onto her thighs spreading her legs.
+She is in the same clothes as on start image, dress hiked high up.""",
+                'neg': 'naked',
+                'audio_prompt': 'female moaning loud pleasure, rhythmic thrusting sounds, skin slapping wet impact, gasping breath, increasing intensity, climax vocal',
+                'audio_negative_prompt': 'music, melody, speech, words, lyrics, reverb, echo, distortion, cartoon, low quality',
+                'lora_high': 'WAN2.2_LoraSet/iGoon%20-%20Blink_Missionary_I2V_LOW%20v2.safetensors',
+                'lora_low': 'WAN2.2_LoraSet/iGoon%20-%20Blink_Missionary_I2V_LOW%20v2.safetensors',
+            },
+            {
+                'duration': 5,
+                'pos': """Woman now having sex in missionary position. She is lying on her back with a patterned bed spread and pillow with her legs spread wide. A man's large penis is visible entering her vagina from below. The man is positioned kneeling between her legs infront of her thrusting his penis into her vagina. Throughout the scene, she appears to be experiencing pleasure, often with her mouth open or eyes closed as she lies back. Her hands hold onto her thighs spreading her legs.
+She is in the same clothes as on start image, dress hiked high up.""",
+                'neg': 'naked',
+                'audio_prompt': 'female moaning loud pleasure, rhythmic thrusting sounds, skin slapping wet impact, gasping breath, increasing intensity, climax vocal',
+                'audio_negative_prompt': 'music, melody, speech, words, lyrics, reverb, echo, distortion, cartoon, low quality',
+                'lora_high': 'WAN2.2_LoraSet/iGoon%20-%20Blink_Missionary_I2V_LOW%20v2.safetensors',
+                'lora_low': 'WAN2.2_LoraSet/iGoon%20-%20Blink_Missionary_I2V_LOW%20v2.safetensors',
+            },
+        ],
+        "chain_prefix": 'missionary r2 cust2',
+        'backend': 'linux',
+        'fps': 16,
+        'cfg': 2,
+        'neg': 'static, frozen, no movement',
+    },
+
+    {"break": True},
+
+    {
+        'file': '99.035 tuz po pierwszym.png',
+        'backend': 'linux',
+        'duration': 2,
+        'pos': 'NONE',
+        'neg': 'NONE',
+    },
+    {
+        'type': 'talk',
+        'audio': [
+            {
+                'file': '25a. Ale mial wielkiego.mp3',
+                'pos': """Woman is lying with close eyes, she is still and
+exhausted""",
+            },
+            {
+                'file': '25b Malo co nie rozerwal.mp3',
+                'pos': """Woman is lying with close eyes, she is still and
+exhausted""",
+            },
+            {
+                'file': '25c troche odpoczac.mp3',
+                'pos': """Woman is lying with close eyes, she is still and
+exhausted""",
+            },
+        ],
+        'width': 448,
+        'height': 672,
+        'backend': 'linux',
+    },
+
+    {"break": True},
+
+    {
+        'file': '99.036 zaproszenie.png',
+        'backend': 'linux',
+        'duration': 2,
+        'pos': 'NONE',
+        'neg': 'NONE',
+    },
+    {
+        'type': 'talk',
+        'audio': [
+            {
+                'file': '26a teraz wy.mp3',
+                'pos': 'smiles maliciously and stands still on the stairs',
+            },
+            {
+                'file': '27b maz tez.mp3',
+                'pos': 'smiles maliciously and stands still on the stairs',
+            },
+        ],
+        'width': 448,
+        'height': 672,
+        'backend': 'linux',
+    },
+
+    {"break": True},
+
+    {
+        'file': '99.037 oczekiwanie.png',
+        'backend': 'linux',
+        'duration': 2,
+        'pos': 'NONE',
+        'neg': 'NONE',
+    },
+    {
+        'type': 'talk',
+        'audio': [
+            {
+                'file': '28a. tylko nie to.mp3',
+                'pos': 'Woman is lying on bed and She looks into the camera, terrified',
+            },
+            {
+                'file': '28b. jeden po drugim.mp3',
+                'pos': 'Woman is lying on bed and She looks into the camera, terrified',
+            },
+            {
+                'file': '28c. dam rade.mp3',
+                'pos': 'A woman is lying on the bed, and her face is becoming calm.',
+            },
+        ],
+        'width': 448,
+        'height': 672,
+        'backend': 'linux',
+    },
+
+    {"break": True},
+
+    {
+        'file': '99.035 tuz po pierwszym.png',
+        'backend': 'linux',
+        'duration': 2,
+        'pos': 'NONE',
+        'neg': 'NONE',
+    },
+    {
+        'type': 'talk',
+        'audio': '29. juz ktos idzie 1.mp3',
+        'width': 448,
+        'height': 672,
+        'backend': 'linux',
+    },
+
+    {"break": True},
+
+    {
+        'file': '99.035 tuz po pierwszym.png',
+        'backend': 'linux',
+        'duration': 2,
+        'pos': 'NONE',
+        'neg': 'NONE',
+    },
+    {
+        "chain": [
+            {
+                'duration': 3,
+                'pos': """The video begins with a close-up of a woman. The video then jumpcuts to the same woman now having sex in missionary position. She is lying on her back on a bed with a patterned bed spread and pillow with her legs spread wide. A man's penis is visible entering her vagina from below. The man is positioned kneeling between her legs infront of her thrusting his penis into her vagina. Throughout the scene, she appears to be experiencing pleasure, often with her mouth open or eyes closed as she lies back. Her hands hold onto her thighs spreading her legs.
+She is in the same clothes as on start image, dress hiked high up. Man has trousers down.""",
+                'neg': 'naked',
+                'audio_prompt': 'female moaning loud pleasure, rhythmic thrusting sounds, skin slapping wet impact, gasping breath, increasing intensity, climax vocal',
+                'audio_negative_prompt': 'music, melody, speech, words, lyrics, reverb, echo, distortion, cartoon, low quality',
+                'lora_high': 'WAN2.2_LoraSet/iGoon%20-%20Blink_Missionary_I2V_LOW%20v2.safetensors',
+                'lora_low': 'WAN2.2_LoraSet/iGoon%20-%20Blink_Missionary_I2V_LOW%20v2.safetensors',
+            },
+            {
+                'duration': 5,
+                'pos': """Woman now having sex in missionary position. She is lying on her back with a patterned bed spread and pillow with her legs spread wide. A man's large penis is visible entering her vagina from below. The man is positioned kneeling between her legs infront of her thrusting his penis into her vagina. Throughout the scene, she appears to be experiencing pleasure, often with her mouth open or eyes closed as she lies back. Her hands hold onto her thighs spreading her legs.
+She is in the same clothes as on start image, dress hiked high up.""",
+                'neg': 'naked',
+                'audio_prompt': 'female moaning loud pleasure, rhythmic thrusting sounds, skin slapping wet impact, gasping breath, increasing intensity, climax vocal',
+                'audio_negative_prompt': 'music, melody, speech, words, lyrics, reverb, echo, distortion, cartoon, low quality',
+                'lora_high': 'WAN2.2_LoraSet/iGoon%20-%20Blink_Missionary_I2V_LOW%20v2.safetensors',
+                'lora_low': 'WAN2.2_LoraSet/iGoon%20-%20Blink_Missionary_I2V_LOW%20v2.safetensors',
+            },
+        ],
+        "chain_prefix": 'missionary r2 bedroom1',
+        'backend': 'linux',
+        'fps': 16,
+        'cfg': 2,
+        'neg': 'static, frozen, no movement',
+    },
+
+    {"break": True},
+
+    {
+        'file': '99.035 tuz po pierwszym.png',
+        'backend': 'linux',
+        'duration': 2,
+        'pos': 'NONE',
+        'neg': 'NONE',
+    },
+    {
+        'type': 'talk',
+        'audio': '30. juz ktos idzie 2.mp3',
+        'width': 448,
+        'height': 672,
+        'backend': 'linux',
+    },
+
+    {"break": True},
+
+    {
+        'file': '99.035 tuz po pierwszym.png',
+        'backend': 'linux',
+        'duration': 2,
+        'pos': 'NONE',
+        'neg': 'NONE',
+    },
+    {
+        "chain": [
+            {
+                'duration': 3,
+                'pos': """The video begins with a close-up of a woman. The video then jumpcuts to the same woman now having sex in missionary position. She is lying on her back on a bed with a patterned bed spread and pillow with her legs spread wide. A man's penis is visible entering her vagina from below. The man is positioned kneeling between her legs infront of her thrusting his penis into her vagina. Throughout the scene, she appears to be experiencing pleasure, often with her mouth open or eyes closed as she lies back. Her hands hold onto her thighs spreading her legs.
+She is in the same clothes as on start image, dress hiked high up. Man has trousers down.""",
+                'neg': 'naked',
+                'audio_prompt': 'female moaning loud pleasure, rhythmic thrusting sounds, skin slapping wet impact, gasping breath, increasing intensity, climax vocal',
+                'audio_negative_prompt': 'music, melody, speech, words, lyrics, reverb, echo, distortion, cartoon, low quality',
+                'lora_high': 'WAN2.2_LoraSet/iGoon%20-%20Blink_Missionary_I2V_LOW%20v2.safetensors',
+                'lora_low': 'WAN2.2_LoraSet/iGoon%20-%20Blink_Missionary_I2V_LOW%20v2.safetensors',
+            },
+            {
+                'duration': 5,
+                'pos': """Woman now having sex in missionary position. She is lying on her back with a patterned bed spread and pillow with her legs spread wide. A man's large penis is visible entering her vagina from below. The man is positioned kneeling between her legs infront of her thrusting his penis into her vagina. Throughout the scene, she appears to be experiencing pleasure, often with her mouth open or eyes closed as she lies back. Her hands hold onto her thighs spreading her legs.
+She is in the same clothes as on start image, dress hiked high up.""",
+                'neg': 'naked',
+                'audio_prompt': 'female moaning loud pleasure, rhythmic thrusting sounds, skin slapping wet impact, gasping breath, increasing intensity, climax vocal',
+                'audio_negative_prompt': 'music, melody, speech, words, lyrics, reverb, echo, distortion, cartoon, low quality',
+                'lora_high': 'WAN2.2_LoraSet/iGoon%20-%20Blink_Missionary_I2V_LOW%20v2.safetensors',
+                'lora_low': 'WAN2.2_LoraSet/iGoon%20-%20Blink_Missionary_I2V_LOW%20v2.safetensors',
+            },
+        ],
+        "chain_prefix": 'missionary r2 bedroom2',
+        'backend': 'linux',
+        'fps': 16,
+        'cfg': 2,
+        'neg': 'static, frozen, no movement',
+    },
+
+    {"break": True},
+
+    {
+        'file': '99.035 tuz po pierwszym.png',
+        'backend': 'linux',
+        'duration': 2,
+        'pos': 'NONE',
+        'neg': 'NONE',
+    },
+    {
+        'type': 'talk',
+        'audio': '31. juz ktos idzie 3.mp3',
+        'width': 448,
+        'height': 672,
+        'backend': 'linux',
+    },
+
+    {"break": True},
+
+    {
+        'file': '99.035 tuz po pierwszym.png',
+        'backend': 'linux',
+        'duration': 2,
+        'pos': 'NONE',
+        'neg': 'NONE',
+    },
+    {
+        "chain": [
+            {
+                'duration': 3,
+                'pos': """The video begins with a close-up of a woman. The video then jumpcuts to the same woman now having sex in missionary position. She is lying on her back on a bed with a patterned bed spread and pillow with her legs spread wide. A man's penis is visible entering her vagina from below. The man is positioned kneeling between her legs infront of her thrusting his penis into her vagina. Throughout the scene, she appears to be experiencing pleasure, often with her mouth open or eyes closed as she lies back. Her hands hold onto her thighs spreading her legs.
+She is in the same clothes as on start image, dress hiked high up. Man has trousers down.
+She is in the same clothes as on start image, dress hiked high up.""",
+                'neg': 'naked',
+                'audio_prompt': 'female moaning loud pleasure, rhythmic thrusting sounds, skin slapping wet impact, gasping breath, increasing intensity, climax vocal',
+                'audio_negative_prompt': 'music, melody, speech, words, lyrics, reverb, echo, distortion, cartoon, low quality',
+                'lora_high': 'WAN2.2_LoraSet/iGoon%20-%20Blink_Missionary_I2V_LOW%20v2.safetensors',
+                'lora_low': 'WAN2.2_LoraSet/iGoon%20-%20Blink_Missionary_I2V_LOW%20v2.safetensors',
+            },
+            {
+                'duration': 5,
+                'pos': """Woman now having sex in missionary position. She is lying on her back with a patterned bed spread and pillow with her legs spread wide. A man's large penis is visible entering her vagina from below. The man is positioned kneeling between her legs infront of her thrusting his penis into her vagina. Throughout the scene, she appears to be experiencing pleasure, often with her mouth open or eyes closed as she lies back. Her hands hold onto her thighs spreading her legs.
+She is in the same clothes as on start image, dress hiked high up.""",
+                'neg': 'naked',
+                'audio_prompt': 'female moaning loud pleasure, rhythmic thrusting sounds, skin slapping wet impact, gasping breath, increasing intensity, climax vocal',
+                'audio_negative_prompt': 'music, melody, speech, words, lyrics, reverb, echo, distortion, cartoon, low quality',
+                'lora_high': 'WAN2.2_LoraSet/iGoon%20-%20Blink_Missionary_I2V_LOW%20v2.safetensors',
+                'lora_low': 'WAN2.2_LoraSet/iGoon%20-%20Blink_Missionary_I2V_LOW%20v2.safetensors',
+            },
+        ],
+        "chain_prefix": 'missionary r2 bedroom3',
+        'backend': 'linux',
+        'fps': 16,
+        'cfg': 2,
+        'neg': 'static, frozen, no movement',
+    },
+
+    {"break": True},
+
+    {
+        'type': 'scene_break',
+        'name': 'OPOWIADANIE',
+    },
+    {
+        'type': 'multitalk',
+        'image': '99.026 trhee customers.png',
+        'num_persons': 3,
+        'name': 'opowiesz nam',
+        'width': 448,
+        'height': 672,
+        'steps': [
+            {
+                'speaker_idx': 0,
+                'audio': '32a my odpoczniemy.mp3',
+            },
+            {
+                'speaker_idx': 0,
+                'audio': '32b. opowiesz kim jestes.mp3',
+            },
+        ],
+    },
+
+    {"break": True},
+
+    {
+        'type': 'talk',
+        'audio': [
+            {
+                'file': '33a. jestem napalona suka.mp3',
+                'pos': 'Woman moves seductively',
+            },
+            {
+                'file': '33b. wszyscy mozecie.mp3',
+                'pos': 'Woman moves seductively',
+            },
+            {
+                'file': '33c. do przyjemnosci.mp3',
+                'pos': 'Woman moves seductively',
+            },
+            {
+                'file': '33d. na wszystkie sposoby.mp3',
+                'pos': 'Woman moves seductively',
+            },
+            {
+                'file': '33e w kazdej pozycji.mp3',
+                'pos': 'Woman moves seductively',
+            },
+            {
+                'file': '33f. musztrowac tanczyc.mp3',
+                'pos': 'Woman moves seductively',
+            },
+            {
+                'file': '33g wychlostac.mp3',
+                'pos': 'A woman covers her vagina with her hands and looks shyly at the camera.',
+            },
+            {
+                'file': '33h odpoczac.mp3',
+                'pos': 'A woman clasps her hands pleadingly in front of her and looks into the camera.',
+            },
+        ],
+        'width': 448,
+        'height': 672,
+        'backend': 'linux',
+        'image': '99.038 niech czeka.png',
+        'use_last_frame': True,
+    },
+
+    {"break": True},
+
+    {
+        'type': 'scene_break',
+        'name': 'LANIE',
+    },
+    {
+        'type': 'multitalk',
+        'image': '99.026 trhee customers.png',
+        'num_persons': 3,
+        'name': 'lanie_zapowiedz',
+        'width': 448,
+        'height': 672,
+        'steps': [
+            {
+                'speaker_idx': 0,
+                'audio': '34a. postoj tak troche.mp3',
+            },
+            {
+                'speaker_idx': 0,
+                'audio': '34b. lanie na gola.mp3',
+            },
+            {
+                'speaker_idx': 0,
+                'audio': '34c. i ciesz sie.mp3',
+            },
+        ],
+        'use_last_frame': True,
+    },
+
+    {"break": True},
+
+    {
+        'type': 'talk',
+        'audio': {
+            'file': '35. dziekuje za laske.mp3',
+            'pos': 'The woman bows deeply.',
+        },
+        'width': 448,
+        'height': 672,
+        'backend': 'linux',
+        'image': '99.038 niech czeka.png',
+    },
+
+    {
+        "chain": [
+            {
+                'duration': 3,
+                'pos': 'A woman slowly turns away from the camera toward the wall and bows her head.',
+                'neg': '',
+                'audio_prompt': 'subtle body movement, soft weight shift, quiet fabric rustle, gentle shuffling feet on floor, light position change, soft clothing sounds, natural movement foley, realistic, high quality',
+                'audio_negative_prompt': 'music, melody, ambient drone, loud impact, hard footsteps, slap, sustained atmosphere, low quality, distortion',
+            },
+        ],
+        "chain_prefix": 'odwraca się do ściany',
+        'backend': 'linux',
+        'fps': 16,
+        'cfg': 2,
+        'neg': 'static, frozen, no movement',
+    },
+
+    {"break": True},
+
+    {
+        'type': 'talk',
+        'audio': {
+            'file': '36. Panowie zapraszam.mp3',
+            'pos': 'woman is still only deep breathing',
+        },
+        'width': 448,
+        'height': 672,
+        'backend': 'linux',
+        'image': '99.038 panowie zapraszam.png',
+    },
+
+    {"break": True},
+
+    {
+        'file': '99.039 start lania.png',
+        'backend': 'linux',
+        'duration': 3,
+        'pos': 'Camera slighlty zoom in woman turns head slowly, men breathing and naturally moves',
+        'neg': 'no moves',
+        'width': 896,
+        'height': 1344,
+        'use_lightning': False,
+        'audio_prompt': 'sharp slap impact, flesh impact sound, skin contact, crisp smack, physical strike, body percussion, high quality, realistic foley',
+        'audio_negative_prompt': 'music, melody, ambient drone, echo, reverb, wet sound, low quality, distortion',
+    },
+    {
+        'file': '99.040 start lania patrzy.png',
+        'backend': 'linux',
+        'duration': 2,
+        'pos': 'The man puts the belt down on the table.',
+        'neg': 'NONE',
+        'audio_prompt': 'sharp slap impact, flesh impact sound, skin contact, crisp smack, physical strike, body percussion, high quality, realistic foley',
+        'audio_negative_prompt': 'music, melody, ambient drone, echo, reverb, wet sound, low quality, distortion',
+    },
+    {
+        'file': '99.041 jednak reka.png',
+        'backend': 'linux',
+        'duration': 3,
+        'pos': 'Man is sitting down and preparing for spank. Woman shake her head. Men i foreground slightly moves',
+        'neg': 'NONE',
+        'audio_prompt': 'sharp slap impact, flesh impact sound, skin contact, crisp smack, physical strike, body percussion, high quality, realistic foley',
+        'audio_negative_prompt': 'music, melody, ambient drone, echo, reverb, wet sound, low quality, distortion',
+    },
+    {
+        'file': '99.042 siadanie.png',
+        'backend': 'linux',
+        'duration': 2,
+        'pos': 'NONE',
+        'neg': 'NONE',
+    },
+    {
+        "chain": [
+            {
+                'duration': 3,
+                'pos': 'spanked, A man vigorously spanking a woman lying face-down on a table with her ass fully sticking out and raised high. The man delivers fast, hard, sharp spanking strikes with his open hand on her bare buttocks. Clear motion dynamics: quick powerful hits, exactly two strong spankings every 3 seconds, realistic impact, skin jiggle and bounce with each strike, hand moving rapidly up and down. Dynamic camera, natural motion blur on the fast hand movements, realistic physics, detailed skin deformation on impact,  high quality, smooth motion, cinematic lighting',
+                'neg': 'slow motion, slow hits, soft spanking, weak strikes, blurry, deformed hands, extra fingers, bad anatomy, static image, no movement, frozen frame, low quality, artifacts, distorted body, unnatural physics, cartoon, anime, overexposed, underexposed',
+                'audio_prompt': 'sharp slap impact, flesh impact sound, skin contact, crisp smack, physical strike, body percussion, high quality, realistic foley',
+                'audio_negative_prompt': 'music, melody, ambient drone, echo, reverb, wet sound, low quality, distortion',
+                'lora_high': 'WAN2.2_LoraSet/Spanking_HIGH.safetensors',
+                'lora_low': 'WAN2.2_LoraSet/Spanking_LOW.safetensors',
+            },
+            {
+                'duration': 3,
+                'pos': 'spanked, A man vigorously spanking a woman lying face-down on a table with her ass fully sticking out and raised high. The man delivers fast, hard, sharp spanking strikes with his open hand on her bare buttocks. Clear motion dynamics: quick powerful hits, exactly two strong spankings every 3 seconds, realistic impact, skin jiggle and bounce with each strike, hand moving rapidly up and down. Dynamic camera, natural motion blur on the fast hand movements, realistic physics, detailed skin deformation on impact,  high quality, smooth motion, cinematic lighting',
+                'neg': 'slow motion, slow hits, soft spanking, weak strikes, blurry, deformed hands, extra fingers, bad anatomy, static image, no movement, frozen frame, low quality, artifacts, distorted body, unnatural physics, cartoon, anime, overexposed, underexposed',
+                'audio_prompt': 'sharp slap impact, flesh impact sound, skin contact, crisp smack, physical strike, body percussion, high quality, realistic foley',
+                'audio_negative_prompt': 'music, melody, ambient drone, echo, reverb, wet sound, low quality, distortion',
+                'lora_high': 'WAN2.2_LoraSet/Spanking_HIGH.safetensors',
+                'lora_low': 'WAN2.2_LoraSet/Spanking_LOW.safetensors',
+            },
+        ],
+        "chain_prefix": 'spanking',
+        'backend': 'linux',
+        'fps': 16,
+        'cfg': 2,
+        'neg': 'static, frozen, no movement',
+        'width': 896,
+        'height': 1344,
+        'frame_interpolation': False,
+    },
+
+    {
+        'file': '99.042 siadanie.png',
+        'backend': 'linux',
+        'duration': 2,
+        'pos': 'NONE',
+        'neg': 'NONE',
+    },
+    {
+        "chain": [
+            {
+                'duration': 3,
+                'pos': 'spanked, A man vigorously spanking a woman lying face-down on a table with her ass fully sticking out and raised high. The man delivers fast, hard, sharp spanking strikes with his open hand on her bare buttocks. Clear motion dynamics: quick powerful hits, exactly two strong spankings every 3 seconds, realistic impact, skin jiggle and bounce with each strike, hand moving rapidly up and down. Dynamic camera, natural motion blur on the fast hand movements, realistic physics, detailed skin deformation on impact,  high quality, smooth motion, cinematic lighting',
+                'neg': 'slow motion, slow hits, soft spanking, weak strikes, blurry, deformed hands, extra fingers, bad anatomy, static image, no movement, frozen frame, low quality, artifacts, distorted body, unnatural physics, cartoon, anime, overexposed, underexposed',
+                'audio_prompt': 'sharp slap impact, flesh impact sound, skin contact, crisp smack, physical strike, body percussion, high quality, realistic foley',
+                'audio_negative_prompt': 'music, melody, ambient drone, echo, reverb, wet sound, low quality, distortion',
+                'lora_high': 'WAN2.2_LoraSet/Spanking_HIGH.safetensors',
+                'lora_low': 'WAN2.2_LoraSet/Spanking_LOW.safetensors',
+            },
+            {
+                'duration': 3,
+                'pos': 'spanked, A man vigorously spanking a woman lying face-down on a table with her ass fully sticking out and raised high. The man delivers fast, hard, sharp spanking strikes with his open hand on her bare buttocks. Clear motion dynamics: quick powerful hits, exactly two strong spankings every 3 seconds, realistic impact, skin jiggle and bounce with each strike, hand moving rapidly up and down. Dynamic camera, natural motion blur on the fast hand movements, realistic physics, detailed skin deformation on impact,  high quality, smooth motion, cinematic lighting',
+                'neg': 'slow motion, slow hits, soft spanking, weak strikes, blurry, deformed hands, extra fingers, bad anatomy, static image, no movement, frozen frame, low quality, artifacts, distorted body, unnatural physics, cartoon, anime, overexposed, underexposed',
+                'audio_prompt': 'sharp slap impact, flesh impact sound, skin contact, crisp smack, physical strike, body percussion, high quality, realistic foley',
+                'audio_negative_prompt': 'music, melody, ambient drone, echo, reverb, wet sound, low quality, distortion',
+                'lora_high': 'WAN2.2_LoraSet/Spanking_HIGH.safetensors',
+                'lora_low': 'WAN2.2_LoraSet/Spanking_LOW.safetensors',
+            },
+        ],
+        "chain_prefix": 'spanking2',
+        'backend': 'linux',
+        'fps': 16,
+        'cfg': 2,
+        'neg': 'static, frozen, no movement',
+        'width': 896,
+        'height': 1344,
+        'frame_interpolation': False,
+    },
+
+    {
+        'file': '99.042 siadanie.png',
+        'backend': 'linux',
+        'duration': 2,
+        'pos': 'NONE',
+        'neg': 'NONE',
+    },
+    {
+        "chain": [
+            {
+                'duration': 3,
+                'pos': 'spanked, A man vigorously spanking a woman lying face-down on a table with her ass fully sticking out and raised high. The man delivers fast, hard, sharp spanking strikes with his open hand on her bare buttocks. Clear motion dynamics: quick powerful hits, exactly two strong spankings every 3 seconds, realistic impact, skin jiggle and bounce with each strike, hand moving rapidly up and down. Dynamic camera, natural motion blur on the fast hand movements, realistic physics, detailed skin deformation on impact,  high quality, smooth motion, cinematic lighting',
+                'neg': 'slow motion, slow hits, soft spanking, weak strikes, blurry, deformed hands, extra fingers, bad anatomy, static image, no movement, frozen frame, low quality, artifacts, distorted body, unnatural physics, cartoon, anime, overexposed, underexposed',
+                'audio_prompt': 'sharp slap impact, flesh impact sound, skin contact, crisp smack, physical strike, body percussion, high quality, realistic foley,woman cries loud',
+                'audio_negative_prompt': 'music, melody, ambient drone, echo, reverb, wet sound, low quality, distortion',
+                'lora_high': 'WAN2.2_LoraSet/Spanking_HIGH.safetensors',
+                'lora_low': 'WAN2.2_LoraSet/Spanking_LOW.safetensors',
+            },
+            {
+                'duration': 3,
+                'pos': 'spanked, A man vigorously spanking a woman lying face-down on a table with her ass fully sticking out and raised high. The man delivers fast, hard, sharp spanking strikes with his open hand on her bare buttocks. Clear motion dynamics: quick powerful hits, exactly two strong spankings every 3 seconds, realistic impact, skin jiggle and bounce with each strike, hand moving rapidly up and down. Dynamic camera, natural motion blur on the fast hand movements, realistic physics, detailed skin deformation on impact,  high quality, smooth motion, cinematic lighting',
+                'neg': 'slow motion, slow hits, soft spanking, weak strikes, blurry, deformed hands, extra fingers, bad anatomy, static image, no movement, frozen frame, low quality, artifacts, distorted body, unnatural physics, cartoon, anime, overexposed, underexposed',
+                'audio_prompt': 'sharp slap impact, flesh impact sound, skin contact, crisp smack, physical strike, body percussion, high quality, realistic foley',
+                'audio_negative_prompt': 'music, melody, ambient drone, echo, reverb, wet sound, low quality, distortion',
+                'lora_high': 'WAN2.2_LoraSet/Spanking_HIGH.safetensors',
+                'lora_low': 'WAN2.2_LoraSet/Spanking_LOW.safetensors',
+            },
+        ],
+        "chain_prefix": 'spanking3',
+        'backend': 'linux',
+        'fps': 16,
+        'cfg': 2,
+        'neg': 'static, frozen, no movement',
+        'width': 896,
+        'height': 1344,
+        'frame_interpolation': False,
+    },
+
+    {"break": True},
+
+    {
+        'type': 'multitalk',
+        'image': '99.042 siadanie.png',
+        'num_persons': 4,
+        'name': 'dialog_01',
+        'width': 576,
+        'height': 864,
+        'steps': [
+            {
+                'speaker_idx': 0,
+                'audio': '37a. na razie wystarczy.mp3',
+            },
+            {
+                'speaker_idx': 0,
+                'audio': '37b. idz stan na bacznosc.mp3',
+            },
+        ],
+        'use_last_frame': True,
+        'pos': 'The man rests his hands comfortably on his knees. He looks boredly at the woman with her backside thrust out.',
+    },
+
+    {"break": True},
+
+    {
+        'type': 'talk',
+        'audio': {
+            'file': '38. podziekowanie.mp3',
+            'pos': 'The woman bows.',
+        },
+        'width': 576,
+        'height': 864,
+        'backend': 'linux',
+        'image': '99.045 rozmowa anal.png',
+        'prefix': 'Podziekowanie',
+    },
+
+    {"break": True},
+
+    {
+        'type': 'multitalk',
+        'image': '99.044. przygotowanie do anal.png',
+        'num_persons': 3,
+        'name': 'przygotuj sie do anal',
+        'width': 576,
+        'height': 864,
+        'steps': [
+            {
+                'speaker_idx': 0,
+                'audio': '39. nowe zadanie anal.mp3',
+            },
+        ],
+        'pos': 'Men looks right',
+    },
+
+    {"break": True},
+
+    {
+        'type': 'talk',
+        'audio': {
+            'file': '40. Nikt nigdy.mp3',
+            'pos': 'The woman looks around in fear, then buries her face in her hands.',
+        },
+        'width': 576,
+        'height': 864,
+        'backend': 'linux',
+        'image': '99.045 rozmowa anal.png',
+        'prefix': 'Rozmowa anal',
+    },
+
+    {"break": True},
+
+    {
+        'type': 'multitalk',
+        'image': '99.044. przygotowanie do anal.png',
+        'num_persons': 3,
+        'name': 'obietnica kary',
+        'width': 576,
+        'height': 864,
+        'steps': [
+            {
+                'speaker_idx': 0,
+                'audio': '41. ponowna kara.mp3',
+            },
+        ],
+    },
+
+    {"break": True},
+
+    {
+        'type': 'scene_break',
+        'name': 'STRIPPING',
+    },
+    {
+        'file': '99.045 rozmowa anal.png',
+        'backend': 'linux',
+        'duration': 4,
+        'pos': 'A woman smoothly pulls her top up and over her head, removing it completely. At the start she is wearing the top, at the end the top is fully removed and there is no bra underneath — only bare skin and exposed breasts. Natural realistic motion of taking the top off over the head, fluid arm movement, clothing sliding off the body.',
+        'neg': 'bra remaining, underwear, clothes still on, top not fully removed, extra limbs, deformed hands, bad anatomy, blurry, low quality, static, no movement, censored, covered breasts',
+        'width': 896,
+        'height': 1344,
+        'audio_prompt': 'subtle body movement, soft weight shift, quiet fabric rustle, gentle shuffling feet on floor, light position change, soft clothing sounds, natural movement foley, realistic, high quality',
+        'audio_negative_prompt': 'music, melody, ambient drone, loud impact, hard footsteps, slap, sustained atmosphere, low quality, distortion',
+    },
+    {
+        'file': '99.046 rozmowa anal.png',
+        'backend': 'linux',
+        'duration': 4,
+        'pos': 'From 1 to 3 seconds a woman quickly bends down, grabs her right shoe and takes it off. At 3 seconds she is already bent over holding the shoe in her hand. Between 3 and 4 seconds she dynamically and forcefully throws the shoe outside the frame. Fast, energetic and continuous motion, clear body and arm movement, realistic physics of the shoe flying out of the scene.',
+        'neg': 'slow motion, shoe remaining on foot, shoe stays in hand, shoe stays in frame, static, no movement, deformed hands, bad anatomy, extra limbs, blurry, low quality, frozen pose, incomplete action',
+        'width': 896,
+        'height': 1344,
+        'audio_prompt': 'subtle body movement, soft weight shift, quiet fabric rustle, gentle shuffling feet on floor, light position change, soft clothing sounds, natural movement foley, realistic, high quality',
+        'audio_negative_prompt': 'music, melody, ambient drone, loud impact, hard footsteps, slap, sustained atmosphere, low quality, distortion',
+    },
+    {
+        'file': '99.046.2 rozmowa anal.png',
+        'backend': 'linux',
+        'duration': 2,
+        'pos': 'From 1 to 3 seconds a woman quickly bends down, grabs her right shoe and takes it off. At 3 seconds she is already bent over holding the shoe in her hand. Between 3 and 4 seconds she dynamically and forcefully throws the shoe outside the frame. Fast, energetic and continuous motion, clear body and arm movement, realistic physics of the shoe flying out of the scene.',
+        'neg': 'slow motion, shoe remaining on foot, shoe stays in hand, shoe stays in frame, static, no movement, deformed hands, bad anatomy, extra limbs, blurry, low quality, frozen pose, incomplete action',
+        'width': 896,
+        'height': 1344,
+        'audio_prompt': 'subtle body movement, soft weight shift, quiet fabric rustle, gentle shuffling feet on floor, light position change, soft clothing sounds, natural movement foley, realistic, high quality',
+        'audio_negative_prompt': 'music, melody, ambient drone, loud impact, hard footsteps, slap, sustained atmosphere, low quality, distortion',
+    },
+    {
+        'file': '99.047 rozmowa anal.png',
+        'backend': 'linux',
+        'duration': 4,
+        'pos': 'From 1 to 4 seconds a woman quickly bends down, grabs only her right stocking from the top and smoothly slides it down her leg, pulling it completely off. She does not touch or move the left stocking at all. At 4 seconds she is already bent over holding the removed right stocking in her hand. Between 4 and 5 seconds she dynamically and forcefully throws the right stocking outside the frame. Fast, energetic and continuous motion, clear body and arm movement, realistic fabric sliding and the stocking flying out of the scene.',
+        'neg': 'slow motion, stocking remaining on leg, both stockings removed, left stocking touched or moved, stocking stays in hand, stocking stays in frame, static, no movement, deformed hands, bad anatomy, extra limbs, blurry, low quality, frozen pose, incomplete action, fabric not sliding',
+        'width': 896,
+        'height': 1344,
+    },
+    {
+        'file': '99.047.2 rozmowa anal.png',
+        'backend': 'linux',
+        'duration': 4,
+        'pos': 'From 1 to 3 seconds a woman quickly bends down while keeping her right leg completely still and firmly planted on the floor the entire time. She grabs only her left stocking from the top and smoothly slides it down her left leg, pulling it completely off. The right foot stays flat on the ground and never lifts. At 3 seconds she is already bent over holding the removed left stocking in her hand, still standing only on her right leg. Between 3 and 4 seconds she dynamically throws the left stocking outside the frame. Right leg remains motionless and planted on the floor from start to finish. Fast continuous motion of the left leg and arms only.',
+        'neg': 'right leg lifting, right leg moving, right foot leaving the floor, raising right leg, balancing on left leg, both legs moving, slow motion, stocking remaining on leg, stocking stays in hand, stocking stays in frame, static, deformed hands, bad anatomy, extra limbs, blurry, low quality, frozen pose, incomplete action',
+        'width': 896,
+        'height': 1344,
+        'audio_prompt': 'subtle body movement, soft weight shift, quiet fabric rustle, gentle shuffling feet on floor, light position change, soft clothing sounds, natural movement foley, realistic, high quality',
+        'audio_negative_prompt': 'music, melody, ambient drone, loud impact, hard footsteps, slap, sustained atmosphere, low quality, distortion',
+    },
+    {
+        'file': '99.048 rozmowa anal.png',
+        'backend': 'linux',
+        'duration': 8,
+        'pos': '',
+        'neg': '',
+    },
+    {
+        "chain": [
+            {
+                'duration': 4,
+                'pos': 'A woman lightly slides her short skirt down her hips. The skirt loosens and falls down on its own to the ground. Natural and soft motion of the fabric sliding and dropping, realistic gravity, clear body movement, continuous action. ',
+                'neg': 'skirt thrown, skirt flying, forceful pull, energetic motion, skirt stays on body, slow motion, static, no movement, deformed hands, bad anatomy, extra limbs, blurry, low quality, frozen pose, incomplete action panties underwear',
+                'audio_prompt': 'subtle body movement, soft weight shift, quiet fabric rustle, gentle shuffling feet on floor, light position change, soft clothing sounds, natural movement foley, realistic, high quality',
+                'audio_negative_prompt': 'music, melody, ambient drone, loud impact, hard footsteps, slap, sustained atmosphere, low quality, distortion',
+            },
+            {
+                'duration': 1,
+                'pos': 'The skirt loosens and falls down on its own to the ground. Natural and soft motion of the fabric sliding and dropping, realistic gravity, clear body movement, continuous action. ',
+                'neg': 'skirt thrown, skirt flying, forceful pull, energetic motion, skirt stays on body, slow motion, static, no movement, deformed hands, bad anatomy, extra limbs, blurry, low quality, frozen pose, incomplete action panties underwear',
+                'audio_prompt': 'subtle body movement, soft weight shift, quiet fabric rustle, gentle shuffling feet on floor, light position change, soft clothing sounds, natural movement foley, realistic, high quality',
+                'audio_negative_prompt': 'music, melody, ambient drone, loud impact, hard footsteps, slap, sustained atmosphere, low quality, distortion',
+            },
+            {
+                'duration': 3,
+                'pos': 'Woman has bare feet. The woman walks reluctantly towards the camera with bowed head. Red skirt is laying on floor. ',
+                'neg': "Moving red skirt, shoes slipper on woman's feet",
+                'audio_prompt': 'subtle body movement, soft weight shift, quiet fabric rustle, gentle shuffling feet on floor, light position change, soft clothing sounds, natural movement foley, realistic, high quality',
+                'audio_negative_prompt': 'music, melody, ambient drone, loud impact, hard footsteps, slap, sustained atmosphere, low quality, distortion',
+            },
+        ],
+        "chain_prefix": 'spada spodnica',
+        'backend': 'linux',
+        'fps': 16,
+        'cfg': 2,
+        'neg': 'static, frozen, no movement',
+        'width': 896,
+        'height': 1344,
+    },
+
+    {"break": True},
+
+    {"break": True},
+
+    {
+        'type': 'scene_break',
+        'name': 'PIERWSZY ANAL',
+    },
+    {
+        'file': '99.043 first anal.png',
+        'backend': 'linux',
+        'duration': 2,
+        'pos': 'NONE',
+        'neg': 'NONE',
+    },
+    {
+        "chain": [
+            {
+                'duration': 3,
+                'pos': 'FU11N31S0N: A woman enjoys an anal penetration with her legs spread wide apart. The man thrusts his veiny penis deeply into her, creating a full nelson position. Her facial expressions is full of pain. She open mouth to catch the breath and shut it repeatidely',
+                'neg': '',
+                'audio_prompt': 'female moaning loud pleasure, rhythmic thrusting sounds, skin slapping wet impact, gasping breath, increasing intensity, climax vocal',
+                'audio_negative_prompt': 'music, melody, speech, words, lyrics, reverb, echo, distortion, cartoon, low quality',
+            },
+            {
+                'duration': 3,
+                'pos': 'FU11N31S0N: A woman enjoys an anal penetration with her legs spread wide apart. The man thrusts his veiny penis deeply into her, creating a full nelson position. Her facial expressions is full of pain. She open mouth to catch the breath and shut it repeatidely',
+                'neg': '',
+                'audio_prompt': 'female moaning loud pleasure, rhythmic thrusting sounds, skin slapping wet impact, gasping breath, increasing intensity, climax vocal',
+                'audio_negative_prompt': 'music, melody, speech, words, lyrics, reverb, echo, distortion, cartoon, low quality',
+            },
+        ],
+        "chain_prefix": 'first anal',
+        'backend': 'linux',
+        'fps': 16,
+        'cfg': 2,
+        'neg': 'static, frozen, no movement',
+    },
+
+    {
+        'file': '99.043 first anal.png',
+        'backend': 'linux',
+        'duration': 2,
+        'pos': 'NONE',
+        'neg': 'NONE',
+    },
+    {
+        "chain": [
+            {
+                'duration': 3,
+                'pos': 'FU11N31S0N: A woman enjoys an anal penetration with her legs spread wide apart. The man thrusts his veiny penis deeply into her, creating a full nelson position. Her facial expressions is full of pain. She open mouth to catch the breath and shut it repeatidely',
+                'neg': '',
+                'audio_prompt': 'female moaning loud pleasure, rhythmic thrusting sounds, skin slapping wet impact, gasping breath, increasing intensity, climax vocal',
+                'audio_negative_prompt': 'music, melody, speech, words, lyrics, reverb, echo, distortion, cartoon, low quality',
+            },
+            {
+                'duration': 3,
+                'pos': 'FU11N31S0N: A woman enjoys an anal penetration with her legs spread wide apart. The man thrusts his veiny penis deeply into her, creating a full nelson position. Her facial expressions is full of pain. She open mouth to catch the breath and shut it repeatidely',
+                'neg': '',
+                'audio_prompt': 'female moaning loud pleasure, rhythmic thrusting sounds, skin slapping wet impact, gasping breath, increasing intensity, climax vocal',
+                'audio_negative_prompt': 'music, melody, speech, words, lyrics, reverb, echo, distortion, cartoon, low quality',
+            },
+        ],
+        "chain_prefix": 'first anal 2',
+        'backend': 'linux',
+        'fps': 16,
+        'cfg': 2,
+        'neg': 'static, frozen, no movement',
+    },
+
+    {
+        'type': 'talk',
+        'audio': {
+            'file': '41.5. dziekuje za doswiadczenie.mp3',
+            'pos': 'Woman looks with face full of pain',
+        },
+        'width': 576,
+        'height': 864,
+        'backend': 'linux',
+    },
+
+    {"break": True},
+
+    {
+        'type': 'scene_break',
+        'name': 'LANIE PALETKĄ',
+    },
+    {
+        'type': 'multitalk',
+        'image': '99.055 paddle spanking.png',
+        'num_persons': 4,
+        'name': 'start lania paletka',
+        'width': 448,
+        'height': 672,
+        'steps': [
+            {
+                'speaker_idx': 0,
+                'audio': '42 paddle start.mp3',
+            },
+        ],
+    },
+
+    {
+        "chain": [
+            {
+                'duration': 2,
+                'pos': 'Smooth transition to next scene',
+                'neg': '',
+                'audio_prompt': 'whip crack slap sound, woman yelp cry out pain, sharp impact flesh, gasp moan distress, high quality sound effects',
+                'audio_negative_prompt': 'music, melody, ambient drone, echo, reverb, sustained atmosphere, continuous background noise, low quality, distortion',
+            },
+        ],
+        "chain_prefix": 'transition to paddle spank',
+        'backend': 'linux',
+        'fps': 16,
+        'cfg': 2,
+        'neg': 'static, frozen, no movement',
+        'frame_interpolation': False,
+    },
+
+    {
+        'file': '99.054 paddle spanking.png',
+        'backend': 'linux',
+        'duration': 2,
+        'pos': 'NONE',
+        'neg': 'NONE',
+    },
+    {
+        "chain": [
+            {
+                'duration': 3,
+                'pos': 'wooden paddle, A man vigorously spanking a woman lying face-down on a table with her ass fully sticking out and raised high. The man delivers fast, hard, sharp spanking strikes with his open hand on her bare buttocks. Clear motion dynamics: quick powerful hits, exactly two strong spankings every 3 seconds, realistic impact, skin jiggle and bounce with each strike, hand moving rapidly up and down. Dynamic camera, natural motion blur on the fast hand movements, realistic physics, detailed skin deformation on impact,  high quality, smooth motion, cinematic lighting',
+                'neg': 'slow motion, slow hits, soft spanking, weak strikes, blurry, deformed hands, extra fingers, bad anatomy, static image, no movement, frozen frame, low quality, artifacts, distorted body, unnatural physics, cartoon, anime, overexposed, underexposed',
+                'audio_prompt': 'whip crack slap sound, woman yelp cry out pain, sharp impact flesh, gasp moan distress, high quality sound effects',
+                'audio_negative_prompt': 'music, melody, ambient drone, echo, reverb, sustained atmosphere, continuous background noise, low quality, distortion',
+                'lora_high': 'WAN2.2_LoraSet/Spanking_HIGH.safetensors',
+                'lora_low': 'WAN2.2_LoraSet/Spanking_LOW.safetensors',
+            },
+            {
+                'duration': 3,
+                'pos': 'spanked, A man vigorously spanking a woman lying face-down on a table with her ass fully sticking out and raised high. The man delivers fast, hard, sharp spanking strikes with his open hand on her bare buttocks. Clear motion dynamics: quick powerful hits, exactly two strong spankings every 3 seconds, realistic impact, skin jiggle and bounce with each strike, hand moving rapidly up and down. Dynamic camera, natural motion blur on the fast hand movements, realistic physics, detailed skin deformation on impact,  high quality, smooth motion, cinematic lighting',
+                'neg': 'slow motion, slow hits, soft spanking, weak strikes, blurry, deformed hands, extra fingers, bad anatomy, static image, no movement, frozen frame, low quality, artifacts, distorted body, unnatural physics, cartoon, anime, overexposed, underexposed',
+                'audio_prompt': 'whip crack slap sound, woman yelp cry out pain, sharp impact flesh, gasp moan distress, high quality sound effects',
+                'audio_negative_prompt': 'music, melody, ambient drone, echo, reverb, sustained atmosphere, continuous background noise, low quality, distortion',
+                'lora_high': 'WAN2.2_LoraSet/Spanking_HIGH.safetensors',
+                'lora_low': 'WAN2.2_LoraSet/Spanking_LOW.safetensors',
+            },
+        ],
+        "chain_prefix": 'belt spanking1',
+        'backend': 'linux',
+        'fps': 16,
+        'cfg': 2,
+        'neg': 'static, frozen, no movement',
+        'width': 896,
+        'height': 1344,
+        'frame_interpolation': False,
+    },
+
+    {
+        'file': '99.055 paddle spanking.png',
+        'backend': 'linux',
+        'duration': 2,
+        'pos': 'NONE',
+        'neg': 'NONE',
+    },
+    {
+        "chain": [
+            {
+                'duration': 3,
+                'pos': 'wooden paddle, A man vigorously spanking a woman lying face-down on a table with her ass fully sticking out and raised high. The man delivers fast, hard, sharp spanking strikes with his open hand on her bare buttocks. Clear motion dynamics: quick powerful hits, exactly two strong spankings every 3 seconds, realistic impact, skin jiggle and bounce with each strike, hand moving rapidly up and down. Dynamic camera, natural motion blur on the fast hand movements, realistic physics, detailed skin deformation on impact,  high quality, smooth motion, cinematic lighting',
+                'neg': 'slow motion, slow hits, soft spanking, weak strikes, blurry, deformed hands, extra fingers, bad anatomy, static image, no movement, frozen frame, low quality, artifacts, distorted body, unnatural physics, cartoon, anime, overexposed, underexposed',
+                'audio_prompt': 'whip crack slap sound, woman yelp cry out pain, sharp impact flesh, gasp moan distress, high quality sound effects',
+                'audio_negative_prompt': 'music, melody, ambient drone, echo, reverb, sustained atmosphere, continuous background noise, low quality, distortion',
+                'lora_high': 'WAN2.2_LoraSet/Spanking_HIGH.safetensors',
+                'lora_low': 'WAN2.2_LoraSet/Spanking_LOW.safetensors',
+            },
+            {
+                'duration': 3,
+                'pos': 'spanked, A man vigorously spanking a woman lying face-down on a table with her ass fully sticking out and raised high. The man delivers fast, hard, sharp spanking strikes with his open hand on her bare buttocks. Clear motion dynamics: quick powerful hits, exactly two strong spankings every 3 seconds, realistic impact, skin jiggle and bounce with each strike, hand moving rapidly up and down. Dynamic camera, natural motion blur on the fast hand movements, realistic physics, detailed skin deformation on impact,  high quality, smooth motion, cinematic lighting',
+                'neg': 'slow motion, slow hits, soft spanking, weak strikes, blurry, deformed hands, extra fingers, bad anatomy, static image, no movement, frozen frame, low quality, artifacts, distorted body, unnatural physics, cartoon, anime, overexposed, underexposed',
+                'audio_prompt': 'whip crack slap sound, woman yelp cry out pain, sharp impact flesh, gasp moan distress, high quality sound effects',
+                'audio_negative_prompt': 'music, melody, ambient drone, echo, reverb, sustained atmosphere, continuous background noise, low quality, distortion',
+                'lora_high': 'WAN2.2_LoraSet/Spanking_HIGH.safetensors',
+                'lora_low': 'WAN2.2_LoraSet/Spanking_LOW.safetensors',
+            },
+            {
+                'duration': 3,
+                'pos': 'spanked, A man vigorously spanking a woman lying face-down on a table with her ass fully sticking out and raised high. The man delivers fast, hard, sharp spanking strikes with his open hand on her bare buttocks. Clear motion dynamics: quick powerful hits, exactly two strong spankings every 3 seconds, realistic impact, skin jiggle and bounce with each strike, hand moving rapidly up and down. Dynamic camera, natural motion blur on the fast hand movements, realistic physics, detailed skin deformation on impact,  high quality, smooth motion, cinematic lighting',
+                'neg': 'slow motion, slow hits, soft spanking, weak strikes, blurry, deformed hands, extra fingers, bad anatomy, static image, no movement, frozen frame, low quality, artifacts, distorted body, unnatural physics, cartoon, anime, overexposed, underexposed',
+                'audio_prompt': 'whip crack slap sound, woman yelp cry out pain, sharp impact flesh, gasp moan distress, high quality sound effects',
+                'audio_negative_prompt': 'music, melody, ambient drone, echo, reverb, sustained atmosphere, continuous background noise, low quality, distortion',
+                'lora_high': 'WAN2.2_LoraSet/Spanking_HIGH.safetensors',
+                'lora_low': 'WAN2.2_LoraSet/Spanking_LOW.safetensors',
+            },
+        ],
+        "chain_prefix": 'belt spanking2',
+        'backend': 'linux',
+        'fps': 16,
+        'cfg': 2,
+        'neg': 'static, frozen, no movement',
+        'width': 896,
+        'height': 1344,
+        'frame_interpolation': False,
+    },
+
+    {
+        'file': '99.055 paddle spanking.png',
+        'backend': 'linux',
+        'duration': 2,
+        'pos': 'NONE',
+        'neg': 'NONE',
+    },
+    {
+        "chain": [
+            {
+                'duration': 3,
+                'pos': 'wooden paddle, A man vigorously spanking a woman lying face-down on a table with her ass fully sticking out and raised high. The man delivers fast, hard, sharp spanking strikes with his open hand on her bare buttocks. Clear motion dynamics: quick powerful hits, exactly two strong spankings every 3 seconds, realistic impact, skin jiggle and bounce with each strike, hand moving rapidly up and down. Dynamic camera, natural motion blur on the fast hand movements, realistic physics, detailed skin deformation on impact,  high quality, smooth motion, cinematic lighting',
+                'neg': 'slow motion, slow hits, soft spanking, weak strikes, blurry, deformed hands, extra fingers, bad anatomy, static image, no movement, frozen frame, low quality, artifacts, distorted body, unnatural physics, cartoon, anime, overexposed, underexposed',
+                'audio_prompt': 'whip crack slap sound, woman yelp cry out pain, sharp impact flesh, gasp moan distress, high quality sound effects',
+                'audio_negative_prompt': 'music, melody, ambient drone, echo, reverb, sustained atmosphere, continuous background noise, low quality, distortion',
+                'lora_high': 'WAN2.2_LoraSet/Spanking_HIGH.safetensors',
+                'lora_low': 'WAN2.2_LoraSet/Spanking_LOW.safetensors',
+            },
+            {
+                'duration': 3,
+                'pos': 'spanked, A man vigorously spanking a woman lying face-down on a table with her ass fully sticking out and raised high. The man delivers fast, hard, sharp spanking strikes with his open hand on her bare buttocks. Clear motion dynamics: quick powerful hits, exactly two strong spankings every 3 seconds, realistic impact, skin jiggle and bounce with each strike, hand moving rapidly up and down. Dynamic camera, natural motion blur on the fast hand movements, realistic physics, detailed skin deformation on impact,  high quality, smooth motion, cinematic lighting',
+                'neg': 'slow motion, slow hits, soft spanking, weak strikes, blurry, deformed hands, extra fingers, bad anatomy, static image, no movement, frozen frame, low quality, artifacts, distorted body, unnatural physics, cartoon, anime, overexposed, underexposed',
+                'audio_prompt': 'whip crack slap sound, woman yelp cry out pain, sharp impact flesh, gasp moan distress, high quality sound effects',
+                'audio_negative_prompt': 'music, melody, ambient drone, echo, reverb, sustained atmosphere, continuous background noise, low quality, distortion',
+                'lora_high': 'WAN2.2_LoraSet/Spanking_HIGH.safetensors',
+                'lora_low': 'WAN2.2_LoraSet/Spanking_LOW.safetensors',
+            },
+        ],
+        "chain_prefix": 'belt spanking3',
+        'backend': 'linux',
+        'fps': 16,
+        'cfg': 2,
+        'neg': 'static, frozen, no movement',
+        'width': 896,
+        'height': 1344,
+        'frame_interpolation': False,
+    },
+
+    {
+        'type': 'multitalk',
+        'image': '99.055 paddle spanking.png',
+        'num_persons': 4,
+        'name': 'pozegnanie',
+        'width': 448,
+        'height': 672,
+        'steps': [
+            {
+                'speaker_idx': 0,
+                'audio': '43. na dzis wystarczy.mp3',
+            },
+        ],
+    },
+
+    {"break": True},
+
+    {
+        'type': 'scene_break',
+        'name': 'ZAKOŃCZENIE',
+    },
+    {
+        'type': 'talk',
+        'audio': [
+            {
+                'file': '100a. zerzneli.mp3',
+                'pos': 'Woman is delicately touching her vagina and breasts',
+            },
+            {
+                'file': '100b. polozyc.mp3',
+                'pos': 'Woman is delicately touching her vagina and breasts',
+            },
+            {
+                'file': '100c. maz kleczec.mp3',
+                'pos': 'Woman is delicately touching her vagina and breasts',
+            },
+            {
+                'file': '100d. nie zasne.mp3',
+                'pos': 'A woman lies down on her side to go to sleep. ',
+            },
+        ],
+        'width': 448,
+        'height': 672,
+        'backend': 'linux',
+        'image': '100.001 Natural.png',
     },
 
 ]

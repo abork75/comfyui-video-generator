@@ -4,7 +4,7 @@
 # Edit RUN_021 - igraszki modelek.yaml and regenerate with:
 #     from app.services.yaml_service import generate_py_from_yaml
 #     generate_py_from_yaml(Path("RUNS/RUN_021 - igraszki modelek.yaml"))
-# Generated: 2026-07-20 08:18:22
+# Generated: 2026-07-25 02:50:46
 # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 import sys
@@ -228,6 +228,9 @@ FLOW_FULL = [
         'steps': 6,
         'cfg': 2,
         'neg': 'static, frozen, no movement',
+        'width': 704,
+        'height': 1056,
+        'use_lightning': False,
     },
 
     {
@@ -254,6 +257,9 @@ she looks at the camera throughout the video.""",
         'steps': 6,
         'cfg': 2,
         'neg': 'static, frozen, no movement',
+        'width': 704,
+        'height': 1056,
+        'use_lightning': False,
     },
 
     {
@@ -287,6 +293,9 @@ The video is shot from above looking down on the scene.""",
         'steps': 6,
         'cfg': 2,
         'neg': 'static, frozen, no movement',
+        'width': 704,
+        'height': 1056,
+        'use_lightning': False,
     },
 
     {
@@ -359,7 +368,10 @@ She looks at the camera throughout the video
         'steps': 6,
         'cfg': 2,
         'neg': 'static, frozen, no movement',
+        'width': 704,
+        'height': 1056,
         'frame_interpolation': False,
+        'use_lightning': False,
     },
 
 ]

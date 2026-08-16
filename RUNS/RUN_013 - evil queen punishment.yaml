@@ -1,17 +1,19 @@
 # RUN_013 - evil queen punishment.yaml
-# Edited: 2026-07-18 00:37:35
+# Edited: 2026-07-29 00:33:48
 # Edit this file freely — regenerate .py with generate_py_from_yaml()
 #
 defaults:
   fps: 16
-  steps: 6
   cfg: 2
   duration: 2
   blocks_to_swap: 35
   backend: linux
+  auto_blocks_to_swap: true
   resolution:
-  - 1024
-  - 1024
+  - 512
+  - 512
+  pre_target_w: 1024
+  pre_target_h: 1024
 
 linux_backend:
   config_path: D:\streamlit_project\comfyui_integration\workflow_configs\wan_i2v.yaml
@@ -26,7 +28,65 @@ use_test_flow: false
 # ──────────────────────────────────────────────────────────
 flow:
 - type: scene_break
+  name: NARADA
+
+- file: Narada_1.mp4
+  backend: linux
+  duration: 2
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- type: scene_break
   name: NOC W LOCHU
+
+- file: Wizyta_0.mp4
+  backend: linux
+  duration: 3
+  pos: |-
+    Woman approaches another woman
+  neg: |-
+    NONE
+  width: 1024
+  height: 1024
+
+- file: Wizyta_1.png
+  backend: linux
+  duration: 4
+  pos: |-
+    Woman on left rises hand and touches chained woman's breast
+  neg: |-
+    NONE
+  width: 1024
+  height: 1024
+
+- file: Wizyta_2.png
+  backend: linux
+  duration: 2
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- chain:
+    prefix: opuszcza loch
+    transitions:
+    - duration: 4
+      pos: |-
+        Woman on left is leaving the dungeon, screen slowly fades to black after her leaving
+      neg: ""
+      audio_prompt: subtle body movement, soft weight shift, quiet fabric rustle, gentle shuffling feet on floor, light position change, soft clothing sounds, natural movement foley, realistic, high quality
+      audio_negative_prompt: music, melody, ambient drone, loud impact, hard footsteps, slap, sustained atmosphere, low quality, distortion
+    backend: linux
+    fps: 16
+    cfg: 2
+    neg: |-
+      static, frozen, no movement
+    width: 1024
+    height: 1024
+
+- break: true
 
 - file: Crossed_3.png
   backend: linux
@@ -42,7 +102,8 @@ flow:
   pos: |-
     cinematic 5-second video sequence, woman chained to stone wall with arms and legs spread wide in X position, heavy metal chains, dynamically and decisively struggling and yanking against restraints with forceful body movements, intense determined expression, start frame close-up from mid-breasts downward showing lower torso hips and spread legs, end frame showing full breasts and face with smooth upward camera movement from lower body to upper body, dramatic lighting, high detail, anatomical correctness
   neg: |-
-    NONE
+    fabric movement, rippling cloth, moving wrinkles, animated texture, oscillating patterns, clothing movement, texture flickering, static camera, no camera movement, frozen pose
+  use_lightning: false
 
 - file: Crossed_2.png
   backend: linux
@@ -71,7 +132,6 @@ flow:
       neg: ""
     backend: linux
     fps: 16
-    steps: 6
     cfg: 2
     neg: |-
       static, frozen, no movement
@@ -430,7 +490,6 @@ flow:
       audio_negative_prompt: music, melody, ambient drone, loud impact, hard footsteps, slap, sustained atmosphere, low quality, distortion
     backend: linux
     fps: 16
-    steps: 6
     cfg: 2
     neg: |-
       static, frozen, no movement
@@ -683,7 +742,6 @@ flow:
       neg: ""
     backend: linux
     fps: 16
-    steps: 6
     cfg: 2
     neg: |-
       static, frozen, no movement
@@ -923,7 +981,6 @@ flow:
         blurry, deformed hands, extra limbs, poor anatomy, text, watermark, cartoon, low quality
     backend: linux
     fps: 16
-    steps: 6
     cfg: 2
     neg: |-
       static, frozen, no movement
@@ -989,7 +1046,6 @@ flow:
         anybody on scene
     backend: linux
     fps: 16
-    steps: 6
     cfg: 2
     neg: |-
       static, frozen, no movement

@@ -120,3 +120,90 @@ async def chain_rename_files(request: Request):
                         errors.append(f"{name}: {e}")
 
     return {"renamed": renamed, "skipped": skipped, "errors": errors, "dry_run": dry_run}
+
+
+@router.post("/split")
+async def chain_split_files(request: Request):
+    """
+    Rename chain files with renumbering — used for split and merge operations.
+
+    Body JSON:
+    {
+        "run_filename": "RUN_001.yaml",
+        "old_prefix":   "foo",      // source prefix
+        "new_prefix":   "foo_b",    // destination prefix
+        "from_step":    3,          // 1-based: first step to rename
+        "to_step":      5,          // 1-based: last step to rename
+        "new_start":    1           // 1-based: new numbering starts here
+    }
+
+    Split example: foo_003→foo_b_001, foo_004→foo_b_002, foo_005→foo_b_003
+    Merge example: bar_001→foo_004, bar_002→foo_005  (new_start = prev_chain_len + 1)
+    """
+    try:
+        body = await request.json()
+    except Exception:
+        raise HTTPException(status_code=422, detail="Invalid JSON body")
+
+    run_filename = body.get("run_filename")
+    old_prefix   = body.get("old_prefix", "").strip()
+    new_prefix   = body.get("new_prefix", "").strip()
+    from_step    = int(body.get("from_step", 1))
+    to_step      = int(body.get("to_step", 1))
+    new_start    = int(body.get("new_start", 1))
+    dry_run      = bool(body.get("dry_run", False))
+
+    if not run_filename or not old_prefix or not new_prefix:
+        raise HTTPException(status_code=422, detail="Required: run_filename, old_prefix, new_prefix")
+
+    pf = _project_folder(run_filename)
+    if pf is None:
+        raise HTTPException(status_code=404, detail=f"Project folder not found: {run_filename}")
+
+    chains_dir = pf / "transitions" / "chains"
+    frames_dir = pf / "frames"
+    renamed, skipped, errors = [], [], []
+
+    # offset: old_step + offset = new_step
+    offset = new_start - from_step
+
+    for old_step in range(from_step, to_step + 1):
+        new_step = old_step + offset
+        old_stem = f"{old_prefix}_{old_step:03d}"
+        new_stem = f"{new_prefix}_{new_step:03d}"
+
+        # Main video file
+        if chains_dir.exists():
+            src = chains_dir / f"{old_stem}.mp4"
+            dst = chains_dir / f"{new_stem}.mp4"
+            if src.exists():
+                if dst.exists() and src != dst:
+                    skipped.append(src.name)
+                elif src != dst:
+                    if dry_run:
+                        renamed.append(f"{src.name} → {dst.name}")
+                    else:
+                        try:
+                            src.rename(dst)
+                            renamed.append(f"{src.name} → {dst.name}")
+                        except Exception as e:
+                            errors.append(f"{src.name}: {e}")
+
+        # Frame cache files (_last / _first thumbnails)
+        if frames_dir.exists():
+            for suffix in ("_last.jpg", "_first.jpg", "_last.png", "_first.png"):
+                fsrc = frames_dir / f"{old_stem}{suffix}"
+                fdst = frames_dir / f"{new_stem}{suffix}"
+                if fsrc.exists() and fsrc != fdst:
+                    if fdst.exists():
+                        skipped.append(fsrc.name)
+                    elif dry_run:
+                        renamed.append(f"{fsrc.name} → {fdst.name}")
+                    else:
+                        try:
+                            fsrc.rename(fdst)
+                            renamed.append(f"{fsrc.name} → {fdst.name}")
+                        except Exception as e:
+                            errors.append(f"{fsrc.name}: {e}")
+
+    return {"renamed": renamed, "skipped": skipped, "errors": errors, "dry_run": dry_run}

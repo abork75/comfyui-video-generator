@@ -277,7 +277,6 @@ flow:
       neg: "teleportation, cart disappearing, sudden jump cut, static frozen scene, \ncamera movement, zoom, blur extra people, additional figures, crowd on cart, more than three people on cart, spectators on cart"
     backend: linux
     fps: 16
-    steps: 6
     cfg: 2
     neg: |-
       static, frozen, no movement

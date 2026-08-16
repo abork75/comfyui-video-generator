@@ -46,6 +46,7 @@ _DEFAULTS: dict[str, Any] = {
                 "video_gen": {"config_path": "", "lightning_workflow": "_I2V_dasiwa_3step_nog4gg.json", "hq_workflow": "_I2V_classic_hq_nog4gg.json"},
                 "talk":      {"workflow_json": ""},
                 "multitalk": {"workflow_json": ""},
+                "dubit":     {"workflow_json": ""},
             },
         },
         "windows": {

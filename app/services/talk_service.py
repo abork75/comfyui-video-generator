@@ -250,6 +250,8 @@ def _patch_workflow(
     audio_filename: str,
     width: int,
     height: int,
+    length: int = 0,
+    steps: int = 20,
     prompt: str = "",
     negative_prompt: str = "",
     filename_prefix: str = "Talk",
@@ -257,6 +259,7 @@ def _patch_workflow(
     """
     Patch a deep copy of the workflow with job-specific parameters.
     Searches by class_type — robust against node ID changes.
+    Supports both InfiniteTalk and WAN S2V workflows.
     """
     wf = copy.deepcopy(workflow)
 
@@ -268,11 +271,19 @@ def _patch_workflow(
     if node:
         node["inputs"]["audio"] = audio_filename
 
+    # InfiniteTalk: ImageScale
     node = _find_node(wf, "ImageScale")
     if node:
         node["inputs"]["width"]  = width
         node["inputs"]["height"] = height
 
+    # S2V: ImageResize+
+    node = _find_node(wf, "ImageResize+")
+    if node:
+        node["inputs"]["width"]  = width
+        node["inputs"]["height"] = height
+
+    # InfiniteTalk: single node with pos+neg
     node = _find_node(wf, "WanVideoTextEncodeCached")
     if node:
         if prompt:
@@ -280,9 +291,47 @@ def _patch_workflow(
         if negative_prompt:
             node["inputs"]["negative_prompt"] = negative_prompt
 
+    # S2V: two separate CLIPTextEncode nodes, distinguished by title
+    _is_s2v = _find_node(wf, "WanSoundImageToVideo") is not None
+    _s2v_pos = prompt if prompt else (
+        "The person on screen maintains the same pose and position as the reference image, "
+        "speaking naturally, same appearance, same background, no props"
+        if _is_s2v else ""
+    )
+    _s2v_neg_suffix = (
+        ", holding objects, props in hands, object in hand, box, bag, gift, purse, "
+        "extra limbs, extra fingers, deformed limbs, wrong anatomy, additional objects"
+        if _is_s2v else ""
+    )
+    for node in wf.values():
+        if not isinstance(node, dict) or node.get("class_type") != "CLIPTextEncode":
+            continue
+        title = (node.get("_meta") or {}).get("title", "").lower()
+        if "positive" in title and _s2v_pos:
+            node["inputs"]["text"] = _s2v_pos
+        elif "negative" in title:
+            _base_neg = negative_prompt or node["inputs"].get("text", "")
+            node["inputs"]["text"] = _base_neg + _s2v_neg_suffix
+
+    # S2V: frame count driven by audio duration
+    node = _find_node(wf, "WanSoundImageToVideo")
+    if node and length > 0:
+        node["inputs"]["length"] = length
+
+    # S2V: sampling steps
+    node = _find_node(wf, "KSampler")
+    if node:
+        node["inputs"]["steps"] = steps
+
+    # InfiniteTalk output
     node = _find_node(wf, "VHS_VideoCombine")
     if node:
         node["inputs"]["filename_prefix"] = filename_prefix
+
+    # S2V output
+    node = _find_node(wf, "SaveVideo")
+    if node:
+        node["inputs"]["filename_prefix"] = f"video/{filename_prefix}"
 
     return wf
 
@@ -350,20 +399,22 @@ def _http_get(url: str, timeout: int = 10) -> dict:
 # ── Output detection helpers ─────────────────────────────────────────────────
 
 def _find_video_in_outputs(outputs: dict) -> dict | None:
+    # ComfyUI SaveVideo returns files under "images" key (not "videos").
+    # VHS_VideoCombine uses "videos". Check all known output keys.
     for node_id, node_out in outputs.items():
         if not isinstance(node_out, dict):
             continue
-        videos = node_out.get("videos") or node_out.get("gifs") or []
-        for v in videos:
-            if isinstance(v, dict) and v.get("filename", "").endswith(".mp4"):
-                return v
+        for key in ("videos", "gifs", "images"):
+            for v in (node_out.get(key) or []):
+                if isinstance(v, dict) and v.get("filename", "").endswith(".mp4"):
+                    return v
     return None
 
 
 def _newest_mp4_added_after(directory: Path, known: set[str]) -> Path | None:
     if not directory.exists():
         return None
-    candidates = [p for p in directory.glob("*.mp4") if p.name not in known]
+    candidates = [p for p in directory.rglob("*.mp4") if p.name not in known]
     return max(candidates, key=lambda p: p.stat().st_mtime) if candidates else None
 
 
@@ -506,6 +557,7 @@ async def _generate_segment(
     prompt:          str,
     negative_prompt: str,
     prefix:          str,
+    steps:           int = 20,
 ) -> Path:
     """
     Submit one audio segment to ComfyUI and return the path to the output mp4.
@@ -539,11 +591,13 @@ async def _generate_segment(
 
     # Snapshot existing outputs (for fallback detection)
     existing_mp4s: set[str] = (
-        {p.name for p in output_dir.glob("*.mp4")} if output_dir.exists() else set()
+        {p.name for p in output_dir.rglob("*.mp4")} if output_dir.exists() else set()
     )
 
     try:
         # Load and patch workflow
+        _dur    = _audio_duration(audio_path)
+        _length = max(16, round(_dur * 16)) if _dur > 0 else 41
         workflow = _load_workflow()
         workflow = _patch_workflow(
             workflow,
@@ -551,6 +605,8 @@ async def _generate_segment(
             audio_filename=tmp_audio.name,
             width=width,
             height=height,
+            length=_length,
+            steps=steps,
             prompt=prompt,
             negative_prompt=negative_prompt,
             filename_prefix=prefix,
@@ -783,6 +839,7 @@ async def _run_talk(
     width:          int,
     height:         int,
     *,
+    steps:          int = 20,
     from_step:      int = 0,          # 0-indexed; skip earlier audio entries and resolve start image
     total_audio:    int | None = None, # full segment count (for correct file numbering); defaults to len(audio_entries)
     # Optional overrides — used by generate_talk_clip_sync() for batch scripts.
@@ -836,6 +893,7 @@ async def _run_talk(
                 prompt=seg_pos,
                 negative_prompt=seg_neg,
                 prefix=prefix,
+                steps=steps,
             )
             segment_paths.append(seg_out)
 
@@ -923,6 +981,7 @@ async def _run_talk(
         pf = dest_path.parent.parent.parent
         frames_dir = pf / "frames"
         frames_dir.mkdir(parents=True, exist_ok=True)
+        _end_dst = None
         try:
             _end_dst = frames_dir / f"{dest_path.stem}_end.png"
             if _end_frame_tmp.exists():
@@ -933,6 +992,37 @@ async def _run_talk(
                     pass
             else:
                 _extract_last_frame(final_paths[-1], _end_dst)
+        except Exception:
+            pass
+
+        # Write _real.png for the next static-image file tile in the flow so that
+        # the following transition starts from talk's actual last frame instead of
+        # the static source image (which WAN may not have fully reached).
+        try:
+            from app.services.run_file_service import get_run_flow
+            from app.services.media_service import talk_path as _talk_path
+            _flow_data = get_run_flow(run_filename)
+            _flow = (_flow_data.get("flow") or []) if _flow_data else []
+            _found = False
+            _next_file = None
+            for _fi in _flow:
+                if not isinstance(_fi, dict):
+                    continue
+                if not _found:
+                    if _fi.get("type") == "talk":
+                        if _talk_path(pf, _fi).name == dest_path.name:
+                            _found = True
+                    continue
+                if _fi.get("break") or _fi.get("type") == "scene_break":
+                    break
+                if _fi.get("type") in ("talk", "chain", "multitalk"):
+                    break
+                if _fi.get("file"):
+                    _next_file = _fi["file"]
+                    break
+            if _next_file and _end_dst and _end_dst.exists():
+                _real_p = frames_dir / f"{Path(_next_file).stem}_real.png"
+                shutil.copy2(str(_end_dst), str(_real_p))
         except Exception:
             pass
 
@@ -1106,11 +1196,13 @@ def start_talk(
         "started_at":   time.time(),
     })
 
+    steps = max(1, int(talk_item.get("steps", 20)))
+
     try:
         _task = asyncio.create_task(
             _run_talk(img_path, audio_entries, dest_path,
                       run_filename, talk_name, width, height,
-                      from_step=from_step, total_audio=total_audio)
+                      steps=steps, from_step=from_step, total_audio=total_audio)
         )
     except RuntimeError as e:
         _state.update({"status": "error", "error": str(e)})

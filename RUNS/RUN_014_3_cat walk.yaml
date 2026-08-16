@@ -171,6 +171,11 @@ pic_flow:
         steps: 30
         cfg: 8
         denoise: 1
+        atlascloud_model: qwen/qwen-image-2.0-pro/edit
+        seed: -1
+        thinking_mode: false
+        wan_size: 2K
+      mode: i2i
     - id: p0000046
       output_id: AjB7XmwAewGjpjnNob
       enabled: true
@@ -182,6 +187,11 @@ pic_flow:
         steps: 30
         cfg: 8
         denoise: 1
+        atlascloud_model: qwen/qwen-image-2.0-pro/edit
+        seed: -1
+        thinking_mode: false
+        wan_size: 2K
+      mode: i2i
     - id: p0000047
       output_id: 6u8MF87hG2vS7KOje1
       enabled: true
@@ -193,6 +203,11 @@ pic_flow:
         steps: 30
         cfg: 8
         denoise: 1
+        atlascloud_model: qwen/qwen-image-2.0-pro/edit
+        seed: -1
+        thinking_mode: false
+        wan_size: 2K
+      mode: i2i
     - id: p0000048
       output_id: B1fpXmWnhP1e3c2qY2
       enabled: true
@@ -204,6 +219,11 @@ pic_flow:
         steps: 30
         cfg: 8
         denoise: 1
+        atlascloud_model: qwen/qwen-image-2.0-pro/edit
+        seed: -1
+        thinking_mode: false
+        wan_size: 2K
+      mode: i2i
     - id: p0000049
       output_id: KDp9UmbOgd50oBc12Z
       enabled: true
@@ -215,19 +235,15 @@ pic_flow:
         steps: 30
         cfg: 8
         denoise: 1
-  scene_dirs: []
-  characters_dirs: []
-  scene_slots: []
-  paste_slots: []
-  edge_blend_enabled: false
-  edge_blend_px: 15
+        atlascloud_model: qwen/qwen-image-2.0-pro/edit
+        seed: -1
+        thinking_mode: false
+        wan_size: 2K
+      mode: i2i
   edge_blend_cfg: null
   edge_blend_denoise: null
-  edge_blend_prompts: []
-  scene_blend_enabled: false
   scene_blend_cfg: null
   scene_blend_denoise: null
-  scene_blend_prompts: []
   output_dir: C:\Users\abork\AppData\Local\CapCut\Videos\muszelka_pliki\EM\skakanie_na_pilce\modelEM_modele
   global_suffix: no background solid white scene
   crop_to_subject: true
@@ -264,19 +280,10 @@ pic_flow:
         steps: 30
         cfg: 8
         denoise: 1
-  scene_dirs: []
-  characters_dirs: []
-  scene_slots: []
-  paste_slots: []
-  edge_blend_enabled: false
-  edge_blend_px: 15
   edge_blend_cfg: null
   edge_blend_denoise: null
-  edge_blend_prompts: []
-  scene_blend_enabled: false
   scene_blend_cfg: null
   scene_blend_denoise: null
-  scene_blend_prompts: []
   output_dir: C:\Users\abork\AppData\Local\CapCut\Videos\muszelka_pliki\EM\skakanie_na_pilce\modelEM_modele
   global_suffix: ''
   crop_to_subject: true
@@ -387,19 +394,10 @@ pic_flow:
         steps: 30
         cfg: 8
         denoise: 1
-  scene_dirs: []
-  characters_dirs: []
-  scene_slots: []
-  paste_slots: []
-  edge_blend_enabled: false
-  edge_blend_px: 15
   edge_blend_cfg: null
   edge_blend_denoise: null
-  edge_blend_prompts: []
-  scene_blend_enabled: false
   scene_blend_cfg: null
   scene_blend_denoise: null
-  scene_blend_prompts: []
   output_dir: C:\Users\abork\AppData\Local\CapCut\Videos\muszelka_pliki\EM\skakanie_na_pilce\modelEM_modele
   global_suffix: Solid white background
   crop_to_subject: true
@@ -407,11 +405,6 @@ pic_flow:
   id: repose_z_mask
 - type: paste_character
   name: Umieszczanie na scenie - casual
-  source_dirs: []
-  image_slots: []
-  scene_dirs: []
-  characters_dirs: []
-  scene_slots: []
   paste_slots:
   - id: b448ff46-9037-439b-81d4-5055ba5e1f65
     output_id: qD9Nm55aXtfJaSoq6g
@@ -499,11 +492,6 @@ pic_flow:
   id: umieszczanie_na_scenie_-_casual_kopia
 - type: paste_character
   name: Umieszczanie na scenie - smart casual
-  source_dirs: []
-  image_slots: []
-  scene_dirs: []
-  characters_dirs: []
-  scene_slots: []
   paste_slots:
   - id: 2d50f514-7ca6-4cf0-8e70-5514e72a67eb
     output_id: uZcgPSMdqkzXuveE98
@@ -591,11 +579,6 @@ pic_flow:
   id: umieszczanie_na_scenie_-_smart_casual_kopia
 - type: paste_character
   name: Umieszczanie na scenie - Little Black Dress (Cocktail)
-  source_dirs: []
-  image_slots: []
-  scene_dirs: []
-  characters_dirs: []
-  scene_slots: []
   paste_slots:
   - id: e82cda9b-c897-4ed1-b81b-da1983cbff3e
     output_id: j6hWRCDTOQzVoDDaRF
@@ -683,11 +666,6 @@ pic_flow:
   id: umieszczanie_na_scenie_-_little_black_dress_cocktail_kopia
 - type: paste_character
   name: Umieszczanie na scenie - Elegant Evening Gown
-  source_dirs: []
-  image_slots: []
-  scene_dirs: []
-  characters_dirs: []
-  scene_slots: []
   paste_slots:
   - id: 4f65b210-7969-45aa-a112-68ba1830f1da
     output_id: 1XHtIX3Zfy4ZEGWMln
@@ -775,11 +753,6 @@ pic_flow:
   id: umieszczanie_na_scenie_-_elegant_evening_gown_kopia
 - type: paste_character
   name: Umieszczanie na scenie - Glamorous Red Carpet
-  source_dirs: []
-  image_slots: []
-  scene_dirs: []
-  characters_dirs: []
-  scene_slots: []
   paste_slots:
   - id: 33b7e689-3f08-41a3-a696-d4daecce6b63
     output_id: 3G6DG42f8k097LXZoo
@@ -867,11 +840,6 @@ pic_flow:
   id: umieszczanie_na_scenie_-_glamorous_red_carpet_kopia
 - type: paste_character
   name: start scene
-  source_dirs: []
-  image_slots: []
-  scene_dirs: []
-  characters_dirs: []
-  scene_slots: []
   paste_slots:
   - id: 40397566-77c1-4c1c-9b48-b57584443ce5
     output_id: Xg5u7Tq65Km6QxSe9C

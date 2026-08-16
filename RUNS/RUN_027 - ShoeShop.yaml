@@ -1,0 +1,198 @@
+# RUN_027 - ShoeShop.yaml
+# Edited: 2026-08-16 13:57:40
+# Edit this file freely — regenerate .py with generate_py_from_yaml()
+#
+project_folder: C:\Users\abork\AppData\Local\CapCut\Videos\__DEVIANT ART\FILMY\ShoeShop
+
+use_test_flow: false
+
+# ──────────────────────────────────────────────────────────
+# FLOW — lista generacji
+# ──────────────────────────────────────────────────────────
+flow:
+- file: 50.51. pose.png
+  backend: linux
+  duration: 2
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- chain:
+    prefix: Sex Dance
+    transitions:
+    - duration: 3
+      pos: |-
+        sexy_dance, They do a sexy dance. They thrusts and sways her hips in a sexual manner. Next they kneeling down.
+      neg: ""
+      lora_high: WAN2.2_LoraSet/Wan2.2%20-%20T2V%20-%20Sexy%20Dance%20-%20HIGH%2014B.safetensors
+      lora_low: WAN2.2_LoraSet/Wan2.2%20-%20T2V%20-%20Sexy%20Dance%20-%20LOW%2014B%20.safetensors
+      audio_prompt: Quiet exclusive shoe store ambience, soft footsteps on wooden floor, gentle rustling of tissue paper, quiet voices in the distance, soft door chime, subtle clothing and shoe movement sounds, calm refined atmosphere, low-level ambient room tone
+      audio_negative_prompt: supermarket, hypermarket, loud announcements, shopping carts, beeping scanners, crowded noise, loud music, heavy bass, traffic, street noise, strong reverb, distorted audio
+    - duration: 3
+      pos: |-
+        sexy_dance, They do a sexy dance. They thrusts and sways her hips in a sexual manner while kneeling.
+      neg: ""
+      audio_prompt: subtle body movement, soft weight shift, quiet fabric rustle, gentle shuffling feet on floor, light position change, soft clothing sounds, natural movement foley, realistic, high quality
+      audio_negative_prompt: music, melody, ambient drone, loud impact, hard footsteps, slap, sustained atmosphere, low quality, distortion
+    backend: linux
+    fps: 16
+    cfg: 2
+    neg: |-
+      static, frozen, no movement
+
+- file: 50.53. pose.png
+  backend: linux
+  duration: 2
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- type: talk
+  audio:
+    file: We are shop assistant.MP3
+    pos: |-
+      Kneeling, the women clasp their hands behind their backs, keeping their arms along their sides.
+  width: 896
+  height: 1152
+  backend: linux
+
+- chain:
+    prefix: wstawanie
+    transitions:
+    - duration: 3
+      pos: |-
+        The women slowly rise and stand at attention.
+      neg: ""
+      audio_prompt: subtle body movement, soft weight shift, quiet fabric rustle, gentle shuffling feet on floor, light position change, soft clothing sounds, natural movement foley, realistic, high quality
+      audio_negative_prompt: music, melody, ambient drone, loud impact, hard footsteps, slap, sustained atmosphere, low quality, distortion
+    backend: linux
+    fps: 16
+    cfg: 2
+    neg: |-
+      static, frozen, no movement
+
+- file: 50.51. pose.png
+  backend: linux
+  duration: 2
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- type: talk
+  audio:
+    file: spanking.MP3
+    pos: |-
+      Women look into the camera, hiding their hands behind their backs.
+  width: 624
+  height: 800
+  backend: linux
+
+- chain:
+    prefix: turns back
+    transitions:
+    - duration: 3
+      pos: |-
+        Women slowly and sensually turns back
+      neg: ""
+    backend: linux
+    fps: 16
+    cfg: 2
+    neg: |-
+      static, frozen, no movement
+
+- file: 50.55. pose.png
+  backend: linux
+  duration: 3
+  pos: |-
+    Camera slowly zoom in women on foreground shakes their buttocks
+  neg: |-
+    static women no movement
+
+- file: 50.57. pose.png
+  backend: linux
+  duration: 2
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- break: true
+
+- file: 50.59. single talk.png
+  backend: linux
+  duration: 2
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- type: talk
+  audio:
+  - file: Please take me.mp3
+    pos: |-
+      Kneeling, the women clasp their hands behind their backs, keeping their arms along their sides.
+  - file: I am yours.MP3
+    pos: |-
+      The woman extends her hands invitingly in front of her.
+  width: 624
+  height: 800
+  backend: linux
+
+- break: true
+
+- file: 50.59. single talk.png
+  backend: linux
+  duration: 2
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- type: dubit
+  audio:
+  - file: Please take me.MP3
+    pos: |-
+      A person is speaking English, saying: "Please take me!"
+    neg: |-
+      blurry, distorted face
+  - file: I am yours.MP3
+    pos: |-
+      A person is speaking English, saying: "I am yours"
+    neg: ""
+  - file: Here and now.mp3
+    pos: |-
+      A person is speaking English, saying: "Here and now"
+    neg: |-
+      blurry, distorted face
+  width: 896
+  height: 1152
+
+- break: true
+
+- file: resize.png
+  backend: linux
+  duration: 2
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- type: dubit
+  audio: chodz na plaze.mp3
+  pos: |-
+    A woman is speaking Polish, saying: " Chodź na plażę! Nie ma co w hotelu siedzieć!"
+  neg: |-
+    blurry, distorted face
+  width: 896
+  height: 1152
+
+- break: true
+
+defaults:
+  auto_blocks_to_swap: true
+  resolution:
+  - 896
+  - 1152

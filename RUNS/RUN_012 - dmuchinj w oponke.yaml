@@ -1,10 +1,5 @@
-# RUN_012 - dmuchinj w oponke.yaml
-# Edited: 2026-06-06 05:47:54
-# Edit this file freely — regenerate .py with generate_py_from_yaml()
-#
 defaults:
   fps: 16
-  steps: 6
   cfg: 2
   duration: 2
   blocks_to_swap: 35
@@ -12,215 +7,149 @@ defaults:
   resolution:
   - 880
   - 1184
-
 linux_backend:
   config_path: D:\streamlit_project\comfyui_integration\workflow_configs\wan_i2v.yaml
   workflows_path: D:\streamlit_project\comfyui_integration\workflows
   comfyui_output_folder: D:\ComfyUI\output\Wan22_I2V
   api_url: http://127.0.0.1:8189
-
 use_test_flow: false
-
-# ──────────────────────────────────────────────────────────
-# FLOW — lista generacji
-# ──────────────────────────────────────────────────────────
 flow:
 - file: 10.51. prawy przod.jpeg
   backend: linux
   duration: 5
   pos: "Cinematic 5-second I2V2I video with magical effect:\n\nStart frame (Image 1): Empty room with a large poster of a beautiful woman/model hanging on the wall.\n\nDuring the 5 seconds a magical transformation happens: The woman on the poster begins to glow with bright, ethereal light. Suddenly there is a strong flash of light, sparkling particles and magical energy burst from the poster. The woman magically materializes and steps out of the poster into reality. \n\nShe appears on the floor in the room below the poster in a natural, slightly surprised pose. The transition is smooth and spectacular — glowing particles, light trails, and bright flash emphasize the magical transfer from 2D poster to real 3D person.\nEnd frame (Image 2): The same empty room, but now the real woman is sitting/lying on the floor beneath the now empty poster.\n\nMagical, fantastical atmosphere, dramatic lighting, sparkling particles, beautiful cinematic effect, photorealistic, highly detailed, 4K."
-  neg: |-
-    deformed body, bad anatomy, extra limbs, missing limbs, mutated hands, blurry motion, low quality, artifacts, watermark, text, logo, poster tearing, broken poster, woman walking out of poster, smooth morphing, slow transition, no magical effect, no glow, no particles, no flash, dull lighting, realistic transfer without magic, static scene, no materialization, bad composition, distorted proportions, cartoonish, plastic skin, low detail, overexposed flash, underexposed, jerky movement, floating body, wrong pose, different clothing, face deformation, extra people, empty room without woman
-
+  neg: deformed body, bad anatomy, extra limbs, missing limbs, mutated hands, blurry motion, low quality, artifacts, watermark, text, logo, poster tearing, broken poster, woman walking out of poster, smooth morphing, slow transition, no magical effect, no glow, no particles, no flash, dull lighting, realistic transfer without magic, static scene, no materialization, bad composition, distorted proportions, cartoonish, plastic skin, low detail, overexposed flash, underexposed, jerky movement, floating body, wrong pose, different clothing, face deformation, extra people, empty room without woman
 - file: 10.53. on scene.png
   backend: linux
   duration: 0
-  pos: |-
-    NONE
-  neg: |-
-    NONE
-
+  pos: NONE
+  neg: NONE
 - type: talk
   audio:
     file: 10.55 Dmuchne w oponke.mp3
-    pos: |-
-      Woman is waving a hand
+    pos: Woman is waving a hand
   width: 608
   height: 816
   transition:
     duration: 2
-    pos: |-
-      Woman is waving hand and smiles
-
+    pos: Woman is waving hand and smiles
 - chain:
     prefix: wychodzi na zewnątrz
     transitions:
     - duration: 3
-      pos: |-
-        Woman is standing up, turning back to go straight to open garrage doors leaving garrage.
-      neg: ""
+      pos: Woman is standing up, turning back to go straight to open garrage doors leaving garrage.
+      neg: ''
     backend: linux
     fps: 16
-    steps: 6
     cfg: 2
-    neg: |-
-      static, frozen, no movement
-
+    neg: static, frozen, no movement
 - break: true
-
 - file: 11.51. maszyny_wywazarka.jpeg
   backend: linux
   duration: 5
   pos: "5-second magical I2V2I: In an empty room, a large poster of a woman hangs on the wall (Image 1). Suddenly the poster starts glowing intensely. A bright flash of light and swirling magical particles erupt from the poster. The woman dramatically materializes out of the poster, emerging into the real world and landing gracefully on the floor. \n\nStrong emphasis on magical transfer, glowing effects, sparkles, and light burst. End frame shows the real woman on the floor and the now blank poster (Image 2). Cinematic, enchanting, photorealistic, ultra detailed."
-  neg: |-
-    deformed body, bad anatomy, extra limbs, missing limbs, mutated hands, blurry motion, low quality, artifacts, watermark, text, logo, poster tearing, broken poster, woman walking out of poster, smooth morphing, slow transition, no magical effect, no glow, no particles, no flash, dull lighting, realistic transfer without magic, static scene, no materialization, bad composition, distorted proportions, cartoonish, plastic skin, low detail, overexposed flash, underexposed, jerky movement, floating body, wrong pose, different clothing, face deformation, extra people, empty room without woman
-
+  neg: deformed body, bad anatomy, extra limbs, missing limbs, mutated hands, blurry motion, low quality, artifacts, watermark, text, logo, poster tearing, broken poster, woman walking out of poster, smooth morphing, slow transition, no magical effect, no glow, no particles, no flash, dull lighting, realistic transfer without magic, static scene, no materialization, bad composition, distorted proportions, cartoonish, plastic skin, low detail, overexposed flash, underexposed, jerky movement, floating body, wrong pose, different clothing, face deformation, extra people, empty room without woman
 - file: 11.53. on scene.png
   backend: linux
   duration: 0
-  pos: |-
-    NONE
-  neg: |-
-    NONE
-
+  pos: NONE
+  neg: NONE
 - type: talk
   audio:
     file: 11.55. przykrecac kolka.mp3
-    pos: |-
-      Woman standing in front is rising both hands and waving them. Woman on poster are not moving and talking at all.
+    pos: Woman standing in front is rising both hands and waving them. Woman on poster are not moving and talking at all.
   width: 608
   height: 816
-
 - break: true
-
 - file: 11.55 gdzie ten lewarek.png
   backend: linux
   duration: 2
-  pos: |-
-    NONE
-  neg: |-
-    NONE
-
+  pos: NONE
+  neg: NONE
 - chain:
     prefix: gdzie lewarek
     transitions:
     - duration: 2
-      pos: |-
-        Woman is chaotically looking for something on table
-      neg: ""
+      pos: Woman is chaotically looking for something on table
+      neg: ''
     backend: linux
     fps: 16
-    steps: 6
     cfg: 2
-    neg: ""
-
+    neg: ''
 - type: talk
   audio:
     file: 11.57. Gdzie ten lewarek.mp3
-    pos: |-
-      Woman is chaotically looking for something on table
+    pos: Woman is chaotically looking for something on table
   width: 608
   height: 816
-
 - break: true
-
 - file: 13.51. taniec.png
   backend: linux
   duration: 5
-  pos: |-
-    NONE
-  neg: |-
-    NONE
-
+  pos: NONE
+  neg: NONE
 - chain:
     prefix: nowy_chain_1
     transitions:
     - duration: 5
       pos: "5-second cinematic video: A woman sitting on a sofa with another woman standing and leaning over her seductively. The seated woman slowly rises to her feet, moving very close to the standing woman. They immediately begin dancing together in a slow, extremely sensual and passionate style — hips moving, bodies sliding against each other, soft caresses, intense eye contact and elegant, erotic dance moves. \n\nSmooth transitions, seductive atmosphere, cinematic lighting, photorealistic, high detail."
-      neg: ""
+      neg: ''
     backend: linux
     fps: 16
-    steps: 6
     cfg: 2
-    neg: |-
-      static, frozen, no movement
-
+    neg: static, frozen, no movement
 - file: 13.71. taniec.png
   backend: linux
   duration: 2
-  pos: |-
-    Two women dancing seductively. They turn to face each other, slowly and gracefully embrace — arms wrapped around each other, bodies close together. They continue dancing as a couple: slow, intimate movements, hips swaying in unison, gentle caresses, foreheads almost touching, intense eye contact. Passionate, erotic and elegant partner dance. Smooth cinematic motion, soft dramatic lighting, photorealistic.
-  neg: |-
-    NONE
-
+  pos: 'Two women dancing seductively. They turn to face each other, slowly and gracefully embrace — arms wrapped around each other, bodies close together. They continue dancing as a couple: slow, intimate movements, hips swaying in unison, gentle caresses, foreheads almost touching, intense eye contact. Passionate, erotic and elegant partner dance. Smooth cinematic motion, soft dramatic lighting, photorealistic.'
+  neg: NONE
 - file: 13.75. taniec.png
   backend: linux
   duration: 2
-  pos: |-
-    Cinematic 5-second I2V video: Two beautiful women dancing sensually together. They slowly move closer to each other while dancing, bodies swaying in rhythm. They gently embrace, lean in and give each other a soft, passionate kiss on the lips. After the kiss they pull back slightly, smiling, and continue dancing closely together in a very intimate and seductive way — hips moving, gentle touching, deep eye contact.
+  pos: 'Cinematic 5-second I2V video: Two beautiful women dancing sensually together. They slowly move closer to each other while dancing, bodies swaying in rhythm. They gently embrace, lean in and give each other a soft, passionate kiss on the lips. After the kiss they pull back slightly, smiling, and continue dancing closely together in a very intimate and seductive way — hips moving, gentle touching, deep eye contact.
 
-    Smooth, fluid and erotic choreography, slow-motion elements during the kiss, sensual atmosphere, soft cinematic lighting, graceful movements, photorealistic, highly detailed, 4K.
-  neg: |-
-    NONE
 
+    Smooth, fluid and erotic choreography, slow-motion elements during the kiss, sensual atmosphere, soft cinematic lighting, graceful movements, photorealistic, highly detailed, 4K.'
+  neg: NONE
 - file: 13.77. taniec.png
   backend: linux
   duration: 2
-  pos: |-
-    Zoom on woman in black black lace bodysuit with blonde hair other woman is not visible
-  neg: |-
-    NONE
-
+  pos: Zoom on woman in black black lace bodysuit with blonde hair other woman is not visible
+  neg: NONE
 - file: 13.79. taniec.png
   backend: linux
   duration: 2
-  pos: |-
-    NONE
-  neg: |-
-    NONE
-
+  pos: NONE
+  neg: NONE
 - type: talk
   audio:
     file: 13.79. ktos przyjechal.mp3
-    pos: |-
-      Face is little frighetned and courious
+    pos: Face is little frighetned and courious
   width: 608
   height: 816
-
 - break: true
-
 - file: 15.51. powitanie.png
   backend: linux
   duration: 2
-  pos: |-
-    Women are smiling and waving her right hands in greetings
-  neg: |-
-    NONE
-
+  pos: Women are smiling and waving her right hands in greetings
+  neg: NONE
 - type: talk
   audio:
     file: 15.51. Lauren_witamy.mp3
-    pos: |-
-      Women is waving hand with greetings
+    pos: Women is waving hand with greetings
   width: 608
   height: 816
-
 - chain:
     prefix: zaproszenie
     transitions:
     - duration: 3
-      pos: |-
-        NONE
-      neg: ""
+      pos: NONE
+      neg: ''
     backend: linux
     fps: 16
-    steps: 6
     cfg: 2
-    neg: |-
-      Women is waving hands with greetings
-
+    neg: Women is waving hands with greetings
 project_folder: C:\Users\abork\AppData\Local\CapCut\Videos\muszelka_pliki\obce\oponka\film
-
 pic_flow:
 - type: one_image_many_prompts
   name: Generator modelu bazowego modelka1
@@ -254,15 +183,6 @@ pic_flow:
         steps: 30
         cfg: 8
         denoise: 1
-  scene_dirs: []
-  characters_dirs: []
-  scene_slots: []
-  paste_slots: []
-  edge_blend_enabled: false
-  edge_blend_px: 15
-  edge_blend_prompts: []
-  scene_blend_enabled: false
-  scene_blend_prompts: []
   output_dir: C:\Users\abork\AppData\Local\CapCut\Videos\muszelka_pliki\obce\oponka\modelka_1_modele
   global_suffix: ''
   id: generator_modeli
@@ -272,7 +192,6 @@ pic_flow:
   edge_blend_denoise: null
   scene_blend_cfg: null
   scene_blend_denoise: null
-
 - type: one_image_many_prompts
   name: Generator modelu bazowego modelka2
   source_dirs:
@@ -292,15 +211,6 @@ pic_flow:
         steps: 30
         cfg: 8
         denoise: 1
-  scene_dirs: []
-  characters_dirs: []
-  scene_slots: []
-  paste_slots: []
-  edge_blend_enabled: false
-  edge_blend_px: 15
-  edge_blend_prompts: []
-  scene_blend_enabled: false
-  scene_blend_prompts: []
   output_dir: C:\Users\abork\AppData\Local\CapCut\Videos\muszelka_pliki\obce\oponka\modelka_2_modele
   global_suffix: ''
   id: generator_modelu_bazowego_modelka1_kopia
@@ -310,7 +220,6 @@ pic_flow:
   edge_blend_denoise: null
   scene_blend_cfg: null
   scene_blend_denoise: null
-
 - type: one_image_many_prompts
   name: modelka1_generator_póz
   source_dirs:
@@ -430,15 +339,6 @@ pic_flow:
         steps: 30
         cfg: 8
         denoise: 1
-  scene_dirs: []
-  characters_dirs: []
-  scene_slots: []
-  paste_slots: []
-  edge_blend_enabled: false
-  edge_blend_px: 15
-  edge_blend_prompts: []
-  scene_blend_enabled: false
-  scene_blend_prompts: []
   output_dir: C:\Users\abork\AppData\Local\CapCut\Videos\muszelka_pliki\obce\oponka\modelka_1_modele
   global_suffix: ''
   crop_to_subject: true
@@ -448,7 +348,6 @@ pic_flow:
   edge_blend_denoise: null
   scene_blend_cfg: null
   scene_blend_denoise: null
-
 - type: one_image_many_prompts
   name: modelka2_generator_póz
   output_dir: C:\Users\abork\AppData\Local\CapCut\Videos\muszelka_pliki\obce\oponka\modelka_2_modele
@@ -576,38 +475,26 @@ pic_flow:
   scene_image: ''
   character_images: []
   prompts: []
-  scene_dirs: []
-  characters_dirs: []
-  scene_slots: []
-  paste_slots: []
-  edge_blend_enabled: false
   edge_blend_positive: ''
   edge_blend_negative: ''
   edge_blend_params:
     steps: 30
     cfg: 8
     denoise: 0.6
-  edge_blend_px: 15
-  scene_blend_enabled: false
   scene_blend_positive: ''
   scene_blend_negative: ''
   scene_blend_params:
     steps: 30
     cfg: 8
     denoise: 0.4
-  edge_blend_prompts: []
-  scene_blend_prompts: []
   crop_to_subject: false
   pad_input_to_ratio: true
   edge_blend_cfg: null
   edge_blend_denoise: null
   scene_blend_cfg: null
   scene_blend_denoise: null
-
 - type: character_insert
   name: wstawianie_na_scene_free
-  source_dirs: []
-  image_slots: []
   scene_dirs:
   - C:\Users\abork\AppData\Local\CapCut\Videos\muszelka_pliki\obce\oponka\lokal
   - C:\Users\abork\AppData\Local\CapCut\Videos\muszelka_pliki\obce\oponka
@@ -630,6 +517,7 @@ pic_flow:
         steps: 30
         cfg: 8
         denoise: 1
+      mode: i2i
     - id: tmp_ci_1780381648032
       output_id: Iq54VAzuwAcT98WdIU
       enabled: true
@@ -641,6 +529,7 @@ pic_flow:
         steps: 30
         cfg: 8
         denoise: 1
+      mode: i2i
   - scene_image: lewy_tyl.jpeg
     character_images:
     - D7wwMSFD5aIGOqS6R3.png
@@ -656,6 +545,7 @@ pic_flow:
         steps: 30
         cfg: 8
         denoise: 1
+      mode: i2i
   - scene_image: maszyny_sciana.jpeg
     character_images:
     - 2yhhXR6gEUeSRuBgyA.png
@@ -671,6 +561,7 @@ pic_flow:
         steps: 30
         cfg: 8
         denoise: 1
+      mode: i2i
   - scene_image: maszyny_wywazarka.jpeg
     character_images:
     - L4LxdCMujXRQ0VonO7.png
@@ -686,10 +577,10 @@ pic_flow:
         steps: 30
         cfg: 8
         denoise: 1
+      mode: i2i
   output_dir: C:\Users\abork\AppData\Local\CapCut\Videos\muszelka_pliki\obce\oponka\postacie_na_scenie
   global_suffix: ''
   id: modelka_2_w_zakladzie
-  paste_slots: []
   blend_enabled: false
   blend_positive: ''
   blend_negative: ''
@@ -697,25 +588,14 @@ pic_flow:
     steps: 30
     cfg: 8
     denoise: 1
-  edge_blend_enabled: false
-  edge_blend_px: 15
-  edge_blend_prompts: []
-  scene_blend_enabled: false
-  scene_blend_prompts: []
   crop_to_subject: false
   pad_input_to_ratio: false
   edge_blend_cfg: null
   edge_blend_denoise: null
   scene_blend_cfg: null
   scene_blend_denoise: null
-
 - type: paste_character
   name: wstawianie_na_scene_fixed
-  source_dirs: []
-  image_slots: []
-  scene_dirs: []
-  characters_dirs: []
-  scene_slots: []
   output_dir: C:\Users\abork\AppData\Local\CapCut\Videos\muszelka_pliki\obce\oponka\postacie_na_scenie
   global_suffix: ''
   paste_slots:
@@ -729,8 +609,11 @@ pic_flow:
       x_center_pct: 31.0
       erode_px: 3
       blur_px: 2
+      preserve_alpha: false
       edge_blend_enabled: true
     scene_blend_enabled: true
+    sb_override: null
+    custom_passes: []
   - id: a1cf6942-11b5-4f18-b81b-ddf0bb9f9123
     output_id: 12266ef8-59ab-45c5-b8ff-8c71b70a14c1
     scene_image: C:\Users\abork\AppData\Local\CapCut\Videos\muszelka_pliki\obce\oponka\lokal\rzut z przodu.jpeg
@@ -741,6 +624,7 @@ pic_flow:
       x_center_pct: 32.0
       erode_px: 3
       blur_px: 2
+      preserve_alpha: false
       edge_blend_enabled: true
     - model_image: C:\Users\abork\AppData\Local\CapCut\Videos\muszelka_pliki\obce\oponka\modelka_2_modele\ImvIasuQ0xW95lzvko.png
       top_pct: 29.0
@@ -748,8 +632,11 @@ pic_flow:
       x_center_pct: 71.0
       erode_px: 3
       blur_px: 2
+      preserve_alpha: false
       edge_blend_enabled: true
     scene_blend_enabled: true
+    sb_override: null
+    custom_passes: []
   - id: 05f9627a-eacb-4954-a7bc-72cc10207bc5
     output_id: fe697c58-8296-4de4-b34b-21e4d3443518
     scene_image: C:\Users\abork\AppData\Local\CapCut\Videos\muszelka_pliki\obce\oponka\RmaJF2cJy9ZQp5Mv2g.png
@@ -760,8 +647,11 @@ pic_flow:
       x_center_pct: 78.0
       erode_px: 3
       blur_px: 2
+      preserve_alpha: false
       edge_blend_enabled: true
     scene_blend_enabled: true
+    sb_override: null
+    custom_passes: []
   - id: 659f58b4-5542-45bc-9339-b598f3ec74e6
     output_id: 61012b52-e6f1-4314-b7b7-562b25e6c4a4
     scene_image: C:\Users\abork\AppData\Local\CapCut\Videos\muszelka_pliki\obce\oponka\lokal\lewa sciana.jpeg
@@ -772,6 +662,7 @@ pic_flow:
       x_center_pct: 76.0
       erode_px: 3
       blur_px: 2
+      preserve_alpha: false
       edge_blend_enabled: true
     - model_image: C:\Users\abork\AppData\Local\CapCut\Videos\muszelka_pliki\obce\oponka\modelka_2_modele\HmMJsEFCwj5BznNFt7.png
       top_pct: 18.0
@@ -779,8 +670,11 @@ pic_flow:
       x_center_pct: 39.0
       erode_px: 3
       blur_px: 2
+      preserve_alpha: false
       edge_blend_enabled: false
     scene_blend_enabled: true
+    sb_override: null
+    custom_passes: []
   - id: 05d5481a-134a-47c1-b195-1b33aba3bf38
     output_id: 2a4a2dc0-b023-4437-a031-9cedc80ba5c8
     scene_image: C:\Users\abork\AppData\Local\CapCut\Videos\muszelka_pliki\obce\oponka\lokal\maszyny_wywazarka.jpeg
@@ -791,8 +685,11 @@ pic_flow:
       x_center_pct: 27.0
       erode_px: 3
       blur_px: 2
+      preserve_alpha: false
       edge_blend_enabled: true
     scene_blend_enabled: false
+    sb_override: null
+    custom_passes: []
   - id: 85d1fded-a998-4c85-9237-66fee03c8205
     output_id: 2b80c558-0d2e-4ac8-b55c-a5b08aa2ca26
     scene_image: C:\Users\abork\AppData\Local\CapCut\Videos\muszelka_pliki\obce\oponka\lokal\lewa sciana.jpeg
@@ -803,6 +700,7 @@ pic_flow:
       x_center_pct: 75.0
       erode_px: 3
       blur_px: 2
+      preserve_alpha: false
       edge_blend_enabled: true
     - model_image: C:\Users\abork\AppData\Local\CapCut\Videos\muszelka_pliki\obce\oponka\modelka_2_modele\GODtS0qhQtp9WEcOnM.png
       top_pct: 4.0
@@ -810,8 +708,11 @@ pic_flow:
       x_center_pct: 30.0
       erode_px: 3
       blur_px: 2
+      preserve_alpha: false
       edge_blend_enabled: true
     scene_blend_enabled: true
+    sb_override: null
+    custom_passes: []
   - id: 01ba5e1e-2b80-4c35-8bef-3ba1084282ca
     output_id: 4ed3f25e-fde1-4a6d-ad25-972e4ee3a22a
     scene_image: C:\Users\abork\AppData\Local\CapCut\Videos\muszelka_pliki\obce\oponka\lokal\lewa sciana.jpeg
@@ -822,6 +723,7 @@ pic_flow:
       x_center_pct: 77.0
       erode_px: 3
       blur_px: 2
+      preserve_alpha: false
       edge_blend_enabled: true
     - model_image: C:\Users\abork\AppData\Local\CapCut\Videos\muszelka_pliki\obce\oponka\modelka_2_modele\0GMeYWBx5qLvkE8VTq.png
       top_pct: 23.0
@@ -829,8 +731,11 @@ pic_flow:
       x_center_pct: 45.0
       erode_px: 3
       blur_px: 2
+      preserve_alpha: false
       edge_blend_enabled: true
     scene_blend_enabled: true
+    sb_override: null
+    custom_passes: []
   id: deterministycznie
   edge_blend_enabled: true
   edge_blend_px: 15
@@ -840,23 +745,31 @@ pic_flow:
     category: system
     name: Edge Blend — krawędzie postaci
     note: Pass 1 — inpainting w strefie maski (15px wokół sylwetki). Używany z ci_1ref (scena+maska + ref postaci).
-    positive: |-
-      You have two inputs: image 1 is the composited scene, image 2 is the original reference character. Using image 2 as reference, repair and improve the character in image 1. Fix all of the following:
+    positive: 'You have two inputs: image 1 is the composited scene, image 2 is the original reference character. Using image 2 as reference, repair and improve the character in image 1. Fix all of the following:
 
-      1. EDGES: Remove all hard cutout edges, halos and white fringing around the character's silhouette. Blend her edges naturally into the background — match local lighting, color temperature and depth of field. Pay special attention to: (a) hair edges — blend individual strands naturally into the background, remove any white or bright halo around the hair silhouette, make hair edges feather softly as if photographed in the same environment; (b) feet and floor contact — remove any white or light-colored residue where the feet meet the floor surface, replace it with the surrounding floor texture seamlessly.
 
-      2. BODY RECONSTRUCTION: Where parts of the character's body are blurry, incomplete, distorted or missing (e.g. blurry fingers, cut-off limbs, broken anatomy) — reconstruct them correctly using image 2 as the reference. Restore sharp, realistic anatomy.
+      1. EDGES: Remove all hard cutout edges, halos and white fringing around the character''s silhouette. Blend her edges naturally into the background — match local lighting, color temperature and depth of field. Pay special attention to: (a) hair edges — blend individual strands naturally into the background, remove any white or bright halo around the hair silhouette, make hair edges feather softly as if photographed in the same environment; (b) feet and floor contact — remove any white or light-colored residue where the feet meet the floor surface, replace it with the surrounding floor texture seamlessly.
 
-      3. SKIN AND DETAIL: Match the character's skin tone, sharpness and detail level to image 2. Remove any softness or blur on the character's body.
 
-      Do not move the character. Do not change her pose or position. Do not modify the background outside the character area. Preserve the character's face, clothing and identity exactly as in image 2.
+      2. BODY RECONSTRUCTION: Where parts of the character''s body are blurry, incomplete, distorted or missing (e.g. blurry fingers, cut-off limbs, broken anatomy) — reconstruct them correctly using image 2 as the reference. Restore sharp, realistic anatomy.
+
+
+      3. SKIN AND DETAIL: Match the character''s skin tone, sharpness and detail level to image 2. Remove any softness or blur on the character''s body.
+
+
+      Do not move the character. Do not change her pose or position. Do not modify the background outside the character area. Preserve the character''s face, clothing and identity exactly as in image 2.'
     negative: changed pose, moved character, different face, different clothing, background change, artifacts, distorted anatomy, color shift on character body, overexposed, underexposed, blurry fingers, missing limbs, broken anatomy, white halo around hair, bright fringe on hair, white patch under feet, white floor artifact, floating feet
     params:
       steps: 30
       cfg: 8
       denoise: 0.75
+      atlascloud_model: qwen/qwen-image-2.0-pro/edit
+      seed: -1
+      thinking_mode: false
+      wan_size: 2K
     enabled: true
     _editing: false
+    mode: i2i
   scene_blend_prompts:
   - id: p0000022
     category: system
@@ -868,15 +781,19 @@ pic_flow:
       steps: 30
       cfg: 8
       denoise: 0.4
+      atlascloud_model: qwen/qwen-image-2.0-pro/edit
+      seed: -1
+      thinking_mode: false
+      wan_size: 2K
     enabled: true
     _editing: true
+    mode: i2i
   crop_to_subject: false
   pad_input_to_ratio: false
   edge_blend_cfg: null
   edge_blend_denoise: 1.0
   scene_blend_cfg: null
   scene_blend_denoise: null
-
 - type: one_image_many_prompts
   name: Dorobki na finalnych filmach
   source_dirs:
@@ -895,19 +812,15 @@ pic_flow:
         steps: 30
         cfg: 8
         denoise: 1
-  scene_dirs: []
-  characters_dirs: []
-  scene_slots: []
-  paste_slots: []
-  edge_blend_enabled: false
-  edge_blend_px: 15
+        atlascloud_model: qwen/qwen-image-2.0-pro/edit
+        seed: -1
+        thinking_mode: false
+        wan_size: 2K
+      mode: i2i
   edge_blend_cfg: null
   edge_blend_denoise: null
-  edge_blend_prompts: []
-  scene_blend_enabled: false
   scene_blend_cfg: null
   scene_blend_denoise: null
-  scene_blend_prompts: []
   output_dir: C:\Users\abork\AppData\Local\CapCut\Videos\muszelka_pliki\obce\oponka\postacie_na_scenie
   global_suffix: ''
   crop_to_subject: false

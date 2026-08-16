@@ -4,7 +4,7 @@
 # Edit RUN_018_naked_warrior.yaml and regenerate with:
 #     from app.services.yaml_service import generate_py_from_yaml
 #     generate_py_from_yaml(Path("RUNS/RUN_018_naked_warrior.yaml"))
-# Generated: 2026-07-18 02:53:15
+# Generated: 2026-08-02 00:34:07
 # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 import sys
@@ -31,7 +31,7 @@ DEFAULT_RESOLUTION = (
 
 DEFAULT_BACKEND        = 'linux'
 DEFAULT_FPS            = 16
-DEFAULT_STEPS          = 6
+DEFAULT_STEPS          = 8
 DEFAULT_CFG            = 2
 DEFAULT_DURATION       = 2
 DEFAULT_BLOCKS_TO_SWAP      = 20
@@ -165,7 +165,6 @@ FLOW_FULL = [
         "chain_prefix": 'utrata napiersnika',
         'backend': 'linux',
         'fps': 16,
-        'steps': 6,
         'cfg': 2,
         'neg': 'static, frozen, no movement',
         'width': 704,
@@ -274,8 +273,10 @@ FLOW_FULL = [
         "chain": [
             {
                 'duration': 3,
-                'pos': "Dynamic 2-second action scene: a large monster aggressively grabs the woman's legs with one of his massive clawed hands and is leaning back. He doesn't catch woman belly breast and no other part of body. The woman desperately tries to crawl away towards the left side of the frame, struggling and attempting to get on all fours while being pulled back. Strong dynamic motion, realistic physics, intense struggle, cinematic camera angle, high detail, dramatic tension",
-                'neg': 'static pose, slow motion, woman standing, no grabbing, bad hand anatomy, deformed body, extra limbs, low quality, blurry motion, weak movement, cartoon, poor physics, monster not grabbing legs',
+                'pos': """Dynamic 2-second action scene: a large monster aggressively grabs the woman's both legs with one of his massive clawed hands and is leaning back. He doesn't catch woman belly breast, hands and no other part of body. The woman desperately tries to crawl away towards the left side of the frame, struggling and attempting to get on all fours while being pulled back. Strong dynamic motion, realistic physics, intense struggle, cinematic camera angle, high detail, dramatic tension
+static camera, fixed camera position, locked camera, no camera movement, no pan, no zoom, no camera drift""",
+                'neg': """static pose, slow motion, woman standing, no grabbing, bad hand anatomy, deformed body, extra limbs, low quality, blurry motion, weak movement, cartoon, poor physics, monster not grabbing legs
+camera movement, camera pan, camera zoom, camera drift, moving camera, handheld camera, shaky cam""",
                 'audio_prompt': 'metal impact, armor strike, sword clash, weapon hit, sharp blow, hard combat hit, physical impact foley, synchronized with video, crisp, high quality, realistic',
                 'audio_negative_prompt': 'music, melody, ambient drone, sustained atmosphere, continuous background, crowd noise, reverb heavy, low quality, distortion',
             },
@@ -290,7 +291,6 @@ FLOW_FULL = [
         "chain_prefix": 'utrata botow_1',
         'backend': 'linux',
         'fps': 16,
-        'steps': 6,
         'cfg': 2,
         'neg': 'static, frozen, no movement',
         'width': 704,
@@ -375,7 +375,6 @@ FLOW_FULL = [
         "chain_prefix": 'kontratak',
         'backend': 'linux',
         'fps': 16,
-        'steps': 6,
         'cfg': 2,
         'neg': 'static, frozen, no movement',
         'width': 704,
@@ -432,7 +431,6 @@ FLOW_FULL = [
         "chain_prefix": 'ucieczka',
         'backend': 'linux',
         'fps': 16,
-        'steps': 6,
         'cfg': 2,
         'neg': 'static, frozen, no movement',
         'width': 848,
@@ -477,7 +475,6 @@ FLOW_FULL = [
         "chain_prefix": 'bieg przez las',
         'backend': 'linux',
         'fps': 24,
-        'steps': 6,
         'cfg': 2,
         'neg': 'static, frozen, no movement',
         'width': 848,
@@ -636,7 +633,6 @@ FLOW_FULL = [
         "chain_prefix": 'doggy style',
         'backend': 'linux',
         'fps': 16,
-        'steps': 6,
         'cfg': 2,
         'neg': 'static, frozen, no movement',
         'width': 848,
@@ -657,7 +653,7 @@ FLOW_FULL = [
         "chain": [
             {
                 'duration': 4,
-                'pos': """The same woman now having sex in doggystyle position with the monster. From an overhead perspective, she is on all fours with her back facing the camera. A monster is positioned behind her has dark humongous hand with dark fur. his humongous hand with dark fur gripping her hips as he penetrates her from behind. The woman's expression changes throughout the scene, showing moments of pleasure and engagement with her partner. Her legs are spread apart with the man in-between her legs.
+                'pos': """The video begins with woman and monster on the picture. Monster's penis is outside the woman. Then scene jumpcut to the same woman and monster now having sex in doggystyle position with the monster's penis inside woman's vagina. From an overhead perspective, she is on all fours with her back facing the camera. A monster is positioned behind her has dark humongous hand with dark fur. his humongous hand with dark fur gripping her hips as he penetrates her from behind. The woman's expression changes throughout the scene, showing moments of pleasure and engagement with her partner. Her legs are spread apart with the man in-between her legs.
 
 she is looking directly at the camera fully facing it.
 
@@ -665,8 +661,8 @@ she looks back at the camera.
 
 she looks at the camera throughout the video.""",
                 'neg': 'side view only, back view, no eye contact, woman not looking at camera, static pose, weak thrusting, bad anatomy, deformed body, extra limbs, blurry motion, low quality, censored, clothes on, poor penetration, unrealistic scale, cartoon',
-                'audio_prompt': 'rhythmic skin-on-skin slapping, flesh impact sounds, body weight shifting, wet contact sounds, rhythmic thrusting foley, synchronized with video, crisp, high quality, realistic',
-                'audio_negative_prompt': 'music, melody, ambient drone, moaning, voice, sustained atmosphere, continuous background noise, low quality, distortion',
+                'audio_prompt': 'female moaning loud pleasure, rhythmic thrusting sounds, skin slapping wet impact, gasping breath, increasing intensity, climax vocal',
+                'audio_negative_prompt': 'music, melody, speech, words, lyrics, reverb, echo, distortion, cartoon, low quality',
                 'lora_high': 'WAN2.2_LoraSet/iGoon%2520-%2520Blink_Back_Doggystyle_HIGH.safetensors',
                 'lora_low': 'WAN2.2_LoraSet/iGoon%2520-%2520Blink_Back_Doggystyle_LOW.safetensors',
             },
@@ -682,18 +678,17 @@ she looks at the camera throughout the video.""",
                 'neg': 'side view only, back view, no eye contact, woman not looking at camera, static pose, weak thrusting, bad anatomy, deformed body, extra limbs, blurry motion, low quality, censored, clothes on, poor penetration, unrealistic scale, cartoon',
                 'lora_high': 'WAN2.2_LoraSet/iGoon%2520-%2520Blink_Back_Doggystyle_HIGH.safetensors',
                 'lora_low': 'WAN2.2_LoraSet/iGoon%2520-%2520Blink_Back_Doggystyle_LOW.safetensors',
-                'audio_prompt': 'rhythmic skin-on-skin slapping, flesh impact sounds, body weight shifting, wet contact sounds, rhythmic thrusting foley, synchronized with video, crisp, high quality, realistic',
-                'audio_negative_prompt': 'music, melody, ambient drone, moaning, voice, sustained atmosphere, continuous background noise, low quality, distortion',
+                'audio_prompt': 'female moaning loud pleasure, rhythmic thrusting sounds, skin slapping wet impact, gasping breath, increasing intensity, climax vocal',
+                'audio_negative_prompt': 'music, melody, speech, words, lyrics, reverb, echo, distortion, cartoon, low quality',
             },
         ],
         "chain_prefix": 'doggy style back',
         'backend': 'linux',
         'fps': 16,
-        'steps': 6,
         'cfg': 2,
         'neg': 'static, frozen, no movement',
-        'width': 848,
-        'height': 1280,
+        'width': 896,
+        'height': 1344,
         'frame_interpolation': False,
     },
 
@@ -710,7 +705,7 @@ she looks at the camera throughout the video.""",
         "chain": [
             {
                 'duration': 4,
-                'pos': """The video begins with a close-up of a fully nude woman and the monster. The video then jumpcuts to the same woman now having sex with a same monster with big dark muscular legs in squatting cowgirl position her face fills the screen she is leaning over forwards as she bounces up and down aggressively. Monster erect dark penis is in her vagina.
+                'pos': """Woman now having sex with a same monster with big dark muscular legs in squatting cowgirl position her face fills the screen she is leaning over forwards as she bounces up and down aggressively. Monster erect dark penis is in her vagina.
 
 she looks at the camera throughout the video.
 
@@ -718,16 +713,30 @@ The video is shot from above looking down on the scene.""",
                 'neg': 'fur on woman, woman with fur, furry legs, animal fur on skin, static, frozen, no movement stockings, thigh highs, socks, hosiery, legwear',
                 'lora_high': 'WAN2.2_LoraSet/Blink_Squatting_Cowgirl_Position_I2V_HIGH.safetensors',
                 'lora_low': 'WAN2.2_LoraSet/Blink_Squatting_Cowgirl_Position_I2V_LOW.safetensors',
+                'audio_prompt': 'female moaning loud pleasure, rhythmic thrusting sounds, skin slapping wet impact, gasping breath, increasing intensity, climax vocal',
+                'audio_negative_prompt': 'music, melody, speech, words, lyrics, reverb, echo, distortion, cartoon, low quality',
+            },
+            {
+                'duration': 4,
+                'pos': """Woman now having sex with a same monster with big dark muscular legs in squatting cowgirl position her face fills the screen she is leaning over forwards as she bounces up and down aggressively. Monster erect dark penis is in her vagina.
+
+she looks at the camera throughout the video.
+
+The video is shot from above looking down on the scene.""",
+                'neg': 'fur on woman, woman with fur, furry legs, animal fur on skin, static, frozen, no movement stockings, thigh highs, socks, hosiery, legwear',
+                'lora_high': 'WAN2.2_LoraSet/Blink_Squatting_Cowgirl_Position_I2V_HIGH.safetensors',
+                'lora_low': 'WAN2.2_LoraSet/Blink_Squatting_Cowgirl_Position_I2V_LOW.safetensors',
+                'audio_prompt': 'female moaning loud pleasure, rhythmic thrusting sounds, skin slapping wet impact, gasping breath, increasing intensity, climax vocal',
+                'audio_negative_prompt': 'music, melody, speech, words, lyrics, reverb, echo, distortion, cartoon, low quality',
             },
         ],
         "chain_prefix": 'Squatting Cowgirl',
         'backend': 'linux',
         'fps': 16,
-        'steps': 6,
         'cfg': 2,
         'neg': 'static, frozen, no movement',
-        'width': 848,
-        'height': 1280,
+        'width': 704,
+        'height': 1056,
     },
 
     {"break": True},
@@ -743,10 +752,10 @@ The video is shot from above looking down on the scene.""",
         "chain": [
             {
                 'duration': 5,
-                'pos': 'The video begins with a close-up of a woman and monster. The video then immiedately jumpcuts to the same woman now having sex in missionary position with the monster from image. She is lying on her back on the ground in the forest with her legs spread with her knees to her chest. A monster humonogous dark penis is visible entering her vagina from below. The monster is positioned kneeling between her legs infront of her thrusting his penis into her vagina. He has dark large muscular legs. Throughout the scene, she appears to be experiencing pleasure, often with her mouth open or eyes closed as she lies back. Her hands hold onto her thighs spreading her legs.',
+                'pos': 'Woman now having sex in missionary position with the monster from image. She is lying on her back on the ground in the forest with her legs spread with her knees to her chest. A monster humonogous dark penis is visible entering her vagina from below. The monster is positioned kneeling between her legs infront of her thrusting his penis into her vagina. He has dark large muscular legs. Throughout the scene, she appears to be experiencing pleasure, often with her mouth open or eyes closed as she lies back. Her hands hold onto her thighs spreading her legs.',
                 'neg': '',
-                'audio_prompt': 'rhythmic skin-on-skin slapping, flesh impact sounds, body weight shifting, wet contact sounds, rhythmic thrusting foley, synchronized with video, crisp, high quality, realistic',
-                'audio_negative_prompt': 'music, melody, ambient drone, moaning, voice, sustained atmosphere, continuous background noise, low quality, distortion',
+                'audio_prompt': 'female moaning loud pleasure, rhythmic thrusting sounds, skin slapping wet impact, gasping breath, increasing intensity, climax vocal',
+                'audio_negative_prompt': 'music, melody, speech, words, lyrics, reverb, echo, distortion, cartoon, low quality',
                 'lora_high': 'WAN2.2_LoraSet/iGoon%20-%20Blink_Missionary_I2V_HIGH.safetensors',
                 'lora_low': 'WAN2.2_LoraSet/iGoon%20-%20Blink_Missionary_I2V_LOW.safetensors',
             },
@@ -756,6 +765,8 @@ The video is shot from above looking down on the scene.""",
                 'neg': '',
                 'lora_high': 'WAN2.2_LoraSet/iGoon%20-%20Blink_Missionary_I2V_HIGH.safetensors',
                 'lora_low': 'WAN2.2_LoraSet/iGoon%20-%20Blink_Missionary_I2V_LOW.safetensors',
+                'audio_prompt': 'female moaning loud pleasure, rhythmic thrusting sounds, skin slapping wet impact, gasping breath, increasing intensity, climax vocal',
+                'audio_negative_prompt': 'music, melody, speech, words, lyrics, reverb, echo, distortion, cartoon, low quality',
             },
             {
                 'duration': 5,
@@ -763,12 +774,13 @@ The video is shot from above looking down on the scene.""",
                 'neg': '',
                 'lora_high': 'WAN2.2_LoraSet/iGoon_Blink_Missionary_I2V_HIGH%20v2.safetensors',
                 'lora_low': 'WAN2.2_LoraSet/iGoon%20-%20Blink_Missionary_I2V_LOW%20v2.safetensors',
+                'audio_prompt': 'female moaning loud pleasure, rhythmic thrusting sounds, skin slapping wet impact, gasping breath, increasing intensity, climax vocal',
+                'audio_negative_prompt': 'music, melody, speech, words, lyrics, reverb, echo, distortion, cartoon, low quality',
             },
         ],
         "chain_prefix": 'missionary',
         'backend': 'linux',
         'fps': 16,
-        'steps': 6,
         'cfg': 2,
         'neg': 'static, frozen, no movement',
         'width': 848,
@@ -800,7 +812,6 @@ The video is shot from above looking down on the scene.""",
         "chain_prefix": 'sexspoon',
         'backend': 'linux',
         'fps': 16,
-        'steps': 6,
         'cfg': 2,
         'neg': 'static, frozen, no movement',
         'width': 848,
@@ -834,7 +845,6 @@ The video is shot from above looking down on the scene.""",
         "chain_prefix": 'tit job',
         'backend': 'linux',
         'fps': 16,
-        'steps': 6,
         'cfg': 2,
         'neg': 'static, frozen, no movement',
         'width': 848,
@@ -855,7 +865,7 @@ The video is shot from above looking down on the scene.""",
         "chain": [
             {
                 'duration': 4,
-                'pos': """The video begins with a close-up of a woman. The video then jumpcuts to the same woman now kneeling between a monster's dark muscular legs and big dark feet with her upper body is bent forward over him, and her face is close to his lap. With one hand, she grasps the monsters humonogous erect penis and moves it up and down its shaft in a steady rhythm, performing the handjob. She goes through various facial expressions throughout the video from happy to gasping she looks like she is talking.
+                'pos': """Woman now kneeling between a monster's dark muscular legs and big dark feet with her upper body is bent forward over him, and her face is close to his lap. With one hand, she grasps the monsters humonogous erect penis and moves it up and down its shaft in a steady rhythm, performing the handjob. She goes through various facial expressions throughout the video from happy to gasping she looks like she is talking.
 
 She looks at the camera throughout the video
 
@@ -868,7 +878,6 @@ She man's feet are seen in the background""",
         "chain_prefix": 'hand job',
         'backend': 'linux',
         'fps': 16,
-        'steps': 6,
         'cfg': 2,
         'neg': 'static, frozen, no movement',
         'width': 848,
@@ -888,7 +897,7 @@ She man's feet are seen in the background""",
         "chain": [
             {
                 'duration': 4,
-                'pos': """The video begins with a close-up of a kneeling woman. The video then jumpcuts to the same woman now kneeling between a monster's muscular fur dark legs wihth bare dark feet with her upper body is bent forward over him, and her face is close to his lap. With one hand, she grasps the man's erect penis and moves it up and down its shaft in a steady rhythm, performing the handjob.  She goes through various facial expressions throughout the video from happy to gasping she looks like she is talking.
+                'pos': """Woman now kneeling between a monster's muscular fur dark legs wihth bare dark feet with her upper body is bent forward over him, and her face is close to his lap. With one hand, she grasps the man's erect penis and moves it up and down its shaft in a steady rhythm, performing the handjob.  She goes through various facial expressions throughout the video from happy to gasping she looks like she is talking.
 
 She looks at the camera throughout the video
 """,
@@ -902,7 +911,6 @@ She looks at the camera throughout the video
         "chain_prefix": 'Hand job blow job',
         'backend': 'linux',
         'fps': 16,
-        'steps': 6,
         'cfg': 2,
         'neg': 'static, frozen, no movement',
         'width': 848,
@@ -943,7 +951,6 @@ She looks at the camera throughout the video
         "chain_prefix": 'blow job',
         'backend': 'linux',
         'fps': 16,
-        'steps': 6,
         'cfg': 2,
         'neg': 'static, frozen, no movement',
         'width': 848,
@@ -980,7 +987,6 @@ She looks at the camera throughout the video
         "chain_prefix": 'grand finale',
         'backend': 'linux',
         'fps': 16,
-        'steps': 6,
         'cfg': 2,
         'neg': 'static, frozen, no movement',
         'width': 848,
@@ -1061,7 +1067,6 @@ She looks at the camera throughout the video
         "chain_prefix": 'wszystko splywa',
         'backend': 'linux',
         'fps': 16,
-        'steps': 6,
         'cfg': 2,
         'neg': 'static, frozen, no movement',
         'width': 848,
@@ -1147,7 +1152,6 @@ She looks at the camera throughout the video
         "chain_prefix": 'blaganie',
         'backend': 'linux',
         'fps': 16,
-        'steps': 6,
         'cfg': 2,
         'neg': 'static, frozen, no movement',
     },
@@ -1176,7 +1180,6 @@ She looks at the camera throughout the video
         "chain_prefix": 'znowu czysta',
         'backend': 'linux',
         'fps': 16,
-        'steps': 6,
         'cfg': 2,
         'neg': 'static, frozen, no movement',
         'width': 848,
@@ -1233,7 +1236,6 @@ She looks at the camera throughout the video
         "chain_prefix": 'happy end',
         'backend': 'linux',
         'fps': 16,
-        'steps': 6,
         'cfg': 2,
         'neg': 'static, frozen, no movement',
         'width': 848,
@@ -1289,7 +1291,6 @@ She looks at the camera throughout the video
         "chain_prefix": 'wznosi miecz',
         'backend': 'linux',
         'fps': 16,
-        'steps': 6,
         'cfg': 2,
         'neg': 'static, frozen, no movement',
         'frame_interpolation': False,
@@ -1350,7 +1351,6 @@ She looks at the camera throughout the video
         "chain_prefix": 'zbliżenie na brzuch',
         'backend': 'linux',
         'fps': 16,
-        'steps': 6,
         'cfg': 2,
         'neg': 'static, frozen, no movement',
         'frame_interpolation': False,
@@ -1380,7 +1380,6 @@ She looks at the camera throughout the video
         "chain_prefix": 'blow job_natural 1',
         'backend': 'linux',
         'fps': 16,
-        'steps': 6,
         'cfg': 2,
         'neg': 'static, frozen, no movement',
         'frame_interpolation': False,
@@ -1410,37 +1409,6 @@ She looks at the camera throughout the video
         "chain_prefix": 'blow job_natural 2',
         'backend': 'linux',
         'fps': 16,
-        'steps': 6,
-        'cfg': 2,
-        'neg': 'static, frozen, no movement',
-        'frame_interpolation': False,
-    },
-
-    {"break": True},
-
-    {
-        'file': '99.002 Natural.png',
-        'backend': 'linux',
-        'duration': 2,
-        'pos': 'NONE',
-        'neg': 'NONE',
-    },
-    {
-        "chain": [
-            {
-                'duration': 5,
-                'pos': "The video begins with a close-up of a woman and man. The video then immiedately jumpcuts to the same woman now having sex in missionary position with the man from image. She is lying on her back on the ground in the same restaurant with her legs spread with her knees to her chest. A man's penis is visible entering her vagina from below. The man is positioned kneeling between her legs infront of her thrusting his penis into her vagina. Throughout the scene, she appears to be experiencing pleasure, often with her mouth open or eyes closed as she lies back. Her hands hold onto her thighs spreading her legs.",
-                'neg': '',
-                'audio_prompt': 'female moaning loud pleasure, rhythmic thrusting sounds, skin slapping wet impact, gasping breath, increasing intensity, climax vocal',
-                'audio_negative_prompt': 'music, melody, speech, words, lyrics, reverb, echo, distortion, cartoon, low quality',
-                'lora_high': 'WAN2.2_LoraSet/iGoon%20-%20Blink_Missionary_I2V_HIGH.safetensors',
-                'lora_low': 'WAN2.2_LoraSet/iGoon%20-%20Blink_Missionary_I2V_LOW.safetensors',
-            },
-        ],
-        "chain_prefix": 'missionary_kopia',
-        'backend': 'linux',
-        'fps': 16,
-        'steps': 6,
         'cfg': 2,
         'neg': 'static, frozen, no movement',
         'frame_interpolation': False,
@@ -1470,7 +1438,6 @@ She looks at the camera throughout the video
         "chain_prefix": 'grand finale_natural_1',
         'backend': 'linux',
         'fps': 16,
-        'steps': 6,
         'cfg': 2,
         'neg': 'static, frozen, no movement',
     },

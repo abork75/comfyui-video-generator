@@ -16,6 +16,8 @@ backends:
         workflow_json: D:\streamlit_project\comfyui_integration\workflow_configs\talk_workflow_api.json
       multitalk:
         workflow_json: D:\streamlit_project\comfyui_integration\workflow_configs\multitalk_wanvideo_test_api.json
+      dubit:
+        workflow_json: D:\streamlit_project\comfyui_integration\workflow_configs\dubit_workflow_api.json
   windows:
     api_url: http://127.0.0.1:8190
     input_dir: D:\ComfyUI\input

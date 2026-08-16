@@ -1204,7 +1204,12 @@ def run_batch_generation(config):
                 # (no preceding transition ends here), a stale _real.png from a
                 # previous run with different config must not be used.
                 _real = _real_frame_path(Path(from_file).stem)
-                _has_prev_transition = any(p['to_file'] == from_file for p in pairs)
+                _has_prev_transition = (
+                    any(p['to_file'] == from_file for p in pairs)
+                    # flow_parser marks files that immediately follow a talk tile
+                    # (_is_talk pairs are not created so the normal check misses them)
+                    or from_config.get('_preceded_by_talk', False)
+                )
                 if _real.exists() and _has_prev_transition:
                     start_frame = _real
                     logger.info(f"  🎯 {Path(from_file).stem}: using _real.png as start frame")

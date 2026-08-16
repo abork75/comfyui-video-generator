@@ -4,7 +4,7 @@
 # Edit RUN_013 - evil queen punishment.yaml and regenerate with:
 #     from app.services.yaml_service import generate_py_from_yaml
 #     generate_py_from_yaml(Path("RUNS/RUN_013 - evil queen punishment.yaml"))
-# Generated: 2026-07-18 00:37:36
+# Generated: 2026-07-29 00:33:48
 # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 import sys
@@ -21,12 +21,12 @@ from batch_transitions import run_batch_generation
 PROJECT_FOLDER = 'C:\\Users\\abork\\AppData\\Local\\CapCut\\Videos\\dungeon_team\\film'
 
 FORCE_RESOLUTION = (
-    1024,
-    1024,
+    512,
+    512,
 )
 DEFAULT_RESOLUTION = (
-    1024,
-    1024,
+    512,
+    512,
 )
 
 DEFAULT_BACKEND        = 'linux'
@@ -65,8 +65,65 @@ USE_TEST_FLOW = False
 FLOW_FULL = [
     {
         'type': 'scene_break',
+        'name': 'NARADA',
+    },
+    {
+        'file': 'Narada_1.mp4',
+        'backend': 'linux',
+        'duration': 2,
+        'pos': 'NONE',
+        'neg': 'NONE',
+    },
+    {
+        'type': 'scene_break',
         'name': 'NOC W LOCHU',
     },
+    {
+        'file': 'Wizyta_0.mp4',
+        'backend': 'linux',
+        'duration': 3,
+        'pos': 'Woman approaches another woman',
+        'neg': 'NONE',
+        'width': 1024,
+        'height': 1024,
+    },
+    {
+        'file': 'Wizyta_1.png',
+        'backend': 'linux',
+        'duration': 4,
+        'pos': "Woman on left rises hand and touches chained woman's breast",
+        'neg': 'NONE',
+        'width': 1024,
+        'height': 1024,
+    },
+    {
+        'file': 'Wizyta_2.png',
+        'backend': 'linux',
+        'duration': 2,
+        'pos': 'NONE',
+        'neg': 'NONE',
+    },
+    {
+        "chain": [
+            {
+                'duration': 4,
+                'pos': 'Woman on left is leaving the dungeon, screen slowly fades to black after her leaving',
+                'neg': '',
+                'audio_prompt': 'subtle body movement, soft weight shift, quiet fabric rustle, gentle shuffling feet on floor, light position change, soft clothing sounds, natural movement foley, realistic, high quality',
+                'audio_negative_prompt': 'music, melody, ambient drone, loud impact, hard footsteps, slap, sustained atmosphere, low quality, distortion',
+            },
+        ],
+        "chain_prefix": 'opuszcza loch',
+        'backend': 'linux',
+        'fps': 16,
+        'cfg': 2,
+        'neg': 'static, frozen, no movement',
+        'width': 1024,
+        'height': 1024,
+    },
+
+    {"break": True},
+
     {
         'file': 'Crossed_3.png',
         'backend': 'linux',
@@ -79,7 +136,8 @@ FLOW_FULL = [
         'backend': 'linux',
         'duration': 5,
         'pos': 'cinematic 5-second video sequence, woman chained to stone wall with arms and legs spread wide in X position, heavy metal chains, dynamically and decisively struggling and yanking against restraints with forceful body movements, intense determined expression, start frame close-up from mid-breasts downward showing lower torso hips and spread legs, end frame showing full breasts and face with smooth upward camera movement from lower body to upper body, dramatic lighting, high detail, anatomical correctness',
-        'neg': 'NONE',
+        'neg': 'fabric movement, rippling cloth, moving wrinkles, animated texture, oscillating patterns, clothing movement, texture flickering, static camera, no camera movement, frozen pose',
+        'use_lightning': False,
     },
     {
         'file': 'Crossed_2.png',

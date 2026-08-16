@@ -80,6 +80,7 @@ class AtlasCloudVideoBackend(BaseBackend):
         width, height,
         blocks_to_swap=None, frame_interpolation=None,
         lora_name=None, lora_strength=None,
+        **kwargs,
     ):
         """
         Override BaseBackend — maps I2V/I2V2I to AtlasCloud /generateVideo.

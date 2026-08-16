@@ -240,6 +240,40 @@ class FlowParser:
                 prev_config = talk_config
                 continue
 
+            # ===== DUBIT =====
+            if isinstance(item, dict) and item.get('type') == 'dubit':
+                explicit_prefix = (item.get('prefix') or '').strip()
+                if explicit_prefix:
+                    virtual_file = f"dubit_{explicit_prefix}.mp4"
+                else:
+                    raw_audio = item.get('audio', '')
+                    if isinstance(raw_audio, list):
+                        first = raw_audio[0] if raw_audio else 'unknown'
+                    else:
+                        first = raw_audio
+                    if isinstance(first, dict):
+                        first = first.get('file', 'unknown')
+                    stem = Path(first).stem
+                    virtual_file = f"dubit_{stem}.mp4"
+
+                dubit_config = {**item, '_is_dubit': True, '_source_image': prev_file}
+                current_segment.add_file(virtual_file, dubit_config)
+                self.all_files.append(FlowFile(virtual_file, dubit_config))
+
+                if prev_file:
+                    pair = TransitionPair(
+                        from_file=prev_file,
+                        to_file=virtual_file,
+                        from_config=prev_config or {},
+                        to_config=dubit_config,
+                    )
+                    current_segment.add_transition(pair)
+                    self.all_transitions.append(pair)
+
+                prev_file = virtual_file
+                prev_config = dubit_config
+                continue
+
             # ===== MULTITALK =====
             if isinstance(item, dict) and item.get('type') == 'multitalk':
                 clip_name = (item.get('name') or '').strip()
@@ -269,15 +303,16 @@ class FlowParser:
                 # Add transition pair only when appropriate:
                 # - File → File (normal bridge)
                 # - Chain_last → File only if transition_to_next is set on last step
-                # - Talk → File: NO bridge (talk clips cut to next scene by default)
-                #   (future: add bridge if talk has explicit 'transition:' config)
+                # - Talk / Dubit → File: NO bridge (clips cut directly to next scene)
+                _prev_is_talk = False
                 if prev_file:
                     _prev_is_talk  = (prev_config or {}).get('_is_talk', False)
+                    _prev_is_dubit = (prev_config or {}).get('_is_dubit', False)
                     _prev_is_chain = (prev_config or {}).get('_is_chain', False)
 
                     _should_pair = True
-                    if _prev_is_talk:
-                        _should_pair = False  # talk → file: always cut (chain snaps via end frame)
+                    if _prev_is_talk or _prev_is_dubit:
+                        _should_pair = False  # talk/dubit → file: always cut
                     elif _prev_is_chain:
                         # chain → file: bridge only when explicitly requested
                         _should_pair = bool((prev_config or {}).get('transition_to_next'))
@@ -305,7 +340,12 @@ class FlowParser:
                         self.all_transitions.append(pair)
                 
                 prev_file = current_file
-                prev_config = current_config
+                # Propagate talk-predecessor info so batch_transitions can trust
+                # _real.png written by talk_service for this file.
+                if _prev_is_talk:
+                    prev_config = {**current_config, '_preceded_by_talk': True}
+                else:
+                    prev_config = current_config
         
         # Save last segment
         if current_segment.files:

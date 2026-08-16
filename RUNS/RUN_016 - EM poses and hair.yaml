@@ -95,7 +95,6 @@ flow:
       neg: ""
     backend: linux
     fps: 16
-    steps: 6
     cfg: 2
     neg: |-
       static, frozen, no movement
@@ -143,7 +142,6 @@ flow:
       neg: ""
     backend: linux
     fps: 16
-    steps: 6
     cfg: 2
     neg: |-
       static, frozen, no movement
@@ -185,7 +183,6 @@ flow:
         static whip, no rotation, minimal movement, deformed whip, rubbery motion, stiff whip, bad physics, blurry rotation, low detail, floating without spinning, jerky movement, unnatural bending, artifacts, plastic texture, changed shape
     backend: linux
     fps: 16
-    steps: 6
     cfg: 2
     neg: |-
       static, frozen, no movement

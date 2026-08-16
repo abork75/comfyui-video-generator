@@ -4,7 +4,7 @@
 # Edit RUN_000 - templates.yaml and regenerate with:
 #     from app.services.yaml_service import generate_py_from_yaml
 #     generate_py_from_yaml(Path("RUNS/RUN_000 - templates.yaml"))
-# Generated: 2026-07-21 10:08:24
+# Generated: 2026-08-11 08:52:40
 # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 import sys
@@ -31,7 +31,7 @@ DEFAULT_RESOLUTION = (
 
 DEFAULT_BACKEND        = 'linux'
 DEFAULT_FPS            = 16
-DEFAULT_STEPS          = 6
+DEFAULT_STEPS          = 8
 DEFAULT_CFG            = 2
 DEFAULT_DURATION       = 2
 DEFAULT_BLOCKS_TO_SWAP      = 20
@@ -79,7 +79,7 @@ FLOW_FULL = [
             {
                 'duration': 4,
                 'pos': "The video begins with a close-up of a woman - Than video jumpcut to scene with same woman is lying on her side, legs slightly bent. A man lying behind her in spooning position, vigorously fucking her from behind. Strong, deep, rhythmic penetration, man's hips thrusting forward against her ass. Clear side view showing the woman's face in profile, breasts exposed and bouncing with each thrust, open mouth, eyes rolling back, intense pleasure and overwhelm expression, heavy breathing. Man's hand gripping her hip and waist tightly, holding her against his body, dynamic and powerful sex motion, detailed anatomy, realistic penetration, dramatic lighting, high detail, erotic atmosphere",
-                'neg': '',
+                'neg': 'side view only, back view, no eye contact, woman not looking at camera, static pose, weak thrusting, bad anatomy, deformed body, extra limbs, blurry motion, low quality, censored, clothes on, poor penetration, unrealistic scale, cartoon',
                 'lora_high': 'WAN2.2_LoraSet/mql_casting_sex_spoon_wan22_i2v_v1_high_noise.safetensors',
                 'lora_low': 'WAN2.2_LoraSet/mql_casting_sex_spoon_wan22_i2v_v1_low_noise.safetensors',
                 'audio_prompt': 'rhythmic skin-on-skin slapping, flesh impact sounds, body weight shifting, wet contact sounds, rhythmic thrusting foley, synchronized with video, crisp, high quality, realistic',
@@ -92,37 +92,25 @@ FLOW_FULL = [
                 'lora_high': 'WAN2.2_LoraSet/iGoon%20-%20Blink_Front_Doggystyle_I2V_HIGH.safetensors',
                 'lora_low': 'WAN2.2_LoraSet/iGoon%20-%20Blink_Front_Doggystyle_I2V_LOW.safetensors',
             },
-        ],
-        "chain_prefix": 'sexspoon doggy',
-        'backend': 'linux',
-        'fps': 16,
-        'steps': 6,
-        'cfg': 2,
-        'neg': 'static, frozen, no movement',
-    },
-
-    {
-        "chain": [
             {
                 'duration': 3,
-                'pos': """The same woman now having sex in doggystyle position with the man. From an overhead perspective, she is on all fours with her back facing the camera. A man is positioned behind her. his hand gripping her hips as he penetrates her from behind. The woman's expression changes throughout the scene, showing moments of pleasure and engagement with her partner. Her legs are spread apart with the man in-between her legs.
+                'pos': """The video begins with a close-up of a woman. Than video jumpcut to scene with same woman now having sex in doggystyle position with the man. From an overhead perspective, she is on all fours with her back facing the camera. A man is positioned behind her. his hand gripping her hips as he penetrates her from behind. The woman's expression changes throughout the scene, showing moments of pleasure and engagement with her partner. Her legs are spread apart with the man in-between her legs.
 
 she is looking directly at the camera fully facing it.
 
 she looks back at the camera.
 
-she looks at the camera throughout the video.""",
+she looks at the camera throughout the video. same background as the first frame, tile floor, beige walls, restaurant setting with patrons.""",
                 'neg': 'side view only, back view, no eye contact, woman not looking at camera, static pose, weak thrusting, bad anatomy, deformed body, extra limbs, blurry motion, low quality, censored, clothes on, poor penetration, unrealistic scale, cartoon',
-                'audio_prompt': 'rhythmic skin-on-skin slapping, flesh impact sounds, body weight shifting, wet contact sounds, rhythmic thrusting foley, synchronized with video, crisp, high quality, realistic',
-                'audio_negative_prompt': 'music, melody, ambient drone, moaning, voice, sustained atmosphere, continuous background noise, low quality, distortion',
+                'audio_prompt': 'female moaning loud pleasure, rhythmic thrusting sounds, skin slapping wet impact, gasping breath, increasing intensity, climax vocal',
+                'audio_negative_prompt': 'music, melody, speech, words, lyrics, reverb, echo, distortion, cartoon, low quality',
                 'lora_high': 'WAN2.2_LoraSet/iGoon%2520-%2520Blink_Back_Doggystyle_HIGH.safetensors',
                 'lora_low': 'WAN2.2_LoraSet/iGoon%2520-%2520Blink_Back_Doggystyle_LOW.safetensors',
             },
         ],
-        "chain_prefix": 'doggyback',
+        "chain_prefix": 'sexspoon doggy',
         'backend': 'linux',
         'fps': 16,
-        'steps': 6,
         'cfg': 2,
         'neg': 'static, frozen, no movement',
     },
@@ -155,7 +143,6 @@ The video is shot from above looking down on the scene.""",
         "chain_prefix": 'SquatCowgirl missionary',
         'backend': 'linux',
         'fps': 16,
-        'steps': 6,
         'cfg': 2,
         'neg': 'static, frozen, no movement',
     },
@@ -197,7 +184,7 @@ She looks at the camera throughout the video
                 'audio_negative_prompt': 'music, melody, ambient drone, moaning, voice, sustained atmosphere, continuous background noise, low quality, distortion',
             },
             {
-                'duration': 5,
+                'duration': 4,
                 'pos': 'The video then jumpcuts to the same woman giving a blowjob to the same man standing in the same location. Only penis of man is visible. She is kneeling in front of him, looking up as she performs the blowjob. She is holding the man penis with both hands. She looks at the camera the entire time. She shoves the man penis deep in her mouth, sucking intensely with visible effort, saliva dripping, cheeks hollowed. Dynamic oral sex, high detail, explicit, realistic anatomy and size difference',
                 'neg': 'bad anatomy, deformed penis, extra limbs, blurry, low quality, censored, small penis, no saliva, closed mouth, no eye contact, bad hand position, teeth visible, static pose, cartoon, plastic skin, poor connection, weak motion',
                 'audio_prompt': 'wet mouth sounds, oral suction, saliva dripping, lips sliding, rhythmic sucking and slurping, oral motion foley, synchronized with video, crisp, high quality, realistic',
@@ -206,7 +193,7 @@ She looks at the camera throughout the video
                 'lora_low': 'WAN2.2_LoraSet/iGOON_Blink_Blowjob_I2V_LOW.safetensors',
             },
             {
-                'duration': 5,
+                'duration': 4,
                 'pos': "The video begins with a close-up of a woman. The video then jumpcuts to the same woman now receiving a facial from a man's penis. She is kneeling on the floor looking up with a open mouth. The cum shoots all over her face. The man's hand holds his erect penis masturbating his penis and shooting the thick white cum directly onto her face, forehead, eyes, cheek and mouth. The thick white cum slowly drips down her face onto her body. An explosion of thick white cum blasts her face. she looks directly at the camera throughout the video.",
                 'neg': '',
                 'lora_high': 'WAN2.2_LoraSet/iGoon%2520-%2520Blink_Facial_I2V_HIGH.safetensors',
@@ -227,7 +214,286 @@ She looks at the camera throughout the video
         "chain_prefix": 'titjob_hndjob_blwhnd_blow_finale',
         'backend': 'linux',
         'fps': 16,
-        'steps': 6,
+        'cfg': 2,
+        'neg': 'static, frozen, no movement',
+        'frame_interpolation': False,
+    },
+
+    {
+        'type': 'scene_break',
+        'name': 'ONE MINUTE NTSW FACE KEEP',
+    },
+    {
+        'file': '99.004 Natural.png',
+        'backend': 'linux',
+        'duration': 2,
+        'pos': 'NONE',
+        'neg': 'NONE',
+    },
+    {
+        "chain": [
+            {
+                'duration': 4,
+                'pos': "The video begins with a close-up of a woman - Than video jumpcut to scene with same woman is lying on her side, legs slightly bent. A man lying behind her in spooning position, vigorously fucking her from behind. Strong, deep, rhythmic penetration, man's hips thrusting forward against her ass. Clear side view showing the woman's face in profile, breasts exposed and bouncing with each thrust, open mouth, eyes rolling back, intense pleasure and overwhelm expression, heavy breathing. Man's hand gripping her hip and waist tightly, holding her against his body, dynamic and powerful sex motion, detailed anatomy, realistic penetration, dramatic lighting, high detail, erotic atmosphere",
+                'neg': 'side view only, back view, no eye contact, woman not looking at camera, static pose, weak thrusting, bad anatomy, deformed body, extra limbs, blurry motion, low quality, censored, clothes on, poor penetration, unrealistic scale, cartoon',
+                'lora_high': 'WAN2.2_LoraSet/mql_casting_sex_spoon_wan22_i2v_v1_high_noise.safetensors',
+                'lora_low': 'WAN2.2_LoraSet/mql_casting_sex_spoon_wan22_i2v_v1_low_noise.safetensors',
+                'audio_prompt': 'rhythmic skin-on-skin slapping, flesh impact sounds, body weight shifting, wet contact sounds, rhythmic thrusting foley, synchronized with video, crisp, high quality, realistic',
+                'audio_negative_prompt': 'music, melody, ambient drone, moaning, voice, sustained atmosphere, continuous background noise, low quality, distortion',
+            },
+            {
+                'duration': 3,
+                'pos': "Woman is lying on her side, legs slightly bent. A man lying behind her in spooning position, vigorously fucking her from behind. Strong, deep, rhythmic penetration, man's hips thrusting forward against her ass. Clear side view showing the woman's face in profile, breasts exposed and bouncing with each thrust, open mouth, eyes rolling back, intense pleasure and overwhelm expression, heavy breathing. Man's hand gripping her hip and waist tightly, holding her against his body, dynamic and powerful sex motion, detailed anatomy, realistic penetration, dramatic lighting, high detail, erotic atmosphere",
+                'neg': 'rhythmic skin-on-skin slapping, flesh impact sounds, body weight shifting, wet contact sounds, rhythmic thrusting foley, synchronized with video, crisp, high quality, realistic',
+                'lora_high': 'WAN2.2_LoraSet/mql_casting_sex_spoon_wan22_i2v_v1_high_noise.safetensors',
+                'lora_low': 'WAN2.2_LoraSet/mql_casting_sex_spoon_wan22_i2v_v1_low_noise.safetensors',
+            },
+        ],
+        "chain_prefix": 'Sexspoon FK',
+        'backend': 'linux',
+        'fps': 16,
+        'cfg': 2,
+        'neg': 'static, frozen, no movement',
+    },
+
+    {"break": True},
+
+    {
+        'file': '99.004 Natural.png',
+        'backend': 'linux',
+        'duration': 2,
+        'pos': 'NONE',
+        'neg': 'NONE',
+    },
+    {
+        "chain": [
+            {
+                'duration': 3,
+                'pos': "The video begins with a close-up of a woman. Jumpcut to a same woman kneeling on all fours on the ground, back arched. A naked man standing behind her and vigorously fucking her in doggystyle position. Strong, deep, rhythmic penetration, man's hips slamming against her ass. Clear front view showing the woman's face, breasts hanging and bouncing with each thrust, open mouth, wide eyes, intense pleasure and overwhelm expression, heavy breathing. Man's hands gripping her waist tightly, dynamic and powerful sex motion, detailed anatomy, realistic penetration, forest setting, dramatic lighting, high detail, erotic atmosphere",
+                'neg': 'side view, back view, wrong camera angle, no penetration, bad anatomy, deformed body, extra limbs, blurry, low quality, censored, clothes on, monster not behind her, weak motion, static pose, cartoon, floating, unrealistic scale, poor connection between bodies',
+                'lora_high': 'WAN2.2_LoraSet/iGoon%20-%20Blink_Front_Doggystyle_I2V_HIGH.safetensors',
+                'lora_low': 'WAN2.2_LoraSet/iGoon%20-%20Blink_Front_Doggystyle_I2V_LOW.safetensors',
+            },
+            {
+                'duration': 3,
+                'pos': "Woman kneeling on all fours on the ground, back arched. A naked man standing behind her and vigorously fucking her in doggystyle position. Strong, deep, rhythmic penetration, man's hips slamming against her ass. Clear front view showing the woman's face, breasts hanging and bouncing with each thrust, open mouth, wide eyes, intense pleasure and overwhelm expression, heavy breathing. Man's hands gripping her waist tightly, dynamic and powerful sex motion, detailed anatomy, realistic penetration, forest setting, dramatic lighting, high detail, erotic atmosphere",
+                'neg': 'side view, back view, wrong camera angle, no penetration, bad anatomy, deformed body, extra limbs, blurry, low quality, censored, clothes on, monster not behind her, weak motion, static pose, cartoon, floating, unrealistic scale, poor connection between bodies',
+                'audio_prompt': 'female moaning loud pleasure, rhythmic thrusting sounds, skin slapping wet impact, gasping breath, increasing intensity, climax vocal',
+                'audio_negative_prompt': 'music, melody, speech, words, lyrics, reverb, echo, distortion, cartoon, low quality',
+                'lora_high': 'WAN2.2_LoraSet/iGoon%20-%20Blink_Front_Doggystyle_I2V_HIGH.safetensors',
+                'lora_low': 'WAN2.2_LoraSet/iGoon%20-%20Blink_Front_Doggystyle_I2V_LOW.safetensors',
+            },
+        ],
+        "chain_prefix": 'Doggy FK',
+        'backend': 'linux',
+        'fps': 16,
+        'cfg': 2,
+        'neg': 'static, frozen, no movement',
+    },
+
+    {"break": True},
+
+    {
+        'file': '99.004 Natural.png',
+        'backend': 'linux',
+        'duration': 2,
+        'pos': 'NONE',
+        'neg': 'NONE',
+    },
+    {
+        "chain": [
+            {
+                'duration': 3,
+                'pos': """The video begins with a close-up of a woman. Than video jumpcut to scene with same woman now having sex in doggystyle position with the man. From an overhead perspective, she is on all fours with her back facing the camera. A man is positioned behind her. his hand gripping her hips as he penetrates her from behind. The woman's expression changes throughout the scene, showing moments of pleasure and engagement with her partner. Her legs are spread apart with the man in-between her legs.
+
+she is looking directly at the camera fully facing it.
+
+she looks back at the camera.
+
+she looks at the camera throughout the video. same background as the first frame.""",
+                'neg': 'side view only, back view, no eye contact, woman not looking at camera, static pose, weak thrusting, bad anatomy, deformed body, extra limbs, blurry motion, low quality, censored, clothes on, poor penetration, unrealistic scale, cartoon',
+                'lora_high': 'WAN2.2_LoraSet/iGoon%2520-%2520Blink_Back_Doggystyle_HIGH.safetensors',
+                'lora_low': 'WAN2.2_LoraSet/iGoon%2520-%2520Blink_Back_Doggystyle_LOW.safetensors',
+            },
+            {
+                'duration': 3,
+                'pos': """Woman now having sex in doggystyle position with the man. From an overhead perspective, she is on all fours with her back facing the camera. A man is positioned behind her. his hand gripping her hips as he penetrates her from behind. The woman's expression changes throughout the scene, showing moments of pleasure and engagement with her partner. Her legs are spread apart with the man in-between her legs.
+
+she is looking directly at the camera fully facing it.
+
+she looks back at the camera.
+
+she looks at the camera throughout the video. same background as the first frame.""",
+                'neg': 'side view only, back view, no eye contact, woman not looking at camera, static pose, weak thrusting, bad anatomy, deformed body, extra limbs, blurry motion, low quality, censored, clothes on, poor penetration, unrealistic scale, cartoon',
+                'lora_high': 'WAN2.2_LoraSet/iGoon%2520-%2520Blink_Back_Doggystyle_HIGH.safetensors',
+                'lora_low': 'WAN2.2_LoraSet/iGoon%2520-%2520Blink_Back_Doggystyle_LOW.safetensors',
+            },
+        ],
+        "chain_prefix": 'Back doggy FK',
+        'backend': 'linux',
+        'fps': 16,
+        'cfg': 2,
+        'neg': 'static, frozen, no movement',
+    },
+
+    {"break": True},
+
+    {
+        'file': '99.004 Natural.png',
+        'backend': 'linux',
+        'duration': 2,
+        'pos': 'NONE',
+        'neg': 'NONE',
+    },
+    {
+        "chain": [
+            {
+                'duration': 4,
+                'pos': """The video begins with a close-up of a fully nude woman. The video then jumpcuts to the same woman now having sex with a same man in squatting cowgirl position her face fills the screen she is leaning over forwards as she bounces up and down aggressively. Man erect penis is in her vagina.
+
+she looks at the camera throughout the video.
+
+The video is shot from above looking down on the scene.""",
+                'neg': 'static, frozen, thigh highs, socks, hosiery, legwear',
+                'lora_high': 'WAN2.2_LoraSet/Blink_Squatting_Cowgirl_Position_I2V_HIGH.safetensors',
+                'lora_low': 'WAN2.2_LoraSet/Blink_Squatting_Cowgirl_Position_I2V_LOW.safetensors',
+                'audio_prompt': 'rhythmic skin-on-skin slapping, flesh impact sounds, body weight shifting, wet contact sounds, rhythmic thrusting foley, synchronized with video, crisp, high quality, realistic',
+                'audio_negative_prompt': 'music, melody, ambient drone, moaning, voice, sustained atmosphere, continuous background noise, low quality, distortion',
+            },
+            {
+                'duration': 3,
+                'pos': """Woman now having sex with a same man in squatting cowgirl position her face fills the screen she is leaning over forwards as she bounces up and down aggressively. Man erect penis is in her vagina.
+
+she looks at the camera throughout the video.
+
+The video is shot from above looking down on the scene.""",
+                'neg': '',
+                'lora_high': 'WAN2.2_LoraSet/iGoon%20-%20Blink_Missionary_I2V_HIGH.safetensors',
+                'lora_low': 'WAN2.2_LoraSet/iGoon%20-%20Blink_Missionary_I2V_LOW.safetensors',
+                'audio_prompt': 'rhythmic skin-on-skin slapping, flesh impact sounds, body weight shifting, wet contact sounds, rhythmic thrusting foley, synchronized with video, crisp, high quality, realistic',
+                'audio_negative_prompt': 'music, melody, ambient drone, moaning, voice, sustained atmosphere, continuous background noise, low quality, distortion',
+            },
+        ],
+        "chain_prefix": 'SquatCowgirl ',
+        'backend': 'linux',
+        'fps': 16,
+        'cfg': 2,
+        'neg': 'static, frozen, no movement',
+    },
+
+    {"break": True},
+
+    {
+        'file': '99.004 Natural.png',
+        'backend': 'linux',
+        'duration': 2,
+        'pos': 'NONE',
+        'neg': 'NONE',
+    },
+    {
+        "chain": [
+            {
+                'duration': 4,
+                'pos': "The video begins with a close-up of a woman and man. The video then immiedately jumpcuts to the same woman now having sex in missionary position with the man from image. She is lying on her back on the ground with her legs spread with her knees to her chest hands on the floor. A man's penis is visible entering her vagina from below. The man is positioned kneeling between her legs infront of her thrusting his penis into her vagina. Throughout the scene, she appears to be experiencing pleasure, often with her mouth open or eyes closed as she lies back. Her hands hold onto her thighs spreading her legs.",
+                'neg': 'static, frozen, thigh highs, socks, hosiery, legwear',
+                'lora_high': 'WAN2.2_LoraSet/Blink_Squatting_Cowgirl_Position_I2V_HIGH.safetensors',
+                'lora_low': 'WAN2.2_LoraSet/Blink_Squatting_Cowgirl_Position_I2V_LOW.safetensors',
+                'audio_prompt': 'rhythmic skin-on-skin slapping, flesh impact sounds, body weight shifting, wet contact sounds, rhythmic thrusting foley, synchronized with video, crisp, high quality, realistic',
+                'audio_negative_prompt': 'music, melody, ambient drone, moaning, voice, sustained atmosphere, continuous background noise, low quality, distortion',
+            },
+            {
+                'duration': 3,
+                'pos': "Woman now having sex in missionary position with the man from image. She is lying on her back on the ground with her legs spread with her knees to her chest hands on the floor. A man's penis is visible entering her vagina from below. The man is positioned kneeling between her legs infront of her thrusting his penis into her vagina. Throughout the scene, she appears to be experiencing pleasure, often with her mouth open or eyes closed as she lies back. Her hands hold onto her thighs spreading her legs.",
+                'neg': '',
+                'lora_high': 'WAN2.2_LoraSet/iGoon%20-%20Blink_Missionary_I2V_HIGH.safetensors',
+                'lora_low': 'WAN2.2_LoraSet/iGoon%20-%20Blink_Missionary_I2V_LOW.safetensors',
+                'audio_prompt': 'rhythmic skin-on-skin slapping, flesh impact sounds, body weight shifting, wet contact sounds, rhythmic thrusting foley, synchronized with video, crisp, high quality, realistic',
+                'audio_negative_prompt': 'music, melody, ambient drone, moaning, voice, sustained atmosphere, continuous background noise, low quality, distortion',
+            },
+        ],
+        "chain_prefix": 'Missionary FK2',
+        'backend': 'linux',
+        'fps': 16,
+        'cfg': 2,
+        'neg': 'static, frozen, no movement',
+    },
+
+    {"break": True},
+
+    {
+        'file': '99.004 Natural.png',
+        'backend': 'linux',
+        'duration': 2,
+        'pos': 'NONE',
+        'neg': 'NONE',
+    },
+    {
+        "chain": [
+            {
+                'duration': 3,
+                'pos': "The video begins with a close-up of a fully nude woman. The video then jumpcuts to the same woman now lying down in same background as the first frame, stone tile floor, building wall with her breasts positioned around the man's erect penis as he thrusts his penis up and down in a titjob motion sliding it between her breasts. she makes various facial expressions during the video she looks like she is talking and has her eyes wide open with a crazy expression. ",
+                'neg': '',
+                'audio_prompt': 'wet mouth sounds, oral suction, saliva dripping, lips sliding, rhythmic sucking and slurping, oral motion foley, synchronized with video, crisp, high quality, realistic',
+                'audio_negative_prompt': 'music, melody, ambient drone, moaning, voice, sustained atmosphere, continuous background noise, low quality, distortion',
+                'lora_high': 'WAN2.2_LoraSet/iGoon_Blink_Titjob_I2V_HIGH.safetensors',
+                'lora_low': 'WAN2.2_LoraSet/iGoon_Blink_Titjob_I2V_LOW.safetensors',
+            },
+            {
+                'duration': 3,
+                'pos': """The video then jumpcuts to the same woman now kneeling between a man's legs and feet with her upper body is bent forward over him, and her face is close to his lap. With one hand, she grasps the man's penis and moves it up and down its shaft in a steady rhythm, performing the handjob. She goes through various facial expressions throughout the video from happy to gasping she looks like she is talking.
+
+She looks at the camera throughout the video
+
+Man's feet are seen in the background""",
+                'neg': '',
+                'audio_prompt': 'wet mouth sounds, oral suction, saliva dripping, lips sliding, rhythmic sucking and slurping, oral motion foley, synchronized with video, crisp, high quality, realistic',
+                'audio_negative_prompt': 'music, melody, ambient drone, moaning, voice, sustained atmosphere, continuous background noise, low quality, distortion',
+                'lora_high': 'WAN2.2_LoraSet/iGoon%20-%20Blink_Handjob_I2V_HIGH.safetensors',
+                'lora_low': 'WAN2.2_LoraSet/iGoon%20-%20Blink_Handjob_I2V_LOW.safetensors',
+            },
+            {
+                'duration': 3,
+                'pos': """The video then jumpcuts to the same woman now kneeling between a man's legs with her upper body is bent forward over him, and her face is close to his lap. With one hand, she grasps the man's erect penis and moves it up and down its shaft in a steady rhythm, performing the handjob.  She goes through various facial expressions throughout the video from happy to gasping she looks like she is talking.
+
+She looks at the camera throughout the video
+""",
+                'neg': '',
+                'lora_high': 'WAN2.2_LoraSet/WAN-2.2-I2V-HandjobBlowjobCombo-HIGH-v1.safetensors',
+                'lora_low': 'WAN2.2_LoraSet/WAN-2.2-I2V-HandjobBlowjobCombo-LOW-v1.safetensors',
+                'audio_prompt': 'wet mouth sounds, oral suction, saliva dripping, lips sliding, rhythmic sucking and slurping, oral motion foley, synchronized with video, crisp, high quality, realistic',
+                'audio_negative_prompt': 'music, melody, ambient drone, moaning, voice, sustained atmosphere, continuous background noise, low quality, distortion',
+            },
+            {
+                'duration': 4,
+                'pos': 'The video then jumpcuts to the same woman giving a blowjob to the same man standing in the same location. Only penis of man is visible. She is kneeling in front of him, looking up as she performs the blowjob. She is holding the man penis with both hands. She looks at the camera the entire time. She shoves the man penis deep in her mouth, sucking intensely with visible effort, saliva dripping, cheeks hollowed. Dynamic oral sex, high detail, explicit, realistic anatomy and size difference',
+                'neg': 'bad anatomy, deformed penis, extra limbs, blurry, low quality, censored, small penis, no saliva, closed mouth, no eye contact, bad hand position, teeth visible, static pose, cartoon, plastic skin, poor connection, weak motion',
+                'audio_prompt': 'wet mouth sounds, oral suction, saliva dripping, lips sliding, rhythmic sucking and slurping, oral motion foley, synchronized with video, crisp, high quality, realistic',
+                'audio_negative_prompt': 'music, melody, ambient drone, moaning, voice, sustained atmosphere, continuous background noise, low quality, distortion',
+                'lora_high': 'WAN2.2_LoraSet/iGOON_Blink_Blowjob_I2V_HIGH.safetensors',
+                'lora_low': 'WAN2.2_LoraSet/iGOON_Blink_Blowjob_I2V_LOW.safetensors',
+            },
+            {
+                'duration': 4,
+                'pos': "The video begins with a close-up of a woman. The video then jumpcuts to the same woman now receiving a facial from a man's penis. She is kneeling on the floor looking up with a open mouth. The cum shoots all over her face. The man's hand holds his erect penis masturbating his penis and shooting the thick white cum directly onto her face, forehead, eyes, cheek and mouth. The thick white cum slowly drips down her face onto her body. An explosion of thick white cum blasts her face. she looks directly at the camera throughout the video.",
+                'neg': '',
+                'lora_high': 'WAN2.2_LoraSet/iGoon%2520-%2520Blink_Facial_I2V_HIGH.safetensors',
+                'lora_low': 'WAN2.2_LoraSet/iGoon%2520-%2520Blink_Facial_I2V_LOW.safetensors',
+                'audio_prompt': 'wet splashing sounds, thick liquid impact, fluid spray, viscous liquid dripping and hitting skin, wet surface contact, synchronized with video, crisp, high quality, realistic',
+                'audio_negative_prompt': 'music, melody, ambient drone, moaning, voice, sustained atmosphere, continuous background noise, low quality, distortion',
+            },
+            {
+                'duration': 3,
+                'pos': "Woman now receiving a facial from a man's penis. She is kneeling on the floor looking up with a open mouth. The cum shoots all over her face. The man's hand holds his erect penis masturbating his penis and shooting the thick white cum directly onto her face, forehead, eyes, cheek and mouth. The thick white cum slowly drips down her face onto her body.",
+                'neg': '',
+                'lora_high': 'WAN2.2_LoraSet/iGoon%2520-%2520Blink_Facial_I2V_HIGH.safetensors',
+                'lora_low': 'WAN2.2_LoraSet/iGoon%2520-%2520Blink_Facial_I2V_LOW.safetensors',
+                'audio_prompt': 'wet splashing sounds, thick liquid impact, fluid spray, viscous liquid dripping and hitting skin, wet surface contact, synchronized with video, crisp, high quality, realistic',
+                'audio_negative_prompt': 'music, melody, ambient drone, moaning, voice, sustained atmosphere, continuous background noise, low quality, distortion',
+            },
+        ],
+        "chain_prefix": 'titjob_hndjob_blwhnd_blow_finale FK',
+        'backend': 'linux',
+        'fps': 16,
         'cfg': 2,
         'neg': 'static, frozen, no movement',
         'frame_interpolation': False,
@@ -278,7 +544,6 @@ she looks at the camera throughout the video.""",
         "chain_prefix": 'doggyback 2',
         'backend': 'linux',
         'fps': 16,
-        'steps': 6,
         'cfg': 2,
         'neg': 'static, frozen, no movement',
     },
@@ -301,7 +566,7 @@ she looks at the camera throughout the video.""",
     {
         "chain": [
             {
-                'duration': 5,
+                'duration': 4,
                 'pos': """Create a short, seductive video from this image:
 
 She begins a slow, provocative erotic dance – very confident and bold. She sways her hips in wide, circular, teasing movements, rolling them seductively forward and backward, accentuating every curve of her body.
@@ -318,7 +583,7 @@ Camera: static medium-wide shot at first, then slowly zooms in slightly during t
                 'neg': '',
             },
             {
-                'duration': 5,
+                'duration': 4,
                 'pos': """Create a short, erotic video from this image:
 
 She slowly turns her back to the camera, facing away completely.
@@ -362,16 +627,14 @@ Camera work:
                 'neg': '',
             },
             {
-                'duration': 3,
-                'pos': """Create a 10-second hyper-detailed cinematic erotic dance video, 8K realistic animation, 60fps smooth motion.
-
+                'duration': 5,
+                'pos': """Create a 5-second hyper-detailed cinematic erotic dance video, 8K realistic animation, 60fps smooth motion.
 Scene setup:
-
-Precise 10-second sequence focusing purely on body movements:
-0-2s: Places both hands behind head, elbows wide, hips sway seductively side-to-side, chest thrust forward.
-2-4s: Slowly pivots 180 degrees turning back to camera, arches back, pushes buttocks out prominently.
-4-7s: Maintains rear pose, circles hips/ass in wide deliberate rolls, adds short teasing up-down bounces making buttocks jiggle enticingly.
-7-10s: Swings back to face camera, intense eye contact, hands glide provocatively over breasts, down stomach to caress inner thighs and intimate areas through fabric.
+Precise 5-second sequence focusing purely on body movements:
+0-1s: Places both hands behind head, elbows wide, hips sway seductively side-to-side, chest thrust forward.
+1-2s: Slowly pivots 180 degrees turning back to camera, arches back, pushes buttocks out prominently.
+3-4s: Maintains rear pose, circles hips/ass in wide deliberate rolls, adds short teasing up-down bounces making buttocks jiggle enticingly.
+5s: Swings back to face camera, intense eye contact, hands glide provocatively over breasts, down stomach to caress inner thighs and intimate areas through fabric.
 Camera: Static medium shot eye-level, subtle zoom to hips during rear section, full body visible. Fluid natural motions only, high detail.""",
                 'neg': '',
             },
@@ -379,13 +642,12 @@ Camera: Static medium shot eye-level, subtle zoom to hips during rear section, f
         "chain_prefix": 'Erotic dance 1 part 1',
         'backend': 'linux',
         'fps': 16,
-        'steps': 6,
         'cfg': 2,
         'neg': 'static, frozen, no movement',
     },
 
     {
-        'file': '99.001 Natural.png',
+        'file': '99.002 Natural.png',
         'backend': 'linux',
         'duration': 2,
         'pos': 'NONE',
@@ -396,23 +658,23 @@ Camera: Static medium shot eye-level, subtle zoom to hips during rear section, f
     {
         "chain": [
             {
-                'duration': 5,
-                'pos': """A sensual female dancer performs an intimate, slow-motion erotic dance in a luxurious dimly lit bedroom, 10-second cinematic video with fluid progression.
+                'duration': 4,
+                'pos': """A sensual female dancer performs an intimate, slow-motion erotic dancem, 4-second cinematic video with fluid progression.
 
 Action sequence (smooth 10-second progression at 24fps, slow-motion 0.25x speed):
 • 0-3s: Starts in a standing pose facing camera at 45-degree angle, hands slowly rising from hips, tracing up her sides with fingertips grazing ribs, then cupping and caressing her full breasts sensually, arching back slightly as camera orbits clockwise from low angle to emphasize cleavage and curve of torso
-• 3-6s: Hands glide downward in fluid waves over her toned abdomen, fingers splaying and pressing into soft skin, body undulating in hypnotic hip sways, camera pulls back to medium shot tracking her movements, side lighting casting erotic highlights on muscles flexing
-• 6-10s: Hands descend teasingly between her thighs, one palm pressing inward while the other traces inner legs, knees bending into a deep sensual squat with legs parting slowly, head tilting back in pleasure; camera dolly zooms in from front low angle to intimate close-up on hands and face, ending with a lingering hold""",
+• 1-2s: Hands glide downward in fluid waves over her toned abdomen, fingers splaying and pressing into soft skin, body undulating in hypnotic hip sways, camera pulls back to medium shot tracking her movements, side lighting casting erotic highlights on muscles flexing
+• 3-4s: Hands descend teasingly between her thighs, one palm pressing inward while the other traces inner legs, knees bending into a deep sensual squat with legs parting slowly, head tilting back in pleasure; camera dolly zooms in from front low angle to intimate close-up on hands and face, ending with a lingering hold""",
                 'neg': '',
             },
             {
-                'duration': 5,
-                'pos': """A provocative erotic dancer finishes her routine with a graceful rightward turn and exit, 5-second cinematic video featuring STRICTLY STATIC CAMERA - no movement, pans, or orbits; dancer simply rotates and walks off-frame with poise, nothing more.
+                'duration': 4,
+                'pos': """A provocative erotic dancer finishes her routine with a graceful rightward turn and exit, 4-second cinematic video featuring STRICTLY STATIC CAMERA - no movement, pans, or orbits; dancer simply rotates and walks off-frame with poise, nothing more.
 
 Action sequence (precise 5-second progression at 24fps, fluid slow-motion 0.25x; STATIC CAMERA ONLY):
 • 0-2s (Beginning): Stands center-frame facing camera at slight angle, exhales from performance, arms dropping naturally; slowly pivots clockwise on heels, turning rightward with elegant hip shift
-• 2-4s (Development): Completes 180-degree turn facing right edge of frame, body elongated gracefully, hair cascading over shoulder; takes two poised steps forward
-• 4-5s (End): Glides smoothly out of frame right with final sway, leaving empty space center; static frame holds on vacated spot with lingering light trails
+• 1-2s (Development): Completes 180-degree turn facing right edge of frame, body elongated gracefully, hair cascading over shoulder; takes two poised steps forward
+• 3-4s (End): Glides smoothly out of frame right with final sway, leaving empty space center; static frame holds on vacated spot with lingering light trails
 
 Camera and movement:
 • STRICTLY STATIC LOCKED-OFF CAMERA at fixed medium-wide angle, eye-level height, no panning, tilting, zooming, or tracking - dancer moves through frame naturally
@@ -426,7 +688,671 @@ Cinematic hyper-realistic 8K resolution, HDR high contrast, precise motion blur 
         "chain_prefix": 'Erotic dance 1 part 2',
         'backend': 'linux',
         'fps': 16,
-        'steps': 6,
+        'cfg': 2,
+        'neg': 'static, frozen, no movement',
+    },
+
+    {
+        'type': 'scene_break',
+        'name': 'PEE TEST',
+    },
+    {
+        'file': '99.005 Natural.png',
+        'backend': 'linux',
+        'duration': 2,
+        'pos': 'NONE',
+        'neg': 'NONE',
+    },
+    {
+        "chain": [
+            {
+                'duration': 3,
+                'pos': 'a woman, jumpcut, after the transition, she is nude lying on her back with her legs back, she is pissing on her own face',
+                'neg': 'pissing from mouth, deformed genitals, protruding, distorted anatomy',
+                'lora_high': 'WAN2.2_LoraSet/WAN2.2-I2V_HighNoise_I2Pee-V4.safetensors',
+                'lora_low': 'WAN2.2_LoraSet/WAN2.2-I2V_LowNoise_I2Pee-V4.safetensors',
+            },
+        ],
+        "chain_prefix": 'pee 1',
+        'backend': 'linux',
+        'fps': 16,
+        'cfg': 2,
+        'neg': 'static, frozen, no movement',
+        'width': 704,
+        'height': 1056,
+    },
+
+    {"break": True},
+
+    {
+        'file': '99.005 Natural.png',
+        'backend': 'linux',
+        'duration': 2,
+        'pos': 'NONE',
+        'neg': 'NONE',
+    },
+    {
+        "chain": [
+            {
+                'duration': 3,
+                'pos': 'a woman, jumpcut, after the transition, she is nude on all fours, a nude man is standing in front of her, he is holding his penis and pissing into her mouth',
+                'neg': 'pissing from mouth, deformed genitals, protruding, distorted anatomy',
+                'lora_high': 'WAN2.2_LoraSet/WAN2.2-I2V_HighNoise_I2Pee-V4.safetensors',
+                'lora_low': 'WAN2.2_LoraSet/WAN2.2-I2V_LowNoise_I2Pee-V4.safetensors',
+            },
+        ],
+        "chain_prefix": 'pee 2',
+        'backend': 'linux',
+        'fps': 16,
+        'cfg': 2,
+        'neg': 'static, frozen, no movement',
+        'width': 704,
+        'height': 1056,
+    },
+
+    {"break": True},
+
+    {
+        'file': '99.005 Natural.png',
+        'backend': 'linux',
+        'duration': 2,
+        'pos': 'NONE',
+        'neg': 'NONE',
+    },
+    {
+        "chain": [
+            {
+                'duration': 3,
+                'pos': 'a woman, jumpcut, after the transition, she is nude sitting with her legs spread, she is pissing on the ground',
+                'neg': 'pissing from mouth, deformed genitals, protruding, distorted anatomy',
+                'lora_high': 'WAN2.2_LoraSet/WAN2.2-I2V_HighNoise_I2Pee-V4.safetensors',
+                'lora_low': 'WAN2.2_LoraSet/WAN2.2-I2V_LowNoise_I2Pee-V4.safetensors',
+            },
+        ],
+        "chain_prefix": 'pee 3',
+        'backend': 'linux',
+        'fps': 16,
+        'cfg': 2,
+        'neg': 'static, frozen, no movement',
+        'width': 704,
+        'height': 1056,
+    },
+
+    {"break": True},
+
+    {
+        'file': '99.005 Natural.png',
+        'backend': 'linux',
+        'duration': 2,
+        'pos': 'NONE',
+        'neg': 'NONE',
+    },
+    {
+        "chain": [
+            {
+                'duration': 3,
+                'pos': "woman, jumpcut, after the transition, the man is nude sitting down, the woman is nude sitting on his lap, he is grabbing her neck, she is grabbing the man's penis, while they are tongue kissing, the man is pissing on her chest",
+                'neg': 'pissing from mouth, deformed genitals, protruding, distorted anatomy',
+                'lora_high': 'WAN2.2_LoraSet/WAN2.2-I2V_HighNoise_I2Pee-V4.safetensors',
+                'lora_low': 'WAN2.2_LoraSet/WAN2.2-I2V_LowNoise_I2Pee-V4.safetensors',
+            },
+        ],
+        "chain_prefix": 'pee 4',
+        'backend': 'linux',
+        'fps': 16,
+        'cfg': 2,
+        'neg': 'static, frozen, no movement',
+        'width': 704,
+        'height': 1056,
+    },
+
+    {"break": True},
+
+    {
+        'type': 'scene_break',
+        'name': 'BACKDOGGY',
+    },
+    {
+        'file': '99.004 Natural.png',
+        'backend': 'linux',
+        'duration': 2,
+        'pos': 'NONE',
+        'neg': 'NONE',
+    },
+    {
+        "chain": [
+            {
+                'duration': 3,
+                'pos': """The video begins with a close-up of a woman. Than video jumpcut to scene with same woman now having sex in doggystyle position with the man. From an overhead perspective, she is on all fours with her back facing the camera. A man is positioned behind her. his hand gripping her hips as he penetrates her from behind. The woman's expression changes throughout the scene, showing moments of pleasure and engagement with her partner. Her legs are spread apart with the man in-between her legs.
+
+she is looking directly at the camera fully facing it.
+
+she looks back at the camera.
+
+she looks at the camera throughout the video. same background as the first frame, tile floor, beige walls, restaurant setting with patrons.""",
+                'neg': 'side view only, back view, no eye contact, woman not looking at camera, static pose, weak thrusting, bad anatomy, deformed body, extra limbs, blurry motion, low quality, censored, clothes on, poor penetration, unrealistic scale, cartoon',
+                'lora_high': 'WAN2.2_LoraSet/iGoon%2520-%2520Blink_Back_Doggystyle_HIGH.safetensors',
+                'lora_low': 'WAN2.2_LoraSet/iGoon%2520-%2520Blink_Back_Doggystyle_LOW.safetensors',
+            },
+            {
+                'duration': 3,
+                'pos': """Woman now having sex in doggystyle position with the man. From an overhead perspective, she is on all fours with her back facing the camera. A man is positioned behind her. his hand gripping her hips as he penetrates her from behind. The woman's expression changes throughout the scene, showing moments of pleasure and engagement with her partner. Her legs are spread apart with the man in-between her legs.
+
+she is looking directly at the camera fully facing it.
+
+she looks back at the camera.
+
+she looks at the camera throughout the video. same background as the first frame, tile floor, beige walls, restaurant setting with patrons.""",
+                'neg': 'side view only, back view, no eye contact, woman not looking at camera, static pose, weak thrusting, bad anatomy, deformed body, extra limbs, blurry motion, low quality, censored, clothes on, poor penetration, unrealistic scale, cartoon',
+                'lora_high': 'WAN2.2_LoraSet/iGoon%2520-%2520Blink_Back_Doggystyle_HIGH.safetensors',
+                'lora_low': 'WAN2.2_LoraSet/iGoon%2520-%2520Blink_Back_Doggystyle_LOW.safetensors',
+            },
+        ],
+        "chain_prefix": 'Back doggy simple',
+        'backend': 'linux',
+        'fps': 16,
+        'cfg': 2,
+        'neg': 'static, frozen, no movement',
+    },
+
+    {"break": True},
+
+    {
+        'type': 'scene_break',
+        'name': '99.016 ONE MINUTE NSFW FACE KEEP, V2',
+    },
+    {
+        'file': '99.016 Natural.png',
+        'backend': 'linux',
+        'duration': 2,
+        'pos': 'NONE',
+        'neg': 'NONE',
+    },
+    {
+        "chain": [
+            {
+                'duration': 4,
+                'pos': "The video begins with a close-up of a woman - Than video jumpcut to scene with same woman is lying on her side, legs slightly bent. A man lying behind her in spooning position, vigorously fucking her from behind. Strong, deep, rhythmic penetration, man's hips thrusting forward against her ass. Clear side view showing the woman's face in profile, breasts exposed and bouncing with each thrust, open mouth, eyes rolling back, intense pleasure and overwhelm expression, heavy breathing. Man's hand gripping her hip and waist tightly, holding her against his body, dynamic and powerful sex motion, detailed anatomy, realistic penetration, dramatic lighting, high detail, erotic atmosphere same background as the first frame.",
+                'neg': 'side view only, back view, no eye contact, woman not looking at camera, static pose, weak thrusting, bad anatomy, deformed body, extra limbs, blurry motion, low quality, censored, clothes on, poor penetration, unrealistic scale, cartoon',
+                'lora_high': 'WAN2.2_LoraSet/mql_casting_sex_spoon_wan22_i2v_v1_high_noise.safetensors',
+                'lora_low': 'WAN2.2_LoraSet/mql_casting_sex_spoon_wan22_i2v_v1_low_noise.safetensors',
+                'audio_prompt': 'female moaning loud pleasure, rhythmic thrusting sounds, skin slapping wet impact, gasping breath, increasing intensity, climax vocal',
+                'audio_negative_prompt': 'music, melody, speech, words, lyrics, reverb, echo, distortion, cartoon, low quality',
+            },
+            {
+                'duration': 3,
+                'pos': "Woman is lying on her side, legs slightly bent. A man lying behind her in spooning position, vigorously fucking her from behind. Strong, deep, rhythmic penetration, man's hips thrusting forward against her ass. Clear side view showing the woman's face in profile, breasts exposed and bouncing with each thrust, open mouth, eyes rolling back, intense pleasure and overwhelm expression, heavy breathing. Man's hand gripping her hip and waist tightly, holding her against his body, dynamic and powerful sex motion, detailed anatomy, realistic penetration, dramatic lighting, high detail, erotic atmosphere same background as the first frame.",
+                'neg': 'side view, back view, wrong camera angle, no penetration, bad anatomy, deformed body, extra limbs, blurry, low quality, censored, clothes on, monster not behind her, weak motion, static pose, cartoon, floating, unrealistic scale, poor connection between bodies',
+                'lora_high': 'WAN2.2_LoraSet/mql_casting_sex_spoon_wan22_i2v_v1_high_noise.safetensors',
+                'lora_low': 'WAN2.2_LoraSet/mql_casting_sex_spoon_wan22_i2v_v1_low_noise.safetensors',
+                'audio_prompt': 'female moaning loud pleasure, rhythmic thrusting sounds, skin slapping wet impact, gasping breath, increasing intensity, climax vocal',
+                'audio_negative_prompt': 'music, melody, speech, words, lyrics, reverb, echo, distortion, cartoon, low quality',
+            },
+        ],
+        "chain_prefix": 'Sexspoon FK_99_016_ONE_MINUTE_NSFW_FACE_KEEP V2_kopia',
+        'backend': 'linux',
+        'fps': 16,
+        'cfg': 2,
+        'neg': 'static, frozen, no movement',
+    },
+
+    {"break": True},
+
+    {
+        'file': '99.016 Natural.png',
+        'backend': 'linux',
+        'duration': 2,
+        'pos': 'NONE',
+        'neg': 'NONE',
+    },
+    {
+        "chain": [
+            {
+                'duration': 2.5,
+                'pos': "The video begins with a close-up of a woman. Jumpcut to a same woman kneeling on all fours on the ground, back arched. A naked man standing behind her and vigorously fucking her in doggystyle position. Strong, deep, rhythmic penetration, man's hips slamming against her ass. Clear front view showing the woman's face, breasts hanging and bouncing with each thrust, open mouth, wide eyes, intense pleasure and overwhelm expression, heavy breathing. Man's hands gripping her waist tightly, dynamic and powerful sex motion, detailed anatomy, realistic penetration, forest setting, dramatic lighting, high detail, erotic atmosphere same background as the first frame",
+                'neg': 'side view, back view, wrong camera angle, no penetration, bad anatomy, deformed body, extra limbs, blurry, low quality, censored, clothes on, monster not behind her, weak motion, static pose, cartoon, floating, unrealistic scale, poor connection between bodies',
+                'lora_high': 'WAN2.2_LoraSet/iGoon%20-%20Blink_Front_Doggystyle_I2V_HIGH.safetensors',
+                'lora_low': 'WAN2.2_LoraSet/iGoon%20-%20Blink_Front_Doggystyle_I2V_LOW.safetensors',
+                'audio_prompt': 'female moaning loud pleasure, rhythmic thrusting sounds, skin slapping wet impact, gasping breath, increasing intensity, climax vocal',
+                'audio_negative_prompt': 'music, melody, speech, words, lyrics, reverb, echo, distortion, cartoon, low quality',
+            },
+            {
+                'duration': 3,
+                'pos': "Woman kneeling on all fours on the ground, back arched. A naked man standing behind her and vigorously fucking her in doggystyle position. Strong, deep, rhythmic penetration, man's hips slamming against her ass. Clear front view showing the woman's face, breasts hanging and bouncing with each thrust, open mouth, wide eyes, intense pleasure and overwhelm expression, heavy breathing. Man's hands gripping her waist tightly, dynamic and powerful sex motion, detailed anatomy, realistic penetration, forest setting, dramatic lighting, high detail, erotic atmosphere same background as the first frame",
+                'neg': 'side view only, back view, no eye contact, woman not looking at camera, static pose, weak thrusting, bad anatomy, deformed body, extra limbs, blurry motion, low quality, censored, clothes on, poor penetration, unrealistic scale, cartoon',
+                'audio_prompt': 'female moaning loud pleasure, rhythmic thrusting sounds, skin slapping wet impact, gasping breath, increasing intensity, climax vocal',
+                'audio_negative_prompt': 'music, melody, speech, words, lyrics, reverb, echo, distortion, cartoon, low quality',
+                'lora_high': 'WAN2.2_LoraSet/iGoon%20-%20Blink_Front_Doggystyle_I2V_HIGH.safetensors',
+                'lora_low': 'WAN2.2_LoraSet/iGoon%20-%20Blink_Front_Doggystyle_I2V_LOW.safetensors',
+            },
+        ],
+        "chain_prefix": 'Doggy FK_99_016_ONE_MINUTE_NSFW_FACE_KEEP V2_kopia',
+        'backend': 'linux',
+        'fps': 16,
+        'cfg': 2,
+        'neg': 'static, frozen, no movement',
+        'use_lightning': True,
+    },
+
+    {"break": True},
+
+    {
+        'file': 'C:\\Users\\abork\\AppData\\Local\\CapCut\\Videos\\__DEVIANT ART\\Modelki_igraszki\\99.016 Natural.png',
+        'backend': 'linux',
+        'duration': 2,
+        'pos': 'NONE',
+        'neg': 'NONE',
+    },
+    {
+        "chain": [
+            {
+                'duration': 3,
+                'pos': """The video begins with a close-up of a woman. Than video jumpcut to scene with same woman now having sex in doggystyle position with the man. From an overhead perspective, she is on all fours with her back facing the camera. A man is positioned behind her. his hand gripping her hips as he penetrates her from behind. The woman's expression changes throughout the scene, showing moments of pleasure and engagement with her partner. Her legs are spread apart with the man in-between her legs.
+
+she is looking directly at the camera fully facing it.
+
+she looks back at the camera.
+
+she looks at the camera throughout the video. same background as the first frame.""",
+                'neg': 'side view only, back view, no eye contact, woman not looking at camera, static pose, weak thrusting, bad anatomy, deformed body, extra limbs, blurry motion, low quality, censored, clothes on, poor penetration, unrealistic scale, cartoon',
+                'lora_high': 'WAN2.2_LoraSet/iGoon%2520-%2520Blink_Back_Doggystyle_HIGH.safetensors',
+                'lora_low': 'WAN2.2_LoraSet/iGoon%2520-%2520Blink_Back_Doggystyle_LOW.safetensors',
+                'audio_prompt': 'female moaning loud pleasure, rhythmic thrusting sounds, skin slapping wet impact, gasping breath, increasing intensity, climax vocal',
+                'audio_negative_prompt': 'music, melody, speech, words, lyrics, reverb, echo, distortion, cartoon, low quality',
+            },
+            {
+                'duration': 3,
+                'pos': """Woman now having sex in doggystyle position with the man. From an overhead perspective, she is on all fours with her back facing the camera. A man is positioned behind her. his hand gripping her hips as he penetrates her from behind. The woman's expression changes throughout the scene, showing moments of pleasure and engagement with her partner. Her legs are spread apart with the man in-between her legs.
+
+she is looking directly at the camera fully facing it.
+
+she looks back at the camera.
+
+she looks at the camera throughout the video. same background as the first frame.""",
+                'neg': 'side view only, back view, no eye contact, woman not looking at camera, static pose, weak thrusting, bad anatomy, deformed body, extra limbs, blurry motion, low quality, censored, clothes on, poor penetration, unrealistic scale, cartoon',
+                'lora_high': 'WAN2.2_LoraSet/iGoon%2520-%2520Blink_Back_Doggystyle_HIGH.safetensors',
+                'lora_low': 'WAN2.2_LoraSet/iGoon%2520-%2520Blink_Back_Doggystyle_LOW.safetensors',
+                'audio_prompt': 'female moaning loud pleasure, rhythmic thrusting sounds, skin slapping wet impact, gasping breath, increasing intensity, climax vocal',
+                'audio_negative_prompt': 'music, melody, speech, words, lyrics, reverb, echo, distortion, cartoon, low quality',
+            },
+        ],
+        "chain_prefix": 'Backdoggy FK_99_016_ONE_MINUTE_NSFW_FACE_KEEP V2_kopia',
+        'backend': 'linux',
+        'fps': 16,
+        'cfg': 2,
+        'neg': 'static, frozen, no movement',
+    },
+
+    {"break": True},
+
+    {
+        'file': '99.016 Natural.png',
+        'backend': 'linux',
+        'duration': 2,
+        'pos': 'NONE',
+        'neg': 'NONE',
+    },
+    {
+        "chain": [
+            {
+                'duration': 4,
+                'pos': """The video begins with a close-up of a fully nude woman. The video then jumpcuts to the same woman now having sex with a same man in squatting cowgirl position her face fills the screen she is leaning over forwards as she bounces up and down aggressively. Man erect penis is in her vagina.
+
+she looks at the camera throughout the video.
+
+The video is shot from above looking down on the scene. same background as the first frame.""",
+                'neg': 'static, frozen, thigh highs, socks, hosiery, legwear',
+                'lora_high': 'WAN2.2_LoraSet/Blink_Squatting_Cowgirl_Position_I2V_HIGH.safetensors',
+                'lora_low': 'WAN2.2_LoraSet/Blink_Squatting_Cowgirl_Position_I2V_LOW.safetensors',
+                'audio_prompt': 'female moaning loud pleasure, rhythmic thrusting sounds, skin slapping wet impact, gasping breath, increasing intensity, climax vocal',
+                'audio_negative_prompt': 'music, melody, speech, words, lyrics, reverb, echo, distortion, cartoon, low quality',
+            },
+            {
+                'duration': 3,
+                'pos': """Woman now having sex with a same man in squatting cowgirl position her face fills the screen she is leaning over forwards as she bounces up and down aggressively. Man erect penis is in her vagina.
+
+she looks at the camera throughout the video.
+
+The video is shot from above looking down on the scene. same background as the first frame.""",
+                'neg': '',
+                'lora_high': 'WAN2.2_LoraSet/Blink_Squatting_Cowgirl_Position_I2V_HIGH.safetensors',
+                'lora_low': 'WAN2.2_LoraSet/Blink_Squatting_Cowgirl_Position_I2V_LOW.safetensors',
+                'audio_prompt': 'female moaning loud pleasure, rhythmic thrusting sounds, skin slapping wet impact, gasping breath, increasing intensity, climax vocal',
+                'audio_negative_prompt': 'music, melody, speech, words, lyrics, reverb, echo, distortion, cartoon, low quality',
+            },
+        ],
+        "chain_prefix": 'SquatCowgirl FK_99_016_ONE_MINUTE_NSFW_FACE_KEEP V2_kopia',
+        'backend': 'linux',
+        'fps': 16,
+        'cfg': 2,
+        'neg': 'static, frozen, no movement',
+    },
+
+    {"break": True},
+
+    {
+        'file': '99.016 Natural.png',
+        'backend': 'linux',
+        'duration': 2,
+        'pos': 'NONE',
+        'neg': 'NONE',
+    },
+    {
+        "chain": [
+            {
+                'duration': 4,
+                'pos': "The video begins with a close-up of a woman and man. The video then immiedately jumpcuts to the same woman now having sex in missionary position with the man from image. She is lying on her back on the ground with her legs spread with her knees to her chest hands on the floor. A man's penis is visible entering her vagina from below. The man is positioned kneeling between her legs infront of her thrusting his penis into her vagina. Throughout the scene, she appears to be experiencing pleasure, often with her mouth open or eyes closed as she lies back. Her hands hold onto her thighs spreading her legs. same background as the first frame.",
+                'neg': 'static, frozen, thigh highs, socks, hosiery, legwear',
+                'lora_high': 'WAN2.2_LoraSet/iGoon%20-%20Blink_Missionary_I2V_HIGH.safetensors',
+                'lora_low': 'WAN2.2_LoraSet/iGoon%20-%20Blink_Missionary_I2V_LOW.safetensors',
+                'audio_prompt': 'female moaning loud pleasure, rhythmic thrusting sounds, skin slapping wet impact, gasping breath, increasing intensity, climax vocal',
+                'audio_negative_prompt': 'music, melody, speech, words, lyrics, reverb, echo, distortion, cartoon, low quality',
+                'use_lightning': True,
+                'workflow': '_I2V_classic_4s1200_nog4gg.json',
+            },
+            {
+                'duration': 3,
+                'pos': "Woman now having sex in missionary position with the man from image. She is lying on her back on the ground with her legs spread with her knees to her chest hands on the floor. A man's penis is visible entering her vagina from below. The man is positioned kneeling between her legs infront of her thrusting his penis into her vagina. Throughout the scene, she appears to be experiencing pleasure, often with her mouth open or eyes closed as she lies back. Her hands hold onto her thighs spreading her legs. same background as the first frame.",
+                'neg': '',
+                'lora_high': 'WAN2.2_LoraSet/iGoon%20-%20Blink_Missionary_I2V_HIGH.safetensors',
+                'lora_low': 'WAN2.2_LoraSet/iGoon%20-%20Blink_Missionary_I2V_LOW.safetensors',
+                'audio_prompt': 'female moaning loud pleasure, rhythmic thrusting sounds, skin slapping wet impact, gasping breath, increasing intensity, climax vocal',
+                'audio_negative_prompt': 'music, melody, speech, words, lyrics, reverb, echo, distortion, cartoon, low quality',
+                'use_lightning': True,
+                'workflow': '_I2V_classic_4s1200_nog4gg.json',
+            },
+        ],
+        "chain_prefix": 'Missionary FK2_99_016_ONE_MINUTE_NSFW_FACE_KEEP V2_kopia',
+        'backend': 'linux',
+        'fps': 16,
+        'cfg': 2,
+        'neg': 'static, frozen, no movement',
+    },
+
+    {"break": True},
+
+    {
+        'file': '99.016 Natural.png',
+        'backend': 'linux',
+        'duration': 2,
+        'pos': 'NONE',
+        'neg': 'NONE',
+    },
+    {
+        "chain": [
+            {
+                'duration': 3,
+                'pos': "The video begins with a close-up of a fully nude woman. The video then jumpcuts to the same woman now kneeling down in same background as the first frame, with her breasts positioned around the man's erect penis as he thrusts his penis up and down in a titjob motion sliding it between her breasts. she makes various facial expressions during the video she looks like she is talking and has her eyes wide open with a crazy expression.  same background as the first frame.",
+                'neg': 'bad anatomy, deformed penis, extra limbs, blurry, low quality, censored, small penis, no saliva, closed mouth, no eye contact, bad hand position, teeth visible, static pose, cartoon, plastic skin, poor connection, weak motion',
+                'audio_prompt': 'wet mouth sounds, oral suction, saliva dripping, lips sliding, rhythmic sucking and slurping, oral motion foley, synchronized with video, crisp, high quality, realistic',
+                'audio_negative_prompt': 'music, melody, ambient drone, moaning, voice, sustained atmosphere, continuous background noise, low quality, distortion',
+                'lora_high': 'WAN2.2_LoraSet/iGoon_Blink_Titjob_I2V_HIGH.safetensors',
+                'lora_low': 'WAN2.2_LoraSet/iGoon_Blink_Titjob_I2V_LOW.safetensors',
+            },
+            {
+                'duration': 3,
+                'pos': """The video then jumpcuts to the same woman now kneeling between a man's legs and feet with her upper body is bent forward over him, and her face is close to his lap. With one hand, she grasps the man's penis and moves it up and down its shaft in a steady rhythm, performing the handjob. She goes through various facial expressions throughout the video from happy to gasping she looks like she is talking.
+
+She looks at the camera throughout the video
+
+Man's feet are seen in the background same background as the first frame.""",
+                'neg': 'bad anatomy, deformed penis, extra limbs, blurry, low quality, censored, small penis, no saliva, closed mouth, no eye contact, bad hand position, teeth visible, static pose, cartoon, plastic skin, poor connection, weak motion',
+                'audio_prompt': 'wet mouth sounds, oral suction, saliva dripping, lips sliding, rhythmic sucking and slurping, oral motion foley, synchronized with video, crisp, high quality, realistic',
+                'audio_negative_prompt': 'music, melody, ambient drone, moaning, voice, sustained atmosphere, continuous background noise, low quality, distortion',
+                'lora_high': 'WAN2.2_LoraSet/iGoon%20-%20Blink_Handjob_I2V_HIGH.safetensors',
+                'lora_low': 'WAN2.2_LoraSet/iGoon%20-%20Blink_Handjob_I2V_LOW.safetensors',
+            },
+            {
+                'duration': 3,
+                'pos': """The video then jumpcuts to the same woman now kneeling between a man's legs with her upper body is bent forward over him, and her face is close to his lap. With one hand, she grasps the man's erect penis and moves it up and down its shaft in a steady rhythm, performing the handjob.  She goes through various facial expressions throughout the video from happy to gasping she looks like she is talking.
+
+She looks at the camera throughout the video same background as the first frame.""",
+                'neg': 'bad anatomy, deformed penis, extra limbs, blurry, low quality, censored, small penis, no saliva, closed mouth, no eye contact, bad hand position, teeth visible, static pose, cartoon, plastic skin, poor connection, weak motion',
+                'lora_high': 'WAN2.2_LoraSet/WAN-2.2-I2V-HandjobBlowjobCombo-HIGH-v1.safetensors',
+                'lora_low': 'WAN2.2_LoraSet/WAN-2.2-I2V-HandjobBlowjobCombo-LOW-v1.safetensors',
+                'audio_prompt': 'wet mouth sounds, oral suction, saliva dripping, lips sliding, rhythmic sucking and slurping, oral motion foley, synchronized with video, crisp, high quality, realistic',
+                'audio_negative_prompt': 'music, melody, ambient drone, moaning, voice, sustained atmosphere, continuous background noise, low quality, distortion',
+            },
+            {
+                'duration': 4,
+                'pos': 'The video then jumpcuts to the same woman giving a blowjob to the same man standing in the same location. Only penis of man is visible. She is kneeling in front of him, looking up as she performs the blowjob. She is holding the man penis with both hands. She looks at the camera the entire time. She shoves the man penis deep in her mouth, sucking intensely with visible effort, saliva dripping, cheeks hollowed. Dynamic oral sex, high detail, explicit, realistic anatomy and size difference same background as the first frame.',
+                'neg': 'bad anatomy, deformed penis, extra limbs, blurry, low quality, censored, small penis, no saliva, closed mouth, no eye contact, bad hand position, teeth visible, static pose, cartoon, plastic skin, poor connection, weak motion',
+                'audio_prompt': 'wet mouth sounds, oral suction, saliva dripping, lips sliding, rhythmic sucking and slurping, oral motion foley, synchronized with video, crisp, high quality, realistic',
+                'audio_negative_prompt': 'music, melody, ambient drone, moaning, voice, sustained atmosphere, continuous background noise, low quality, distortion',
+                'lora_high': 'WAN2.2_LoraSet/iGOON_Blink_Blowjob_I2V_HIGH.safetensors',
+                'lora_low': 'WAN2.2_LoraSet/iGOON_Blink_Blowjob_I2V_LOW.safetensors',
+            },
+            {
+                'duration': 4,
+                'pos': "Woman now receiving a facial from a man's penis. She is kneeling on the floor looking up with a open mouth. The cum shoots all over her face. The man's hand holds his erect penis masturbating his penis and shooting the thick white cum directly onto her face, forehead, eyes, cheek and mouth. The thick white cum slowly drips down her face onto her body. An explosion of thick white cum blasts her face. she looks directly at the camera throughout the video. same background as the first frame.",
+                'neg': 'bad anatomy, deformed penis, extra limbs, blurry, low quality, censored, small penis, no saliva, closed mouth, no eye contact, bad hand position, teeth visible, static pose, cartoon, plastic skin, poor connection, weak motion',
+                'lora_high': 'WAN2.2_LoraSet/iGoon%2520-%2520Blink_Facial_I2V_HIGH.safetensors',
+                'lora_low': 'WAN2.2_LoraSet/iGoon%2520-%2520Blink_Facial_I2V_LOW.safetensors',
+                'audio_prompt': 'wet splashing sounds, thick liquid impact, fluid spray, viscous liquid dripping and hitting skin, wet surface contact, synchronized with video, crisp, high quality, realistic',
+                'audio_negative_prompt': 'music, melody, ambient drone, moaning, voice, sustained atmosphere, continuous background noise, low quality, distortion',
+            },
+            {
+                'duration': 3,
+                'pos': "Woman now receiving a facial from a man's penis. She is kneeling on the floor looking up with a open mouth. The cum shoots all over her face. The man's hand holds his erect penis masturbating his penis and shooting the thick white cum directly onto her face, forehead, eyes, cheek and mouth. The thick white cum slowly drips down her face onto her body. same background as the first frame.",
+                'neg': '',
+                'lora_high': 'WAN2.2_LoraSet/iGoon%2520-%2520Blink_Facial_I2V_HIGH.safetensors',
+                'lora_low': 'WAN2.2_LoraSet/iGoon%2520-%2520Blink_Facial_I2V_LOW.safetensors',
+                'audio_prompt': 'wet splashing sounds, thick liquid impact, fluid spray, viscous liquid dripping and hitting skin, wet surface contact, synchronized with video, crisp, high quality, realistic',
+                'audio_negative_prompt': 'music, melody, ambient drone, moaning, voice, sustained atmosphere, continuous background noise, low quality, distortion',
+            },
+        ],
+        "chain_prefix": 'titjob_hndjob_blwhnd_blow_finale FK_99_016_ONE_MINUTE_NSFW_FACE_KEEP V2_kopia',
+        'backend': 'linux',
+        'fps': 16,
+        'cfg': 2,
+        'neg': 'static, frozen, no movement',
+        'frame_interpolation': False,
+    },
+
+    {"break": True},
+
+    {
+        'type': 'scene_break',
+        'name': 'MST V1',
+    },
+    {
+        'file': '99.019 Natural.png',
+        'backend': 'linux',
+        'duration': 2,
+        'pos': 'NONE',
+        'neg': 'NONE',
+    },
+    {
+        "chain": [
+            {
+                'duration': 2,
+                'pos': """Technical specifications:
+cinematic depth of field with subtle rack focus, high dynamic range lighting, realistic skin subsurface scattering, gentle motion blur on slow movements.
+
+Legs remain widely spread from the moment she turns forward until the very last frame.
+Hands stay between her legs masturbating continuously – no pauses, no covering, no change of position.
+Face is visible only after the turn and matches the provided top-left face perfectly.""",
+                'neg': '',
+            },
+            {
+                'duration': 3,
+                'pos': """- Hands glide slowly upward from thighs to caress full breasts – fingers trace underboob, circle nipples gently pinching.
+- Slides down to flat stomach, palms pressing sensually in circles, hips shift forward slightly.
+- With a sultry wink, grips inner thighs and spreads legs languidly wide – knees part outward to 90 degrees, feet flat on sheets exposing intimate area teasingly.
+
+Legs remain widely spread from the moment she turns forward until the very last frame.
+Hands stay between her legs masturbating continuously – no pauses, no covering, no change of position.
+Face is visible only after the turn and matches the provided top-left face perfectly.""",
+                'neg': '',
+            },
+        ],
+        "chain_prefix": 'MST 1_kopia',
+        'backend': 'linux',
+        'fps': 16,
+        'cfg': 2,
+        'neg': 'static, frozen, no movement',
+    },
+
+    {
+        'file': '99.019 Natural.png',
+        'backend': 'linux',
+        'duration': 2,
+        'pos': 'NONE',
+        'neg': 'NONE',
+    },
+    {
+        "chain": [
+            {
+                'duration': 3,
+                'pos': """- One hand lingers on breast, kneading softly while maintaining eye contact and soft humming moan.
+- Other hand trails down abdomen, fingers hovering teasingly over mound before parting labia delicately with index and middle finger.
+- Hips tilt upward invitingly, legs hold spread pose with subtle inner thigh quiver.
+
+Legs remain widely spread from the moment she turns forward until the very last frame.
+Hands stay between her legs masturbating continuously – no pauses, no covering, no change of position.
+Face is visible only after the turn and matches the provided top-left face perfectly.""",
+                'neg': '',
+            },
+            {
+                'duration': 2,
+                'pos': """- Begins slow masturbation: fingers circle clitoris in deliberate lazy spirals, building wetness visible in glistening light.
+- Expression deepens to aroused bliss – eyes half-lidded but locked on camera, smile fades to parted-lip gasp, soft audible sighs escape.
+- Body undulates gently, breasts rise with deepening breaths,
+
+Legs remain widely spread from the moment she turns forward until the very last frame.
+Hands stay between her legs masturbating continuously – no pauses, no covering, no change of position.
+Face is visible only after the turn and matches the provided top-left face perfectly.""",
+                'neg': '',
+            },
+        ],
+        "chain_prefix": 'MST 2_kopia',
+        'backend': 'linux',
+        'fps': 16,
+        'cfg': 2,
+        'neg': 'static, frozen, no movement',
+    },
+
+    {
+        'file': '99.019 Natural.png',
+        'backend': 'linux',
+        'duration': 2,
+        'pos': 'NONE',
+        'neg': 'NONE',
+    },
+    {
+        "chain": [
+            {
+                'duration': 3,
+                'pos': """- Begins slow masturbation: fingers circle clitoris in deliberate lazy spirals, building wetness visible in glistening light.
+- Expression deepens to aroused bliss – eyes half-lidded but locked on camera, smile fades to parted-lip gasp, soft audible sighs escape.
+- Body undulates gently, breasts rise with deepening breaths,
+
+Legs remain widely spread from the moment she turns forward until the very last frame.
+Hands stay between her legs masturbating continuously – no pauses, no covering, no change of position.
+Face is visible only after the turn and matches the provided top-left face perfectly.""",
+                'neg': '',
+                'use_lightning': True,
+                'workflow': '_I2V_dasiwa_3step_nog4gg.json',
+            },
+            {
+                'duration': 3,
+                'pos': """- Begins slow masturbation: fingers circle clitoris in deliberate lazy spirals, building wetness visible in glistening light.
+- Expression deepens to aroused bliss – eyes half-lidded but locked on camera, smile fades to parted-lip gasp, soft audible sighs escape.
+- Body undulates gently, breasts rise with deepening breaths,
+
+Legs remain widely spread from the moment she turns forward until the very last frame.
+Hands stay between her legs masturbating continuously – no pauses, no covering, no change of position.
+Face is visible only after the turn and matches the provided top-left face perfectly.""",
+                'neg': '',
+                'use_lightning': True,
+                'workflow': '_I2V_dasiwa_3step_nog4gg.json',
+            },
+        ],
+        "chain_prefix": 'MST 3_kopia',
+        'backend': 'linux',
+        'fps': 16,
+        'cfg': 2,
+        'neg': 'static, frozen, no movement',
+    },
+
+    {
+        'file': '99.019 Natural.png',
+        'backend': 'linux',
+        'duration': 2,
+        'pos': 'NONE',
+        'neg': 'NONE',
+    },
+    {
+        "chain": [
+            {
+                'duration': 4,
+                'pos': """She slowly rotates her upper body and hips toward the camera in a smooth 90-degree turn until she is facing forward directly into the lens. As her face enters the frame, apply the exact face from the top-left corner of the original photo as her consistent face – perfectly matched to lighting, skin tone, hair, and expressions. The top-left corner must now be empty / clean / showing only the background.
+Once facing the camera, she locks eyes with the lens: slow, heavy-lidded, inviting gaze, slight parted-lips smile conveying strong sexual invitation and arousal.
+She immediately slides / sinks deeper into the chair, reclining her back fully against the backrest, pelvis tilted forward. At the same time she spreads her legs very wide apart – knees moving outward as far as possible, feet flat on the floor or hooked over the edges of the seat if the chair allows – fully exposing her intimate area to the camera.
+Both hands move directly between her widely spread thighs. She begins openly masturbating: fingers of both hands working rhythmically on her clitoris and vulva – slow circular motions at first, then gradually faster and more intense stroking / rubbing. Her movements are deliberate, visible, and unapologetic – clear self-pleasure with fingers sliding over wet skin, occasional parting of labia, focused clit stimulation.
+She continues masturbating visibly and intensely until the very end of the video – never stopping, never closing her legs, never removing her hands from between her thighs. Her breathing becomes heavier, hips subtly rock forward into her own touch, expression shifts from inviting to deeply aroused (eyes half-closed, lips parted, soft moans implied).
+""",
+                'neg': '',
+                'lora_high': '',
+                'use_lightning': True,
+                'workflow': '_I2V_dasiwa_3step_nog4gg.json',
+            },
+            {
+                'duration': 4,
+                'pos': """She slowly rotates her upper body and hips toward the camera in a smooth 90-degree turn until she is facing forward directly into the lens. As her face enters the frame, apply the exact face from the top-left corner of the original photo as her consistent face – perfectly matched to lighting, skin tone, hair, and expressions. The top-left corner must now be empty / clean / showing only the background.
+Once facing the camera, she locks eyes with the lens: slow, heavy-lidded, inviting gaze, slight parted-lips smile conveying strong sexual invitation and arousal.
+She immediately slides / sinks deeper into the chair, reclining her back fully against the backrest, pelvis tilted forward. At the same time she spreads her legs very wide apart – knees moving outward as far as possible, feet flat on the floor or hooked over the edges of the seat if the chair allows – fully exposing her intimate area to the camera.
+Both hands move directly between her widely spread thighs. She begins openly masturbating: fingers of both hands working rhythmically on her clitoris and vulva – slow circular motions at first, then gradually faster and more intense stroking / rubbing. Her movements are deliberate, visible, and unapologetic – clear self-pleasure with fingers sliding over wet skin, occasional parting of labia, focused clit stimulation.
+She continues masturbating visibly and intensely until the very end of the video – never stopping, never closing her legs, never removing her hands from between her thighs. Her breathing becomes heavier, hips subtly rock forward into her own touch, expression shifts from inviting to deeply aroused (eyes half-closed, lips parted, soft moans implied).
+""",
+                'neg': '',
+                'lora_high': '',
+                'use_lightning': True,
+                'workflow': '_I2V_dasiwa_3step_nog4gg.json',
+            },
+        ],
+        "chain_prefix": 'MST 4_kopia',
+        'backend': 'linux',
+        'fps': 16,
+        'cfg': 2,
+        'neg': 'static, frozen, no movement',
+    },
+
+    {
+        'file': '99.019 Natural.png',
+        'backend': 'linux',
+        'duration': 2,
+        'pos': 'NONE',
+        'neg': 'NONE',
+    },
+    {
+        "chain": [
+            {
+                'duration': 5,
+                'pos': """The naked woman sits on the floor facing the camera. She locks intense, heavy-lidded eye contact with the lens, slow aroused half-smile, parted lips. She spreads her legs very wide, fully exposing her vulva.
+
+Both hands move between her thighs and she begins masturbating openly – fingers circling and rubbing her clitoris in deliberate motions that gradually become faster and harder. One hand works her clit while the other parts her labia or slides fingers inside. Movements are clear, wet and visible.
+
+She continues without pause, legs staying maximally spread. Her breathing quickens, hips start to grind forward into her hand, thighs tremble, expression becomes lost in pleasure – eyes fluttering, mouth open in gasps.
+
+She builds to a powerful orgasm: movements turn frantic, body arches, legs tremble violently while remaining wide open, visible contractions around her vulva, loud moan implied. After the peak she collapses limp and exhausted on the floor – body slumped, arms fallen loosely, legs still spread wide, eyes half-closed in post-orgasmic haze, breathing slowly calming. She remains still and spent.""",
+                'neg': '',
+            },
+            {
+                'duration': 2,
+                'pos': """The naked woman sits on the floor facing the camera. She locks intense, heavy-lidded eye contact with the lens, slow aroused half-smile, parted lips. She spreads her legs very wide, fully exposing her vulva.
+
+Both hands move between her thighs and she begins masturbating openly – fingers circling and rubbing her clitoris in deliberate motions that gradually become faster and harder. One hand works her clit while the other parts her labia or slides fingers inside. Movements are clear, wet and visible.
+
+She continues without pause, legs staying maximally spread. Her breathing quickens, hips start to grind forward into her hand, thighs tremble, expression becomes lost in pleasure – eyes fluttering, mouth open in gasps.
+
+She builds to a powerful orgasm: movements turn frantic, body arches, legs tremble violently while remaining wide open, visible contractions around her vulva, loud moan implied. After the peak she collapses limp and exhausted on the floor – body slumped, arms fallen loosely, legs still spread wide, eyes half-closed in post-orgasmic haze, breathing slowly calming. She remains still and spent.""",
+                'neg': '',
+            },
+        ],
+        "chain_prefix": 'MST 5_kopia',
+        'backend': 'linux',
+        'fps': 16,
         'cfg': 2,
         'neg': 'static, frozen, no movement',
     },

@@ -1,6 +1,5 @@
 defaults:
   fps: 16
-  steps: 6
   cfg: 2
   duration: 2
   blocks_to_swap: 35
@@ -58,7 +57,6 @@ flow:
       neg: ''
     backend: linux
     fps: 16
-    steps: 6
     cfg: 2
     neg: static, frozen, no movement
 - break: true
@@ -76,7 +74,6 @@ flow:
       neg: ''
     backend: linux
     fps: 16
-    steps: 6
     cfg: 2
     neg: static, frozen, no movement
 - break: true
@@ -94,7 +91,6 @@ flow:
       neg: ''
     backend: linux
     fps: 16
-    steps: 6
     cfg: 2
     neg: static, frozen, no movement
 - break: true
@@ -112,7 +108,6 @@ flow:
       neg: static ghost, no movement, arms not reaching, weak gesture, ghost staying inside painting, friendly ghost, bright lighting, no horror, deformed hands, extra limbs, bad anatomy, rubbery motion, blurry, low quality, cartoonish ghost, slow motion only, no lunge, changed pose
     backend: linux
     fps: 16
-    steps: 6
     cfg: 2
     neg: static, frozen, no movement
 - break: true
@@ -130,7 +125,6 @@ flow:
       neg: ''
     backend: linux
     fps: 16
-    steps: 6
     cfg: 2
     neg: static, frozen, no movement
 - break: true
@@ -148,7 +142,6 @@ flow:
       neg: ''
     backend: linux
     fps: 16
-    steps: 6
     cfg: 2
     neg: static, frozen, no movement
 - break: true
@@ -166,7 +159,6 @@ flow:
       neg: ''
     backend: linux
     fps: 16
-    steps: 6
     cfg: 2
     neg: static, frozen, no movement
 - break: true
@@ -187,7 +179,6 @@ flow:
       neg: static, frozen, no movement
     backend: linux
     fps: 16
-    steps: 6
     cfg: 2
     neg: ''
 - break: true
@@ -210,7 +201,6 @@ flow:
       neg: weak light, small light burst, colored light, blue light, golden light, slow light growth, partial white screen, still image at the end, dark screen, no light explosion, bad magic effect, low quality particles, deformed hands, blurry, artifacts, cartoonish, sudden cut, minimal light change
     backend: linux
     fps: 16
-    steps: 6
     cfg: 2
     neg: static, frozen, no movement
 - break: true
@@ -233,7 +223,6 @@ flow:
       neg: woman flies away, woman runs, woman falls down, body stays intact, survives the spell, minimal destruction, slow disintegration, low detail particles, bad physics, deformed body, cartoonish explosion, leaves the frame, static pose, no destruction, weak effect
     backend: linux
     fps: 16
-    steps: 6
     cfg: 2
     neg: static, frozen, no movement
 - break: true
@@ -291,7 +280,6 @@ flow:
       neg: ''
     backend: linux
     fps: 16
-    steps: 6
     cfg: 2
     neg: static, frozen, no movement
 - break: true
@@ -317,7 +305,6 @@ flow:
       neg: static pose, minimal movement, stiff dance, awkward movement, bad anatomy, deformed body, extra limbs, mutated hands, blurry motion, low quality, artifacts, rubbery motion, jerky movement, unnatural bending, modest dance, shy pose, looking away from camera, closed body language, boring dance, no hip movement, no body waves, flat expression, censored, clothing on body, partial clothing, deformed breasts, plastic skin, cartoonish, overexposed, underexposed, bad lighting, changed background, low detail, poor anatomy, floating particles without reason
     backend: linux
     fps: 16
-    steps: 6
     cfg: 2
     neg: static, frozen, no movement
 - break: true
@@ -341,7 +328,6 @@ flow:
       neg: static pose, minimal movement, stiff dance, awkward movement, bad anatomy, deformed body, extra limbs, mutated hands, blurry motion, low quality, artifacts, rubbery motion, jerky movement, unnatural bending, modest dance, shy pose, looking away from camera, closed body language, boring dance, no hip movement, no body waves, flat expression, censored, clothing on body, partial clothing, deformed breasts, plastic skin, cartoonish, overexposed, underexposed, bad lighting, changed background, low detail, poor anatomy, floating particles without reason
     backend: linux
     fps: 16
-    steps: 6
     cfg: 2
     neg: static, frozen, no movement
 - break: true
@@ -365,7 +351,6 @@ flow:
       neg: static pose, minimal movement, stiff dance, awkward movement, bad anatomy, deformed body, extra limbs, mutated hands, blurry motion, low quality, artifacts, rubbery motion, jerky movement, unnatural bending, modest dance, shy pose, looking away from camera, closed body language, boring dance, no hip movement, no body waves, flat expression, censored, clothing on body, partial clothing, deformed breasts, plastic skin, cartoonish, overexposed, underexposed, bad lighting, changed background, low detail, poor anatomy, floating particles without reason
     backend: linux
     fps: 16
-    steps: 6
     cfg: 2
     neg: static, frozen, no movement
 - break: true
@@ -389,7 +374,6 @@ flow:
       neg: static pose, minimal movement, stiff dance, awkward movement, bad anatomy, deformed body, extra limbs, mutated hands, blurry motion, low quality, artifacts, rubbery motion, jerky movement, unnatural bending, modest dance, shy pose, looking away from camera, closed body language, boring dance, no hip movement, no body waves, flat expression, censored, clothing on body, partial clothing, deformed breasts, plastic skin, cartoonish, overexposed, underexposed, bad lighting, changed background, low detail, poor anatomy, floating particles without reason
     backend: linux
     fps: 16
-    steps: 6
     cfg: 2
     neg: static, frozen, no movement
 - break: true
@@ -407,7 +391,6 @@ flow:
       neg: static pose, minimal movement, stiff dance, awkward movement, bad anatomy, deformed body, extra limbs, mutated hands, blurry motion, low quality, artifacts, rubbery motion, jerky movement, unnatural bending, modest dance, shy pose, looking away from camera, closed body language, boring dance, no hip movement, no body waves, flat expression, censored, clothing on body, partial clothing, deformed breasts, plastic skin, cartoonish, overexposed, underexposed, bad lighting, changed background, low detail, poor anatomy, floating particles without reason
     backend: linux
     fps: 16
-    steps: 6
     cfg: 2
     neg: static, frozen, no movement
 - break: true
@@ -431,7 +414,6 @@ flow:
       neg: static pose, minimal movement, stiff dance, awkward movement, bad anatomy, deformed body, extra limbs, mutated hands, blurry motion, low quality, artifacts, rubbery motion, jerky movement, unnatural bending, modest dance, shy pose, looking away from camera, closed body language, boring dance, no hip movement, no body waves, flat expression, censored, clothing on body, partial clothing, deformed breasts, plastic skin, cartoonish, overexposed, underexposed, bad lighting, changed background, low detail, poor anatomy, floating particles without reason
     backend: linux
     fps: 16
-    steps: 6
     cfg: 2
     neg: static, frozen, no movement
 - break: true
@@ -455,7 +437,6 @@ flow:
       neg: static pose, minimal movement, stiff dance, awkward movement, bad anatomy, deformed body, extra limbs, mutated hands, blurry motion, low quality, artifacts, rubbery motion, jerky movement, unnatural bending, modest dance, shy pose, looking away from camera, closed body language, boring dance, no hip movement, no body waves, flat expression, censored, clothing on body, partial clothing, deformed breasts, plastic skin, cartoonish, overexposed, underexposed, bad lighting, changed background, low detail, poor anatomy, floating particles without reason
     backend: linux
     fps: 16
-    steps: 6
     cfg: 2
     neg: static, frozen, no movement
 - break: true
@@ -479,7 +460,6 @@ flow:
       neg: static pose, minimal movement, stiff dance, awkward movement, bad anatomy, deformed body, extra limbs, mutated hands, blurry motion, low quality, artifacts, rubbery motion, jerky movement, unnatural bending, modest dance, shy pose, looking away from camera, closed body language, boring dance, no hip movement, no body waves, flat expression, censored, clothing on body, partial clothing, deformed breasts, plastic skin, cartoonish, overexposed, underexposed, bad lighting, changed background, low detail, poor anatomy, floating particles without reason
     backend: linux
     fps: 16
-    steps: 6
     cfg: 2
     neg: static, frozen, no movement
 - break: true
@@ -503,7 +483,6 @@ flow:
       neg: static pose, minimal movement, stiff dance, awkward movement, bad anatomy, deformed body, extra limbs, mutated hands, blurry motion, low quality, artifacts, rubbery motion, jerky movement, unnatural bending, modest dance, shy pose, looking away from camera, closed body language, boring dance, no hip movement, no body waves, flat expression, censored, clothing on body, partial clothing, deformed breasts, plastic skin, cartoonish, overexposed, underexposed, bad lighting, changed background, low detail, poor anatomy, floating particles without reason
     backend: linux
     fps: 16
-    steps: 6
     cfg: 2
     neg: static, frozen, no movement
 - break: true
@@ -527,7 +506,6 @@ flow:
       neg: static pose, minimal movement, stiff dance, awkward movement, bad anatomy, deformed body, extra limbs, mutated hands, blurry motion, low quality, artifacts, rubbery motion, jerky movement, unnatural bending, modest dance, shy pose, looking away from camera, closed body language, boring dance, no hip movement, no body waves, flat expression, censored, clothing on body, partial clothing, deformed breasts, plastic skin, cartoonish, overexposed, underexposed, bad lighting, changed background, low detail, poor anatomy, floating particles without reason
     backend: linux
     fps: 16
-    steps: 6
     cfg: 2
     neg: static, frozen, no movement
 - break: true
@@ -551,7 +529,6 @@ flow:
       neg: static pose, minimal movement, stiff dance, awkward movement, bad anatomy, deformed body, extra limbs, mutated hands, blurry motion, low quality, artifacts, rubbery motion, jerky movement, unnatural bending, modest dance, shy pose, looking away from camera, closed body language, boring dance, no hip movement, no body waves, flat expression, censored, clothing on body, partial clothing, deformed breasts, plastic skin, cartoonish, overexposed, underexposed, bad lighting, changed background, low detail, poor anatomy, floating particles without reason
     backend: linux
     fps: 16
-    steps: 6
     cfg: 2
     neg: static, frozen, no movement
 - break: true
@@ -575,7 +552,6 @@ flow:
       neg: static pose, minimal movement, stiff dance, awkward movement, bad anatomy, deformed body, extra limbs, mutated hands, blurry motion, low quality, artifacts, rubbery motion, jerky movement, unnatural bending, modest dance, shy pose, looking away from camera, closed body language, boring dance, no hip movement, no body waves, flat expression, censored, clothing on body, partial clothing, deformed breasts, plastic skin, cartoonish, overexposed, underexposed, bad lighting, changed background, low detail, poor anatomy, floating particles without reason
     backend: linux
     fps: 16
-    steps: 6
     cfg: 2
     neg: static, frozen, no movement
 - break: true
@@ -599,7 +575,6 @@ flow:
       neg: static pose, minimal movement, stiff dance, awkward movement, bad anatomy, deformed body, extra limbs, mutated hands, blurry motion, low quality, artifacts, rubbery motion, jerky movement, unnatural bending, modest dance, shy pose, looking away from camera, closed body language, boring dance, no hip movement, no body waves, flat expression, censored, clothing on body, partial clothing, deformed breasts, plastic skin, cartoonish, overexposed, underexposed, bad lighting, changed background, low detail, poor anatomy, floating particles without reason
     backend: linux
     fps: 16
-    steps: 6
     cfg: 2
     neg: static, frozen, no movement
 - break: true
@@ -623,7 +598,6 @@ flow:
       neg: static pose, minimal movement, stiff dance, awkward movement, bad anatomy, deformed body, extra limbs, mutated hands, blurry motion, low quality, artifacts, rubbery motion, jerky movement, unnatural bending, modest dance, shy pose, looking away from camera, closed body language, boring dance, no hip movement, no body waves, flat expression, censored, clothing on body, partial clothing, deformed breasts, plastic skin, cartoonish, overexposed, underexposed, bad lighting, changed background, low detail, poor anatomy, floating particles without reason
     backend: linux
     fps: 16
-    steps: 6
     cfg: 2
     neg: static, frozen, no movement
 - break: true
@@ -647,7 +621,6 @@ flow:
       neg: static pose, minimal movement, stiff dance, awkward movement, bad anatomy, deformed body, extra limbs, mutated hands, blurry motion, low quality, artifacts, rubbery motion, jerky movement, unnatural bending, modest dance, shy pose, looking away from camera, closed body language, boring dance, no hip movement, no body waves, flat expression, censored, clothing on body, partial clothing, deformed breasts, plastic skin, cartoonish, overexposed, underexposed, bad lighting, changed background, low detail, poor anatomy, floating particles without reason
     backend: linux
     fps: 16
-    steps: 6
     cfg: 2
     neg: static, frozen, no movement
 - break: true
@@ -671,7 +644,6 @@ flow:
       neg: static pose, minimal movement, stiff dance, awkward movement, bad anatomy, deformed body, extra limbs, mutated hands, blurry motion, low quality, artifacts, rubbery motion, jerky movement, unnatural bending, modest dance, shy pose, looking away from camera, closed body language, boring dance, no hip movement, no body waves, flat expression, censored, clothing on body, partial clothing, deformed breasts, plastic skin, cartoonish, overexposed, underexposed, bad lighting, changed background, low detail, poor anatomy, floating particles without reason
     backend: linux
     fps: 16
-    steps: 6
     cfg: 2
     neg: static, frozen, no movement
 - break: true
@@ -695,7 +667,6 @@ flow:
       neg: static pose, minimal movement, stiff dance, awkward movement, bad anatomy, deformed body, extra limbs, mutated hands, blurry motion, low quality, artifacts, rubbery motion, jerky movement, unnatural bending, modest dance, shy pose, looking away from camera, closed body language, boring dance, no hip movement, no body waves, flat expression, censored, clothing on body, partial clothing, deformed breasts, plastic skin, cartoonish, overexposed, underexposed, bad lighting, changed background, low detail, poor anatomy, floating particles without reason
     backend: linux
     fps: 16
-    steps: 6
     cfg: 2
     neg: static, frozen, no movement
 - type: scene_break
@@ -751,7 +722,6 @@ flow:
       neg: closed eyes, slow blinking, calm expression, neutral face, sleepy, relaxed, smiling, looking away, bad eye direction, deformed face, blurry, low quality, artifacts, minimal movement, no fear, cartoonish, plastic skin
     backend: linux
     fps: 16
-    steps: 6
     cfg: 2
     neg: static, frozen, no movement
 - break: true
@@ -810,7 +780,6 @@ flow:
       neg: ''
     backend: linux
     fps: 16
-    steps: 6
     cfg: 2
     neg: static, frozen, no movement
 - break: true

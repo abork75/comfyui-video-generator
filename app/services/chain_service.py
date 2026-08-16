@@ -620,14 +620,13 @@ async def _run_chain(
             # Last step + end_target: write _real.png so the next item starts cleanly
             if step_idx == total and end_target and last_frame:
                 real_p = pf / "frames" / f"{Path(end_target).stem}_real.png"
-                if not real_p.exists():
-                    try:
-                        from utils.frame_extractor import FrameExtractor
-                        FrameExtractor(project_folder=pf).extract_last_frame_to(
-                            out_path, cur_w, cur_h, real_p
-                        )
-                    except Exception:
-                        pass
+                try:
+                    from utils.frame_extractor import FrameExtractor
+                    FrameExtractor(project_folder=pf).extract_last_frame_to(
+                        out_path, cur_w, cur_h, real_p
+                    )
+                except Exception:
+                    pass
 
         elapsed = round(time.time() - _state["started_at"], 1)
         _state.update({"status": "done", "elapsed_s": elapsed})

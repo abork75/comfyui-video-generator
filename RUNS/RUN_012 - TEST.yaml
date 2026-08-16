@@ -35,7 +35,6 @@ flow:
       neg: ""
     backend: linux
     fps: 16
-    steps: 6
     cfg: 2
     neg: |-
       static, frozen, no movement
@@ -85,7 +84,6 @@ flow:
       neg: ""
     backend: linux
     fps: 16
-    steps: 6
     cfg: 2
     neg: |-
       static, frozen, no movement

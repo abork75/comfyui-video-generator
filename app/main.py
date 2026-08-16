@@ -37,6 +37,7 @@ from app.api.trim import router as trim_router
 from app.api.frames import router as frames_router
 from app.api.sound import router as sound_router
 from app.api.scene_conf import router as scene_conf_router
+from app.api.dubit import router as dubit_router
 from app.services.process_service import process_service
 
 # ============================================================
@@ -75,6 +76,7 @@ app.include_router(trim_router)
 app.include_router(frames_router)
 app.include_router(sound_router)
 app.include_router(scene_conf_router)
+app.include_router(dubit_router)
 
 # Static files
 FRONTEND_DIR = Path(__file__).parent / "frontend"

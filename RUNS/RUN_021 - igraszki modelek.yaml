@@ -1,5 +1,5 @@
 # RUN_021 - igraszki modelek.yaml
-# Edited: 2026-07-20 08:18:22
+# Edited: 2026-07-25 02:50:46
 # Edit this file freely — regenerate .py with generate_py_from_yaml()
 #
 project_folder: C:\Users\abork\AppData\Local\CapCut\Videos\__DEVIANT ART\Modelki_igraszki
@@ -35,7 +35,6 @@ flow:
       lora_low: WAN2.2_LoraSet/iGOON_Blink_Blowjob_I2V_LOW.safetensors
     backend: linux
     fps: 16
-    steps: 6
     cfg: 2
     neg: |-
       static, frozen, no movement
@@ -72,7 +71,6 @@ flow:
       lora_low: WAN2.2_LoraSet/iGOON_Blink_Blowjob_I2V_LOW.safetensors
     backend: linux
     fps: 16
-    steps: 6
     cfg: 2
     neg: |-
       static, frozen, no movement
@@ -102,7 +100,6 @@ flow:
       lora_low: WAN2.2_LoraSet/iGoon%20-%20Blink_Missionary_I2V_LOW.safetensors
     backend: linux
     fps: 16
-    steps: 6
     cfg: 2
     neg: |-
       static, frozen, no movement
@@ -132,7 +129,6 @@ flow:
       audio_negative_prompt: music, melody, ambient drone, moaning, voice, sustained atmosphere, continuous background noise, low quality, distortion
     backend: linux
     fps: 16
-    steps: 6
     cfg: 2
     neg: |-
       static, frozen, no movement
@@ -172,10 +168,12 @@ flow:
       lora_low: WAN2.2_LoraSet/iGoon%20-%20Blink_Front_Doggystyle_I2V_LOW.safetensors
     backend: linux
     fps: 16
-    steps: 6
     cfg: 2
     neg: |-
       static, frozen, no movement
+    width: 704
+    height: 1056
+    use_lightning: false
 
 - chain:
     prefix: doggyback
@@ -197,10 +195,12 @@ flow:
       lora_low: WAN2.2_LoraSet/iGoon%2520-%2520Blink_Back_Doggystyle_LOW.safetensors
     backend: linux
     fps: 16
-    steps: 6
     cfg: 2
     neg: |-
       static, frozen, no movement
+    width: 704
+    height: 1056
+    use_lightning: false
 
 - chain:
     prefix: SquatCowgirl missionary
@@ -228,10 +228,12 @@ flow:
       audio_negative_prompt: music, melody, ambient drone, moaning, voice, sustained atmosphere, continuous background noise, low quality, distortion
     backend: linux
     fps: 16
-    steps: 6
     cfg: 2
     neg: |-
       static, frozen, no movement
+    width: 704
+    height: 1056
+    use_lightning: false
 
 - chain:
     prefix: titjob_hndjob_blwhnd_blow_finale
@@ -292,11 +294,13 @@ flow:
       audio_negative_prompt: music, melody, ambient drone, moaning, voice, sustained atmosphere, continuous background noise, low quality, distortion
     backend: linux
     fps: 16
-    steps: 6
     cfg: 2
     neg: |-
       static, frozen, no movement
+    width: 704
+    height: 1056
     frame_interpolation: false
+    use_lightning: false
 
 defaults:
   backend: linux
