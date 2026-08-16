@@ -109,6 +109,22 @@ def chain_path(project_folder: Path, chain_filename: str) -> Path:
     return project_folder / "transitions" / "chains" / chain_filename
 
 
+def dubit_path(project_folder: Path, dubit_item: dict) -> Path:
+    """Deterministic output path for a dubit clip."""
+    explicit = (dubit_item.get("prefix") or "").strip()
+    if explicit:
+        return project_folder / "transitions" / "dubits" / f"dubit_{explicit}.mp4"
+    audio = dubit_item.get("audio", "")
+    if isinstance(audio, list):
+        first = audio[0] if audio else "unknown"
+    else:
+        first = audio
+    if isinstance(first, dict):
+        first = first.get("file", "unknown")
+    stem = Path(str(first)).stem
+    return project_folder / "transitions" / "dubits" / f"dubit_{stem}.mp4"
+
+
 def talk_path(project_folder: Path, talk_item: dict) -> Path:
     """
     Deterministic output path for a talk clip.
@@ -230,6 +246,71 @@ def get_transition_status(run_filename: str) -> dict | None:
                 "steps":   steps,
                 "size_mb": None,
                 "path":    None,
+            })
+            continue
+
+        # DUBIT
+        if item.get("type") == "dubit":
+            p = dubit_path(pf, item)
+            # Multi-segment dubits kept as _01/_02 files (not concatenated), like talk
+            p_seg1 = p.parent / f"{p.stem}_01.mp4"
+            p_actual = p if p.exists() else (p_seg1 if p_seg1.exists() else p)
+            exists = p.exists() or p_seg1.exists()
+            has_arch = _has_archived(p.parent, p.stem) or _has_archived(p.parent, f"{p.stem}_01")
+            audio = item.get("audio", "")
+            audio_list = audio if isinstance(audio, list) else [audio]
+            audio_names = [
+                (a.get("file", "") if isinstance(a, dict) else str(a or ""))
+                for a in audio_list
+            ]
+            audio_durations = [
+                _audio_duration_sec(pf / fname) if fname else None
+                for fname in audio_names
+            ]
+            audio_name = audio_names[0] if audio_names else ""
+            audio_duration = audio_durations[0] if audio_durations else None
+
+            total_steps = len(audio_list)
+            steps = []
+            for step_i in range(1, total_steps + 1):
+                if total_steps == 1:
+                    sp = p
+                else:
+                    sp = p.parent / f"{p.stem}_{step_i:02d}.mp4"
+                sp_exists = sp.exists()
+                _sp_has_arch = _has_archived(sp.parent, sp.stem)
+                steps.append({
+                    "exists":       sp_exists,
+                    "name":         sp.name,
+                    "size_mb":      round(sp.stat().st_size / 1_048_576, 1) if sp_exists else None,
+                    "has_archived": _sp_has_arch,
+                    "has_versions": sp_exists or _sp_has_arch,
+                })
+
+            all_steps_exist = all(s["exists"] for s in steps)
+            if not exists:
+                dubit_status = "red"
+            elif not all_steps_exist:
+                dubit_status = "partial"
+            else:
+                dubit_status = "green"
+
+            results.append({
+                "index":           i_flow,
+                "type":            "dubit",
+                "status":          dubit_status,
+                "name":            p_actual.name,
+                "canonical_name":  p.name,
+                "audio":           audio_name,
+                "audio_duration":  audio_duration,
+                "audio_durations": audio_durations,
+                "steps":           steps,
+                "width":           item.get("width"),
+                "height":          item.get("height"),
+                "has_versions":    exists or has_arch,
+                "has_archived":    has_arch,
+                "size_mb":         round(p_actual.stat().st_size / 1_048_576, 1) if exists else None,
+                "path":            str(p_actual) if exists else None,
             })
             continue
 
@@ -940,6 +1021,7 @@ def resolve_video(run_filename: str, video_name: str) -> Path | None:
         pf / "transitions" / "chains"    / video_name,
         pf / "transitions" / "talks"     / video_name,
         pf / "transitions" / "multitalk" / video_name,
+        pf / "transitions" / "dubits"    / video_name,
         pf / video_name,
     ]:
         if candidate.exists():
@@ -992,7 +1074,7 @@ def list_file_versions(run_filename: str, video_name: str) -> dict | None:
     base_stem = _VER_RE.sub("", Path(video_name).stem)  # strip _ver... if any
 
     results = []
-    for search_dir in [pf / "transitions", pf / "transitions" / "chains", pf / "transitions" / "multitalk", pf / "transitions" / "talks"]:
+    for search_dir in [pf / "transitions", pf / "transitions" / "chains", pf / "transitions" / "multitalk", pf / "transitions" / "talks", pf / "transitions" / "dubits"]:
         if not search_dir.exists():
             continue
         # Exact canonical file

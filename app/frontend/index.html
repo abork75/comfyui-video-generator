@@ -1303,10 +1303,26 @@
                                                              style="width:36px;height:36px;"
                                                              title="Kliknij aby powiększyć">
                                                     </template>
+                                                    <!-- Checkbox for ambient sequence selection (only when clip exists) -->
+                                                    <template x-if="_si(entry.idx)?.name">
+                                                        <input type="checkbox"
+                                                               :checked="selectedClips.has(_si(entry.idx).name)"
+                                                               @click.stop="handleClipCheckbox(_si(entry.idx).name, $event)"
+                                                               class="accent-violet-500 w-3.5 h-3.5 flex-shrink-0 cursor-pointer">
+                                                    </template>
                                                     <span class="text-sm">🎙</span>
                                                     <!-- Name: explicit prefix → else stem from first audio -->
                                                     <span class="font-mono text-sm text-teal-300"
                                                           x-text="entry.item.prefix || _talkFirstStem(entry.item)"></span>
+                                                    <!-- Ambient badge -->
+                                                    <template x-if="_si(entry.idx)?.name && clipAmbientBadge(_si(entry.idx).name) === 'start'">
+                                                        <span class="text-violet-400 cursor-default select-none" style="font-size:11px"
+                                                              :title="ambientFiles.find(af => af.clips[0] === _si(entry.idx).name)?.name || 'ambient'">♫▶</span>
+                                                    </template>
+                                                    <template x-if="_si(entry.idx)?.name && clipAmbientBadge(_si(entry.idx).name) === 'mid'">
+                                                        <span class="text-violet-700 cursor-default select-none" style="font-size:11px"
+                                                              :title="ambientFiles.find(af => (af.clips||[]).includes(_si(entry.idx).name))?.name || 'ambient'">♫</span>
+                                                    </template>
                                                     <!-- Resolution badge -->
                                                     <template x-if="entry.item.width && entry.item.height">
                                                         <span class="px-1.5 py-0.5 bg-gray-700 rounded text-xs text-gray-300"
@@ -1531,8 +1547,24 @@
                                                              style="width:36px;height:36px;"
                                                              title="Kliknij aby powiększyć">
                                                     </template>
+                                                    <!-- Checkbox for ambient sequence selection (only when clip exists) -->
+                                                    <template x-if="_si(entry.idx)?.name">
+                                                        <input type="checkbox"
+                                                               :checked="selectedClips.has(_si(entry.idx).name)"
+                                                               @click.stop="handleClipCheckbox(_si(entry.idx).name, $event)"
+                                                               class="accent-violet-500 w-3.5 h-3.5 flex-shrink-0 cursor-pointer">
+                                                    </template>
                                                     <span class="text-sm">🗣</span>
                                                     <span class="font-mono text-sm text-purple-300" x-text="entry.item.name || 'multitalk'"></span>
+                                                    <!-- Ambient badge -->
+                                                    <template x-if="_si(entry.idx)?.name && clipAmbientBadge(_si(entry.idx).name) === 'start'">
+                                                        <span class="text-violet-400 cursor-default select-none" style="font-size:11px"
+                                                              :title="ambientFiles.find(af => af.clips[0] === _si(entry.idx).name)?.name || 'ambient'">♫▶</span>
+                                                    </template>
+                                                    <template x-if="_si(entry.idx)?.name && clipAmbientBadge(_si(entry.idx).name) === 'mid'">
+                                                        <span class="text-violet-700 cursor-default select-none" style="font-size:11px"
+                                                              :title="ambientFiles.find(af => (af.clips||[]).includes(_si(entry.idx).name))?.name || 'ambient'">♫</span>
+                                                    </template>
                                                     <!-- Speaker/steps badge -->
                                                     <span class="px-1.5 py-0.5 bg-purple-900/60 border border-purple-700 rounded text-xs text-purple-300"
                                                           x-text="Array.isArray(entry.item.steps) && entry.item.steps.length > 0
@@ -1640,6 +1672,212 @@
                                                         </div>
                                                     </template>
                                                 </div>
+                                            </div>
+                                        </template>
+
+                                        <!-- DUBIT tile -->
+                                        <template x-if="entry.item.type === 'dubit'">
+                                            <div class="bg-gray-800 border border-gray-700 rounded-lg overflow-hidden"
+                                                 :class="_si(entry.idx)?.status === 'green' ? 'sl-green' : (_si(entry.idx)?.status === 'partial' ? 'sl-partial' : 'sl-red')">
+                                                <!-- Header -->
+                                                <div class="px-4 py-2.5 border-b border-gray-700 flex flex-wrap items-center gap-2"
+                                                     style="background-color:#1a2332"
+                                                     :class="editMode ? 'cursor-pointer' : ''"
+                                                     @click="if(editMode && !$event.target.closest('button,img,video,a,select,input')) editOpenItem(entry.idx)">
+                                                    <template x-if="_si(entry.idx)?.name">
+                                                        <input type="checkbox"
+                                                               :checked="selectedClips.has(_si(entry.idx).name)"
+                                                               @click.stop="handleClipCheckbox(_si(entry.idx).name, $event)"
+                                                               class="accent-violet-500 w-3.5 h-3.5 flex-shrink-0 cursor-pointer">
+                                                    </template>
+                                                    <span class="text-sm">🔊</span>
+                                                    <span class="font-mono text-sm text-cyan-300"
+                                                          x-text="entry.item.prefix || (Array.isArray(entry.item.audio) ? (entry.item.audio[0]?.file || entry.item.audio[0] || 'dubit').replace(/\.[^.]+$/, '') : (entry.item.audio ? entry.item.audio.replace(/\.[^.]+$/, '') : 'dubit'))"></span>
+                                                    <!-- Step count badge -->
+                                                    <template x-if="Array.isArray(entry.item.audio) && entry.item.audio.length > 1">
+                                                        <span class="px-1.5 py-0.5 bg-cyan-900/50 rounded text-xs text-cyan-400"
+                                                              x-text="entry.item.audio.length + ' steps'"></span>
+                                                    </template>
+                                                    <!-- Resolution badge -->
+                                                    <template x-if="entry.item.width && entry.item.height">
+                                                        <span class="px-1.5 py-0.5 bg-gray-700 rounded text-xs text-gray-400 font-mono"
+                                                              x-text="entry.item.width + '×' + entry.item.height"></span>
+                                                    </template>
+                                                    <template x-if="!entry.item.width && !entry.item.height && (selectedRun?.force_resolution || selectedRun?.default_resolution)">
+                                                        <span class="px-1.5 py-0.5 bg-gray-700/50 rounded text-xs font-mono"
+                                                              :class="(()=>{ const r=selectedRun.force_resolution||selectedRun.default_resolution; return (r[0]%64===0 && r[1]%64===0) ? 'text-gray-500' : 'text-amber-400'; })()"
+                                                              x-text="(()=>{ const r=selectedRun.force_resolution||selectedRun.default_resolution; const w=r[0],h=r[1]; if(w%64===0&&h%64===0) return w+'×'+h; const rw=Math.round(w/64)*64, rh=Math.round(h/64)*64; return w+'×'+h+' → '+rw+'×'+rh; })()"></span>
+                                                    </template>
+                                                    <!-- Status dot -->
+                                                    <span class="ml-auto flex-shrink-0 w-2 h-2 rounded-full"
+                                                          :class="_si(entry.idx)?.status === 'green' ? 'bg-green-500' : 'bg-red-500'"></span>
+                                                    <!-- Size -->
+                                                    <template x-if="_si(entry.idx)?.size_mb">
+                                                        <span class="text-xs text-gray-500" x-text="_si(entry.idx).size_mb + ' MB'"></span>
+                                                    </template>
+                                                    <!-- Actions -->
+                                                    <button @click.stop="startDubitGen(entry.idx)"
+                                                            :disabled="dubitStatus.status === 'running' || dubitStatus.status === 'queued' || envStatus.linux !== 'ready'"
+                                                            :class="(dubitStatus.status === 'running' || dubitStatus.status === 'queued' || envStatus.linux !== 'ready') ? 'opacity-30 cursor-not-allowed text-gray-600' : (_si(entry.idx)?.status === 'green' ? 'text-gray-500 hover:text-blue-400' : 'text-cyan-500 hover:text-cyan-300')"
+                                                            class="text-base leading-none transition"
+                                                            :title="envStatus.linux !== 'ready' ? '🐧 Linux nieaktywny' : (_si(entry.idx)?.status === 'green' ? 'Re-generuj DubIt' : 'Generuj DubIt')">
+                                                        <span x-show="dubitStatus.status === 'running' && dubitStatus.dubit_name === (_si(entry.idx)?.canonical_name || _si(entry.idx)?.name)" class="animate-spin inline-block">⟳</span>
+                                                        <span x-show="!(dubitStatus.status === 'running' && dubitStatus.dubit_name === (_si(entry.idx)?.canonical_name || _si(entry.idx)?.name))">↺</span>
+                                                    </button>
+                                                    <template x-if="_si(entry.idx)?.status === 'green'">
+                                                        <button @click.stop="archiveDubit(entry.idx)"
+                                                                class="text-gray-600 hover:text-amber-400 text-sm leading-none transition"
+                                                                title="Archiwizuj DubIt clip">🗑</button>
+                                                    </template>
+                                                    <!-- Edit mode controls -->
+                                                    <template x-if="editMode">
+                                                        <div class="flex items-center gap-1 border-l border-gray-700 pl-2 ml-1">
+                                                            <button @click.stop="editOpenItem(entry.idx)"
+                                                                    class="text-cyan-500 hover:text-cyan-300 text-xs px-1.5 py-0.5 rounded hover:bg-cyan-900/30 transition"
+                                                                    title="Edytuj DubIt">✎</button>
+                                                            <button @click.stop="editDuplicateItem(entry.idx)"
+                                                                    class="text-gray-500 hover:text-blue-300 text-xs px-1 py-0.5 rounded hover:bg-gray-700 transition"
+                                                                    title="Kopiuj element do schowka (wklej przez + wstaw element → 📋)">📋</button>
+                                                            <button @click.stop="editMoveItem(entry.idx, -1)"
+                                                                    :disabled="entry.idx === 0"
+                                                                    :class="entry.idx === 0 ? 'opacity-30 cursor-not-allowed' : 'hover:text-white'"
+                                                                    class="text-gray-600 text-xs px-1 py-0.5 rounded hover:bg-gray-700">↑</button>
+                                                            <button @click.stop="editMoveItem(entry.idx, 1)"
+                                                                    :disabled="entry.idx === flowData.flow.length - 1"
+                                                                    :class="entry.idx === flowData.flow.length - 1 ? 'opacity-30 cursor-not-allowed' : 'hover:text-white'"
+                                                                    class="text-gray-600 text-xs px-1 py-0.5 rounded hover:bg-gray-700">↓</button>
+                                                            <button @click.stop="editDeleteItem(entry.idx)"
+                                                                    class="text-gray-600 hover:text-red-400 text-xs px-1 py-0.5 rounded hover:bg-gray-800 transition"
+                                                                    title="Usuń">✕</button>
+                                                        </div>
+                                                    </template>
+                                                </div>
+                                                <!-- Steps body (divide-y like talk/chain) -->
+                                                <div class="divide-y divide-gray-700">
+                                                    <template x-for="(step, si) in (Array.isArray(entry.item.audio) ? entry.item.audio : [{file: entry.item.audio, pos: entry.item.pos, neg: entry.item.neg}])" :key="si">
+                                                        <div class="px-4 py-2.5 flex items-start gap-3"
+                                                             x-data="{
+                                                                get _segInfo()    { return _si(entry.idx)?.steps?.[si]; },
+                                                                get _segExists()  { return _si(entry.idx)?.steps?.[si]?.exists ?? false; },
+                                                                get _isActive()   { return dubitStatus.flow_idx === entry.idx && (dubitStatus.status === 'running' || dubitStatus.status === 'queued'); },
+                                                                get _isThisStep() { return _isActive && dubitStatus.step_current === (si + 1); },
+                                                                get _isPending()  { return _isActive && !_isThisStep && (si + 1) > (dubitStatus.step_current || 0); }
+                                                             }">
+                                                            <!-- Thumbnail: final video on first step, status icon on others -->
+                                                            <div class="flex-shrink-0 mt-0.5">
+                                                                <template x-if="_segExists">
+                                                                    <video :src="'/api/media/file?run=' + selectedRun.filename + '&path=' + encodeURIComponent(_segInfo.name)"
+                                                                           class="thumb rounded cursor-pointer"
+                                                                           style="width:48px;height:48px;object-fit:cover"
+                                                                           muted loop
+                                                                           @mouseenter="$el.play()"
+                                                                           @mouseleave="$el.pause(); $el.currentTime=0"
+                                                                           @click.stop="openVideoModal(_segInfo.name)"
+                                                                           title="Kliknij aby odtworzyć"></video>
+                                                                </template>
+                                                                <template x-if="!_segExists">
+                                                                    <div class="thumb-placeholder text-gray-700">🔊</div>
+                                                                </template>
+                                                            </div>
+                                                            <!-- Content -->
+                                                            <div class="flex-1 min-w-0">
+                                                                <div class="flex items-start gap-2">
+                                                                    <template x-if="Array.isArray(entry.item.audio)">
+                                                                        <span class="text-xs text-gray-600 mt-0.5 flex-shrink-0" x-text="'Step ' + (si+1)"></span>
+                                                                    </template>
+                                                                    <div class="flex flex-wrap gap-1.5">
+                                                                        <span class="px-1.5 py-0.5 bg-gray-700 border border-cyan-900 rounded text-xs font-mono text-cyan-400"
+                                                                              x-text="(typeof step === 'object' ? step.file : step) || '—'"></span>
+                                                                        <template x-if="_si(entry.idx)?.audio_durations?.[si] != null">
+                                                                            <span class="px-1 py-0.5 bg-gray-700 rounded text-xs text-gray-400"
+                                                                                  x-text="_si(entry.idx).audio_durations[si] + 's'"></span>
+                                                                        </template>
+                                                                        <template x-if="_segInfo?.size_mb">
+                                                                            <span class="px-1 py-0.5 bg-gray-700 rounded text-xs text-green-600"
+                                                                                  x-text="_segInfo.size_mb + ' MB'"></span>
+                                                                        </template>
+                                                                    </div>
+                                                                </div>
+                                                                <template x-if="typeof step === 'object' && step.pos">
+                                                                    <p class="text-xs text-green-400/80 mt-1 line-clamp-2 leading-relaxed" x-text="step.pos"></p>
+                                                                </template>
+                                                                <template x-if="!(typeof step === 'object' && step.pos) && entry.item.pos">
+                                                                    <p class="text-xs text-green-400/80 mt-1 line-clamp-2 leading-relaxed" x-text="entry.item.pos"></p>
+                                                                </template>
+                                                            </div>
+                                                            <!-- Per-step actions -->
+                                                            <div class="flex-shrink-0 flex items-center gap-1">
+                                                                <template x-if="_segExists">
+                                                                    <div class="flex gap-1 items-center">
+                                                                        <button @click.stop="openVideoModal(_segInfo.name)"
+                                                                                class="text-green-500 hover:text-green-400 text-sm px-1"
+                                                                                title="Odtwórz">▶</button>
+                                                                        <button @click.stop="regenDubitFrom(entry.idx, si)"
+                                                                                :disabled="_isActive || envStatus.linux !== 'ready'"
+                                                                                :class="(_isActive || envStatus.linux !== 'ready') ? 'opacity-30 cursor-not-allowed text-gray-600' : 'text-gray-500 hover:text-blue-400'"
+                                                                                class="text-sm px-1 transition"
+                                                                                :title="'Re-generuj DubIt od step '+(si+1)">↺</button>
+                                                                        <template x-if="si === 0">
+                                                                            <button @click.stop="archiveDubit(entry.idx)"
+                                                                                    class="text-gray-600 hover:text-red-400 text-sm px-1"
+                                                                                    title="Archiwizuj cały DubIt clip">🗑</button>
+                                                                        </template>
+                                                                        <template x-if="si > 0">
+                                                                            <button @click.stop="archiveDubitStep(entry.idx, si)"
+                                                                                    class="text-gray-600 hover:text-red-400 text-sm px-1"
+                                                                                    :title="'Archiwizuj step '+(si+1)">🗑</button>
+                                                                        </template>
+                                                                        <template x-if="si === 0 && _si(entry.idx)?.has_versions">
+                                                                            <button @click.stop="openVersionsModal(_si(entry.idx).name)"
+                                                                                    class="text-gray-500 hover:text-yellow-400 text-sm px-1 transition"
+                                                                                    title="Pokaż wersje archiwalne">📂</button>
+                                                                        </template>
+                                                                        <template x-if="si > 0 && step?.has_versions">
+                                                                            <button @click.stop="openVersionsModal(step.name)"
+                                                                                    class="text-gray-500 hover:text-yellow-400 text-sm px-1 transition"
+                                                                                    :title="'Pokaż wersje archiwalne step '+(si+1)">📂</button>
+                                                                        </template>
+                                                                    </div>
+                                                                </template>
+                                                                <template x-if="!_segExists">
+                                                                    <div class="flex items-center gap-1">
+                                                                        <template x-if="_isThisStep">
+                                                                            <span class="animate-spin inline-block text-cyan-400 text-xs">⟳</span>
+                                                                        </template>
+                                                                        <template x-if="_isPending">
+                                                                            <span class="text-gray-600 text-xs" title="Oczekuje">◌</span>
+                                                                        </template>
+                                                                        <template x-if="!_isActive">
+                                                                            <span class="text-red-700 text-xs">○</span>
+                                                                        </template>
+                                                                        <button @click.stop="regenDubitFrom(entry.idx, si)"
+                                                                                :disabled="_isActive || envStatus.linux !== 'ready'"
+                                                                                :class="(_isActive || envStatus.linux !== 'ready') ? 'opacity-30 cursor-not-allowed text-gray-600' : 'text-cyan-600 hover:text-cyan-400'"
+                                                                                class="text-sm px-1 transition"
+                                                                                :title="'Generuj DubIt od step '+(si+1)">↺</button>
+                                                                    </div>
+                                                                </template>
+                                                            </div>
+                                                        </div>
+                                                    </template>
+                                                </div>
+                                                <!-- Status bar -->
+                                                <template x-if="dubitStatus.status !== 'idle' && dubitStatus.dubit_name === (_si(entry.idx)?.canonical_name || _si(entry.idx)?.name)">
+                                                    <div class="px-4 py-1.5 text-xs border-t border-gray-700"
+                                                         :class="dubitStatus.status === 'error' ? 'text-red-400 bg-red-950/30' : 'text-cyan-400 bg-cyan-950/20'">
+                                                        <span x-show="dubitStatus.status === 'running'">⟳
+                                                            <template x-if="dubitStatus.step_total > 1">
+                                                                <span>Krok <span x-text="dubitStatus.step_current"></span>/<span x-text="dubitStatus.step_total"></span>…</span>
+                                                            </template>
+                                                            <template x-if="!(dubitStatus.step_total > 1)">
+                                                                <span>Generuję DubIt…</span>
+                                                            </template>
+                                                            <span x-text="dubitStatus.elapsed_s ? ' (' + dubitStatus.elapsed_s + 's)' : ''"></span>
+                                                        </span>
+                                                        <span x-show="dubitStatus.status === 'queued'">⏳ W kolejce…</span>
+                                                        <span x-show="dubitStatus.status === 'error'" x-text="'❌ ' + dubitStatus.error"></span>
+                                                    </div>
+                                                </template>
                                             </div>
                                         </template>
 
@@ -2706,6 +2944,35 @@
                 Ten i wszystkie kolejne (step <span x-text="talkRegenModal.stepIdx + 1"></span>–<span x-text="talkRegenModal.totalSteps"></span>)
             </button>
             <button @click="talkRegenModal._resolve(null); talkRegenModal.show=false"
+                    class="w-full px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg text-sm text-gray-300 transition">
+                Anuluj
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- ═══ DUBIT REGEN MODAL ══════════════════════════════════════════ -->
+<div x-show="dubitRegenModal.show" x-cloak
+     class="fixed inset-0 bg-black/85 flex items-center justify-center z-50 p-4"
+     @keydown.escape.window="dubitRegenModal._resolve && dubitRegenModal._resolve(null); dubitRegenModal.show=false">
+    <div class="bg-gray-900 rounded-xl border border-gray-700 w-full max-w-sm p-5 space-y-4">
+        <h3 class="text-sm font-semibold text-gray-200">Re-generuj DubIt 🔊 step <span class="text-cyan-300 font-mono" x-text="dubitRegenModal.stepIdx + 1"></span></h3>
+        <p class="text-xs text-gray-400">DubIt ma <span x-text="dubitRegenModal.totalSteps"></span> segmenty audio</p>
+        <label class="flex items-center gap-2 text-xs text-yellow-400 cursor-pointer select-none">
+            <input type="checkbox" x-model="dubitRegenModal.dryRun" class="accent-yellow-400">
+            Dry run (testuj ciągłość bez generacji)
+        </label>
+        <div class="flex flex-col gap-2">
+            <button @click="dubitRegenModal._resolve('one'); dubitRegenModal.show=false"
+                    class="w-full px-4 py-2 bg-blue-700 hover:bg-blue-600 rounded-lg text-sm text-white transition">
+                Tylko ten step (<span x-text="dubitRegenModal.stepIdx + 1"></span>)
+            </button>
+            <button @click="dubitRegenModal._resolve('all'); dubitRegenModal.show=false"
+                    class="w-full px-4 py-2 bg-cyan-900 hover:bg-cyan-800 rounded-lg text-sm text-white transition"
+                    x-show="dubitRegenModal.stepIdx < dubitRegenModal.totalSteps - 1">
+                Ten i wszystkie kolejne (step <span x-text="dubitRegenModal.stepIdx + 1"></span>–<span x-text="dubitRegenModal.totalSteps"></span>)
+            </button>
+            <button @click="dubitRegenModal._resolve(null); dubitRegenModal.show=false"
                     class="w-full px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg text-sm text-gray-300 transition">
                 Anuluj
             </button>
@@ -4525,6 +4792,137 @@
                                    class="flex-1 bg-gray-800 border border-gray-600 rounded px-2 py-1.5 text-sm text-gray-200 text-center font-mono focus:outline-none focus:border-purple-500">
                         </div>
                         <p x-show="editModal.resHint" class="text-xs text-purple-600 mt-1" x-text="editModal.resHint"></p>
+                    </div>
+
+                </div>
+            </template>
+
+            <!-- ── DubIt ── -->
+            <template x-if="editModal.kind === 'dubit'">
+                <div class="space-y-4">
+
+                    <!-- Prefix -->
+                    <div>
+                        <label class="block text-xs text-yellow-500 mb-1">
+                            Prefix pliku wyjściowego
+                            <span class="text-gray-500 font-normal ml-1">→ transitions/dubits/dubit_<em>prefix</em>.mp4</span>
+                        </label>
+                        <input type="text" x-model="editModal.data.prefix"
+                               class="w-full bg-gray-800 border border-yellow-900 rounded px-2 py-1.5 text-sm text-yellow-200 font-mono focus:outline-none focus:border-yellow-600"
+                               placeholder="np. scena1_ewa  (zostaw puste = nazwa z mp3)">
+                    </div>
+
+                    <!-- Audio steps -->
+                    <div>
+                        <label class="block text-xs text-cyan-400 mb-1">
+                            Segmenty audio
+                            <span x-show="editModal.loadingFiles" class="ml-1 text-gray-600 animate-spin inline-block">⟳</span>
+                        </label>
+
+                        <div class="space-y-3 mb-2">
+                            <template x-for="(step, si) in _dubitSteps()" :key="si">
+                                <div class="border border-cyan-900 rounded-lg p-2 bg-gray-900/60 space-y-1.5">
+                                    <div class="flex items-center justify-between">
+                                        <span class="text-xs text-cyan-600 font-semibold" x-text="'Step ' + (si+1)"></span>
+                                        <button @click="editDubitRemoveStep(si)"
+                                                x-show="_dubitSteps().length > 1"
+                                                class="text-gray-600 hover:text-red-400 text-xs px-1 rounded">✕</button>
+                                    </div>
+                                    <!-- Audio file -->
+                                    <div class="flex gap-2 items-center">
+                                        <span class="text-cyan-600 text-xs flex-shrink-0">🎵</span>
+                                        <input type="text"
+                                               :value="step.file"
+                                               @input="editDubitSetStep(si, 'file', $event.target.value)"
+                                               class="flex-1 bg-gray-800 border border-cyan-800 rounded px-2 py-1 text-sm text-cyan-200 font-mono focus:outline-none focus:border-cyan-500"
+                                               :placeholder="'glos_' + (si+1) + '.mp3'">
+                                    </div>
+                                    <!-- Positive prompt -->
+                                    <div>
+                                        <label class="block text-xs text-green-500 mb-0.5">
+                                            Pos
+                                            <span class="text-gray-600 font-normal ml-1">Format: A [osoba] is speaking [język], saying: "[tekst]"</span>
+                                        </label>
+                                        <textarea rows="2"
+                                                  :value="step.pos || ''"
+                                                  @input="editDubitSetStep(si, 'pos', $event.target.value)"
+                                                  class="w-full bg-gray-800 border border-gray-700 rounded px-2 py-1 text-xs text-gray-200 font-mono focus:outline-none focus:border-green-600 resize-y"
+                                                  placeholder='A woman is speaking Polish, saying: "Chodź na plażę!"'></textarea>
+                                    </div>
+                                    <!-- Negative prompt -->
+                                    <div>
+                                        <label class="block text-xs text-red-400 mb-0.5">Neg</label>
+                                        <textarea rows="1"
+                                                  :value="step.neg || ''"
+                                                  @input="editDubitSetStep(si, 'neg', $event.target.value)"
+                                                  class="w-full bg-gray-800 border border-gray-700 rounded px-2 py-1 text-xs text-gray-200 font-mono focus:outline-none focus:border-red-600 resize-y"
+                                                  placeholder="blurry, low quality, ugly, distorted face"></textarea>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+
+                        <div class="flex gap-2 items-center">
+                            <button @click="editDubitAddStep()"
+                                    class="text-xs text-cyan-600 hover:text-cyan-400 border border-cyan-900 hover:border-cyan-700 rounded px-2 py-1 transition">+ Dodaj step</button>
+                        </div>
+
+                        <!-- Audio picker -->
+                        <template x-if="editModal.audioFiles && editModal.audioFiles.length > 0">
+                            <div class="mt-2 bg-gray-950 border border-gray-700 rounded max-h-24 overflow-y-auto">
+                                <template x-for="f in editModal.audioFiles" :key="f">
+                                    <button type="button" @click="editDubitPickAudio(f)"
+                                            class="w-full text-left px-3 py-1 text-xs font-mono text-cyan-400 hover:bg-cyan-950 hover:text-cyan-200 transition truncate block"
+                                            x-text="'🎵 ' + f"></button>
+                                </template>
+                            </div>
+                        </template>
+                    </div>
+
+                    <!-- Resolution -->
+                    <div>
+                        <label class="block text-xs text-gray-400 mb-1">
+                            Rozdzielczość Pass 2
+                            <span class="text-gray-600 font-normal ml-1">(musi być podzielna przez 64 — Pass 1 = połowa)</span>
+                        </label>
+                        <div class="flex gap-2">
+                            <input type="number" x-model.number="editModal.data.width" min="64" step="64"
+                                   class="w-24 bg-gray-800 border border-gray-700 rounded px-2 py-1.5 text-sm text-gray-200 font-mono focus:outline-none focus:border-cyan-600"
+                                   placeholder="896">
+                            <span class="text-gray-600 self-center">×</span>
+                            <input type="number" x-model.number="editModal.data.height" min="64" step="64"
+                                   class="w-24 bg-gray-800 border border-gray-700 rounded px-2 py-1.5 text-sm text-gray-200 font-mono focus:outline-none focus:border-cyan-600"
+                                   placeholder="1152">
+                        </div>
+                        <!-- Preset buttons: round64 of project res -->
+                        <div class="flex gap-2 mt-1 flex-wrap">
+                            <button type="button" @click="editModal.data.width=448; editModal.data.height=576"
+                                    class="text-xs px-2 py-0.5 bg-gray-700 hover:bg-gray-600 rounded text-gray-300">448×576</button>
+                            <button type="button" @click="editModal.data.width=640; editModal.data.height=832"
+                                    class="text-xs px-2 py-0.5 bg-gray-700 hover:bg-gray-600 rounded text-gray-300">640×832</button>
+                            <button type="button" @click="editModal.data.width=896; editModal.data.height=1152"
+                                    class="text-xs px-2 py-0.5 bg-cyan-900 hover:bg-cyan-800 rounded text-cyan-300">896×1152 ★</button>
+                            <button type="button" @click="editModal.data.width=1024; editModal.data.height=1280"
+                                    class="text-xs px-2 py-0.5 bg-gray-700 hover:bg-gray-600 rounded text-gray-300">1024×1280</button>
+                        </div>
+                        <!-- Warning if not div/64 -->
+                        <template x-if="editModal.data.width && editModal.data.height && (editModal.data.width % 64 !== 0 || editModal.data.height % 64 !== 0)">
+                            <p class="text-xs text-amber-400 mt-1">
+                                ⚠ Rozdzielczość musi być podzielna przez 64.
+                                Sugerowana: <span x-text="Math.round(editModal.data.width/64)*64 + '×' + Math.round(editModal.data.height/64)*64"></span>
+                            </p>
+                        </template>
+                    </div>
+
+                    <!-- Start image (optional) -->
+                    <div>
+                        <label class="block text-xs text-gray-400 mb-1">
+                            Obraz startowy
+                            <span class="text-gray-600 font-normal ml-1">(opcjonalny — puste = auto z poprzedniego kafelka)</span>
+                        </label>
+                        <input type="text" x-model="editModal.data.image"
+                               class="w-full bg-gray-800 border border-gray-700 rounded px-2 py-1.5 text-sm text-gray-300 font-mono focus:outline-none focus:border-gray-500"
+                               placeholder="twarz.jpg">
                     </div>
 
                 </div>
@@ -8400,6 +8798,11 @@
                 <span class="text-2xl">🗣</span>
                 <span class="text-xs text-purple-300">Multitalk</span>
             </button>
+            <button @click="addItemDo('dubit')"
+                    class="flex flex-col items-center gap-2 bg-cyan-950 hover:bg-cyan-900 border border-cyan-800 hover:border-cyan-600 rounded-lg p-4 transition">
+                <span class="text-2xl">🔊</span>
+                <span class="text-xs text-cyan-300">DubIt</span>
+            </button>
             <button @click="addItemDo('break')"
                     class="flex flex-col items-center gap-2 bg-gray-800 hover:bg-gray-700 border border-gray-600 hover:border-gray-500 rounded-lg p-4 transition">
                 <span class="text-2xl">✂</span>
@@ -8916,7 +9319,7 @@ function app() {
             const flow = this.flowData?.flow || [];
             const needsLinux = flow.some(item =>
                 item && !item.break && !item.header && item.type !== 'scene_break' &&
-                (item.type === 'talk' || !item.backend || item.backend === 'linux' || item.backend === 'local')
+                (item.type === 'talk' || item.type === 'dubit' || !item.backend || item.backend === 'linux' || item.backend === 'local')
             );
             if (needsLinux && this.envStatus.linux !== 'ready') {
                 this.logLine('sys', '❌ 🐧 Linux ComfyUI nie działa (port 8189) — uruchom środowisko Linux i spróbuj ponownie');
@@ -8939,6 +9342,8 @@ function app() {
                         if (item.status !== 'red') names.push(item.name);
                         if (item.bridge_exists && item.bridge_name) names.push(item.bridge_name);
                     } else if (item.type === 'multitalk') {
+                        if (item.status !== 'red' && item.name) names.push(item.name);
+                    } else if (item.type === 'dubit') {
                         if (item.status !== 'red' && item.name) names.push(item.name);
                     }
                 }
@@ -9263,7 +9668,7 @@ function app() {
                 }
                 return null;
             }
-            if (item.type === 'multitalk') {
+            if (item.type === 'multitalk' || item.type === 'dubit') {
                 if (si?.status === 'green' && si?.name) return si.name;
                 return null;
             }
@@ -9851,6 +10256,10 @@ function app() {
                     const clips = si?.steps ? si.steps.filter(s => s.exists).map((s, i) => `${item.chain_prefix}_${String(i+1).padStart(3,'0')}.mp4`) : [];
                     const lastStep = si?.steps ? si.steps.length : 0;
                     flowItems.push({ key, clips, label: `${item.chain_prefix}_1_${lastStep}`, selected: this.selectedClips.has(key), ambientPrompt: item.ambient_audio_prompt || '', ambientNeg: item.ambient_audio_negative_prompt || '', entry });
+                } else if ((item.type === 'talk' || item.type === 'multitalk' || item.type === 'dubit') && this._si(entry.idx)?.name) {
+                    const name = this._si(entry.idx).name;
+                    const label = name.replace(/\.mp4$/i, '');
+                    flowItems.push({ key: name, clips: [name], label, selected: this.selectedClips.has(name), ambientPrompt: item.ambient_audio_prompt || '', ambientNeg: item.ambient_audio_negative_prompt || '', entry });
                 } else if (item.file && this.fileItemIsGreen(entry.idx)) {
                     const name = this.fileItemName(entry.idx);
                     if (!name) continue;
@@ -10211,6 +10620,8 @@ function app() {
                     if (si.status !== 'green') return true;
                 } else if (item.type === 'multitalk') {
                     if (si.status !== 'green') return true;
+                } else if (item.type === 'dubit') {
+                    if (si.status !== 'green') return true;
                 }
             }
             return false;
@@ -10232,6 +10643,7 @@ function app() {
                 else if (item.chain)        hasMissing = si.steps ? si.steps.some(s => !s.exists) : si.status !== 'green';
                 else if (item.type === 'talk') hasMissing = si.status !== 'green';
                 else if (item.type === 'multitalk') hasMissing = si.status !== 'green';
+                else if (item.type === 'dubit') hasMissing = si.status !== 'green';
                 if (hasMissing) { firstMissingPos = i; break; }
             }
             if (firstMissingPos < 0) return; // nothing missing
@@ -10257,6 +10669,8 @@ function app() {
                     if (si.status !== 'partial') names.push(si.name);
                     if (si.bridge_name) names.push(si.bridge_name);
                 } else if (item.type === 'multitalk' && si?.name) {
+                    names.push(si.name);
+                } else if (item.type === 'dubit' && si?.name) {
                     names.push(si.name);
                 }
             }
@@ -10695,6 +11109,9 @@ function app() {
         multitalkStatus: { status: 'idle', clip_name: null, error: null, elapsed_s: null, flow_idx: null },
         _talkPollTimer: null,
         _talkTransitionPollTimer: null,
+        dubitStatus: { status: 'idle', dubit_name: null, error: null, elapsed_s: null, flow_idx: null, step_current: null, step_total: null },
+        dubitRegenModal: { show: false, flowIdx: null, stepIdx: null, totalSteps: 0, dryRun: false, _resolve: null },
+        _dubitPollTimer: null,
 
         // ─ Chain generation ───────────────────────────────────
         chainJobStatus: { status: 'idle', chain_prefix: null, step: null, total_steps: null, from_step: null, error: null, elapsed_s: null },
@@ -10866,6 +11283,20 @@ function app() {
                     startImage = `transitions/multitalk/${mn.endsWith('.mp4') ? mn : mn + '.mp4'}`;
                     break;
                 }
+                if (prev.type === 'talk') {
+                    const explicit = (prev.prefix || '').trim();
+                    const audio = Array.isArray(prev.audio) ? prev.audio[0] : prev.audio;
+                    const stem  = typeof audio === 'string' ? audio.replace(/\.[^.]+$/, '') : (audio?.file || '').replace(/\.[^.]+$/, '');
+                    startImage = `transitions/talks/talk_${explicit || stem}.mp4`;
+                    break;
+                }
+                if (prev.type === 'dubit') {
+                    const explicit = (prev.prefix || '').trim();
+                    const audio = Array.isArray(prev.audio) ? prev.audio[0] : prev.audio;
+                    const stem  = typeof audio === 'string' ? audio.replace(/\.[^.]+$/, '') : (audio?.file || '').replace(/\.[^.]+$/, '');
+                    startImage = `transitions/dubits/dubit_${explicit || stem}.mp4`;
+                    break;
+                }
                 if (prev.file) { startImage = prev.file; break; }
                 if (prev.break || prev.type === 'scene_break') break;
             }
@@ -11032,6 +11463,221 @@ function app() {
             this.statusData = null; await this.refreshStatus();
         },
 
+        // ─ DubIt lipsync ─────────────────────────────────────────────────────
+
+        async startDubitGen(flowIdx, startFromStep = 0, endAtStep = null, dryRun = false) {
+            if (!this.selectedRun) return;
+            if (this.dubitStatus.status === 'running' || this.dubitStatus.status === 'queued') {
+                this.logLine('sys', '❌ DubIt już trwa — poczekaj lub anuluj'); return;
+            }
+            const item = this.flowData?.flow?.[flowIdx];
+            if (!item) return;
+
+            // Archive existing segments when regenerating from scratch
+            if (startFromStep === 0) {
+                const si = this._si(flowIdx);
+                if (si && (si.status === 'green' || si.status === 'partial')) {
+                    const names = si.steps
+                        ? si.steps.filter(s => s.exists).map(s => s.name)
+                        : (si.name ? [si.name] : []);
+                    if (names.length) {
+                        try {
+                            const res  = await fetch('/api/media/batch-archive', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ run: this.selectedRun.filename, names }),
+                            });
+                            const data = await res.json();
+                            if (res.ok) {
+                                for (const r of data.results)
+                                    if (r.ok) this.logLine('sys', `📦 Backup [${data.ts}]: ${r.new_name}`);
+                            }
+                        } catch(e) { this.logLine('sys', `⚠ backup dubit: ${e.message}`); }
+                        this.statusData = null; await this.refreshStatus();
+                    }
+                }
+            }
+
+            // Resolve start image by scanning backwards (mirrors talk tile logic)
+            let sourceImage = null;
+            for (let i = flowIdx - 1; i >= 0; i--) {
+                const prev = this.flowData.flow[i];
+                if (prev.chain !== undefined && prev.chain_prefix && prev.chain.length > 0) {
+                    const n = String(prev.chain.length).padStart(3, '0');
+                    sourceImage = `${prev.chain_prefix}_${n}.mp4`;
+                    break;
+                }
+                if (prev.type === 'multitalk') {
+                    const mn = (prev.name || '').trim();
+                    sourceImage = `transitions/multitalk/${mn.endsWith('.mp4') ? mn : mn + '.mp4'}`;
+                    break;
+                }
+                if (prev.type === 'talk') {
+                    const explicit = (prev.prefix || '').trim();
+                    const audio = Array.isArray(prev.audio) ? prev.audio[0] : prev.audio;
+                    const stem  = typeof audio === 'string' ? audio.replace(/\.[^.]+$/, '') : (audio?.file || '').replace(/\.[^.]+$/, '');
+                    sourceImage = `transitions/talks/talk_${explicit || stem}.mp4`;
+                    break;
+                }
+                if (prev.type === 'dubit') {
+                    const explicit = (prev.prefix || '').trim();
+                    const audio = Array.isArray(prev.audio) ? prev.audio[0] : prev.audio;
+                    const stem  = typeof audio === 'string' ? audio.replace(/\.[^.]+$/, '') : (audio?.file || '').replace(/\.[^.]+$/, '');
+                    sourceImage = `transitions/dubits/dubit_${explicit || stem}.mp4`;
+                    break;
+                }
+                if (prev.file) { sourceImage = prev.file; break; }
+                if (prev.break || prev.type === 'scene_break') break;
+            }
+            if (!sourceImage && item.image) sourceImage = item.image;
+            if (!sourceImage) {
+                this.logLine('sys', '❌ DubIt: nie znaleziono klatki startowej — ustaw pole "image" w kafelku lub dodaj poprzedzający element');
+                return;
+            }
+
+            this.dubitStatus = { status: 'queued', dubit_name: null, error: null, elapsed_s: null, flow_idx: flowIdx };
+            try {
+                const res = await fetch('/api/dubit/start', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        run_filename:    this.selectedRun.filename,
+                        dubit_item:      item,
+                        start_image:     sourceImage,
+                        flow_idx:        flowIdx,
+                        start_from_step: startFromStep,
+                        ...(endAtStep !== null ? { end_at_step: endAtStep } : {}),
+                        dry_run:         dryRun,
+                    }),
+                });
+                const data = await res.json();
+                if (!res.ok) {
+                    this.dubitStatus = { ...this.dubitStatus, status: 'error', error: data.detail || data.error || 'Błąd startu' };
+                    this.logLine('sys', `❌ DubIt error: ${this.dubitStatus.error}`);
+                    return;
+                }
+                this.logLine('sys', `🔊 DubIt start: ${data.dubit_name} @ ${data.resolution}`);
+                if (this._dubitPollTimer) clearInterval(this._dubitPollTimer);
+                this._dubitPollTimer = setInterval(() => this._pollDubitStatus(), 5000);
+            } catch(e) {
+                this.dubitStatus = { ...this.dubitStatus, status: 'error', error: e.message };
+            }
+        },
+
+        _dubitStepCount(flowIdx) {
+            const item = this.flowData?.flow?.[flowIdx];
+            if (!item) return 0;
+            const a = item.audio;
+            return Array.isArray(a) ? a.length : 1;
+        },
+
+        async regenDubitFrom(flowIdx, stepIdx) {
+            if (!this.selectedRun) return;
+            if (this.dubitStatus.status === 'running' || this.dubitStatus.status === 'queued') {
+                this.logLine('sys', '❌ DubIt już trwa — poczekaj lub anuluj'); return;
+            }
+            const total = this._dubitStepCount(flowIdx);
+
+            // Always show modal like chain — "Ten i wszystkie kolejne" button is conditionally shown inside modal
+            const choice = await new Promise(resolve => {
+                this.dubitRegenModal = { show: true, flowIdx, stepIdx, totalSteps: total, _resolve: resolve };
+            });
+            if (!choice) return;
+
+            // Archive segments that will be overwritten
+            const toArchive = choice === 'one'
+                ? [stepIdx]
+                : Array.from({ length: total - stepIdx }, (_, i) => stepIdx + i);
+            const si = this._si(flowIdx);
+            const names = toArchive.map(i => si?.steps?.[i]?.name).filter((n, i) => n && si?.steps?.[toArchive[i]]?.exists);
+            if (names.length) {
+                try {
+                    const res  = await fetch('/api/media/batch-archive', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ run: this.selectedRun.filename, names }),
+                    });
+                    const data = await res.json();
+                    if (res.ok) {
+                        for (const r of data.results)
+                            if (r.ok) this.logLine('sys', `📦 Backup [${data.ts}]: ${r.new_name}`);
+                    }
+                } catch(e) { this.logLine('sys', `⚠ backup dubit segs: ${e.message}`); }
+                this.statusData = null; await this.refreshStatus();
+            }
+
+            // 'one' → regenerate only stepIdx (backend reuses all other segments)
+            // 'all' → regenerate from stepIdx to end
+            const endAt = choice === 'one' ? stepIdx : null;
+            await this.startDubitGen(flowIdx, stepIdx, endAt, this.dubitRegenModal.dryRun);
+        },
+
+        async _pollDubitStatus() {
+            try {
+                const res  = await fetch('/api/dubit/status');
+                const data = await res.json();
+                this.dubitStatus = { ...data };
+                if (data.status === 'done') {
+                    clearInterval(this._dubitPollTimer);
+                    this._dubitPollTimer = null;
+                    this.logLine('sys', `✅ DubIt gotowy: ${data.output_name} (${data.elapsed_s}s)`);
+                    this.statusData = null; await this.refreshStatus();
+                } else if (data.status === 'error') {
+                    clearInterval(this._dubitPollTimer);
+                    this._dubitPollTimer = null;
+                    this.logLine('sys', `❌ DubIt błąd: ${data.error}`);
+                }
+            } catch(e) { /* network hiccup — keep polling */ }
+        },
+
+        async archiveDubit(flowIdx) {
+            const si = this._si(flowIdx);
+            if (!si || si.status === 'red') return;
+            const names = si.steps
+                ? si.steps.filter(s => s.exists).map(s => s.name)
+                : (si.name ? [si.name] : []);
+            if (!names.length) return;
+            if (!confirm(`Archiwizować DubIt clip?\n\n${names.join('\n')}\n\nPliki zostaną przemianowane, nie usunięte.`)) return;
+            try {
+                const res  = await fetch('/api/media/batch-archive', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ run: this.selectedRun.filename, names }),
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    for (const r of data.results)
+                        if (r.ok) this.logLine('sys', `📦 Backup [${data.ts}]: ${r.new_name}`);
+                } else {
+                    this.logLine('sys', `❌ archive dubit: ${data.detail || res.status}`);
+                }
+            } catch(e) { this.logLine('sys', `❌ Archiwizacja DubIt: ${e.message}`); }
+            this.statusData = null; await this.refreshStatus();
+        },
+
+        async archiveDubitStep(flowIdx, stepIdx) {
+            const si = this._si(flowIdx);
+            if (!si || si.status === 'red' || !si.steps) return;
+            const step = si.steps[stepIdx];
+            if (!step?.exists) return;
+            if (!confirm(`Archiwizować step ${stepIdx + 1}?\n\n${step.name}\n\nPlik zostanie przemianowany, nie usunięty.`)) return;
+            try {
+                const res = await fetch('/api/media/batch-archive', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ run: this.selectedRun.filename, names: [step.name] }),
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    for (const r of data.results)
+                        if (r.ok) this.logLine('sys', `📦 Backup [${data.ts}]: ${r.new_name}`);
+                } else {
+                    this.logLine('sys', `❌ archive dubit step: ${data.detail || res.status}`);
+                }
+            } catch(e) { this.logLine('sys', `❌ Archiwizacja DubIt step: ${e.message}`); }
+            this.statusData = null; await this.refreshStatus();
+        },
+
         // ─ Talk transition (I2V2I) ───────────────────────────────────────────
 
         async startTalkTransition(flowIdx) {
@@ -11188,6 +11834,40 @@ function app() {
             }
             this.editModal.data = { ...this.editModal.data, audio: aud };
         },
+
+        // ── DubIt multi-step helpers ────────────────────────────────────────
+        _dubitSteps() {
+            let aud = this.editModal.data.audio;
+            if (!Array.isArray(aud)) {
+                // Legacy: single audio string + root pos/neg
+                return [{ file: aud || '', pos: this.editModal.data.pos || '', neg: this.editModal.data.neg || '' }];
+            }
+            return aud.map(a => typeof a === 'object' && a !== null ? a : { file: a || '', pos: '', neg: '' });
+        },
+        editDubitSetStep(idx, field, val) {
+            let steps = [...this._dubitSteps()];
+            steps[idx] = { ...steps[idx], [field]: val };
+            this.editModal.data = { ...this.editModal.data, audio: steps };
+        },
+        editDubitAddStep() {
+            let steps = this._dubitSteps();
+            this.editModal.data = { ...this.editModal.data, audio: [...steps, { file: '', pos: '', neg: '' }] };
+        },
+        editDubitRemoveStep(idx) {
+            let steps = this._dubitSteps().filter((_, i) => i !== idx);
+            this.editModal.data = { ...this.editModal.data, audio: steps };
+        },
+        editDubitPickAudio(fname) {
+            let steps = this._dubitSteps();
+            const existing = steps.map(s => s.file);
+            if (steps.length === 1 && !steps[0].file) {
+                steps = [{ file: fname, pos: steps[0].pos, neg: steps[0].neg }];
+            } else if (!existing.includes(fname)) {
+                steps = [...steps, { file: fname, pos: '', neg: '' }];
+            }
+            this.editModal.data = { ...this.editModal.data, audio: steps };
+        },
+
         editTalkSetPreset(val) {
             if (!val) return;
             const [w, h] = val.split(',').map(Number);
@@ -11404,7 +12084,7 @@ function app() {
             await this.loadAmbientFiles();
         },
 
-        // Ordered list of selectable clip keys (file→file green + chain headers + gray .mp4)
+        // Ordered list of selectable clip keys (file→file green + chain headers + mp4 tiles + talk + multitalk)
         _selectableClipKeys() {
             const keys = [];
             for (const seg of this.flowSegments()) {
@@ -11412,6 +12092,8 @@ function app() {
                     const item = entry.item || {};
                     if (item.chain && item.chain_prefix && this.chainStatusOk(entry.idx)) {
                         keys.push('chain:' + item.chain_prefix);
+                    } else if ((item.type === 'talk' || item.type === 'multitalk' || item.type === 'dubit') && this._si(entry.idx)?.name) {
+                        keys.push(this._si(entry.idx).name);
                     } else if (item.file && this.fileItemIsGreen(entry.idx)) {
                         const name = this.fileItemName(entry.idx);
                         if (name) keys.push(name);
@@ -12082,9 +12764,10 @@ function app() {
                        : item.header !== undefined ? 'header'
                        : item.type === 'talk' ? 'talk'
                        : item.type === 'multitalk' ? 'multitalk'
+                       : item.type === 'dubit' ? 'dubit'
                        : 'file';
-            const titles    = { chain: '⛓ Edytuj Chain', header: '📌 Edytuj nagłówek', file: '📄 Edytuj plik', talk: '🎙️ Edytuj Talk', multitalk: '🗣 Edytuj Multitalk' };
-            const subtitles = { chain: item.chain_prefix || 'chain', header: item.header || '', file: item.file || '', talk: 'InfiniteTalk', multitalk: item.name || 'multitalk' };
+            const titles    = { chain: '⛓ Edytuj Chain', header: '📌 Edytuj nagłówek', file: '📄 Edytuj plik', talk: '🎙️ Edytuj Talk', multitalk: '🗣 Edytuj Multitalk', dubit: '🔊 Edytuj DubIt' };
+            const subtitles = { chain: item.chain_prefix || 'chain', header: item.header || '', file: item.file || '', talk: 'InfiniteTalk', multitalk: item.name || 'multitalk', dubit: Array.isArray(item.audio) ? (item.audio[0]?.file || 'lipsync') : (item.audio || 'lipsync') };
             if (kind === 'chain') this._loadWorkflowVariants();
             this._loadWorkflowVariants();
             this.editModal = {
@@ -12133,7 +12816,7 @@ function app() {
                     })
                     .catch(() => {});
             }
-            if ((kind === 'file' || kind === 'talk' || kind === 'multitalk') && this.selectedRun?.filename) {
+            if ((kind === 'file' || kind === 'talk' || kind === 'multitalk' || kind === 'dubit') && this.selectedRun?.filename) {
                 this.editModal.loadingFiles = true;
                 fetch(`/api/runs/${encodeURIComponent(this.selectedRun.filename)}/project-files`)
                     .then(r => r.ok ? r.json() : Promise.reject(r.status))
@@ -12219,6 +12902,25 @@ function app() {
                 if (!d.image || !(d.image + '').trim()) delete d.image;
                 // use_last_frame no longer used — clean up any saved values
                 delete d.use_last_frame;
+            }
+            // DubIt validation
+            if (this.editModal.kind === 'dubit') {
+                const dubitSteps = this._dubitSteps();
+                if (!dubitSteps[0]?.file?.trim()) {
+                    this.editModal.error = 'Wymagany plik audio w pierwszym stepie';
+                    this.editModal.saving = false;
+                    return;
+                }
+                // Normalize: save as array of {file, pos, neg}, remove root pos/neg
+                d.audio = dubitSteps.map(s => ({ file: s.file, pos: s.pos || '', neg: s.neg || '' }));
+                delete d.pos;
+                delete d.neg;
+                const r64 = n => Math.round(n / 64) * 64;
+                if (d.width)  d.width  = r64(parseInt(d.width));
+                if (d.height) d.height = r64(parseInt(d.height));
+                if (typeof d.prefix === 'string' && !d.prefix.trim()) delete d.prefix;
+                if (!d.image || !(d.image + '').trim()) delete d.image;
+                d.type = 'dubit';
             }
             // Multitalk validation
             if (this.editModal.kind === 'multitalk') {
@@ -12542,6 +13244,7 @@ function app() {
                 if (item.break || item.type === 'scene_break' || item.header) { prevFile = null; continue; }
                 if (item.type === 'talk') { prevFile = null; continue; }
                 if (item.type === 'multitalk') { prevFile = null; continue; }
+                if (item.type === 'dubit') { prevFile = null; continue; }
                 if (item.chain !== undefined) { prevFile = null; continue; }
                 if (item.file) {
                     if (prevFile !== null) {
@@ -12581,6 +13284,11 @@ function app() {
                 const _tr = this.selectedRun?.force_resolution || this.selectedRun?.default_resolution || null;
                 newItem = { type: 'multitalk', image: '', num_persons: 2, name: 'dialog_01', width: _tr ? _tr[0] : 480, height: _tr ? _tr[1] : 720,
                             steps: [{ speaker_idx: 0, audio: '' }] };
+            } else if (kind === 'dubit') {
+                const _r64 = n => Math.round(n / 64) * 64;
+                const _tr = this.selectedRun?.force_resolution || this.selectedRun?.default_resolution || null;
+                newItem = { type: 'dubit', audio: 'glos.mp3', pos: 'A person is speaking Polish, saying: ""', neg: 'blurry, distorted face',
+                            width: _tr ? _r64(_tr[0]) : 896, height: _tr ? _r64(_tr[1]) : 1152 };
             } else {
                 newItem = {
                     chain_prefix: this.nextChainPrefix(),
@@ -16049,6 +16757,7 @@ function picMaskEditor() {
             if (item.chain) return `Chain: ${item.chain_prefix || ''}`;
             if (item.type === 'talk') return `Talk: ${Array.isArray(item.audio) ? item.audio[0] : item.audio || ''}`.slice(0, 40);
             if (item.type === 'multitalk') return `Multitalk: ${item.name || item.audio || ''}`.slice(0, 40);
+            if (item.type === 'dubit') return `DubIt: ${item.prefix || item.audio || ''}`.slice(0, 40);
             return '—';
         },
 
