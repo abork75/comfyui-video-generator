@@ -1,8 +1,8 @@
-# RUN_RUN024 - test.yaml
-# Edited: 2026-07-24 17:11:41
+# RUN_024 - test.yaml
+# Edited: 2026-08-17 16:35:30
 # Edit this file freely — regenerate .py with generate_py_from_yaml()
 #
-project_folder: C:\Users\abork\AppData\Local\CapCut\Videos\muszelka_pliki\EM\nowa_praca
+project_folder: E:\FILMY\RUN_023 - EM nowa_praca
 
 use_test_flow: false
 
@@ -20,7 +20,7 @@ flow:
   use_lightning: true
 
 - chain:
-    prefix: doggy_MODELKAEM_1MIN
+    prefix: E:\FILMY\RUN_023 - EM nowa_praca
     transitions:
     - duration: 2
       pos: |-

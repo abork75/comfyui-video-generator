@@ -1,17 +1,18 @@
-# Migrated from: RUN_008_MKK_kara.py
-# Migration date: 2026-07-19 18:15:25
+# RUN_008 - MKK_kara.yaml
+# Edited: 2026-08-17 19:05:21
 # Edit this file freely — regenerate .py with generate_py_from_yaml()
 #
-project_folder: C:\Users\abork\AppData\Local\CapCut\Videos\muszelka_pliki\MKK\kara
+project_folder: E:\FILMY\RUN_008 - MK kara
 
 defaults:
+  fps: 16
+  steps: 20
+  cfg: 5
+  duration: 4
+  auto_blocks_to_swap: true
   resolution:
   - 960
   - 720
-  fps: 16
-  steps: 20
-  cfg: 5.0
-  duration: 4
 
 use_test_flow: false
 

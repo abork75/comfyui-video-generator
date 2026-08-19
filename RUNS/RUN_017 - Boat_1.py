@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 # AUTO-GENERATED — do NOT edit manually.
-# Edit RUN_RUN017_REALWORD.yaml and regenerate with:
+# Edit RUN_017 - Boat_1.yaml and regenerate with:
 #     from app.services.yaml_service import generate_py_from_yaml
-#     generate_py_from_yaml(Path("RUNS/RUN_RUN017_REALWORD.yaml"))
-# Generated: 2026-07-12 02:13:19
+#     generate_py_from_yaml(Path("RUNS/RUN_017 - Boat_1.yaml"))
+# Generated: 2026-08-17 17:17:37
 # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 import sys
@@ -18,7 +18,7 @@ from batch_transitions import run_batch_generation
 # PROJECT CONFIG
 # ============================================================
 
-PROJECT_FOLDER = 'C:\\Users\\abork\\AppData\\Local\\CapCut\\Videos\\__DEVIANT ART\\REALWORLD\\film'
+PROJECT_FOLDER = 'E:\\FILMY\\RUN_017 - Boat_1'
 
 FORCE_RESOLUTION = (
     480,
@@ -31,7 +31,7 @@ DEFAULT_RESOLUTION = (
 
 DEFAULT_BACKEND        = 'linux'
 DEFAULT_FPS            = 16
-DEFAULT_STEPS          = 6
+DEFAULT_STEPS          = 8
 DEFAULT_CFG            = 2
 DEFAULT_DURATION       = 2
 DEFAULT_BLOCKS_TO_SWAP      = 35
@@ -306,7 +306,6 @@ Two powerful strikes: first strong swing and impact at 1.2s, second even harder 
         "chain_prefix": 'domina wychodzi',
         'backend': 'linux',
         'fps': 16,
-        'steps': 6,
         'cfg': 2,
         'neg': 'static, frozen, no movement',
     },
@@ -342,7 +341,6 @@ Two powerful strikes: first strong swing and impact at 1.2s, second even harder 
         "chain_prefix": 'oczekiwanie',
         'backend': 'linux',
         'fps': 16,
-        'steps': 6,
         'cfg': 2,
         'neg': 'static, frozen, no movement',
     },
@@ -390,7 +388,6 @@ Camera movement: starts distant, smoothly dollies in and transitions into a clos
         "chain_prefix": 'opuszcza kajute',
         'backend': 'linux',
         'fps': 16,
-        'steps': 6,
         'cfg': 2,
         'neg': 'static, frozen, no movement',
     },
@@ -424,7 +421,6 @@ Camera movement: starts distant, smoothly dollies in and transitions into a clos
         "chain_prefix": 'passing away',
         'backend': 'linux',
         'fps': 16,
-        'steps': 6,
         'cfg': 2,
         'neg': 'static, frozen, no movement',
     },

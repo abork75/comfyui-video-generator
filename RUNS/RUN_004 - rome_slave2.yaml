@@ -1,0 +1,117 @@
+# Migrated from: RUN_004 - rome_slave2.py
+# Migration date: 2026-08-17 19:47:32
+# Edit this file freely — regenerate .py with generate_py_from_yaml()
+#
+project_folder: D:\CapCut\Videos\klub_pliki\rome_slaves\slave2
+
+defaults:
+  resolution:
+  - 464
+  - 688
+  fps: 16
+  steps: 20
+  cfg: 5.0
+  duration: 4
+
+use_test_flow: false
+
+linux_backend:
+  config_path: D:\streamlit_project\comfyui_integration\workflow_configs\wan_i2v_config.yaml
+  workflows_path: D:\streamlit_project\comfyui_integration\workflows
+  comfyui_output_folder: D:\ComfyUI\output\video
+
+# ──────────────────────────────────────────────────────────
+# FLOW — lista generacji
+# ──────────────────────────────────────────────────────────
+flow:
+- file: 01. slave2.mp4
+  backend: local
+  duration: 3
+  pos: |-
+    photograph springs to life, motion begins smoothly, gradual acceleration, woman is whipped
+  neg: |-
+    blurry, low quality, sudden movements, pose changes, moving background, waving windows, motion outside, cars moving, people moving, wind, ripples, dynamic scene, any movement
+
+- file: 02. slave2.mp4
+  backend: local
+  duration: 3
+  pos: |-
+    photograph springs to life, motion begins smoothly, gradual acceleration, woman is whipped
+  neg: |-
+    blurry, low quality, sudden movements, pose changes, moving background, waving windows, motion outside, cars moving, people moving, wind, ripples, dynamic scene, any movement
+
+- file: 03. slave2.mp4
+  backend: local
+  duration: 3
+  pos: |-
+    photograph springs to life, motion begins smoothly, gradual acceleration, woman is whipped
+  neg: |-
+    blurry, low quality, jerky motion, frozen, moving background, waving windows, motion outside, cars moving, people moving, wind, ripples, dynamic scene, any movement
+
+- file: 04. slave2.mp4
+  backend: local
+  duration: 3
+  pos: |-
+    photograph springs to life, motion begins smoothly, gradual acceleration, woman is whipped
+  neg: |-
+    blurry, low quality, jerky motion, frozen, moving background, waving windows, motion outside, cars moving, people moving, wind, ripples, dynamic scene, any movement
+
+- file: 05. slave2.mp4
+  backend: local
+  duration: 3
+  pos: |-
+    photograph springs to life, motion begins smoothly, gradual acceleration, woman is whipped
+  neg: |-
+    blurry, low quality, jerky motion, frozen, moving background, waving windows, motion outside, cars moving, people moving, wind, ripples, dynamic scene, any movement
+
+- file: 06. slave2.mp4
+  backend: local
+  duration: 3
+  pos: |-
+    photograph springs to life, motion begins smoothly, gradual acceleration, woman is whipped
+  neg: |-
+    blurry, low quality, jerky motion, frozen, moving background, waving windows, motion outside, cars moving, people moving, wind, ripples, dynamic scene, any movement
+
+- file: 07. slave2.mp4
+  backend: local
+  duration: 3
+  pos: |-
+    photograph springs to life, motion begins smoothly, gradual acceleration, woman is whipped
+  neg: |-
+    blurry, low quality, jerky motion, frozen, moving background, waving windows, motion outside, cars moving, people moving, wind, ripples, dynamic scene, any movement
+
+- file: 08. slave2.mp4
+  backend: local
+  duration: 3
+  pos: |-
+    photograph springs to life, motion begins smoothly, gradual acceleration, woman is whipped
+  neg: |-
+    blurry, low quality, jerky motion, frozen, moving background, waving windows, motion outside, cars moving, people moving, wind, ripples, dynamic scene, any movement
+
+# ──────────────────────────────────────────────────────────
+# FLOW_TEST — lista testowa
+# ──────────────────────────────────────────────────────────
+flow_test:
+- file: 01. slave2.mp4
+  backend: local
+  duration: 3
+  pos: |-
+    photograph springs to life, motion begins smoothly, gradual acceleration, woman is whipped
+  neg: |-
+    blurry, low quality, sudden movements, pose changes, moving background, waving windows, motion outside, cars moving, people moving, wind, ripples, dynamic scene, any movement
+
+- file: 02. slave2.mp4
+  backend: local
+  duration: 3
+  pos: |-
+    photograph springs to life, motion begins smoothly, gradual acceleration, woman is whipped
+  neg: |-
+    blurry, low quality, sudden movements, pose changes, moving background, waving windows, motion outside, cars moving, people moving, wind, ripples, dynamic scene, any movement
+
+- file: 03. slave2.mp4
+  backend: local
+  duration: 3
+  pos: |-
+    photograph springs to life, motion begins smoothly, gradual acceleration, woman is whipped
+  neg: |-
+    blurry, low quality, jerky motion, frozen, moving background, waving windows, motion outside, cars moving, people moving, wind, ripples, dynamic scene, any movement

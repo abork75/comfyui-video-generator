@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 # AUTO-GENERATED — do NOT edit manually.
-# Edit RUN_011_praca_w_postapo.yaml and regenerate with:
+# Edit RUN_011 - praca_w_postapo.yaml and regenerate with:
 #     from app.services.yaml_service import generate_py_from_yaml
-#     generate_py_from_yaml(Path("RUNS/RUN_011_praca_w_postapo.yaml"))
-# Generated: 2026-05-28 17:43:58
+#     generate_py_from_yaml(Path("RUNS/RUN_011 - praca_w_postapo.yaml"))
+# Generated: 2026-08-17 19:08:00
 # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 import sys
@@ -18,7 +18,7 @@ from batch_transitions import run_batch_generation
 # PROJECT CONFIG
 # ============================================================
 
-PROJECT_FOLDER = 'C:\\Users\\abork\\AppData\\Local\\CapCut\\Videos\\muszelka_pliki\\MKK\\praca w postapo\\film'
+PROJECT_FOLDER = 'E:\\FILMY\\RUN_011 - praca w postapo'
 
 FORCE_RESOLUTION = (
     1024,
@@ -31,11 +31,15 @@ DEFAULT_RESOLUTION = (
 
 DEFAULT_BACKEND        = 'linux'
 DEFAULT_FPS            = 16
-DEFAULT_STEPS          = 6
+DEFAULT_STEPS          = 8
 DEFAULT_CFG            = 2
 DEFAULT_DURATION       = 2
 DEFAULT_BLOCKS_TO_SWAP      = 35
 DEFAULT_FRAME_INTERPOLATION = True
+DEFAULT_POSITIVE_PROMPT = 'smooth motion, high quality, cinematic'
+DEFAULT_NEGATIVE_PROMPT = 'blurry, distorted, artifacts, watermark, text'
+DEFAULT_AUDIO_PROMPT   = 'ambient sound, environmental audio, natural soundscape, high quality'
+DEFAULT_AUDIO_NEGATIVE_PROMPT = 'music, melody, instruments, singing, low quality, distortion'
 DEFAULT_SEED           = None
 SKIP_MISSING           = True
 SKIP_EXISTED           = True
@@ -98,7 +102,6 @@ FLOW_FULL = [
         "chain_prefix": 'dotyka_obrozy',
         'backend': 'linux',
         'fps': 16,
-        'steps': 6,
         'cfg': 2,
         'neg': '',
     },
@@ -228,7 +231,6 @@ unnatural camera movement, orbiting too quickly, spinning camera""",
         "chain_prefix": 'dissapearing_woman',
         'backend': 'linux',
         'fps': 16,
-        'steps': 6,
         'cfg': 2,
         'neg': 'static, frozen, no movement, distorted, walking towards camera, facing camera, approaching viewer, coming closer, teleporting, jumping, blurry, low quality',
     },
@@ -317,7 +319,6 @@ unnatural camera movement, orbiting too quickly, spinning camera""",
         "chain_prefix": 'nowy_chain0',
         'backend': 'linux',
         'fps': 16,
-        'steps': 6,
         'cfg': 2,
         'neg': 'static, frozen, no movement',
     },
@@ -386,7 +387,6 @@ unnatural camera movement, orbiting too quickly, spinning camera""",
         "chain_prefix": 'nowy_chain1',
         'backend': 'linux',
         'fps': 16,
-        'steps': 6,
         'cfg': 2,
         'neg': 'static, frozen, no movement',
     },
@@ -411,7 +411,6 @@ unnatural camera movement, orbiting too quickly, spinning camera""",
         "chain_prefix": 'nowy_chain2',
         'backend': 'linux',
         'fps': 16,
-        'steps': 6,
         'cfg': 2,
         'neg': 'static, frozen, no movement',
     },
@@ -461,7 +460,6 @@ unnatural camera movement, orbiting too quickly, spinning camera""",
         "chain_prefix": 'nowy_chain3',
         'backend': 'linux',
         'fps': 16,
-        'steps': 6,
         'cfg': 2,
         'neg': 'static, frozen, no movement',
     },
@@ -523,7 +521,6 @@ Her eyes slowly open and close, fluttering with pleasure, and her mouth gently p
         "chain_prefix": 'nowy_chain5',
         'backend': 'linux',
         'fps': 16,
-        'steps': 6,
         'cfg': 2,
         'neg': 'static, frozen, no movement',
     },
@@ -548,7 +545,6 @@ Her eyes slowly open and close, fluttering with pleasure, and her mouth gently p
         "chain_prefix": 'nowy_chain6',
         'backend': 'linux',
         'fps': 16,
-        'steps': 6,
         'cfg': 2,
         'neg': 'static, frozen, no movement',
     },
@@ -692,7 +688,6 @@ Both movements happen naturally and are well synchronized. Keep the exact appear
         "chain_prefix": 'nowy_chain8',
         'backend': 'linux',
         'fps': 16,
-        'steps': 6,
         'cfg': 2,
         'neg': 'static, frozen, no movement',
     },
@@ -808,7 +803,6 @@ Graceful yet raw and seductive exit in a desolate environment. Smooth cinematic 
         "chain_prefix": 'nowy_chain9',
         'backend': 'linux',
         'fps': 16,
-        'steps': 6,
         'cfg': 2,
         'neg': 'static, frozen, no movement',
     },

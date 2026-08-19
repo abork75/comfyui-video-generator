@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 # AUTO-GENERATED — do NOT edit manually.
-# Edit RUN_RUN025 - Cinema show 1.yaml and regenerate with:
+# Edit RUN_025 - Cinema show 1.yaml and regenerate with:
 #     from app.services.yaml_service import generate_py_from_yaml
-#     generate_py_from_yaml(Path("RUNS/RUN_RUN025 - Cinema show 1.yaml"))
-# Generated: 2026-08-11 22:15:51
+#     generate_py_from_yaml(Path("RUNS/RUN_025 - Cinema show 1.yaml"))
+# Generated: 2026-08-19 07:24:24
 # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 import sys
@@ -18,7 +18,7 @@ from batch_transitions import run_batch_generation
 # PROJECT CONFIG
 # ============================================================
 
-PROJECT_FOLDER = 'C:\\Users\\abork\\AppData\\Local\\CapCut\\Videos\\__DEVIANT ART\\FILMY\\Cinema_1'
+PROJECT_FOLDER = 'E:\\FILMY\\RUN_025 - Cinema_1'
 
 FORCE_RESOLUTION = (
     736,
@@ -550,7 +550,7 @@ She continues masturbating visibly and intensely until the very end of the video
     },
 
     {
-        'file': 'C:\\Users\\abork\\AppData\\Local\\CapCut\\Videos\\__DEVIANT ART\\FILMY\\Cinema_1\\61.53 start MST.png',
+        'file': '61.53 start MST.png',
         'backend': 'linux',
         'duration': 2,
         'pos': 'NONE',

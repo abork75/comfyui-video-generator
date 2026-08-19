@@ -4,7 +4,7 @@
 # Edit RUN_012 - dmuchinj w oponke.yaml and regenerate with:
 #     from app.services.yaml_service import generate_py_from_yaml
 #     generate_py_from_yaml(Path("RUNS/RUN_012 - dmuchinj w oponke.yaml"))
-# Generated: 2026-06-06 05:47:54
+# Generated: 2026-08-17 19:08:45
 # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 import sys
@@ -18,7 +18,7 @@ from batch_transitions import run_batch_generation
 # PROJECT CONFIG
 # ============================================================
 
-PROJECT_FOLDER = 'C:\\Users\\abork\\AppData\\Local\\CapCut\\Videos\\muszelka_pliki\\obce\\oponka\\film'
+PROJECT_FOLDER = 'E:\\FILMY\\RUN_012 - dmuchnij w oponke'
 
 FORCE_RESOLUTION = (
     880,
@@ -31,11 +31,15 @@ DEFAULT_RESOLUTION = (
 
 DEFAULT_BACKEND        = 'linux'
 DEFAULT_FPS            = 16
-DEFAULT_STEPS          = 6
+DEFAULT_STEPS          = 8
 DEFAULT_CFG            = 2
 DEFAULT_DURATION       = 2
 DEFAULT_BLOCKS_TO_SWAP      = 35
 DEFAULT_FRAME_INTERPOLATION = True
+DEFAULT_POSITIVE_PROMPT = 'smooth motion, high quality, cinematic'
+DEFAULT_NEGATIVE_PROMPT = 'blurry, distorted, artifacts, watermark, text'
+DEFAULT_AUDIO_PROMPT   = 'ambient sound, environmental audio, natural soundscape, high quality'
+DEFAULT_AUDIO_NEGATIVE_PROMPT = 'music, melody, instruments, singing, low quality, distortion'
 DEFAULT_SEED           = None
 SKIP_MISSING           = True
 SKIP_EXISTED           = True
@@ -107,7 +111,6 @@ Magical, fantastical atmosphere, dramatic lighting, sparkling particles, beautif
         "chain_prefix": 'wychodzi na zewnątrz',
         'backend': 'linux',
         'fps': 16,
-        'steps': 6,
         'cfg': 2,
         'neg': 'static, frozen, no movement',
     },
@@ -160,7 +163,6 @@ Strong emphasis on magical transfer, glowing effects, sparkles, and light burst.
         "chain_prefix": 'gdzie lewarek',
         'backend': 'linux',
         'fps': 16,
-        'steps': 6,
         'cfg': 2,
         'neg': '',
     },
@@ -197,7 +199,6 @@ Smooth transitions, seductive atmosphere, cinematic lighting, photorealistic, hi
         "chain_prefix": 'nowy_chain_1',
         'backend': 'linux',
         'fps': 16,
-        'steps': 6,
         'cfg': 2,
         'neg': 'static, frozen, no movement',
     },
@@ -272,7 +273,6 @@ Smooth, fluid and erotic choreography, slow-motion elements during the kiss, sen
         "chain_prefix": 'zaproszenie',
         'backend': 'linux',
         'fps': 16,
-        'steps': 6,
         'cfg': 2,
         'neg': 'Women is waving hands with greetings',
     },

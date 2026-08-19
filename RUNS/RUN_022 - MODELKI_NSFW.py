@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 # AUTO-GENERATED — do NOT edit manually.
-# Edit RUN_022_MODELKI_NSFW.yaml and regenerate with:
+# Edit RUN_022 - MODELKI_NSFW.yaml and regenerate with:
 #     from app.services.yaml_service import generate_py_from_yaml
-#     generate_py_from_yaml(Path("RUNS/RUN_022_MODELKI_NSFW.yaml"))
-# Generated: 2026-08-09 22:45:53
+#     generate_py_from_yaml(Path("RUNS/RUN_022 - MODELKI_NSFW.yaml"))
+# Generated: 2026-08-17 16:53:00
 # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 import sys
@@ -18,7 +18,7 @@ from batch_transitions import run_batch_generation
 # PROJECT CONFIG
 # ============================================================
 
-PROJECT_FOLDER = 'C:\\Users\\abork\\AppData\\Local\\CapCut\\Videos\\__DEVIANT ART\\Modelki_igraszki'
+PROJECT_FOLDER = 'E:\\FILMY\\RUN_022 - MODELKI - NSFW'
 
 FORCE_RESOLUTION = (
     704,
@@ -230,7 +230,7 @@ She looks at the camera throughout the video
         'name': '99.002 ONE MINUTE NSFW',
     },
     {
-        'file': 'C:\\Users\\abork\\AppData\\Local\\CapCut\\Videos\\__DEVIANT ART\\Modelki_igraszki\\99.002 Natural.png',
+        'file': '99.002 Natural.png',
         'backend': 'linux',
         'duration': 2,
         'pos': 'NONE',
@@ -398,7 +398,7 @@ She looks at the camera throughout the video
         'name': '99.003. EROTIC DANCE 1',
     },
     {
-        'file': 'C:\\Users\\abork\\AppData\\Local\\CapCut\\Videos\\__DEVIANT ART\\Modelki_igraszki\\99.003 Natural.png',
+        'file': '99.003 Natural.png',
         'backend': 'linux',
         'duration': 2,
         'pos': 'NONE',
@@ -915,7 +915,7 @@ She looks at the camera throughout the video
         'name': '99.006 ONE MINUTE NTSW',
     },
     {
-        'file': 'C:\\Users\\abork\\AppData\\Local\\CapCut\\Videos\\__DEVIANT ART\\Modelki_igraszki\\99.006 Natural.png',
+        'file': '99.006 Natural.png',
         'backend': 'linux',
         'duration': 2,
         'pos': 'NONE',
@@ -1223,7 +1223,7 @@ Cinematic hyper-realistic 8K resolution, HDR high contrast, precise motion blur 
         'name': '99.009 ONE MINUTE NSFW',
     },
     {
-        'file': 'C:\\Users\\abork\\AppData\\Local\\CapCut\\Videos\\__DEVIANT ART\\Modelki_igraszki\\99.009 Natural.png',
+        'file': '99.009 Natural.png',
         'backend': 'linux',
         'duration': 2,
         'pos': 'NONE',
@@ -1255,7 +1255,7 @@ she looks at the camera throughout the video. same background as the first frame
     },
 
     {
-        'file': 'C:\\Users\\abork\\AppData\\Local\\CapCut\\Videos\\__DEVIANT ART\\Modelki_igraszki\\99.009 Natural.png',
+        'file': '99.009 Natural.png',
         'backend': 'linux',
         'duration': 2,
         'pos': 'NONE',
@@ -1294,7 +1294,7 @@ The video is shot from above looking down on the scene. same background as the f
     },
 
     {
-        'file': 'C:\\Users\\abork\\AppData\\Local\\CapCut\\Videos\\__DEVIANT ART\\Modelki_igraszki\\99.009 Natural.png',
+        'file': '99.009 Natural.png',
         'backend': 'linux',
         'duration': 2,
         'pos': 'NONE',
@@ -1377,7 +1377,7 @@ She looks at the camera throughout the video
         'name': '99.010 ONE MINUTE NSFW',
     },
     {
-        'file': 'C:\\Users\\abork\\AppData\\Local\\CapCut\\Videos\\__DEVIANT ART\\Modelki_igraszki\\99.010 Natural.png',
+        'file': '99.010 Natural.png',
         'backend': 'linux',
         'duration': 2,
         'pos': 'NONE',
@@ -2132,7 +2132,7 @@ Camera: Static medium shot eye-level, subtle zoom to hips during rear section, f
     },
 
     {
-        'file': 'C:\\Users\\abork\\AppData\\Local\\CapCut\\Videos\\__DEVIANT ART\\Modelki_igraszki\\99.012 Natural.png',
+        'file': '99.012 Natural.png',
         'backend': 'linux',
         'duration': 2,
         'pos': 'NONE',
@@ -2182,7 +2182,7 @@ Cinematic hyper-realistic 8K resolution, HDR high contrast, precise motion blur 
         'name': '99.004 ONE MINUTE NSFW,  desiva 600 no g4gg',
     },
     {
-        'file': 'C:\\Users\\abork\\AppData\\Local\\CapCut\\Videos\\__DEVIANT ART\\Modelki_igraszki\\99.013 Natural.png',
+        'file': '99.013 Natural.png',
         'backend': 'linux',
         'duration': 2,
         'pos': 'NONE',
@@ -2344,7 +2344,7 @@ She looks at the camera throughout the video
         'name': '99.014 ONE MINUTE NSFW, desiva 600 no g4gg',
     },
     {
-        'file': 'C:\\Users\\abork\\AppData\\Local\\CapCut\\Videos\\__DEVIANT ART\\Modelki_igraszki\\99.014 Natural.png',
+        'file': '99.014 Natural.png',
         'backend': 'linux',
         'duration': 2,
         'pos': 'NONE',
@@ -2500,7 +2500,7 @@ She looks at the camera throughout the video
         'name': '99.015 ONE MINUTE NSFW FACE KEEP, desiva 600 no g4gg',
     },
     {
-        'file': 'C:\\Users\\abork\\AppData\\Local\\CapCut\\Videos\\__DEVIANT ART\\Modelki_igraszki\\99.015 Natural.png',
+        'file': '99.015 Natural.png',
         'backend': 'linux',
         'duration': 2,
         'pos': 'NONE',
@@ -2550,7 +2550,7 @@ she looks at the camera throughout the video. same background as the first frame
     {"break": True},
 
     {
-        'file': 'C:\\Users\\abork\\AppData\\Local\\CapCut\\Videos\\__DEVIANT ART\\Modelki_igraszki\\99.015 Natural.png',
+        'file': '99.015 Natural.png',
         'backend': 'linux',
         'duration': 2,
         'pos': 'NONE',
@@ -2595,7 +2595,7 @@ The video is shot from above looking down on the scene. same background as the f
     {"break": True},
 
     {
-        'file': 'C:\\Users\\abork\\AppData\\Local\\CapCut\\Videos\\__DEVIANT ART\\Modelki_igraszki\\99.015 Natural.png',
+        'file': '99.015 Natural.png',
         'backend': 'linux',
         'duration': 2,
         'pos': 'NONE',
@@ -2755,7 +2755,7 @@ She looks at the camera throughout the video
     {"break": True},
 
     {
-        'file': 'C:\\Users\\abork\\AppData\\Local\\CapCut\\Videos\\__DEVIANT ART\\Modelki_igraszki\\99.016 Natural.png',
+        'file': '99.016 Natural.png',
         'backend': 'linux',
         'duration': 2,
         'pos': 'NONE',
@@ -2974,7 +2974,7 @@ She looks at the camera throughout the video same background as the first frame.
         'name': '99.017 ONE MINUTE NSFW FACE KEEP CARTOON',
     },
     {
-        'file': 'C:\\Users\\abork\\AppData\\Local\\CapCut\\Videos\\__DEVIANT ART\\Modelki_igraszki\\99.017 Anime.png',
+        'file': '99.017 Anime.png',
         'backend': 'linux',
         'duration': 2,
         'pos': 'NONE',
@@ -3047,7 +3047,7 @@ She looks at the camera throughout the video same background as the first frame.
     {"break": True},
 
     {
-        'file': 'C:\\Users\\abork\\AppData\\Local\\CapCut\\Videos\\__DEVIANT ART\\Modelki_igraszki\\99.017 Anime.png',
+        'file': '99.017 Anime.png',
         'backend': 'linux',
         'duration': 2,
         'pos': 'NONE',
@@ -3100,7 +3100,7 @@ she looks at the camera throughout the video. same background as the first frame
     {"break": True},
 
     {
-        'file': 'C:\\Users\\abork\\AppData\\Local\\CapCut\\Videos\\__DEVIANT ART\\Modelki_igraszki\\99.017 Anime.png',
+        'file': '99.017 Anime.png',
         'backend': 'linux',
         'duration': 2,
         'pos': 'NONE',
@@ -3149,7 +3149,7 @@ The video is shot from above looking down on the scene.""",
     {"break": True},
 
     {
-        'file': 'C:\\Users\\abork\\AppData\\Local\\CapCut\\Videos\\__DEVIANT ART\\Modelki_igraszki\\99.017 Anime.png',
+        'file': '99.017 Anime.png',
         'backend': 'linux',
         'duration': 2,
         'pos': 'NONE',
@@ -3188,7 +3188,7 @@ The video is shot from above looking down on the scene.""",
     {"break": True},
 
     {
-        'file': 'C:\\Users\\abork\\AppData\\Local\\CapCut\\Videos\\__DEVIANT ART\\Modelki_igraszki\\99.017 Anime.png',
+        'file': '99.017 Anime.png',
         'backend': 'linux',
         'duration': 2,
         'pos': 'NONE',
@@ -3283,7 +3283,7 @@ She looks at the camera throughout the video
         'name': '99.018 ONE MINUTE NSFW FACE KEEP V2',
     },
     {
-        'file': 'C:\\Users\\abork\\AppData\\Local\\CapCut\\Videos\\__DEVIANT ART\\Modelki_igraszki\\99.018 Natural.png',
+        'file': '99.018 Natural.png',
         'backend': 'linux',
         'duration': 2,
         'pos': 'NONE',
@@ -3320,7 +3320,7 @@ She looks at the camera throughout the video
     {"break": True},
 
     {
-        'file': 'C:\\Users\\abork\\AppData\\Local\\CapCut\\Videos\\__DEVIANT ART\\Modelki_igraszki\\99.018 Natural.png',
+        'file': '99.018 Natural.png',
         'backend': 'linux',
         'duration': 2,
         'pos': 'NONE',
@@ -3362,7 +3362,7 @@ She looks at the camera throughout the video
     {"break": True},
 
     {
-        'file': 'C:\\Users\\abork\\AppData\\Local\\CapCut\\Videos\\__DEVIANT ART\\Modelki_igraszki\\99.018 Natural.png',
+        'file': '99.018 Natural.png',
         'backend': 'linux',
         'duration': 2,
         'pos': 'NONE',
@@ -3415,7 +3415,7 @@ she looks at the camera throughout the video. same background as the first frame
     {"break": True},
 
     {
-        'file': 'C:\\Users\\abork\\AppData\\Local\\CapCut\\Videos\\__DEVIANT ART\\Modelki_igraszki\\99.018 Natural.png',
+        'file': '99.018 Natural.png',
         'backend': 'linux',
         'duration': 2,
         'pos': 'NONE',
@@ -3460,7 +3460,7 @@ The video is shot from above looking down on the scene. same background as the f
     {"break": True},
 
     {
-        'file': 'C:\\Users\\abork\\AppData\\Local\\CapCut\\Videos\\__DEVIANT ART\\Modelki_igraszki\\99.018 Natural.png',
+        'file': '99.018 Natural.png',
         'backend': 'linux',
         'duration': 2,
         'pos': 'NONE',
@@ -3501,7 +3501,7 @@ The video is shot from above looking down on the scene. same background as the f
     {"break": True},
 
     {
-        'file': 'C:\\Users\\abork\\AppData\\Local\\CapCut\\Videos\\__DEVIANT ART\\Modelki_igraszki\\99.018 Natural.png',
+        'file': '99.018 Natural.png',
         'backend': 'linux',
         'duration': 2,
         'pos': 'NONE',
@@ -3585,7 +3585,7 @@ She looks at the camera throughout the video same background as the first frame.
         'name': '99.019 ONE MINUTE NSFW FACE KEEP V2',
     },
     {
-        'file': 'C:\\Users\\abork\\AppData\\Local\\CapCut\\Videos\\__DEVIANT ART\\Modelki_igraszki\\99.019 Natural.png',
+        'file': '99.019 Natural.png',
         'backend': 'linux',
         'duration': 2,
         'pos': 'NONE',
@@ -3622,7 +3622,7 @@ She looks at the camera throughout the video same background as the first frame.
     {"break": True},
 
     {
-        'file': 'C:\\Users\\abork\\AppData\\Local\\CapCut\\Videos\\__DEVIANT ART\\Modelki_igraszki\\99.019 Natural.png',
+        'file': '99.019 Natural.png',
         'backend': 'linux',
         'duration': 2,
         'pos': 'NONE',
@@ -3660,7 +3660,7 @@ She looks at the camera throughout the video same background as the first frame.
     {"break": True},
 
     {
-        'file': 'C:\\Users\\abork\\AppData\\Local\\CapCut\\Videos\\__DEVIANT ART\\Modelki_igraszki\\99.019 Natural.png',
+        'file': '99.019 Natural.png',
         'backend': 'linux',
         'duration': 2,
         'pos': 'NONE',
@@ -3709,7 +3709,7 @@ she looks at the camera throughout the video. same background as the first frame
     {"break": True},
 
     {
-        'file': 'C:\\Users\\abork\\AppData\\Local\\CapCut\\Videos\\__DEVIANT ART\\Modelki_igraszki\\99.019 Natural.png',
+        'file': '99.019 Natural.png',
         'backend': 'linux',
         'duration': 2,
         'pos': 'NONE',
@@ -3754,7 +3754,7 @@ The video is shot from above looking down on the scene. same background as the f
     {"break": True},
 
     {
-        'file': 'C:\\Users\\abork\\AppData\\Local\\CapCut\\Videos\\__DEVIANT ART\\Modelki_igraszki\\99.019 Natural.png',
+        'file': '99.019 Natural.png',
         'backend': 'linux',
         'duration': 2,
         'pos': 'NONE',
@@ -3795,7 +3795,7 @@ The video is shot from above looking down on the scene. same background as the f
     {"break": True},
 
     {
-        'file': 'C:\\Users\\abork\\AppData\\Local\\CapCut\\Videos\\__DEVIANT ART\\Modelki_igraszki\\99.019 Natural.png',
+        'file': '99.019 Natural.png',
         'backend': 'linux',
         'duration': 2,
         'pos': 'NONE',

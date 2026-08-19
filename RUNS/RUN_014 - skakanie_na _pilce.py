@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 # AUTO-GENERATED — do NOT edit manually.
-# Edit RUN_014_1_skakanie_na _pilce.yaml and regenerate with:
+# Edit RUN_014 - skakanie_na _pilce.yaml and regenerate with:
 #     from app.services.yaml_service import generate_py_from_yaml
-#     generate_py_from_yaml(Path("RUNS/RUN_014_1_skakanie_na _pilce.yaml"))
-# Generated: 2026-06-08 16:39:48
+#     generate_py_from_yaml(Path("RUNS/RUN_014 - skakanie_na _pilce.yaml"))
+# Generated: 2026-08-17 17:35:22
 # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 import sys
@@ -18,7 +18,7 @@ from batch_transitions import run_batch_generation
 # PROJECT CONFIG
 # ============================================================
 
-PROJECT_FOLDER = 'C:\\Users\\abork\\AppData\\Local\\CapCut\\Videos\\muszelka_pliki\\EM\\skakanie_na_pilce\\film'
+PROJECT_FOLDER = 'E:\\FILMY\\RUN_014 - EM cat walk pilka'
 
 FORCE_RESOLUTION = (
     880,
@@ -31,11 +31,15 @@ DEFAULT_RESOLUTION = (
 
 DEFAULT_BACKEND        = 'linux'
 DEFAULT_FPS            = 16
-DEFAULT_STEPS          = 6
-DEFAULT_CFG            = 2.0
+DEFAULT_STEPS          = 8
+DEFAULT_CFG            = 2
 DEFAULT_DURATION       = 2
 DEFAULT_BLOCKS_TO_SWAP      = 35
 DEFAULT_FRAME_INTERPOLATION = True
+DEFAULT_POSITIVE_PROMPT = 'smooth motion, high quality, cinematic'
+DEFAULT_NEGATIVE_PROMPT = 'blurry, distorted, artifacts, watermark, text'
+DEFAULT_AUDIO_PROMPT   = 'ambient sound, environmental audio, natural soundscape, high quality'
+DEFAULT_AUDIO_NEGATIVE_PROMPT = 'music, melody, instruments, singing, low quality, distortion'
 DEFAULT_SEED           = None
 SKIP_MISSING           = True
 SKIP_EXISTED           = True
@@ -135,7 +139,6 @@ Movement is elegant, smooth and highly sensual, with emphasis on her curves, slo
         "chain_prefix": 'gimnasytka',
         'backend': 'linux',
         'fps': 16,
-        'steps': 6,
         'cfg': 2,
         'neg': 'static, frozen, no movement',
     },
@@ -178,7 +181,6 @@ Front view, visible realistic bouncing motion, natural ball deformation and rebo
         "chain_prefix": 'Skacze na pilce',
         'backend': 'linux',
         'fps': 16,
-        'steps': 6,
         'cfg': 2,
         'neg': 'static, frozen, no movement',
     },
@@ -208,7 +210,6 @@ Front view, visible realistic bouncing motion, natural ball deformation and rebo
         "chain_prefix": 'idzie do przedpokoju',
         'backend': 'linux',
         'fps': 16,
-        'steps': 6,
         'cfg': 2,
         'neg': 'static, frozen, no movement',
     },
@@ -243,7 +244,6 @@ Front view, visible realistic bouncing motion, natural ball deformation and rebo
         "chain_prefix": 'idzie na gorke',
         'backend': 'linux',
         'fps': 16,
-        'steps': 6,
         'cfg': 2,
         'neg': 'static, frozen, no movement',
     },

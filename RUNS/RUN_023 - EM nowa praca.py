@@ -4,7 +4,7 @@
 # Edit RUN_023 - EM nowa praca.yaml and regenerate with:
 #     from app.services.yaml_service import generate_py_from_yaml
 #     generate_py_from_yaml(Path("RUNS/RUN_023 - EM nowa praca.yaml"))
-# Generated: 2026-08-10 14:09:52
+# Generated: 2026-08-17 16:34:52
 # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 import sys
@@ -18,7 +18,7 @@ from batch_transitions import run_batch_generation
 # PROJECT CONFIG
 # ============================================================
 
-PROJECT_FOLDER = 'C:\\Users\\abork\\AppData\\Local\\CapCut\\Videos\\muszelka_pliki\\EM\\nowa_praca'
+PROJECT_FOLDER = 'E:\\FILMY\\RUN_023 - EM nowa_praca'
 
 FORCE_RESOLUTION = (
     448,

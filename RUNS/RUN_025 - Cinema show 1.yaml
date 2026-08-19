@@ -1,8 +1,8 @@
-# RUN_RUN025 - Cinema show 1.yaml
-# Edited: 2026-08-11 22:15:51
+# RUN_025 - Cinema show 1.yaml
+# Edited: 2026-08-19 07:24:24
 # Edit this file freely — regenerate .py with generate_py_from_yaml()
 #
-project_folder: C:\Users\abork\AppData\Local\CapCut\Videos\__DEVIANT ART\FILMY\Cinema_1
+project_folder: E:\FILMY\RUN_025 - Cinema_1
 
 use_test_flow: false
 
@@ -486,7 +486,7 @@ flow:
     neg: |-
       static, frozen, no movement
 
-- file: C:\Users\abork\AppData\Local\CapCut\Videos\__DEVIANT ART\FILMY\Cinema_1\61.53 start MST.png
+- file: 61.53 start MST.png
   backend: linux
   duration: 2
   pos: |-

@@ -1,8 +1,8 @@
-# RUN_RUN017_REALWORD.yaml
-# Edited: 2026-07-12 02:13:19
+# RUN_017 - Boat_1.yaml
+# Edited: 2026-08-17 17:17:37
 # Edit this file freely — regenerate .py with generate_py_from_yaml()
 #
-project_folder: C:\Users\abork\AppData\Local\CapCut\Videos\__DEVIANT ART\REALWORLD\film
+project_folder: E:\FILMY\RUN_017 - Boat_1
 
 use_test_flow: false
 
@@ -438,8 +438,9 @@ flow:
 
 defaults:
   backend: linux
+  pre_target_w: 960
+  pre_target_h: 1248
+  auto_blocks_to_swap: true
   resolution:
   - 480
   - 624
-  pre_target_w: 960
-  pre_target_h: 1248

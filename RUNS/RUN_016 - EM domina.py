@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 # AUTO-GENERATED — do NOT edit manually.
-# Edit RUN_016 - EM poses and hair.yaml and regenerate with:
+# Edit RUN_016 - EM domina.yaml and regenerate with:
 #     from app.services.yaml_service import generate_py_from_yaml
-#     generate_py_from_yaml(Path("RUNS/RUN_016 - EM poses and hair.yaml"))
-# Generated: 2026-07-20 10:34:40
+#     generate_py_from_yaml(Path("RUNS/RUN_016 - EM domina.yaml"))
+# Generated: 2026-08-17 17:27:32
 # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 import sys
@@ -18,7 +18,7 @@ from batch_transitions import run_batch_generation
 # PROJECT CONFIG
 # ============================================================
 
-PROJECT_FOLDER = 'C:\\Users\\abork\\AppData\\Local\\CapCut\\Videos\\muszelka_pliki\\EM\\Poses and hair\\film'
+PROJECT_FOLDER = 'E:\\FILMY\\RUN_016 - EM Domina'
 
 FORCE_RESOLUTION = (
     880,
@@ -31,7 +31,7 @@ DEFAULT_RESOLUTION = (
 
 DEFAULT_BACKEND        = 'linux'
 DEFAULT_FPS            = 16
-DEFAULT_STEPS          = 6
+DEFAULT_STEPS          = 8
 DEFAULT_CFG            = 2
 DEFAULT_DURATION       = 2
 DEFAULT_BLOCKS_TO_SWAP      = 35
@@ -155,7 +155,6 @@ FLOW_FULL = [
         "chain_prefix": 'zoom in',
         'backend': 'linux',
         'fps': 16,
-        'steps': 6,
         'cfg': 2,
         'neg': 'static, frozen, no movement',
     },
@@ -204,7 +203,6 @@ Natural lip sync, realistic whip physics, no rubbery stretching, high detail, ph
         "chain_prefix": 'bieg na gore',
         'backend': 'linux',
         'fps': 16,
-        'steps': 6,
         'cfg': 2,
         'neg': 'static, frozen, no movement',
     },
@@ -250,7 +248,6 @@ The leather braid bends and springs realistically during the rotation. Beautiful
         "chain_prefix": 'obroc szpicrute',
         'backend': 'linux',
         'fps': 16,
-        'steps': 6,
         'cfg': 2,
         'neg': 'static, frozen, no movement',
     },

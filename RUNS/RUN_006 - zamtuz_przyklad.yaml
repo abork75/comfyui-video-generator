@@ -1,0 +1,193 @@
+# RUN_006 - zamtuz_przyklad.yaml
+# Edited: 2026-08-17 19:36:25
+# Edit this file freely — regenerate .py with generate_py_from_yaml()
+#
+project_folder: E:\FILMY\RUN_006 - zamtuz przyklad_kary
+
+defaults:
+  fps: 16
+  steps: 20
+  cfg: 5
+  duration: 4
+  auto_blocks_to_swap: true
+  resolution:
+  - 464
+  - 688
+
+use_test_flow: false
+
+linux_backend:
+  config_path: D:\streamlit_project\comfyui_integration\workflow_configs\wan_i2v_config.yaml
+  workflows_path: D:\streamlit_project\comfyui_integration\workflows
+  comfyui_output_folder: D:\ComfyUI\output\video
+
+# ──────────────────────────────────────────────────────────
+# FLOW — lista generacji
+# ──────────────────────────────────────────────────────────
+flow:
+- file: Start1_przyklad.mp4
+  backend: local
+  duration: 2
+  pos: |-
+    Smooth transition totaly naked woman approachesy
+  neg: |-
+    blurry, low quality, sudden movements, pose changes, moving background, waving windows, motion outside, cars moving, people moving, wind, ripples, dynamic scene, any movement
+
+- file: Start2_przyklad.mp4
+  backend: local
+  duration: 2
+  pos: |-
+    NONE
+  neg: |-
+    blurry, low quality, sudden movements, pose changes, moving background, waving windows, motion outside, cars moving, people moving, wind, ripples, dynamic scene, any movement
+
+- file: 01_przyklad.mp4
+  backend: local
+  duration: 2
+  neg: |-
+    blurry, low quality, sudden movements, pose changes, moving background, waving windows, motion outside, cars moving, people moving, wind, ripples, dynamic scene, any movement
+
+- file: 03_przyklad.mp4
+  backend: local
+  duration: 2
+  neg: |-
+    blurry, low quality, sudden movements, pose changes, moving background, waving windows, motion outside, cars moving, people moving, wind, ripples, dynamic scene, any movement
+
+- file: 02_przyklad.mp4
+  backend: local
+  duration: 2
+  neg: |-
+    blurry, low quality, sudden movements, pose changes, moving background, waving windows, motion outside, cars moving, people moving, wind, ripples, dynamic scene, any movement
+
+- break: true
+
+- file: 05_przyklad.mp4
+  backend: local
+  duration: 2
+  neg: |-
+    blurry, low quality, sudden movements, pose changes, moving background, waving windows, motion outside, cars moving, people moving, wind, ripples, dynamic scene, any movement
+
+- file: 06_przyklad.mp4
+  backend: local
+  duration: 2
+  neg: |-
+    blurry, low quality, sudden movements, pose changes, moving background, waving windows, motion outside, cars moving, people moving, wind, ripples, dynamic scene, any movement
+
+- file: 07_przyklad.mp4
+  backend: local
+  duration: 2
+  neg: |-
+    blurry, low quality, sudden movements, pose changes, moving background, waving windows, motion outside, cars moving, people moving, wind, ripples, dynamic scene, any movement
+
+- break: true
+
+- file: 04_przyklad.mp4
+  backend: local
+  duration: 2
+  neg: |-
+    blurry, low quality, sudden movements, pose changes, moving background, waving windows, motion outside, cars moving, people moving, wind, ripples, dynamic scene, any movement
+
+- file: 08_przyklad.mp4
+  backend: local
+  duration: 2
+  neg: |-
+    blurry, low quality, sudden movements, pose changes, moving background, waving windows, motion outside, cars moving, people moving, wind, ripples, dynamic scene, any movement
+
+- file: 09_przyklad.mp4
+  backend: local
+  duration: 2
+  neg: |-
+    blurry, low quality, sudden movements, pose changes, moving background, waving windows, motion outside, cars moving, people moving, wind, ripples, dynamic scene, any movement
+
+- file: 10_przyklad.mp4
+  backend: local
+  duration: 2
+  neg: |-
+    blurry, low quality, sudden movements, pose changes, moving background, waving windows, motion outside, cars moving, people moving, wind, ripples, dynamic scene, any movement
+
+- file: 11_przyklad.mp4
+  backend: local
+  duration: 2
+  neg: |-
+    blurry, low quality, sudden movements, pose changes, moving background, waving windows, motion outside, cars moving, people moving, wind, ripples, dynamic scene, any movement
+
+- file: 13_przyklad.mp4
+  backend: local
+  duration: 2
+  neg: |-
+    blurry, low quality, sudden movements, pose changes, moving background, waving windows, motion outside, cars moving, people moving, wind, ripples, dynamic scene, any movement
+
+- file: 12_przyklad.mp4
+  backend: local
+  duration: 2
+  neg: |-
+    blurry, low quality, sudden movements, pose changes, moving background, waving windows, motion outside, cars moving, people moving, wind, ripples, dynamic scene, any movement
+
+- break: true
+
+- file: 14_przyklad.mp4
+  backend: local
+  duration: 2
+  neg: |-
+    blurry, low quality, sudden movements, pose changes, moving background, waving windows, motion outside, cars moving, people moving, wind, ripples, dynamic scene, any movement
+
+- file: 15_przyklad.mp4
+  backend: local
+  duration: 2
+  neg: |-
+    blurry, low quality, sudden movements, pose changes, moving background, waving windows, motion outside, cars moving, people moving, wind, ripples, dynamic scene, any movement
+
+- file: 16_przyklad.mp4
+  backend: local
+  duration: 0.5
+  neg: |-
+    blurry, low quality, sudden movements, pose changes, moving background, waving windows, motion outside, cars moving, people moving, wind, ripples, dynamic scene, any movement
+
+- file: 17_przyklad.mp4
+  backend: local
+  duration: 2
+  neg: |-
+    blurry, low quality, sudden movements, pose changes, moving background, waving windows, motion outside, cars moving, people moving, wind, ripples, dynamic scene, any movement
+
+- file: END_przyklad.mp4
+  backend: local
+  duration: 0
+  pos: |-
+    NOT GENERATAD BEFORE CHAIN
+  neg: |-
+    blurry, low quality, sudden movements, pose changes, moving background, waving windows, motion outside, cars moving, people moving, wind, ripples, dynamic scene, any movement
+
+- chain:
+    prefix: koniec
+    transitions:
+    - duration: 5
+      pos: |-
+        Woman sits still in that position
+    backend: local
+    fps: 16
+    steps: 20
+    cfg: 5.0
+    neg: |-
+      static, frozen, no movement, distorted, walking towards camera, facing camera, approaching viewer, coming closer, teleporting, jumping, blurry, low quality
+
+- file: END2_przyklad.mp4
+
+# ──────────────────────────────────────────────────────────
+# FLOW_TEST — lista testowa
+# ──────────────────────────────────────────────────────────
+flow_test:
+- file: Start1_przyklad.mp4
+  backend: local
+  duration: 2
+  pos: |-
+    Smooth transition
+  neg: |-
+    blurry, low quality, sudden movements, pose changes, moving background, waving windows, motion outside, cars moving, people moving, wind, ripples, dynamic scene, any movement
+
+- file: Start2_przyklad.mp4
+  backend: local
+  duration: 2
+  pos: |-
+    NONE
+  neg: |-
+    blurry, low quality, sudden movements, pose changes, moving background, waving windows, motion outside, cars moving, people moving, wind, ripples, dynamic scene, any movement

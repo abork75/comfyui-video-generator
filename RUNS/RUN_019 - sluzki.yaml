@@ -1,8 +1,8 @@
-# RUN_019_sluzki.yaml
-# Edited: 2026-07-18 15:02:26
+# RUN_019 - sluzki.yaml
+# Edited: 2026-08-17 17:08:39
 # Edit this file freely — regenerate .py with generate_py_from_yaml()
 #
-project_folder: C:\Users\abork\AppData\Local\CapCut\Videos\dungeon_team\filmsluzki
+project_folder: E:\FILMY\RUN_019 - sluzki
 
 use_test_flow: false
 
@@ -285,8 +285,8 @@ flow:
 
 defaults:
   auto_blocks_to_swap: true
+  pre_target_w: 960
+  pre_target_h: 960
   resolution:
   - 560
   - 560
-  pre_target_w: 960
-  pre_target_h: 960

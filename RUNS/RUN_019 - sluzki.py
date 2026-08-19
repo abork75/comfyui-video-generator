@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 # AUTO-GENERATED — do NOT edit manually.
-# Edit RUN_019_sluzki.yaml and regenerate with:
+# Edit RUN_019 - sluzki.yaml and regenerate with:
 #     from app.services.yaml_service import generate_py_from_yaml
-#     generate_py_from_yaml(Path("RUNS/RUN_019_sluzki.yaml"))
-# Generated: 2026-07-18 14:39:11
+#     generate_py_from_yaml(Path("RUNS/RUN_019 - sluzki.yaml"))
+# Generated: 2026-08-17 17:08:39
 # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 import sys
@@ -18,7 +18,7 @@ from batch_transitions import run_batch_generation
 # PROJECT CONFIG
 # ============================================================
 
-PROJECT_FOLDER = 'C:\\Users\\abork\\AppData\\Local\\CapCut\\Videos\\dungeon_team\\filmsluzki'
+PROJECT_FOLDER = 'E:\\FILMY\\RUN_019 - sluzki'
 
 FORCE_RESOLUTION = (
     560,
@@ -31,7 +31,7 @@ DEFAULT_RESOLUTION = (
 
 DEFAULT_BACKEND        = 'linux'
 DEFAULT_FPS            = 16
-DEFAULT_STEPS          = 6
+DEFAULT_STEPS          = 8
 DEFAULT_CFG            = 2
 DEFAULT_DURATION       = 2
 DEFAULT_BLOCKS_TO_SWAP      = 35
@@ -322,7 +322,6 @@ camera movement, zoom, blur extra people, additional figures, crowd on cart, mor
         "chain_prefix": 'wyjazd',
         'backend': 'linux',
         'fps': 16,
-        'steps': 6,
         'cfg': 2,
         'neg': 'static, frozen, no movement',
         'width': 1040,

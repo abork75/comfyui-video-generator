@@ -4,7 +4,7 @@
 # Edit RUN_014_2_cat walk.yaml and regenerate with:
 #     from app.services.yaml_service import generate_py_from_yaml
 #     generate_py_from_yaml(Path("RUNS/RUN_014_2_cat walk.yaml"))
-# Generated: 2026-06-09 12:00:14
+# Generated: 2026-08-17 17:35:12
 # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 import sys
@@ -18,7 +18,7 @@ from batch_transitions import run_batch_generation
 # PROJECT CONFIG
 # ============================================================
 
-PROJECT_FOLDER = 'C:\\Users\\abork\\AppData\\Local\\CapCut\\Videos\\muszelka_pliki\\EM\\skakanie_na_pilce\\film'
+PROJECT_FOLDER = 'E:\\FILMY\\RUN_014 - EM cat walk pilka'
 
 FORCE_RESOLUTION = (
     880,
@@ -31,11 +31,15 @@ DEFAULT_RESOLUTION = (
 
 DEFAULT_BACKEND        = 'linux'
 DEFAULT_FPS            = 16
-DEFAULT_STEPS          = 6
-DEFAULT_CFG            = 2.0
+DEFAULT_STEPS          = 8
+DEFAULT_CFG            = 2
 DEFAULT_DURATION       = 2
 DEFAULT_BLOCKS_TO_SWAP      = 35
 DEFAULT_FRAME_INTERPOLATION = True
+DEFAULT_POSITIVE_PROMPT = 'smooth motion, high quality, cinematic'
+DEFAULT_NEGATIVE_PROMPT = 'blurry, distorted, artifacts, watermark, text'
+DEFAULT_AUDIO_PROMPT   = 'ambient sound, environmental audio, natural soundscape, high quality'
+DEFAULT_AUDIO_NEGATIVE_PROMPT = 'music, melody, instruments, singing, low quality, distortion'
 DEFAULT_SEED           = None
 SKIP_MISSING           = True
 SKIP_EXISTED           = True
@@ -145,7 +149,6 @@ Natural lip sync with the spoken words, soft feminine voice, slow and graceful h
         "chain_prefix": 'shy woman',
         'backend': 'linux',
         'fps': 16,
-        'steps': 6,
         'cfg': 1.5,
         'neg': """slowly and bashfully raises both hands to cover her face in a cute, embarrassed way. She first covers her mouth and cheeks, then gently covers more of her face with her palms, peeking shyly through her fingers. Very delicate, timid and adorable movement, slight head tilt, blushing cheeks, sweet and innocent vibe.
 

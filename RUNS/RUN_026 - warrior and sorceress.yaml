@@ -1,8 +1,8 @@
 # RUN_026 - warrior and sorceress.yaml
-# Edited: 2026-08-16 22:00:01
+# Edited: 2026-08-19 07:27:08
 # Edit this file freely — regenerate .py with generate_py_from_yaml()
 #
-project_folder: C:\Users\abork\AppData\Local\CapCut\Videos\__DEVIANT ART\FILMY\warrior_and_sorceress
+project_folder: E:\FILMY\RUN_026 - warrior_and_sorceress
 
 use_test_flow: false
 
@@ -84,9 +84,9 @@ flow:
   backend: linux
   duration: 2
   pos: |-
-    The camera slowly pans to the left. All characters remain standing in place with only natural subtle movements — gentle breathing, slight shifts in posture, and small head turns as they look around. No big actions, no walking. Smooth continuous camera pan, realistic micro-movements, cinematic lighting.
+    The camera slowly pans left at a constant speed. The characters stay seated and standing in their original poses. Only tiny idle motion: slow breathing and a barely visible weight shift. No head turns, no talking, no walking, no gesturing.
   neg: |-
-    freeze frame, completely static image, no movement, frozen characters, still photo, motionless, jump cut, sudden movement, walking, talking, distorted faces, blurry, low quality
+    exaggerated motion, frantic movement, large gestures, waving arms, walking, talking, jumping, sudden movement, jump cut, twitching, rubber body, distorted faces, blurry, low quality
   use_lightning: false
   workflow: _I2V_classic_hq_nog4gg.json
   steps_hq: 20

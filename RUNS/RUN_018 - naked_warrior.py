@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 # AUTO-GENERATED — do NOT edit manually.
-# Edit RUN_018_naked_warrior.yaml and regenerate with:
+# Edit RUN_018 - naked_warrior.yaml and regenerate with:
 #     from app.services.yaml_service import generate_py_from_yaml
-#     generate_py_from_yaml(Path("RUNS/RUN_018_naked_warrior.yaml"))
-# Generated: 2026-08-02 00:34:07
+#     generate_py_from_yaml(Path("RUNS/RUN_018 - naked_warrior.yaml"))
+# Generated: 2026-08-17 17:19:40
 # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 import sys
@@ -18,7 +18,7 @@ from batch_transitions import run_batch_generation
 # PROJECT CONFIG
 # ============================================================
 
-PROJECT_FOLDER = 'C:\\Users\\abork\\AppData\\Local\\CapCut\\Videos\\__DEVIANT ART\\POCZEKALNIA\\pliki_naked_warrior\\film'
+PROJECT_FOLDER = 'E:\\FILMY\\RUN_018 - naked warrior'
 
 FORCE_RESOLUTION = (
     448,

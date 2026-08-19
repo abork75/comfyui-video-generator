@@ -4,7 +4,7 @@
 # Edit RUN_026 - warrior and sorceress.yaml and regenerate with:
 #     from app.services.yaml_service import generate_py_from_yaml
 #     generate_py_from_yaml(Path("RUNS/RUN_026 - warrior and sorceress.yaml"))
-# Generated: 2026-08-16 22:00:02
+# Generated: 2026-08-19 07:27:08
 # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 import sys
@@ -18,7 +18,7 @@ from batch_transitions import run_batch_generation
 # PROJECT CONFIG
 # ============================================================
 
-PROJECT_FOLDER = 'C:\\Users\\abork\\AppData\\Local\\CapCut\\Videos\\__DEVIANT ART\\FILMY\\warrior_and_sorceress'
+PROJECT_FOLDER = 'E:\\FILMY\\RUN_026 - warrior_and_sorceress'
 
 FORCE_RESOLUTION = (
     1104,
@@ -130,8 +130,8 @@ FLOW_FULL = [
         'file': '40.69. wejscie_do_karczmy.png',
         'backend': 'linux',
         'duration': 2,
-        'pos': 'The camera slowly pans to the left. All characters remain standing in place with only natural subtle movements — gentle breathing, slight shifts in posture, and small head turns as they look around. No big actions, no walking. Smooth continuous camera pan, realistic micro-movements, cinematic lighting.',
-        'neg': 'freeze frame, completely static image, no movement, frozen characters, still photo, motionless, jump cut, sudden movement, walking, talking, distorted faces, blurry, low quality',
+        'pos': 'The camera slowly pans left at a constant speed. The characters stay seated and standing in their original poses. Only tiny idle motion: slow breathing and a barely visible weight shift. No head turns, no talking, no walking, no gesturing.',
+        'neg': 'exaggerated motion, frantic movement, large gestures, waving arms, walking, talking, jumping, sudden movement, jump cut, twitching, rubber body, distorted faces, blurry, low quality',
         'use_lightning': False,
         'workflow': '_I2V_classic_hq_nog4gg.json',
         'steps_hq': 20,

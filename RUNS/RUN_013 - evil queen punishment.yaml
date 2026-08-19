@@ -1,5 +1,5 @@
 # RUN_013 - evil queen punishment.yaml
-# Edited: 2026-07-29 00:33:48
+# Edited: 2026-08-17 19:10:28
 # Edit this file freely — regenerate .py with generate_py_from_yaml()
 #
 defaults:
@@ -9,11 +9,11 @@ defaults:
   blocks_to_swap: 35
   backend: linux
   auto_blocks_to_swap: true
+  pre_target_w: 1024
+  pre_target_h: 1024
   resolution:
   - 512
   - 512
-  pre_target_w: 1024
-  pre_target_h: 1024
 
 linux_backend:
   config_path: D:\streamlit_project\comfyui_integration\workflow_configs\wan_i2v.yaml
@@ -1050,7 +1050,7 @@ flow:
     neg: |-
       static, frozen, no movement
 
-project_folder: C:\Users\abork\AppData\Local\CapCut\Videos\dungeon_team\film
+project_folder: E:\FILMY\RUN_013 - dancing sorceress evil queen punishment
 
 pic_flow:
 - type: paste_character

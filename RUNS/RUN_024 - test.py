@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 # AUTO-GENERATED — do NOT edit manually.
-# Edit RUN_RUN024 - test.yaml and regenerate with:
+# Edit RUN_024 - test.yaml and regenerate with:
 #     from app.services.yaml_service import generate_py_from_yaml
-#     generate_py_from_yaml(Path("RUNS/RUN_RUN024 - test.yaml"))
-# Generated: 2026-07-24 17:11:41
+#     generate_py_from_yaml(Path("RUNS/RUN_024 - test.yaml"))
+# Generated: 2026-08-17 16:35:30
 # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 import sys
@@ -18,7 +18,7 @@ from batch_transitions import run_batch_generation
 # PROJECT CONFIG
 # ============================================================
 
-PROJECT_FOLDER = 'C:\\Users\\abork\\AppData\\Local\\CapCut\\Videos\\muszelka_pliki\\EM\\nowa_praca'
+PROJECT_FOLDER = 'E:\\FILMY\\RUN_023 - EM nowa_praca'
 
 FORCE_RESOLUTION = (
     448,
@@ -31,7 +31,7 @@ DEFAULT_RESOLUTION = (
 
 DEFAULT_BACKEND        = 'linux'
 DEFAULT_FPS            = 16
-DEFAULT_STEPS          = 6
+DEFAULT_STEPS          = 8
 DEFAULT_CFG            = 2
 DEFAULT_DURATION       = 2
 DEFAULT_BLOCKS_TO_SWAP      = 35
@@ -79,10 +79,9 @@ FLOW_FULL = [
                 'neg': '',
             },
         ],
-        "chain_prefix": 'doggy_MODELKAEM_1MIN',
+        "chain_prefix": 'E:\\FILMY\\RUN_023 - EM nowa_praca',
         'backend': 'linux',
         'fps': 16,
-        'steps': 6,
         'cfg': 2,
         'neg': 'static, frozen, no movement',
         'frame_interpolation': False,

@@ -1,8 +1,8 @@
 # RUN_014_2_cat walk.yaml
-# Edited: 2026-06-09 12:00:08
+# Edited: 2026-08-17 17:35:12
 # Edit this file freely — regenerate .py with generate_py_from_yaml()
 #
-project_folder: C:\Users\abork\AppData\Local\CapCut\Videos\muszelka_pliki\EM\skakanie_na_pilce\film
+project_folder: E:\FILMY\RUN_014 - EM cat walk pilka
 
 use_test_flow: false
 
@@ -253,6 +253,7 @@ flow:
 
 defaults:
   backend: linux
+  auto_blocks_to_swap: true
   resolution:
   - 880
   - 1184

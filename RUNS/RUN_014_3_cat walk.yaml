@@ -1,157 +1,233 @@
-project_folder: C:\Users\abork\AppData\Local\CapCut\Videos\muszelka_pliki\EM\skakanie_na_pilce\film
+# RUN_014_3_cat walk.yaml
+# Edited: 2026-08-17 17:35:01
+# Edit this file freely — regenerate .py with generate_py_from_yaml()
+#
+project_folder: E:\FILMY\RUN_014 - EM cat walk pilka
+
 use_test_flow: false
+
+# ──────────────────────────────────────────────────────────
+# FLOW — lista generacji
+# ──────────────────────────────────────────────────────────
 flow:
 - file: 21.49. Stroje_1.png
   backend: linux
   duration: 2
-  pos: NONE
-  neg: NONE
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
 - type: talk
   audio:
     file: cloth1_casual.mp3
-    pos: Woman is waving hand with greetings and smiles
+    pos: |-
+      Woman is waving hand with greetings and smiles
   width: 608
   height: 816
+
 - break: true
+
 - file: 21.51. Stroje_1.png
   backend: linux
   duration: 2
   pos: "Cinematic 2-second I2V2I video: A beautiful model walks confidently and seductively straight toward the camera in a sensual catwalk style. \n\nShe moves with strong, exaggerated hip sway, one leg crossing slightly in front of the other, elegant and powerful strides. Her body is dynamic and erotic — pronounced hip movement, arched back, chest forward, shoulders back, head held high. Arms swing naturally but stylishly by her sides. \n\nThe walk is very feminine, teasing and provocative. She maintains intense, seductive eye contact with the camera the entire time. Smooth, fluid and confident motion from start to end frame. \n\nPhotorealistic, highly detailed, cinematic lighting, sensual atmosphere, elegant catwalk gait, 4K."
-  neg: static pose, standing still, no hip sway, stiff walk, straight legs, legs too close together, minimal movement, awkward gait, hunched shoulders, looking away from camera, shy expression, bad walking animation, jerky motion, rubbery movement, unnatural stride, flat feet, pigeon toes, deformed legs, extra limbs, bad anatomy, low energy, boring walk, modest pose, no sensuality, stiff arms, arms glued to body, changed clothing, different hair, altered lighting, blurry motion, low quality, artifacts, cartoonish, plastic skin, side view, turning away, slow motion, floating feet
+  neg: |-
+    static pose, standing still, no hip sway, stiff walk, straight legs, legs too close together, minimal movement, awkward gait, hunched shoulders, looking away from camera, shy expression, bad walking animation, jerky motion, rubbery movement, unnatural stride, flat feet, pigeon toes, deformed legs, extra limbs, bad anatomy, low energy, boring walk, modest pose, no sensuality, stiff arms, arms glued to body, changed clothing, different hair, altered lighting, blurry motion, low quality, artifacts, cartoonish, plastic skin, side view, turning away, slow motion, floating feet
+
 - file: 21.53. Stroje_1.png
   backend: linux
   duration: 2
   pos: "Cinematic 2-second I2V2I video: A beautiful model walks confidently and seductively straight toward the camera in a sensual catwalk style. \n\nShe moves with strong, exaggerated hip sway, one leg crossing slightly in front of the other, elegant and powerful strides. Her body is dynamic and erotic — pronounced hip movement, arched back, chest forward, shoulders back, head held high. Arms swing naturally but stylishly by her sides. \n\nThe walk is very feminine, teasing and provocative. She maintains intense, seductive eye contact with the camera the entire time. Smooth, fluid and confident motion from start to end frame. \n\nPhotorealistic, highly detailed, cinematic lighting, sensual atmosphere, elegant catwalk gait, 4K."
-  neg: static pose, standing still, no hip sway, stiff walk, straight legs, legs too close together, minimal movement, awkward gait, hunched shoulders, looking away from camera, shy expression, bad walking animation, jerky motion, rubbery movement, unnatural stride, flat feet, pigeon toes, deformed legs, extra limbs, bad anatomy, low energy, boring walk, modest pose, no sensuality, stiff arms, arms glued to body, changed clothing, different hair, altered lighting, blurry motion, low quality, artifacts, cartoonish, plastic skin, side view, turning away, slow motion, floating feet
+  neg: |-
+    static pose, standing still, no hip sway, stiff walk, straight legs, legs too close together, minimal movement, awkward gait, hunched shoulders, looking away from camera, shy expression, bad walking animation, jerky motion, rubbery movement, unnatural stride, flat feet, pigeon toes, deformed legs, extra limbs, bad anatomy, low energy, boring walk, modest pose, no sensuality, stiff arms, arms glued to body, changed clothing, different hair, altered lighting, blurry motion, low quality, artifacts, cartoonish, plastic skin, side view, turning away, slow motion, floating feet
+
 - file: 21.55. Stroje_1.png
   backend: linux
   duration: 2
-  pos: NONE
-  neg: NONE
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
 - break: true
+
 - file: 22.49. Stroje_2.png
   backend: linux
   duration: 2
-  pos: NONE
-  neg: NONE
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
 - type: talk
   audio:
     file: cloth2_smart_casual.mp3
     pos: "The woman smoothly and naturally crosses her arms in front of her chest. She slowly raises her arms and places one arm over the other in a confident, relaxed pose. The movement is graceful, deliberate and feminine.\n\nShe keeps her body mostly still, only her arms are moving. She maintains eye contact with the camera and has a calm, slightly seductive expression. \n\nNatural, smooth arm movement, realistic physics, elegant motion, photorealistic, high detail, cinematic lighting.\n"
   width: 608
   height: 816
+
 - break: true
+
 - file: 22.51. Stroje_2.png
   backend: linux
   duration: 2
   pos: "Cinematic 2-second I2V2I video: A beautiful model walks confidently and seductively straight toward the camera in a sensual catwalk style. \n\nShe moves with strong, exaggerated hip sway, one leg crossing slightly in front of the other, elegant and powerful strides. Her body is dynamic and erotic — pronounced hip movement, arched back, chest forward, shoulders back, head held high. Arms swing naturally but stylishly by her sides. \n\nThe walk is very feminine, teasing and provocative. She maintains intense, seductive eye contact with the camera the entire time. Smooth, fluid and confident motion from start to end frame. \n\nPhotorealistic, highly detailed, cinematic lighting, sensual atmosphere, elegant catwalk gait, 4K."
-  neg: static pose, standing still, no hip sway, stiff walk, straight legs, legs too close together, minimal movement, awkward gait, hunched shoulders, looking away from camera, shy expression, bad walking animation, jerky motion, rubbery movement, unnatural stride, flat feet, pigeon toes, deformed legs, extra limbs, bad anatomy, low energy, boring walk, modest pose, no sensuality, stiff arms, arms glued to body, changed clothing, different hair, altered lighting, blurry motion, low quality, artifacts, cartoonish, plastic skin, side view, turning away, slow motion, floating feet
+  neg: |-
+    static pose, standing still, no hip sway, stiff walk, straight legs, legs too close together, minimal movement, awkward gait, hunched shoulders, looking away from camera, shy expression, bad walking animation, jerky motion, rubbery movement, unnatural stride, flat feet, pigeon toes, deformed legs, extra limbs, bad anatomy, low energy, boring walk, modest pose, no sensuality, stiff arms, arms glued to body, changed clothing, different hair, altered lighting, blurry motion, low quality, artifacts, cartoonish, plastic skin, side view, turning away, slow motion, floating feet
+
 - file: 22.53. Stroje_2.png
   backend: linux
   duration: 2
   pos: "Cinematic 2-second I2V2I video: A beautiful model walks confidently and seductively straight toward the camera in a sensual catwalk style. \n\nShe moves with strong, exaggerated hip sway, one leg crossing slightly in front of the other, elegant and powerful strides. Her body is dynamic and erotic — pronounced hip movement, arched back, chest forward, shoulders back, head held high. Arms swing naturally but stylishly by her sides. \n\nThe walk is very feminine, teasing and provocative. She maintains intense, seductive eye contact with the camera the entire time. Smooth, fluid and confident motion from start to end frame. \n\nPhotorealistic, highly detailed, cinematic lighting, sensual atmosphere, elegant catwalk gait, 4K."
-  neg: static pose, standing still, no hip sway, stiff walk, straight legs, legs too close together, minimal movement, awkward gait, hunched shoulders, looking away from camera, shy expression, bad walking animation, jerky motion, rubbery movement, unnatural stride, flat feet, pigeon toes, deformed legs, extra limbs, bad anatomy, low energy, boring walk, modest pose, no sensuality, stiff arms, arms glued to body, changed clothing, different hair, altered lighting, blurry motion, low quality, artifacts, cartoonish, plastic skin, side view, turning away, slow motion, floating feet
+  neg: |-
+    static pose, standing still, no hip sway, stiff walk, straight legs, legs too close together, minimal movement, awkward gait, hunched shoulders, looking away from camera, shy expression, bad walking animation, jerky motion, rubbery movement, unnatural stride, flat feet, pigeon toes, deformed legs, extra limbs, bad anatomy, low energy, boring walk, modest pose, no sensuality, stiff arms, arms glued to body, changed clothing, different hair, altered lighting, blurry motion, low quality, artifacts, cartoonish, plastic skin, side view, turning away, slow motion, floating feet
+
 - file: 22.55. Stroje_2.png
   backend: linux
   duration: 2
-  pos: NONE
-  neg: NONE
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
 - break: true
+
 - file: 23.49. Stroje_3.png
   backend: linux
   duration: 2
-  pos: NONE
-  neg: NONE
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
 - type: talk
   audio:
     file: cloth3_little_black_dress.mp3
     pos: "Cinematic video of a beautiful woman in a sexy little black dress. She stands elegantly, then slowly shifts into a seductive pose while speaking.\n\nShe says playfully and teasingly: \"No i klasyka! Mała czarna sukienka, która zawsze działa. Co myślicie?\"\n\nWhile speaking, she gently places one hand on her hip, slightly tilts her body, pushes her chest forward and looks directly at the camera with a flirtatious, confident smile. She makes a slow, graceful turn of her hips and lightly runs her other hand down her side, showing off the dress. \n\nVery feminine, elegant and seductive body language, slow seductive movements, strong eye contact, natural lip sync, photorealistic, high detail, cinematic lighting."
   width: 608
   height: 816
+
 - break: true
+
 - file: 23.51. Stroje_3.png
   backend: linux
   duration: 2
   pos: "Cinematic 2-second I2V2I video: A beautiful model walks confidently and seductively straight toward the camera in a sensual catwalk style. \n\nShe moves with strong, exaggerated hip sway, one leg crossing slightly in front of the other, elegant and powerful strides. Her body is dynamic and erotic — pronounced hip movement, arched back, chest forward, shoulders back, head held high. Arms swing naturally but stylishly by her sides. \n\nThe walk is very feminine, teasing and provocative. She maintains intense, seductive eye contact with the camera the entire time. Smooth, fluid and confident motion from start to end frame. \n\nPhotorealistic, highly detailed, cinematic lighting, sensual atmosphere, elegant catwalk gait, 4K."
-  neg: static pose, standing still, no hip sway, stiff walk, straight legs, legs too close together, minimal movement, awkward gait, hunched shoulders, looking away from camera, shy expression, bad walking animation, jerky motion, rubbery movement, unnatural stride, flat feet, pigeon toes, deformed legs, extra limbs, bad anatomy, low energy, boring walk, modest pose, no sensuality, stiff arms, arms glued to body, changed clothing, different hair, altered lighting, blurry motion, low quality, artifacts, cartoonish, plastic skin, side view, turning away, slow motion, floating feet
+  neg: |-
+    static pose, standing still, no hip sway, stiff walk, straight legs, legs too close together, minimal movement, awkward gait, hunched shoulders, looking away from camera, shy expression, bad walking animation, jerky motion, rubbery movement, unnatural stride, flat feet, pigeon toes, deformed legs, extra limbs, bad anatomy, low energy, boring walk, modest pose, no sensuality, stiff arms, arms glued to body, changed clothing, different hair, altered lighting, blurry motion, low quality, artifacts, cartoonish, plastic skin, side view, turning away, slow motion, floating feet
+
 - file: 23.53. Stroje_3.png
   backend: linux
   duration: 2
   pos: "Cinematic 2-second I2V2I video: A beautiful model walks confidently and seductively straight toward the camera in a sensual catwalk style. \n\nShe moves with strong, exaggerated hip sway, one leg crossing slightly in front of the other, elegant and powerful strides. Her body is dynamic and erotic — pronounced hip movement, arched back, chest forward, shoulders back, head held high. Arms swing naturally but stylishly by her sides. \n\nThe walk is very feminine, teasing and provocative. She maintains intense, seductive eye contact with the camera the entire time. Smooth, fluid and confident motion from start to end frame. \n\nPhotorealistic, highly detailed, cinematic lighting, sensual atmosphere, elegant catwalk gait, 4K."
-  neg: static pose, standing still, no hip sway, stiff walk, straight legs, legs too close together, minimal movement, awkward gait, hunched shoulders, looking away from camera, shy expression, bad walking animation, jerky motion, rubbery movement, unnatural stride, flat feet, pigeon toes, deformed legs, extra limbs, bad anatomy, low energy, boring walk, modest pose, no sensuality, stiff arms, arms glued to body, changed clothing, different hair, altered lighting, blurry motion, low quality, artifacts, cartoonish, plastic skin, side view, turning away, slow motion, floating feet
+  neg: |-
+    static pose, standing still, no hip sway, stiff walk, straight legs, legs too close together, minimal movement, awkward gait, hunched shoulders, looking away from camera, shy expression, bad walking animation, jerky motion, rubbery movement, unnatural stride, flat feet, pigeon toes, deformed legs, extra limbs, bad anatomy, low energy, boring walk, modest pose, no sensuality, stiff arms, arms glued to body, changed clothing, different hair, altered lighting, blurry motion, low quality, artifacts, cartoonish, plastic skin, side view, turning away, slow motion, floating feet
+
 - file: 23.55. Stroje_3.png
   backend: linux
   duration: 2
-  pos: NONE
-  neg: NONE
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
 - break: true
+
 - file: 24.49. Stroje_4.png
   backend: linux
   duration: 2
-  pos: NONE
-  neg: NONE
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
 - type: talk
   audio:
     file: cloth4_Elegant Evening Gown.mp3
-    pos: 'A beautiful woman looking at the camera with a seductive and playful expression. She speaks in a teasing, inviting tone: "A co powiesz na to?"
-
+    pos: |-
+      A beautiful woman looking at the camera with a seductive and playful expression. She speaks in a teasing, inviting tone: "A co powiesz na to?"
 
       While saying this, she smoothly and encouragingly spreads both of her arms outwards in an open, inviting gesture — palms facing up, arms slightly bent, as if saying "what do you think?" or "come here". The movement is slow, sensual and confident. She tilts her head slightly, smiles provocatively and maintains strong, flirtatious eye contact with the camera.
 
-
-      Natural lip sync, expressive facial expression, seductive body language, smooth and graceful arm movement, high detail, realistic animation.'
+      Natural lip sync, expressive facial expression, seductive body language, smooth and graceful arm movement, high detail, realistic animation.
   width: 608
   height: 816
+
 - break: true
+
 - file: 24.51. Stroje_4.png
   backend: linux
   duration: 2
   pos: "Cinematic 2-second I2V2I video: A beautiful model walks confidently and seductively straight toward the camera in a sensual catwalk style. \n\nShe moves with strong, exaggerated hip sway, one leg crossing slightly in front of the other, elegant and powerful strides. Her body is dynamic and erotic — pronounced hip movement, arched back, chest forward, shoulders back, head held high. Arms swing naturally but stylishly by her sides. \n\nThe walk is very feminine, teasing and provocative. She maintains intense, seductive eye contact with the camera the entire time. Smooth, fluid and confident motion from start to end frame. \n\nPhotorealistic, highly detailed, cinematic lighting, sensual atmosphere, elegant catwalk gait, 4K."
-  neg: static pose, standing still, no hip sway, stiff walk, straight legs, legs too close together, minimal movement, awkward gait, hunched shoulders, looking away from camera, shy expression, bad walking animation, jerky motion, rubbery movement, unnatural stride, flat feet, pigeon toes, deformed legs, extra limbs, bad anatomy, low energy, boring walk, modest pose, no sensuality, stiff arms, arms glued to body, changed clothing, different hair, altered lighting, blurry motion, low quality, artifacts, cartoonish, plastic skin, side view, turning away, slow motion, floating feet
+  neg: |-
+    static pose, standing still, no hip sway, stiff walk, straight legs, legs too close together, minimal movement, awkward gait, hunched shoulders, looking away from camera, shy expression, bad walking animation, jerky motion, rubbery movement, unnatural stride, flat feet, pigeon toes, deformed legs, extra limbs, bad anatomy, low energy, boring walk, modest pose, no sensuality, stiff arms, arms glued to body, changed clothing, different hair, altered lighting, blurry motion, low quality, artifacts, cartoonish, plastic skin, side view, turning away, slow motion, floating feet
+
 - file: 24.53. Stroje_4.png
   backend: linux
   duration: 2
   pos: "Cinematic 2-second I2V2I video: A beautiful model walks confidently and seductively straight toward the camera in a sensual catwalk style. \n\nShe moves with strong, exaggerated hip sway, one leg crossing slightly in front of the other, elegant and powerful strides. Her body is dynamic and erotic — pronounced hip movement, arched back, chest forward, shoulders back, head held high. Arms swing naturally but stylishly by her sides. \n\nThe walk is very feminine, teasing and provocative. She maintains intense, seductive eye contact with the camera the entire time. Smooth, fluid and confident motion from start to end frame. \n\nPhotorealistic, highly detailed, cinematic lighting, sensual atmosphere, elegant catwalk gait, 4K."
-  neg: static pose, standing still, no hip sway, stiff walk, straight legs, legs too close together, minimal movement, awkward gait, hunched shoulders, looking away from camera, shy expression, bad walking animation, jerky motion, rubbery movement, unnatural stride, flat feet, pigeon toes, deformed legs, extra limbs, bad anatomy, low energy, boring walk, modest pose, no sensuality, stiff arms, arms glued to body, changed clothing, different hair, altered lighting, blurry motion, low quality, artifacts, cartoonish, plastic skin, side view, turning away, slow motion, floating feet
+  neg: |-
+    static pose, standing still, no hip sway, stiff walk, straight legs, legs too close together, minimal movement, awkward gait, hunched shoulders, looking away from camera, shy expression, bad walking animation, jerky motion, rubbery movement, unnatural stride, flat feet, pigeon toes, deformed legs, extra limbs, bad anatomy, low energy, boring walk, modest pose, no sensuality, stiff arms, arms glued to body, changed clothing, different hair, altered lighting, blurry motion, low quality, artifacts, cartoonish, plastic skin, side view, turning away, slow motion, floating feet
+
 - file: 24.55. Stroje_4.png
   backend: linux
   duration: 2
-  pos: NONE
-  neg: NONE
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
 - break: true
+
 - file: 25.49. Stroje_5.png
   backend: linux
   duration: 2
-  pos: NONE
-  neg: NONE
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
 - type: talk
   audio:
     file: cloth5_Glamorous Red Carpet.mp3
     pos: "Cinematic video of a stunning woman in a luxurious, deep red glamorous evening gown with plunging neckline and high leg slit. She stands elegantly and speaks with a sophisticated, confident tone:\n\n„A na koniec coś naprawdę efektownego — głęboka czerwona suknia z rozcięciem. Idealna na wielką galę!”\n\nWhile speaking, she moves gracefully and regally: slowly runs one hand down her hip and along the slit of the dress, gently shifts her weight to emphasize the leg slit, slightly turns her body to show the dress from different angles, and holds her head high with a proud, alluring smile. She maintains strong, captivating eye contact with the camera. \n\nVery elegant, luxurious and seductive movements, slow and graceful body language, cinematic lighting, photorealistic, ultra detailed."
   width: 608
   height: 816
+
 - break: true
+
 - file: 25.51. Stroje_5.png
   backend: linux
   duration: 2
   pos: "Cinematic 2-second I2V2I video: A beautiful model walks confidently and seductively straight toward the camera in a sensual catwalk style. \n\nShe moves with strong, exaggerated hip sway, one leg crossing slightly in front of the other, elegant and powerful strides. Her body is dynamic and erotic — pronounced hip movement, arched back, chest forward, shoulders back, head held high. Arms swing naturally but stylishly by her sides. \n\nThe walk is very feminine, teasing and provocative. She maintains intense, seductive eye contact with the camera the entire time. Smooth, fluid and confident motion from start to end frame. \n\nPhotorealistic, highly detailed, cinematic lighting, sensual atmosphere, elegant catwalk gait, 4K."
-  neg: static pose, standing still, no hip sway, stiff walk, straight legs, legs too close together, minimal movement, awkward gait, hunched shoulders, looking away from camera, shy expression, bad walking animation, jerky motion, rubbery movement, unnatural stride, flat feet, pigeon toes, deformed legs, extra limbs, bad anatomy, low energy, boring walk, modest pose, no sensuality, stiff arms, arms glued to body, changed clothing, different hair, altered lighting, blurry motion, low quality, artifacts, cartoonish, plastic skin, side view, turning away, slow motion, floating feet
+  neg: |-
+    static pose, standing still, no hip sway, stiff walk, straight legs, legs too close together, minimal movement, awkward gait, hunched shoulders, looking away from camera, shy expression, bad walking animation, jerky motion, rubbery movement, unnatural stride, flat feet, pigeon toes, deformed legs, extra limbs, bad anatomy, low energy, boring walk, modest pose, no sensuality, stiff arms, arms glued to body, changed clothing, different hair, altered lighting, blurry motion, low quality, artifacts, cartoonish, plastic skin, side view, turning away, slow motion, floating feet
+
 - file: 25.53. Stroje_5.png
   backend: linux
   duration: 2
   pos: "Cinematic 2-second I2V2I video: A beautiful model walks confidently and seductively straight toward the camera in a sensual catwalk style. \n\nShe moves with strong, exaggerated hip sway, one leg crossing slightly in front of the other, elegant and powerful strides. Her body is dynamic and erotic — pronounced hip movement, arched back, chest forward, shoulders back, head held high. Arms swing naturally but stylishly by her sides. \n\nThe walk is very feminine, teasing and provocative. She maintains intense, seductive eye contact with the camera the entire time. Smooth, fluid and confident motion from start to end frame. \n\nPhotorealistic, highly detailed, cinematic lighting, sensual atmosphere, elegant catwalk gait, 4K."
-  neg: static pose, standing still, no hip sway, stiff walk, straight legs, legs too close together, minimal movement, awkward gait, hunched shoulders, looking away from camera, shy expression, bad walking animation, jerky motion, rubbery movement, unnatural stride, flat feet, pigeon toes, deformed legs, extra limbs, bad anatomy, low energy, boring walk, modest pose, no sensuality, stiff arms, arms glued to body, changed clothing, different hair, altered lighting, blurry motion, low quality, artifacts, cartoonish, plastic skin, side view, turning away, slow motion, floating feet
+  neg: |-
+    static pose, standing still, no hip sway, stiff walk, straight legs, legs too close together, minimal movement, awkward gait, hunched shoulders, looking away from camera, shy expression, bad walking animation, jerky motion, rubbery movement, unnatural stride, flat feet, pigeon toes, deformed legs, extra limbs, bad anatomy, low energy, boring walk, modest pose, no sensuality, stiff arms, arms glued to body, changed clothing, different hair, altered lighting, blurry motion, low quality, artifacts, cartoonish, plastic skin, side view, turning away, slow motion, floating feet
+
 - file: 25.55. Stroje_5.png
   backend: linux
   duration: 2
-  pos: NONE
-  neg: NONE
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
 - break: true
+
 defaults:
   backend: linux
+  auto_blocks_to_swap: true
   resolution:
   - 880
   - 1184
+
 pic_flow:
 - type: one_image_many_prompts
   name: Zmien ubranie - z maską
@@ -249,6 +325,7 @@ pic_flow:
   crop_to_subject: true
   pad_input_to_ratio: true
   id: zmien_ubranie_-_test_maski
+
 - type: one_image_many_prompts
   name: Fix obrazków - dodawanie butów
   source_dirs:
@@ -289,6 +366,7 @@ pic_flow:
   crop_to_subject: true
   pad_input_to_ratio: true
   id: fix_obrazk_w_-_dodawanie_but_w
+
 - type: one_image_many_prompts
   name: Repose z maską
   source_dirs:
@@ -300,14 +378,12 @@ pic_flow:
       output_id: uZ5ysSlcEhgGK4xQqE
       enabled: true
       name: Idzie przed siebie krok modelki
-      positive: 'Change the woman''s pose to a confident, dynamic runway model walk, captured from the front. She is walking straight toward the camera mid-stride — one leg extended forward with pointed toe, the other leg behind, strong and elegant step. Pronounced hip sway, shoulders slightly back, chest forward, arms swinging naturally by her sides in a stylish model fashion.
-
+      positive: |-
+        Change the woman's pose to a confident, dynamic runway model walk, captured from the front. She is walking straight toward the camera mid-stride — one leg extended forward with pointed toe, the other leg behind, strong and elegant step. Pronounced hip sway, shoulders slightly back, chest forward, arms swinging naturally by her sides in a stylish model fashion.
         Facing directly toward camera, front view, 0-degree angle, camera-facing walk, full frontal view
-
         She looks directly at the camera with a confident, alluring and powerful expression. Elegant catwalk gait, fashionable and sensual movement.
 
-
-        Keep her exact facial features, hair, clothing, lighting, shadows and background completely unchanged. Only modify the body posture, leg position and arm swing to create a dynamic walking pose. Realistic anatomy, natural motion, photorealistic, seamless edit, high detail.'
+        Keep her exact facial features, hair, clothing, lighting, shadows and background completely unchanged. Only modify the body posture, leg position and arm swing to create a dynamic walking pose. Realistic anatomy, natural motion, photorealistic, seamless edit, high detail.
       negative: different face, wrong identity, changed facial features, clothing change, background change, blurry face, distorted anatomy, extra limbs, artifacts, low quality, bad anatomy, shadows, cast, shadows, side view, angled view, three-quarter view, turned body
       note: ''
       params:
@@ -320,14 +396,12 @@ pic_flow:
       output_id: 2AIcXz2hAmP16nL7P9
       enabled: true
       name: Idzie przed siebie krok modelki
-      positive: 'Change the woman''s pose to a confident, dynamic runway model walk, captured from the front. She is walking straight toward the camera mid-stride — one leg extended forward with pointed toe, the other leg behind, strong and elegant step. Pronounced hip sway, shoulders slightly back, chest forward, arms swinging naturally by her sides in a stylish model fashion.
-
+      positive: |-
+        Change the woman's pose to a confident, dynamic runway model walk, captured from the front. She is walking straight toward the camera mid-stride — one leg extended forward with pointed toe, the other leg behind, strong and elegant step. Pronounced hip sway, shoulders slightly back, chest forward, arms swinging naturally by her sides in a stylish model fashion.
         Facing directly toward camera, front view, 0-degree angle, camera-facing walk, full frontal view
-
         She looks directly at the camera with a confident, alluring and powerful expression. Elegant catwalk gait, fashionable and sensual movement.
 
-
-        Keep her exact facial features, hair, clothing, lighting, shadows and background completely unchanged. Only modify the body posture, leg position and arm swing to create a dynamic walking pose. Realistic anatomy, natural motion, photorealistic, seamless edit, high detail.'
+        Keep her exact facial features, hair, clothing, lighting, shadows and background completely unchanged. Only modify the body posture, leg position and arm swing to create a dynamic walking pose. Realistic anatomy, natural motion, photorealistic, seamless edit, high detail.
       negative: different face, wrong identity, changed facial features, clothing change, background change, blurry face, distorted anatomy, extra limbs, artifacts, low quality, bad anatomy, shadows, cast, shadows, side view, angled view, three-quarter view, turned body
       note: ''
       params:
@@ -340,14 +414,12 @@ pic_flow:
       output_id: 37u9wfP235Dy1CpXf4
       enabled: true
       name: Idzie przed siebie krok modelki
-      positive: 'Change the woman''s pose to a confident, dynamic runway model walk, captured from the front. She is walking straight toward the camera mid-stride — one leg extended forward with pointed toe, the other leg behind, strong and elegant step. Pronounced hip sway, shoulders slightly back, chest forward, arms swinging naturally by her sides in a stylish model fashion.
-
+      positive: |-
+        Change the woman's pose to a confident, dynamic runway model walk, captured from the front. She is walking straight toward the camera mid-stride — one leg extended forward with pointed toe, the other leg behind, strong and elegant step. Pronounced hip sway, shoulders slightly back, chest forward, arms swinging naturally by her sides in a stylish model fashion.
         Facing directly toward camera, front view, 0-degree angle, camera-facing walk, full frontal view
-
         She looks directly at the camera with a confident, alluring and powerful expression. Elegant catwalk gait, fashionable and sensual movement.
 
-
-        Keep her exact facial features, hair, clothing, lighting, shadows and background completely unchanged. Only modify the body posture, leg position and arm swing to create a dynamic walking pose. Realistic anatomy, natural motion, photorealistic, seamless edit, high detail.'
+        Keep her exact facial features, hair, clothing, lighting, shadows and background completely unchanged. Only modify the body posture, leg position and arm swing to create a dynamic walking pose. Realistic anatomy, natural motion, photorealistic, seamless edit, high detail.
       negative: different face, wrong identity, changed facial features, clothing change, background change, blurry face, distorted anatomy, extra limbs, artifacts, low quality, bad anatomy, shadows, cast, shadows, side view, angled view, three-quarter view, turned body
       note: ''
       params:
@@ -360,14 +432,12 @@ pic_flow:
       output_id: MIRIx2CS27BCZVxucU
       enabled: true
       name: Idzie przed siebie krok modelki
-      positive: 'Change the woman''s pose to a confident, dynamic runway model walk, captured from the front. She is walking straight toward the camera mid-stride — one leg extended forward with pointed toe, the other leg behind, strong and elegant step. Pronounced hip sway, shoulders slightly back, chest forward, arms swinging naturally by her sides in a stylish model fashion.
-
+      positive: |-
+        Change the woman's pose to a confident, dynamic runway model walk, captured from the front. She is walking straight toward the camera mid-stride — one leg extended forward with pointed toe, the other leg behind, strong and elegant step. Pronounced hip sway, shoulders slightly back, chest forward, arms swinging naturally by her sides in a stylish model fashion.
         Facing directly toward camera, front view, 0-degree angle, camera-facing walk, full frontal view
-
         She looks directly at the camera with a confident, alluring and powerful expression. Elegant catwalk gait, fashionable and sensual movement.
 
-
-        Keep her exact facial features, hair, clothing, lighting, shadows and background completely unchanged. Only modify the body posture, leg position and arm swing to create a dynamic walking pose. Realistic anatomy, natural motion, photorealistic, seamless edit, high detail.'
+        Keep her exact facial features, hair, clothing, lighting, shadows and background completely unchanged. Only modify the body posture, leg position and arm swing to create a dynamic walking pose. Realistic anatomy, natural motion, photorealistic, seamless edit, high detail.
       negative: different face, wrong identity, changed facial features, clothing change, background change, blurry face, distorted anatomy, extra limbs, artifacts, low quality, bad anatomy, shadows, cast, shadows, side view, angled view, three-quarter view, turned body
       note: ''
       params:
@@ -380,14 +450,12 @@ pic_flow:
       output_id: paofxWaoXVcydjJyMI
       enabled: true
       name: Idzie przed siebie krok modelki
-      positive: 'Change the woman''s pose to a confident, dynamic runway model walk, captured from the front. She is walking straight toward the camera mid-stride — one leg extended forward with pointed toe, the other leg behind, strong and elegant step. Pronounced hip sway, shoulders slightly back, chest forward, arms swinging naturally by her sides in a stylish model fashion.
-
+      positive: |-
+        Change the woman's pose to a confident, dynamic runway model walk, captured from the front. She is walking straight toward the camera mid-stride — one leg extended forward with pointed toe, the other leg behind, strong and elegant step. Pronounced hip sway, shoulders slightly back, chest forward, arms swinging naturally by her sides in a stylish model fashion.
         Facing directly toward camera, front view, 0-degree angle, camera-facing walk, full frontal view
-
         She looks directly at the camera with a confident, alluring and powerful expression. Elegant catwalk gait, fashionable and sensual movement.
 
-
-        Keep her exact facial features, hair, clothing, lighting, shadows and background completely unchanged. Only modify the body posture, leg position and arm swing to create a dynamic walking pose. Realistic anatomy, natural motion, photorealistic, seamless edit, high detail.'
+        Keep her exact facial features, hair, clothing, lighting, shadows and background completely unchanged. Only modify the body posture, leg position and arm swing to create a dynamic walking pose. Realistic anatomy, natural motion, photorealistic, seamless edit, high detail.
       negative: different face, wrong identity, changed facial features, clothing change, background change, blurry face, distorted anatomy, extra limbs, artifacts, low quality, bad anatomy, shadows, cast, shadows, side view, angled view, three-quarter view, turned body
       note: ''
       params:
@@ -403,6 +471,7 @@ pic_flow:
   crop_to_subject: true
   pad_input_to_ratio: true
   id: repose_z_mask
+
 - type: paste_character
   name: Umieszczanie na scenie - casual
   paste_slots:
@@ -451,19 +520,16 @@ pic_flow:
     category: system
     name: Edge Blend — krawędzie postaci
     note: Pass 1 — inpainting w strefie maski (15px wokół sylwetki). Używany z ci_1ref (scena+maska + ref postaci).
-    positive: 'You have two inputs: image 1 is the composited scene, image 2 is the original reference character. Using image 2 as reference, repair and improve the character in image 1. Fix all of the following:
+    positive: |-
+      You have two inputs: image 1 is the composited scene, image 2 is the original reference character. Using image 2 as reference, repair and improve the character in image 1. Fix all of the following:
 
+      1. EDGES: Remove all hard cutout edges, halos and white fringing around the character's silhouette. Blend her edges naturally into the background — match local lighting, color temperature and depth of field.
 
-      1. EDGES: Remove all hard cutout edges, halos and white fringing around the character''s silhouette. Blend her edges naturally into the background — match local lighting, color temperature and depth of field.
+      2. BODY RECONSTRUCTION: Where parts of the character's body are blurry, incomplete, distorted or missing (e.g. blurry fingers, cut-off limbs, broken anatomy) — reconstruct them correctly using image 2 as the reference. Restore sharp, realistic anatomy.
 
+      3. SKIN AND DETAIL: Match the character's skin tone, sharpness and detail level to image 2. Remove any softness or blur on the character's body.
 
-      2. BODY RECONSTRUCTION: Where parts of the character''s body are blurry, incomplete, distorted or missing (e.g. blurry fingers, cut-off limbs, broken anatomy) — reconstruct them correctly using image 2 as the reference. Restore sharp, realistic anatomy.
-
-
-      3. SKIN AND DETAIL: Match the character''s skin tone, sharpness and detail level to image 2. Remove any softness or blur on the character''s body.
-
-
-      Do not move the character. Do not change her pose or position. Do not modify the background outside the character area. Preserve the character''s face, clothing and identity.'
+      Do not move the character. Do not change her pose or position. Do not modify the background outside the character area. Preserve the character's face, clothing and identity.
     negative: changed pose, moved character, different face, different clothing, background change, artifacts, distorted anatomy, color shift on character body, overexposed, underexposed, blurry fingers, missing limbs, broken anatomy
     params:
       steps: 30
@@ -490,6 +556,7 @@ pic_flow:
   crop_to_subject: false
   pad_input_to_ratio: false
   id: umieszczanie_na_scenie_-_casual_kopia
+
 - type: paste_character
   name: Umieszczanie na scenie - smart casual
   paste_slots:
@@ -538,19 +605,16 @@ pic_flow:
     category: system
     name: Edge Blend — krawędzie postaci
     note: Pass 1 — inpainting w strefie maski (15px wokół sylwetki). Używany z ci_1ref (scena+maska + ref postaci).
-    positive: 'You have two inputs: image 1 is the composited scene, image 2 is the original reference character. Using image 2 as reference, repair and improve the character in image 1. Fix all of the following:
+    positive: |-
+      You have two inputs: image 1 is the composited scene, image 2 is the original reference character. Using image 2 as reference, repair and improve the character in image 1. Fix all of the following:
 
+      1. EDGES: Remove all hard cutout edges, halos and white fringing around the character's silhouette. Blend her edges naturally into the background — match local lighting, color temperature and depth of field.
 
-      1. EDGES: Remove all hard cutout edges, halos and white fringing around the character''s silhouette. Blend her edges naturally into the background — match local lighting, color temperature and depth of field.
+      2. BODY RECONSTRUCTION: Where parts of the character's body are blurry, incomplete, distorted or missing (e.g. blurry fingers, cut-off limbs, broken anatomy) — reconstruct them correctly using image 2 as the reference. Restore sharp, realistic anatomy.
 
+      3. SKIN AND DETAIL: Match the character's skin tone, sharpness and detail level to image 2. Remove any softness or blur on the character's body.
 
-      2. BODY RECONSTRUCTION: Where parts of the character''s body are blurry, incomplete, distorted or missing (e.g. blurry fingers, cut-off limbs, broken anatomy) — reconstruct them correctly using image 2 as the reference. Restore sharp, realistic anatomy.
-
-
-      3. SKIN AND DETAIL: Match the character''s skin tone, sharpness and detail level to image 2. Remove any softness or blur on the character''s body.
-
-
-      Do not move the character. Do not change her pose or position. Do not modify the background outside the character area. Preserve the character''s face, clothing and identity.'
+      Do not move the character. Do not change her pose or position. Do not modify the background outside the character area. Preserve the character's face, clothing and identity.
     negative: changed pose, moved character, different face, different clothing, background change, artifacts, distorted anatomy, color shift on character body, overexposed, underexposed, blurry fingers, missing limbs, broken anatomy
     params:
       steps: 30
@@ -577,6 +641,7 @@ pic_flow:
   crop_to_subject: false
   pad_input_to_ratio: false
   id: umieszczanie_na_scenie_-_smart_casual_kopia
+
 - type: paste_character
   name: Umieszczanie na scenie - Little Black Dress (Cocktail)
   paste_slots:
@@ -625,19 +690,16 @@ pic_flow:
     category: system
     name: Edge Blend — krawędzie postaci
     note: Pass 1 — inpainting w strefie maski (15px wokół sylwetki). Używany z ci_1ref (scena+maska + ref postaci).
-    positive: 'You have two inputs: image 1 is the composited scene, image 2 is the original reference character. Using image 2 as reference, repair and improve the character in image 1. Fix all of the following:
+    positive: |-
+      You have two inputs: image 1 is the composited scene, image 2 is the original reference character. Using image 2 as reference, repair and improve the character in image 1. Fix all of the following:
 
+      1. EDGES: Remove all hard cutout edges, halos and white fringing around the character's silhouette. Blend her edges naturally into the background — match local lighting, color temperature and depth of field.
 
-      1. EDGES: Remove all hard cutout edges, halos and white fringing around the character''s silhouette. Blend her edges naturally into the background — match local lighting, color temperature and depth of field.
+      2. BODY RECONSTRUCTION: Where parts of the character's body are blurry, incomplete, distorted or missing (e.g. blurry fingers, cut-off limbs, broken anatomy) — reconstruct them correctly using image 2 as the reference. Restore sharp, realistic anatomy.
 
+      3. SKIN AND DETAIL: Match the character's skin tone, sharpness and detail level to image 2. Remove any softness or blur on the character's body.
 
-      2. BODY RECONSTRUCTION: Where parts of the character''s body are blurry, incomplete, distorted or missing (e.g. blurry fingers, cut-off limbs, broken anatomy) — reconstruct them correctly using image 2 as the reference. Restore sharp, realistic anatomy.
-
-
-      3. SKIN AND DETAIL: Match the character''s skin tone, sharpness and detail level to image 2. Remove any softness or blur on the character''s body.
-
-
-      Do not move the character. Do not change her pose or position. Do not modify the background outside the character area. Preserve the character''s face, clothing and identity.'
+      Do not move the character. Do not change her pose or position. Do not modify the background outside the character area. Preserve the character's face, clothing and identity.
     negative: changed pose, moved character, different face, different clothing, background change, artifacts, distorted anatomy, color shift on character body, overexposed, underexposed, blurry fingers, missing limbs, broken anatomy
     params:
       steps: 30
@@ -664,6 +726,7 @@ pic_flow:
   crop_to_subject: false
   pad_input_to_ratio: false
   id: umieszczanie_na_scenie_-_little_black_dress_cocktail_kopia
+
 - type: paste_character
   name: Umieszczanie na scenie - Elegant Evening Gown
   paste_slots:
@@ -712,19 +775,16 @@ pic_flow:
     category: system
     name: Edge Blend — krawędzie postaci
     note: Pass 1 — inpainting w strefie maski (15px wokół sylwetki). Używany z ci_1ref (scena+maska + ref postaci).
-    positive: 'You have two inputs: image 1 is the composited scene, image 2 is the original reference character. Using image 2 as reference, repair and improve the character in image 1. Fix all of the following:
+    positive: |-
+      You have two inputs: image 1 is the composited scene, image 2 is the original reference character. Using image 2 as reference, repair and improve the character in image 1. Fix all of the following:
 
+      1. EDGES: Remove all hard cutout edges, halos and white fringing around the character's silhouette. Blend her edges naturally into the background — match local lighting, color temperature and depth of field.
 
-      1. EDGES: Remove all hard cutout edges, halos and white fringing around the character''s silhouette. Blend her edges naturally into the background — match local lighting, color temperature and depth of field.
+      2. BODY RECONSTRUCTION: Where parts of the character's body are blurry, incomplete, distorted or missing (e.g. blurry fingers, cut-off limbs, broken anatomy) — reconstruct them correctly using image 2 as the reference. Restore sharp, realistic anatomy.
 
+      3. SKIN AND DETAIL: Match the character's skin tone, sharpness and detail level to image 2. Remove any softness or blur on the character's body.
 
-      2. BODY RECONSTRUCTION: Where parts of the character''s body are blurry, incomplete, distorted or missing (e.g. blurry fingers, cut-off limbs, broken anatomy) — reconstruct them correctly using image 2 as the reference. Restore sharp, realistic anatomy.
-
-
-      3. SKIN AND DETAIL: Match the character''s skin tone, sharpness and detail level to image 2. Remove any softness or blur on the character''s body.
-
-
-      Do not move the character. Do not change her pose or position. Do not modify the background outside the character area. Preserve the character''s face, clothing and identity.'
+      Do not move the character. Do not change her pose or position. Do not modify the background outside the character area. Preserve the character's face, clothing and identity.
     negative: changed pose, moved character, different face, different clothing, background change, artifacts, distorted anatomy, color shift on character body, overexposed, underexposed, blurry fingers, missing limbs, broken anatomy
     params:
       steps: 30
@@ -751,6 +811,7 @@ pic_flow:
   crop_to_subject: false
   pad_input_to_ratio: false
   id: umieszczanie_na_scenie_-_elegant_evening_gown_kopia
+
 - type: paste_character
   name: Umieszczanie na scenie - Glamorous Red Carpet
   paste_slots:
@@ -799,19 +860,16 @@ pic_flow:
     category: system
     name: Edge Blend — krawędzie postaci
     note: Pass 1 — inpainting w strefie maski (15px wokół sylwetki). Używany z ci_1ref (scena+maska + ref postaci).
-    positive: 'You have two inputs: image 1 is the composited scene, image 2 is the original reference character. Using image 2 as reference, repair and improve the character in image 1. Fix all of the following:
+    positive: |-
+      You have two inputs: image 1 is the composited scene, image 2 is the original reference character. Using image 2 as reference, repair and improve the character in image 1. Fix all of the following:
 
+      1. EDGES: Remove all hard cutout edges, halos and white fringing around the character's silhouette. Blend her edges naturally into the background — match local lighting, color temperature and depth of field.
 
-      1. EDGES: Remove all hard cutout edges, halos and white fringing around the character''s silhouette. Blend her edges naturally into the background — match local lighting, color temperature and depth of field.
+      2. BODY RECONSTRUCTION: Where parts of the character's body are blurry, incomplete, distorted or missing (e.g. blurry fingers, cut-off limbs, broken anatomy) — reconstruct them correctly using image 2 as the reference. Restore sharp, realistic anatomy.
 
+      3. SKIN AND DETAIL: Match the character's skin tone, sharpness and detail level to image 2. Remove any softness or blur on the character's body.
 
-      2. BODY RECONSTRUCTION: Where parts of the character''s body are blurry, incomplete, distorted or missing (e.g. blurry fingers, cut-off limbs, broken anatomy) — reconstruct them correctly using image 2 as the reference. Restore sharp, realistic anatomy.
-
-
-      3. SKIN AND DETAIL: Match the character''s skin tone, sharpness and detail level to image 2. Remove any softness or blur on the character''s body.
-
-
-      Do not move the character. Do not change her pose or position. Do not modify the background outside the character area. Preserve the character''s face, clothing and identity.'
+      Do not move the character. Do not change her pose or position. Do not modify the background outside the character area. Preserve the character's face, clothing and identity.
     negative: changed pose, moved character, different face, different clothing, background change, artifacts, distorted anatomy, color shift on character body, overexposed, underexposed, blurry fingers, missing limbs, broken anatomy
     params:
       steps: 30
@@ -838,6 +896,7 @@ pic_flow:
   crop_to_subject: false
   pad_input_to_ratio: false
   id: umieszczanie_na_scenie_-_glamorous_red_carpet_kopia
+
 - type: paste_character
   name: start scene
   paste_slots:
@@ -910,19 +969,16 @@ pic_flow:
     category: system
     name: Edge Blend — krawędzie postaci
     note: Pass 1 — inpainting w strefie maski (15px wokół sylwetki). Używany z ci_1ref (scena+maska + ref postaci).
-    positive: 'You have two inputs: image 1 is the composited scene, image 2 is the original reference character. Using image 2 as reference, repair and improve the character in image 1. Fix all of the following:
+    positive: |-
+      You have two inputs: image 1 is the composited scene, image 2 is the original reference character. Using image 2 as reference, repair and improve the character in image 1. Fix all of the following:
 
+      1. EDGES: Remove all hard cutout edges, halos and white fringing around the character's silhouette. Blend her edges naturally into the background — match local lighting, color temperature and depth of field.
 
-      1. EDGES: Remove all hard cutout edges, halos and white fringing around the character''s silhouette. Blend her edges naturally into the background — match local lighting, color temperature and depth of field.
+      2. BODY RECONSTRUCTION: Where parts of the character's body are blurry, incomplete, distorted or missing (e.g. blurry fingers, cut-off limbs, broken anatomy) — reconstruct them correctly using image 2 as the reference. Restore sharp, realistic anatomy.
 
+      3. SKIN AND DETAIL: Match the character's skin tone, sharpness and detail level to image 2. Remove any softness or blur on the character's body.
 
-      2. BODY RECONSTRUCTION: Where parts of the character''s body are blurry, incomplete, distorted or missing (e.g. blurry fingers, cut-off limbs, broken anatomy) — reconstruct them correctly using image 2 as the reference. Restore sharp, realistic anatomy.
-
-
-      3. SKIN AND DETAIL: Match the character''s skin tone, sharpness and detail level to image 2. Remove any softness or blur on the character''s body.
-
-
-      Do not move the character. Do not change her pose or position. Do not modify the background outside the character area. Preserve the character''s face, clothing and identity.'
+      Do not move the character. Do not change her pose or position. Do not modify the background outside the character area. Preserve the character's face, clothing and identity.
     negative: changed pose, moved character, different face, different clothing, background change, artifacts, distorted anatomy, color shift on character body, overexposed, underexposed, blurry fingers, missing limbs, broken anatomy
     params:
       steps: 30

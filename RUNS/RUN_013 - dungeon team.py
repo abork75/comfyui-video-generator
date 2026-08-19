@@ -4,7 +4,7 @@
 # Edit RUN_013 - dungeon team.yaml and regenerate with:
 #     from app.services.yaml_service import generate_py_from_yaml
 #     generate_py_from_yaml(Path("RUNS/RUN_013 - dungeon team.yaml"))
-# Generated: 2026-06-20 19:08:54
+# Generated: 2026-08-17 19:10:13
 # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 import sys
@@ -18,7 +18,7 @@ from batch_transitions import run_batch_generation
 # PROJECT CONFIG
 # ============================================================
 
-PROJECT_FOLDER = 'C:\\Users\\abork\\AppData\\Local\\CapCut\\Videos\\dungeon_team\\film'
+PROJECT_FOLDER = 'E:\\FILMY\\RUN_013 - dancing sorceress evil queen punishment'
 
 FORCE_RESOLUTION = (
     1024,
@@ -31,11 +31,15 @@ DEFAULT_RESOLUTION = (
 
 DEFAULT_BACKEND        = 'linux'
 DEFAULT_FPS            = 16
-DEFAULT_STEPS          = 6
+DEFAULT_STEPS          = 8
 DEFAULT_CFG            = 2
 DEFAULT_DURATION       = 2
 DEFAULT_BLOCKS_TO_SWAP      = 35
 DEFAULT_FRAME_INTERPOLATION = True
+DEFAULT_POSITIVE_PROMPT = 'smooth motion, high quality, cinematic'
+DEFAULT_NEGATIVE_PROMPT = 'blurry, distorted, artifacts, watermark, text'
+DEFAULT_AUDIO_PROMPT   = 'ambient sound, environmental audio, natural soundscape, high quality'
+DEFAULT_AUDIO_NEGATIVE_PROMPT = 'music, melody, instruments, singing, low quality, distortion'
 DEFAULT_SEED           = None
 SKIP_MISSING           = True
 SKIP_EXISTED           = True
@@ -123,7 +127,6 @@ Dynamic, intense and heroic action, realistic physics, strong warrior energy, ph
         "chain_prefix": 'red warrior',
         'backend': 'linux',
         'fps': 16,
-        'steps': 6,
         'cfg': 2,
         'neg': 'static, frozen, no movement',
     },
@@ -150,7 +153,6 @@ Intense eye contact, seductive body language, erotic and predatory atmosphere. M
         "chain_prefix": 'Wampirzyce',
         'backend': 'linux',
         'fps': 16,
-        'steps': 6,
         'cfg': 2,
         'neg': 'static, frozen, no movement',
     },
@@ -175,7 +177,6 @@ Intense eye contact, seductive body language, erotic and predatory atmosphere. M
         "chain_prefix": 'undead',
         'backend': 'linux',
         'fps': 16,
-        'steps': 6,
         'cfg': 2,
         'neg': 'static, frozen, no movement',
     },
@@ -200,7 +201,6 @@ Intense eye contact, seductive body language, erotic and predatory atmosphere. M
         "chain_prefix": 'duch nekromantki',
         'backend': 'linux',
         'fps': 16,
-        'steps': 6,
         'cfg': 2,
         'neg': 'static, frozen, no movement',
     },
@@ -225,7 +225,6 @@ Intense eye contact, seductive body language, erotic and predatory atmosphere. M
         "chain_prefix": 'monster slaver',
         'backend': 'linux',
         'fps': 16,
-        'steps': 6,
         'cfg': 2,
         'neg': 'static, frozen, no movement',
     },
@@ -250,7 +249,6 @@ Intense eye contact, seductive body language, erotic and predatory atmosphere. M
         "chain_prefix": 'dark elf queen casting a spell',
         'backend': 'linux',
         'fps': 16,
-        'steps': 6,
         'cfg': 2,
         'neg': 'static, frozen, no movement',
     },
@@ -275,7 +273,6 @@ Intense eye contact, seductive body language, erotic and predatory atmosphere. M
         "chain_prefix": 'diablo',
         'backend': 'linux',
         'fps': 16,
-        'steps': 6,
         'cfg': 2,
         'neg': 'static, frozen, no movement',
     },
@@ -306,7 +303,6 @@ flows outward around her body, she performs a dramatic magical incantation gestu
         "chain_prefix": 'wiedzma',
         'backend': 'linux',
         'fps': 16,
-        'steps': 6,
         'cfg': 2,
         'neg': '',
     },
@@ -335,7 +331,6 @@ Elegant and intense spellcasting motion, glowing magical particles, dramatic lig
         "chain_prefix": 'walka z wiedzma 1',
         'backend': 'linux',
         'fps': 16,
-        'steps': 6,
         'cfg': 2,
         'neg': 'static, frozen, no movement',
     },
@@ -369,7 +364,6 @@ Dynamic, chaotic disintegration in the center of the frame. She completely vanis
         "chain_prefix": 'walka z wiedzma 2',
         'backend': 'linux',
         'fps': 16,
-        'steps': 6,
         'cfg': 2,
         'neg': 'static, frozen, no movement',
     },
@@ -462,7 +456,6 @@ Her dance is teasing and confident, full of sexual energy. Dramatic lighting, ma
         "chain_prefix": 'taniec',
         'backend': 'linux',
         'fps': 16,
-        'steps': 6,
         'cfg': 2,
         'neg': 'static, frozen, no movement',
     },
@@ -500,7 +493,6 @@ Her dance is teasing and confident, full of sexual energy. Dramatic lighting, ma
         "chain_prefix": 'taniec zamek',
         'backend': 'linux',
         'fps': 16,
-        'steps': 6,
         'cfg': 2,
         'neg': 'static, frozen, no movement',
     },
@@ -534,7 +526,6 @@ Her dance is teasing and confident, full of sexual energy. Dramatic lighting, ma
         "chain_prefix": 'taniec las',
         'backend': 'linux',
         'fps': 16,
-        'steps': 6,
         'cfg': 2,
         'neg': 'static, frozen, no movement',
     },
@@ -568,7 +559,6 @@ Her dance is teasing and confident, full of sexual energy. Dramatic lighting, ma
         "chain_prefix": 'taniec wioska',
         'backend': 'linux',
         'fps': 16,
-        'steps': 6,
         'cfg': 2,
         'neg': 'static, frozen, no movement',
     },
@@ -602,7 +592,6 @@ Her dance is teasing and confident, full of sexual energy. Dramatic lighting, ma
         "chain_prefix": 'taniec prisoners',
         'backend': 'linux',
         'fps': 16,
-        'steps': 6,
         'cfg': 2,
         'neg': 'static, frozen, no movement',
     },
@@ -629,7 +618,6 @@ Magical glowing particles and soft light trails follow her movements. Mysterious
         "chain_prefix": 'taniec zamek_kopia',
         'backend': 'linux',
         'fps': 16,
-        'steps': 6,
         'cfg': 2,
         'neg': 'static, frozen, no movement',
     },
@@ -663,7 +651,6 @@ Her dance is teasing and confident, full of sexual energy. Dramatic lighting, ma
         "chain_prefix": 'taniec roadtonowhere',
         'backend': 'linux',
         'fps': 16,
-        'steps': 6,
         'cfg': 2,
         'neg': 'static, frozen, no movement',
     },
@@ -697,7 +684,6 @@ Her dance is teasing and confident, full of sexual energy. Dramatic lighting, ma
         "chain_prefix": 'taniec farmers',
         'backend': 'linux',
         'fps': 16,
-        'steps': 6,
         'cfg': 2,
         'neg': 'static, frozen, no movement',
     },
@@ -731,7 +717,6 @@ Her dance is teasing and confident, full of sexual energy. Dramatic lighting, ma
         "chain_prefix": 'taniec barracks',
         'backend': 'linux',
         'fps': 16,
-        'steps': 6,
         'cfg': 2,
         'neg': 'static, frozen, no movement',
     },
@@ -765,7 +750,6 @@ Her dance is teasing and confident, full of sexual energy. Dramatic lighting, ma
         "chain_prefix": 'taniec pustynia',
         'backend': 'linux',
         'fps': 16,
-        'steps': 6,
         'cfg': 2,
         'neg': 'static, frozen, no movement',
     },
@@ -799,7 +783,6 @@ Her dance is teasing and confident, full of sexual energy. Dramatic lighting, ma
         "chain_prefix": 'taniec fullsun',
         'backend': 'linux',
         'fps': 16,
-        'steps': 6,
         'cfg': 2,
         'neg': 'static, frozen, no movement',
     },
@@ -833,7 +816,6 @@ Her dance is teasing and confident, full of sexual energy. Dramatic lighting, ma
         "chain_prefix": 'taniec fullmoon',
         'backend': 'linux',
         'fps': 16,
-        'steps': 6,
         'cfg': 2,
         'neg': 'static, frozen, no movement',
     },
@@ -867,7 +849,6 @@ Her dance is teasing and confident, full of sexual energy. Dramatic lighting, ma
         "chain_prefix": 'taniec valley',
         'backend': 'linux',
         'fps': 16,
-        'steps': 6,
         'cfg': 2,
         'neg': 'static, frozen, no movement',
     },
@@ -901,7 +882,6 @@ Her dance is teasing and confident, full of sexual energy. Dramatic lighting, ma
         "chain_prefix": 'taniec lake',
         'backend': 'linux',
         'fps': 16,
-        'steps': 6,
         'cfg': 2,
         'neg': 'static, frozen, no movement',
     },
@@ -935,7 +915,6 @@ Her dance is teasing and confident, full of sexual energy. Dramatic lighting, ma
         "chain_prefix": 'taniec rain',
         'backend': 'linux',
         'fps': 16,
-        'steps': 6,
         'cfg': 2,
         'neg': 'static, frozen, no movement',
     },
@@ -969,7 +948,6 @@ Her dance is teasing and confident, full of sexual energy. Dramatic lighting, ma
         "chain_prefix": 'taniec icyforrest',
         'backend': 'linux',
         'fps': 16,
-        'steps': 6,
         'cfg': 2,
         'neg': 'static, frozen, no movement',
     },
@@ -1003,7 +981,6 @@ Her dance is teasing and confident, full of sexual energy. Dramatic lighting, ma
         "chain_prefix": 'taniec sky',
         'backend': 'linux',
         'fps': 16,
-        'steps': 6,
         'cfg': 2,
         'neg': 'static, frozen, no movement',
     },
@@ -1037,7 +1014,6 @@ Her dance is teasing and confident, full of sexual energy. Dramatic lighting, ma
         "chain_prefix": 'taniec underground',
         'backend': 'linux',
         'fps': 16,
-        'steps': 6,
         'cfg': 2,
         'neg': 'static, frozen, no movement',
     },
@@ -1130,7 +1106,6 @@ Strong emotional reaction, realistic eye movement, subtle body tension. Dark, dr
         "chain_prefix": 'przebudzenie',
         'backend': 'linux',
         'fps': 16,
-        'steps': 6,
         'cfg': 2,
         'neg': 'static, frozen, no movement',
     },
@@ -1237,7 +1212,6 @@ Smooth, highly provocative and feminine dance, intense sensuality, cinematic vol
         "chain_prefix": 'pochyla się jeszcze bardziej',
         'backend': 'linux',
         'fps': 16,
-        'steps': 6,
         'cfg': 2,
         'neg': 'static, frozen, no movement',
     },

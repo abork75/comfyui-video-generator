@@ -1,8 +1,8 @@
-# RUN_022_MODELKI_NSFW.yaml
-# Edited: 2026-08-09 22:45:52
+# RUN_022 - MODELKI_NSFW.yaml
+# Edited: 2026-08-17 16:52:59
 # Edit this file freely — regenerate .py with generate_py_from_yaml()
 #
-project_folder: C:\Users\abork\AppData\Local\CapCut\Videos\__DEVIANT ART\Modelki_igraszki
+project_folder: E:\FILMY\RUN_022 - MODELKI - NSFW
 
 use_test_flow: false
 
@@ -164,7 +164,7 @@ flow:
 - type: scene_break
   name: 99.002 ONE MINUTE NSFW
 
-- file: C:\Users\abork\AppData\Local\CapCut\Videos\__DEVIANT ART\Modelki_igraszki\99.002 Natural.png
+- file: 99.002 Natural.png
   backend: linux
   duration: 2
   pos: |-
@@ -321,7 +321,7 @@ flow:
 - type: scene_break
   name: 99.003. EROTIC DANCE 1
 
-- file: C:\Users\abork\AppData\Local\CapCut\Videos\__DEVIANT ART\Modelki_igraszki\99.003 Natural.png
+- file: 99.003 Natural.png
   backend: linux
   duration: 2
   pos: |-
@@ -807,7 +807,7 @@ flow:
 - type: scene_break
   name: 99.006 ONE MINUTE NTSW
 
-- file: C:\Users\abork\AppData\Local\CapCut\Videos\__DEVIANT ART\Modelki_igraszki\99.006 Natural.png
+- file: 99.006 Natural.png
   backend: linux
   duration: 2
   pos: |-
@@ -1097,7 +1097,7 @@ flow:
 - type: scene_break
   name: 99.009 ONE MINUTE NSFW
 
-- file: C:\Users\abork\AppData\Local\CapCut\Videos\__DEVIANT ART\Modelki_igraszki\99.009 Natural.png
+- file: 99.009 Natural.png
   backend: linux
   duration: 2
   pos: |-
@@ -1129,7 +1129,7 @@ flow:
     neg: |-
       static, frozen, no movement
 
-- file: C:\Users\abork\AppData\Local\CapCut\Videos\__DEVIANT ART\Modelki_igraszki\99.009 Natural.png
+- file: 99.009 Natural.png
   backend: linux
   duration: 2
   pos: |-
@@ -1167,7 +1167,7 @@ flow:
     neg: |-
       static, frozen, no movement
 
-- file: C:\Users\abork\AppData\Local\CapCut\Videos\__DEVIANT ART\Modelki_igraszki\99.009 Natural.png
+- file: 99.009 Natural.png
   backend: linux
   duration: 2
   pos: |-
@@ -1244,7 +1244,7 @@ flow:
 - type: scene_break
   name: 99.010 ONE MINUTE NSFW
 
-- file: C:\Users\abork\AppData\Local\CapCut\Videos\__DEVIANT ART\Modelki_igraszki\99.010 Natural.png
+- file: 99.010 Natural.png
   backend: linux
   duration: 2
   pos: |-
@@ -1966,7 +1966,7 @@ flow:
     neg: |-
       static, frozen, no movement
 
-- file: C:\Users\abork\AppData\Local\CapCut\Videos\__DEVIANT ART\Modelki_igraszki\99.012 Natural.png
+- file: 99.012 Natural.png
   backend: linux
   duration: 2
   pos: |-
@@ -2013,7 +2013,7 @@ flow:
 - type: scene_break
   name: 99.004 ONE MINUTE NSFW,  desiva 600 no g4gg
 
-- file: C:\Users\abork\AppData\Local\CapCut\Videos\__DEVIANT ART\Modelki_igraszki\99.013 Natural.png
+- file: 99.013 Natural.png
   backend: linux
   duration: 2
   pos: |-
@@ -2166,7 +2166,7 @@ flow:
 - type: scene_break
   name: 99.014 ONE MINUTE NSFW, desiva 600 no g4gg
 
-- file: C:\Users\abork\AppData\Local\CapCut\Videos\__DEVIANT ART\Modelki_igraszki\99.014 Natural.png
+- file: 99.014 Natural.png
   backend: linux
   duration: 2
   pos: |-
@@ -2313,7 +2313,7 @@ flow:
 - type: scene_break
   name: 99.015 ONE MINUTE NSFW FACE KEEP, desiva 600 no g4gg
 
-- file: C:\Users\abork\AppData\Local\CapCut\Videos\__DEVIANT ART\Modelki_igraszki\99.015 Natural.png
+- file: 99.015 Natural.png
   backend: linux
   duration: 2
   pos: |-
@@ -2363,7 +2363,7 @@ flow:
 
 - break: true
 
-- file: C:\Users\abork\AppData\Local\CapCut\Videos\__DEVIANT ART\Modelki_igraszki\99.015 Natural.png
+- file: 99.015 Natural.png
   backend: linux
   duration: 2
   pos: |-
@@ -2407,7 +2407,7 @@ flow:
 
 - break: true
 
-- file: C:\Users\abork\AppData\Local\CapCut\Videos\__DEVIANT ART\Modelki_igraszki\99.015 Natural.png
+- file: 99.015 Natural.png
   backend: linux
   duration: 2
   pos: |-
@@ -2563,7 +2563,7 @@ flow:
 - break: true
   label: DOGGY
 
-- file: C:\Users\abork\AppData\Local\CapCut\Videos\__DEVIANT ART\Modelki_igraszki\99.016 Natural.png
+- file: 99.016 Natural.png
   backend: linux
   duration: 2
   pos: |-
@@ -2782,7 +2782,7 @@ flow:
 - type: scene_break
   name: 99.017 ONE MINUTE NSFW FACE KEEP CARTOON
 
-- file: C:\Users\abork\AppData\Local\CapCut\Videos\__DEVIANT ART\Modelki_igraszki\99.017 Anime.png
+- file: 99.017 Anime.png
   backend: linux
   duration: 2
   pos: |-
@@ -2854,7 +2854,7 @@ flow:
 
 - break: true
 
-- file: C:\Users\abork\AppData\Local\CapCut\Videos\__DEVIANT ART\Modelki_igraszki\99.017 Anime.png
+- file: 99.017 Anime.png
   backend: linux
   duration: 2
   pos: |-
@@ -2907,7 +2907,7 @@ flow:
 
 - break: true
 
-- file: C:\Users\abork\AppData\Local\CapCut\Videos\__DEVIANT ART\Modelki_igraszki\99.017 Anime.png
+- file: 99.017 Anime.png
   backend: linux
   duration: 2
   pos: |-
@@ -2955,7 +2955,7 @@ flow:
 
 - break: true
 
-- file: C:\Users\abork\AppData\Local\CapCut\Videos\__DEVIANT ART\Modelki_igraszki\99.017 Anime.png
+- file: 99.017 Anime.png
   backend: linux
   duration: 2
   pos: |-
@@ -2993,7 +2993,7 @@ flow:
 
 - break: true
 
-- file: C:\Users\abork\AppData\Local\CapCut\Videos\__DEVIANT ART\Modelki_igraszki\99.017 Anime.png
+- file: 99.017 Anime.png
   backend: linux
   duration: 2
   pos: |-
@@ -3085,7 +3085,7 @@ flow:
 - type: scene_break
   name: 99.018 ONE MINUTE NSFW FACE KEEP V2
 
-- file: C:\Users\abork\AppData\Local\CapCut\Videos\__DEVIANT ART\Modelki_igraszki\99.018 Natural.png
+- file: 99.018 Natural.png
   backend: linux
   duration: 2
   pos: |-
@@ -3123,7 +3123,7 @@ flow:
 - break: true
   label: SPOON
 
-- file: C:\Users\abork\AppData\Local\CapCut\Videos\__DEVIANT ART\Modelki_igraszki\99.018 Natural.png
+- file: 99.018 Natural.png
   backend: linux
   duration: 2
   pos: |-
@@ -3166,7 +3166,7 @@ flow:
 - break: true
   label: DOGGY
 
-- file: C:\Users\abork\AppData\Local\CapCut\Videos\__DEVIANT ART\Modelki_igraszki\99.018 Natural.png
+- file: 99.018 Natural.png
   backend: linux
   duration: 2
   pos: |-
@@ -3220,7 +3220,7 @@ flow:
 - break: true
   label: BackDOGGY
 
-- file: C:\Users\abork\AppData\Local\CapCut\Videos\__DEVIANT ART\Modelki_igraszki\99.018 Natural.png
+- file: 99.018 Natural.png
   backend: linux
   duration: 2
   pos: |-
@@ -3265,7 +3265,7 @@ flow:
 - break: true
   label: SQUATCOWGIRL
 
-- file: C:\Users\abork\AppData\Local\CapCut\Videos\__DEVIANT ART\Modelki_igraszki\99.018 Natural.png
+- file: 99.018 Natural.png
   backend: linux
   duration: 2
   pos: |-
@@ -3306,7 +3306,7 @@ flow:
 - break: true
   label: MISSIONARY
 
-- file: C:\Users\abork\AppData\Local\CapCut\Videos\__DEVIANT ART\Modelki_igraszki\99.018 Natural.png
+- file: 99.018 Natural.png
   backend: linux
   duration: 2
   pos: |-
@@ -3389,7 +3389,7 @@ flow:
 - type: scene_break
   name: 99.019 ONE MINUTE NSFW FACE KEEP V2
 
-- file: C:\Users\abork\AppData\Local\CapCut\Videos\__DEVIANT ART\Modelki_igraszki\99.019 Natural.png
+- file: 99.019 Natural.png
   backend: linux
   duration: 2
   pos: |-
@@ -3427,7 +3427,7 @@ flow:
 - break: true
   label: SPOON
 
-- file: C:\Users\abork\AppData\Local\CapCut\Videos\__DEVIANT ART\Modelki_igraszki\99.019 Natural.png
+- file: 99.019 Natural.png
   backend: linux
   duration: 2
   pos: |-
@@ -3466,7 +3466,7 @@ flow:
 - break: true
   label: DOGGY
 
-- file: C:\Users\abork\AppData\Local\CapCut\Videos\__DEVIANT ART\Modelki_igraszki\99.019 Natural.png
+- file: 99.019 Natural.png
   backend: linux
   duration: 2
   pos: |-
@@ -3516,7 +3516,7 @@ flow:
 - break: true
   label: BackDOGGY
 
-- file: C:\Users\abork\AppData\Local\CapCut\Videos\__DEVIANT ART\Modelki_igraszki\99.019 Natural.png
+- file: 99.019 Natural.png
   backend: linux
   duration: 2
   pos: |-
@@ -3561,7 +3561,7 @@ flow:
 - break: true
   label: SQUATCOWGIRL
 
-- file: C:\Users\abork\AppData\Local\CapCut\Videos\__DEVIANT ART\Modelki_igraszki\99.019 Natural.png
+- file: 99.019 Natural.png
   backend: linux
   duration: 2
   pos: |-
@@ -3602,7 +3602,7 @@ flow:
 - break: true
   label: MISSIONARY
 
-- file: C:\Users\abork\AppData\Local\CapCut\Videos\__DEVIANT ART\Modelki_igraszki\99.019 Natural.png
+- file: 99.019 Natural.png
   backend: linux
   duration: 2
   pos: |-

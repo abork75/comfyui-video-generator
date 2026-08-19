@@ -4,7 +4,7 @@
 # Edit RUN_027 - ShoeShop.yaml and regenerate with:
 #     from app.services.yaml_service import generate_py_from_yaml
 #     generate_py_from_yaml(Path("RUNS/RUN_027 - ShoeShop.yaml"))
-# Generated: 2026-08-16 13:57:40
+# Generated: 2026-08-17 16:30:07
 # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 import sys
@@ -18,7 +18,7 @@ from batch_transitions import run_batch_generation
 # PROJECT CONFIG
 # ============================================================
 
-PROJECT_FOLDER = 'C:\\Users\\abork\\AppData\\Local\\CapCut\\Videos\\__DEVIANT ART\\FILMY\\ShoeShop'
+PROJECT_FOLDER = 'E:\\FILMY\\RUN_027 - ShoeShop'
 
 FORCE_RESOLUTION = (
     896,
