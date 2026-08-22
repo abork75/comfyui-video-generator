@@ -4,7 +4,7 @@
 # Edit RUN_014 - skakanie_na _pilce.yaml and regenerate with:
 #     from app.services.yaml_service import generate_py_from_yaml
 #     generate_py_from_yaml(Path("RUNS/RUN_014 - skakanie_na _pilce.yaml"))
-# Generated: 2026-08-17 17:35:22
+# Generated: 2026-08-22 21:23:53
 # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 import sys
@@ -120,7 +120,11 @@ FLOW_FULL = [
     },
 
     {
-        "chain": [
+        'type': 'multichain',
+        'chain_prefix': 'gimnasytka',
+        'model_class': 'wan',
+        'neg': 'static, frozen, no movement',
+        'chain': [
             {
                 'duration': 4,
                 'pos': """4-second video: Woman standing frontally to the camera performs two full torso bends. She bends forward at the hips with straight legs, lowering her torso and arms down towards the floor, then rises back up to standing position. She does this movement clearly and rhythmically two times (down-up, down-up).
@@ -136,11 +140,6 @@ Movement is elegant, smooth and highly sensual, with emphasis on her curves, slo
                 'neg': 'static pose, sudden sitting, fast movement, jerky motion, bad anatomy, deformed body, extra limbs, distorted proportions, bent awkwardly, falling, unbalanced pose, stiff posture, no hip movement, flat back, hunched shoulders, looking away from camera, ugly face, deformed hands, blurry, low quality, artifacts, rubbery motion, unnatural physics, ball deformation, ball moving too much, floating, bad lighting, overexposed, underexposed, cartoonish, plastic skin, low detail, different clothing, modest pose, unsexy movement, boring pose, legs closed, knees together',
             },
         ],
-        "chain_prefix": 'gimnasytka',
-        'backend': 'linux',
-        'fps': 16,
-        'cfg': 2,
-        'neg': 'static, frozen, no movement',
     },
 
     {
@@ -158,7 +157,11 @@ Movement is elegant, smooth and highly sensual, with emphasis on her curves, slo
     },
 
     {
-        "chain": [
+        'type': 'multichain',
+        'chain_prefix': 'Skacze na pilce',
+        'model_class': 'wan',
+        'neg': 'static, frozen, no movement',
+        'chain': [
             {
                 'duration': 3,
                 'pos': """Cinematic 4-second I2V video: A beautiful woman sitting on a large exercise ball performs a dynamic, rhythmic bouncing exercise. She pushes her hips upward forcefully, lifting her body off the ball with each bounce, creating visible separation between her body and the ball. The ball compresses and rebounds naturally on the floor with each bounce.
@@ -178,20 +181,31 @@ Front view, visible realistic bouncing motion, natural ball deformation and rebo
                 'neg': 'glued to ball, stuck to ball, ball attached to body, woman and ball moving as one rigid object, no separation between woman and ball, floating together, unnatural ball physics, ball not compressing, ball not rebounding, ball deformed unnaturally, static ball, minimal bouncing, bad physics, rubbery motion, jerky movement, stiff body, bad anatomy, deformed ball, exaggerated floating, woman not lifting off ball, ball stuck to buttocks, low quality motion, artifacts, blurry',
             },
         ],
-        "chain_prefix": 'Skacze na pilce',
-        'backend': 'linux',
-        'fps': 16,
-        'cfg': 2,
-        'neg': 'static, frozen, no movement',
     },
 
     {
         'file': '11.55. siedzi na pilce 2.png',
         'backend': 'linux',
-        'duration': 3,
-        'pos': 'Smooth transition woman is moving with ball',
+        'duration': 2,
+        'pos': 'NONE',
         'neg': 'NONE',
     },
+    {
+        'type': 'multichain',
+        'chain_prefix': '11.55. siedzi na pilce 2_12.51. siedzi na pilce 2',
+        'model_class': 'ltx',
+        'neg': 'NONE',
+        'chain': [
+            {
+                'duration': 6,
+                'pos': 'Smooth transition woman is moving with ball',
+                'neg': '',
+                'frame_interpolation': False,
+                'ltx_variant': '8step',
+            },
+        ],
+    },
+
     {
         'file': '12.51. siedzi na pilce 2.png',
         'backend': 'linux',
@@ -200,18 +214,17 @@ Front view, visible realistic bouncing motion, natural ball deformation and rebo
         'neg': 'NONE',
     },
     {
-        "chain": [
+        'type': 'multichain',
+        'chain_prefix': 'idzie do przedpokoju',
+        'model_class': 'wan',
+        'neg': 'static, frozen, no movement',
+        'chain': [
             {
                 'duration': 4,
                 'pos': 'Woman is standing up and going towards corridor',
                 'neg': '',
             },
         ],
-        "chain_prefix": 'idzie do przedpokoju',
-        'backend': 'linux',
-        'fps': 16,
-        'cfg': 2,
-        'neg': 'static, frozen, no movement',
     },
 
     {
@@ -229,23 +242,26 @@ Front view, visible realistic bouncing motion, natural ball deformation and rebo
     },
 
     {
-        "chain": [
+        'type': 'multichain',
+        'chain_prefix': 'idzie na gorke',
+        'model_class': 'wan',
+        'neg': 'static, frozen, no movement',
+        'chain': [
             {
                 'duration': 3,
                 'pos': 'Woman is turning towards staris an climbing upstairs',
                 'neg': '',
+                'audio_prompt': 'subtle body movement, soft weight shift, quiet fabric rustle, gentle shuffling feet on floor, light position change, soft clothing sounds, natural movement foley, realistic, high quality',
+                'audio_negative_prompt': 'music, melody, ambient drone, loud impact, hard footsteps, slap, sustained atmosphere, low quality, distortion',
             },
             {
                 'duration': 3,
                 'pos': 'Woman dissapearing from scen climbing upstairs, empty scene seen at last 2 seconds',
                 'neg': '',
+                'audio_prompt': 'subtle body movement, soft weight shift, quiet fabric rustle, gentle shuffling feet on floor, light position change, soft clothing sounds, natural movement foley, realistic, high quality',
+                'audio_negative_prompt': 'music, melody, ambient drone, loud impact, hard footsteps, slap, sustained atmosphere, low quality, distortion',
             },
         ],
-        "chain_prefix": 'idzie na gorke',
-        'backend': 'linux',
-        'fps': 16,
-        'cfg': 2,
-        'neg': 'static, frozen, no movement',
     },
 
 ]
