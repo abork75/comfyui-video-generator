@@ -4,7 +4,7 @@
 # Edit RUN_027 - ShoeShop.yaml and regenerate with:
 #     from app.services.yaml_service import generate_py_from_yaml
 #     generate_py_from_yaml(Path("RUNS/RUN_027 - ShoeShop.yaml"))
-# Generated: 2026-08-17 16:30:07
+# Generated: 2026-08-21 09:02:43
 # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 import sys
@@ -254,6 +254,44 @@ FLOW_FULL = [
     },
     {"break": True},
 
+    {
+        'file': '50.53. pose.png',
+        'backend': 'linux',
+        'duration': 2,
+        'pos': 'NONE',
+        'neg': 'NONE',
+    },
+    {
+        'type': 'multichain',
+        'chain_prefix': 'test nowego multi chain 2',
+        'model_class': 'ltx',
+        'neg': 'blur, noise, watermark, text, low quality, worst quality, deformed',
+        'chain': [
+            {
+                'duration': 3,
+                'pos': 'Women is waving hands',
+                'neg': '',
+                'ltx_variant': '8step',
+                'frame_interpolation': False,
+            },
+            {
+                'duration': 3,
+                'pos': 'Womane is standing up',
+                'neg': '',
+                'frame_interpolation': True,
+            },
+        ],
+        'width': 448,
+        'height': 576,
+    },
+
+    {
+        'file': '50.51. pose.png',
+        'backend': 'linux',
+        'duration': 2,
+        'pos': 'NONE',
+        'neg': 'NONE',
+    },
 ]
 
 FLOW = FLOW_FULL

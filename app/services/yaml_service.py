@@ -91,6 +91,11 @@ def _check_flow_item(item: Any, idx: int) -> list[str]:
         return []  # header items are display-only, always valid
     if item.get("type") == "scene_break":
         return []  # scene_break items are always valid
+    if item.get("type") == "multichain":
+        chain = item.get("chain")
+        if not isinstance(chain, list) or len(chain) == 0:
+            errors.append(f"flow[{idx}].multichain: 'chain' must be a non-empty list")
+        return errors
     if "chain" in item:
         chain = item["chain"]
         if not isinstance(chain, dict):
@@ -193,6 +198,9 @@ def _yaml_item_to_internal(item: dict) -> dict:
         return {"type": "scene_break", "name": item.get("name", "")}
     if "header" in item:
         return {"header": item["header"]}
+    if item.get("type") == "multichain":
+        # Pass through verbatim — same as talk/multitalk/dubit, no dict/list reshaping
+        return dict(item)
     if "chain" in item:
         chain_data = item["chain"]
         if not isinstance(chain_data, dict):
@@ -227,6 +235,9 @@ def _internal_item_to_yaml(item: dict) -> dict:
         return {"type": "scene_break", "name": item.get("name", "")}
     if "header" in item:
         return {"header": item["header"]}
+    if item.get("type") == "multichain":
+        # Pass through verbatim — same as talk/multitalk/dubit, no dict/list reshaping
+        return dict(item)
     if "chain" in item:
         chain_prefix = item.get("chain_prefix", "chain")
         chain_data: dict[str, Any] = {
@@ -430,6 +441,15 @@ def _flow_list_to_py(flow: list, var_name: str) -> str:
             bar = "─" * max(4, 54 - len(header_text) - 2)
             lines.append(f"")
             lines.append(f"    # ── {header_text} {bar}")
+            continue
+        if item.get("type") == "multichain":
+            # multichain item — render as plain dict, verbatim (same as talk/multitalk)
+            lines.append("    {")
+            for k, v in item.items():
+                vr = _py_val(v, 8)
+                lines.append(f'        {repr(k)}: {vr},')
+            lines.append("    },")
+            lines.append("")
             continue
         if "chain" in item:
             # chain item — keep internal format (what batch_transitions expects)

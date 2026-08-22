@@ -7,6 +7,7 @@ backends:
     api_url: http://127.0.0.1:8189
     workflows_path: D:\streamlit_project\comfyui_integration\workflows
     comfyui_output_folder: D:\ComfyUI\output\Wan22_I2V
+    comfyui_input_dir: D:\ComfyUI\input
     models:
       video_gen:
         config_path: D:\streamlit_project\comfyui_integration\workflow_configs\wan_i2v.yaml
@@ -18,6 +19,14 @@ backends:
         workflow_json: D:\streamlit_project\comfyui_integration\workflow_configs\multitalk_wanvideo_test_api.json
       dubit:
         workflow_json: D:\streamlit_project\comfyui_integration\workflow_configs\dubit_workflow_api.json
+  ltx:
+    api_url: http://127.0.0.1:8189
+    workflows_path: D:\streamlit_project\comfyui_integration\workflows
+    comfyui_output_folder: D:\ComfyUI\output
+    models:
+      video_gen:
+        config_path_ff: D:\streamlit_project\comfyui_integration\workflow_configs\ltx_ff.yaml
+        config_path_fflf: D:\streamlit_project\comfyui_integration\workflow_configs\ltx_fflf.yaml
   windows:
     api_url: http://127.0.0.1:8190
     input_dir: D:\ComfyUI\input

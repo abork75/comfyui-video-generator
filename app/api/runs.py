@@ -178,6 +178,56 @@ async def generate_py(filename: str):
         raise HTTPException(status_code=400, detail=str(exc))
 
 
+@router.post("/{filename}/multichain-migration-analyze")
+async def multichain_migration_analyze(filename: str):
+    """
+    Dry-run: scan the flow for old file->file pairs and old `chain:` blocks that
+    could be converted to the new `multichain` tile. Touches nothing.
+    Returns {"pairs": [...], "chains": [...]} - see multichain_migration_service
+    for the shape of each proposal.
+    """
+    if not filename.endswith(".yaml"):
+        raise HTTPException(status_code=422, detail="Source file must be a .yaml file")
+    from app.services.multichain_migration_service import analyze_migration
+    try:
+        return analyze_migration(filename)
+    except Exception as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+
+
+@router.post("/{filename}/multichain-migration-apply")
+async def multichain_migration_apply(filename: str, request: Request):
+    """
+    Apply selected conversions from the analysis: renames output files on disk
+    (main + archived versions) and rewrites the flow YAML. Only touches items
+    whose key is included in the request body - nothing else is converted.
+
+    Body JSON: {"pair_keys": ["pair_2", ...], "chain_keys": ["chain_5", ...]}
+    """
+    if not filename.endswith(".yaml"):
+        raise HTTPException(status_code=422, detail="Source file must be a .yaml file")
+    try:
+        body = await request.json()
+    except Exception:
+        raise HTTPException(status_code=422, detail="Invalid JSON body")
+
+    pair_keys = body.get("pair_keys", [])
+    chain_keys = body.get("chain_keys", [])
+    if not isinstance(pair_keys, list) or not isinstance(chain_keys, list):
+        raise HTTPException(status_code=422, detail="pair_keys and chain_keys must be lists")
+    if not pair_keys and not chain_keys:
+        raise HTTPException(status_code=422, detail="Nothing selected")
+
+    from app.services.multichain_migration_service import apply_migration
+    try:
+        result = apply_migration(filename, pair_keys, chain_keys)
+        invalidate_run_info_cache(filename)
+        invalidate_run_cache(filename)
+        return result
+    except Exception as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+
+
 @router.get("/{filename}/project-files")
 async def get_project_files(filename: str):
     """

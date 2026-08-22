@@ -236,10 +236,31 @@ def _find_end_target(flow: list, chain_idx: int) -> str | None:
     return None
 
 
+def _resolve_backend_name(chain_item: dict) -> str:
+    """Resolve which backend implementation to use for a chain/multichain item.
+
+    Old `chain` items select the backend directly via `backend` (linux/local/atlascloud).
+    `multichain` items select via `model_class` (ltx/wan/atlascloud) instead — map that
+    onto backend names: wan -> linux, atlascloud -> atlascloud, ltx -> ltx.
+    """
+    model_class = chain_item.get("model_class")
+    if model_class is not None:
+        if model_class == "wan":
+            return "linux"
+        if model_class == "atlascloud":
+            return "atlascloud"
+        if model_class == "ltx":
+            return "ltx"
+        raise RuntimeError(
+            f"model_class '{model_class}' nie ma jeszcze zaimplementowanego backendu"
+        )
+    return chain_item.get("backend") or "linux"
+
+
 def _build_backend_config(chain_item: dict) -> dict:
     from app.services import app_config_service
 
-    backend_name = chain_item.get("backend") or "linux"
+    backend_name = _resolve_backend_name(chain_item)
     cfg = dict(app_config_service.get_backend(backend_name))
 
     # video_gen model provides config_path / workflows_path
@@ -256,7 +277,7 @@ def _build_backend_config(chain_item: dict) -> dict:
 
 
 def _init_backend(chain_item: dict):
-    backend_name = chain_item.get("backend") or "linux"
+    backend_name = _resolve_backend_name(chain_item)
     cfg = _build_backend_config(chain_item)
 
     if backend_name == "linux":
@@ -268,6 +289,9 @@ def _init_backend(chain_item: dict):
     elif backend_name == "atlascloud":
         from backends.atlascloud_video_backend import AtlasCloudVideoBackend
         return AtlasCloudVideoBackend(cfg)
+    elif backend_name == "ltx":
+        from backends.ltx_backend import LtxBackend
+        return LtxBackend(cfg)
     else:
         from backends.linux_backend import LinuxBackend
         return LinuxBackend(cfg)
@@ -414,6 +438,31 @@ def _log_gen_params(label, width, height, duration, fps, steps, cfg, seed,
     )
 
 
+def _log_gen_params_ltx(label, width, height, duration, ltx_variant,
+                         ff_strength, lf_strength, cfg_pass1, cfg_pass2,
+                         fi, loras=None, pos=None, ltx_model=None):
+    from app.services.process_service import process_service
+    fi_str = "✓" if fi else "✗"
+    variant_str = (f" | 🎨 20-step cfg={cfg_pass1}/{cfg_pass2}" if ltx_variant == "20step"
+                   else " | ⚡ 8-step")
+    model_name = (ltx_model or "distilled-1.1 (pełny, domyślny)")
+    model_str = f"\n   🧠 model: {_Path(model_name).stem}"
+    strengths = f"FF={ff_strength}" + (f" LF={lf_strength}" if lf_strength is not None else "")
+    lora_str = ""
+    if loras:
+        names = ", ".join(_Path(l.get("name", "")).stem for l in loras if l.get("name"))
+        if names:
+            lora_str = f"\n   🎭 LoRAs: {names}"
+    pos_str = f"\n   📝 pos: {pos[:80]}..." if pos and len(pos) > 80 \
+              else (f"\n   📝 pos: {pos}" if pos else "")
+    process_service.log_sys(
+        f"{label}\n"
+        f"   📐 {width}×{height} | ⏱ {duration}s | 🎞 24fps\n"
+        f"   {strengths} | RIFE={fi_str}{variant_str}"
+        f"{model_str}{lora_str}{pos_str}"
+    )
+
+
 # ── Background task ───────────────────────────────────────────────────────────
 
 async def _run_chain(
@@ -513,7 +562,7 @@ async def _run_chain(
             out_path.parent.mkdir(parents=True, exist_ok=True)
 
             # Per-step AtlasCloud overrides
-            if chain_item.get("backend") == "atlascloud":
+            if _resolve_backend_name(chain_item) == "atlascloud":
                 if step_cfg.get("atlascloud_resolution"):
                     backend.config["atlascloud_resolution"] = step_cfg["atlascloud_resolution"]
                 if step_cfg.get("atlascloud_prompt_extend") is not None:
@@ -556,25 +605,42 @@ async def _run_chain(
             _proj_wf_key = 'lightning_workflow' if _ul else 'hq_workflow'
             _wf_override = _step_wf or (_proj_defs_raw.get(_proj_wf_key) or "").strip() or None
 
-            _vg = app_config_service.get_model('linux', 'video_gen')
-            _wf_name = _wf_override or (_vg.get('lightning_workflow') if _ul else _vg.get('hq_workflow')) or ''
-            _log_gen_params(
-                label=f"⛓ {chain_prefix} — step {step_idx}/{total}",
-                width=cur_w, height=cur_h,
-                duration=step_cfg.get("duration", defaults.get("duration", 5)),
-                fps=step_cfg.get("fps", defaults.get("fps", 16)),
-                steps=_steps_hq_val if not _ul else None,
-                cfg=step_cfg.get("cfg", defaults.get("cfg", 2.0)),
-                seed=step_cfg.get("seed", -1),
-                bts=_bts, bts_src=_bts_src,
-                fi=step_cfg.get("frame_interpolation", defaults.get("frame_interpolation", True)),
-                lora_high=step_cfg.get("lora_high") or None,
-                lora_low=step_cfg.get("lora_low") or None,
-                audio_prompt=step_cfg.get("audio_prompt") or None,
-                pos=(step_cfg.get("pos", "") or "")[:80],
-                use_lightning=_ul,
-                workflow_name=_wf_name,
-            )
+            if chain_item.get("model_class") == "ltx":
+                _ltx_variant = step_cfg.get("ltx_variant") or "8step"
+                _log_gen_params_ltx(
+                    label=f"⛓ {chain_prefix} — step {step_idx}/{total}",
+                    width=cur_w, height=cur_h,
+                    duration=step_cfg.get("duration", defaults.get("duration", 5)),
+                    ltx_variant=_ltx_variant,
+                    ff_strength=step_cfg.get("ff_strength", 1.0),
+                    lf_strength=step_cfg.get("lf_strength") if end_frame is not None else None,
+                    cfg_pass1=step_cfg.get("cfg_pass1", 3) if _ltx_variant == "20step" else None,
+                    cfg_pass2=step_cfg.get("cfg_pass2", 2) if _ltx_variant == "20step" else None,
+                    fi=step_cfg.get("frame_interpolation", False),
+                    loras=step_cfg.get("loras"),
+                    pos=(step_cfg.get("pos", "") or "")[:80],
+                    ltx_model=step_cfg.get("ltx_model"),
+                )
+            else:
+                _vg = app_config_service.get_model('linux', 'video_gen')
+                _wf_name = _wf_override or (_vg.get('lightning_workflow') if _ul else _vg.get('hq_workflow')) or ''
+                _log_gen_params(
+                    label=f"⛓ {chain_prefix} — step {step_idx}/{total}",
+                    width=cur_w, height=cur_h,
+                    duration=step_cfg.get("duration", defaults.get("duration", 5)),
+                    fps=step_cfg.get("fps", defaults.get("fps", 16)),
+                    steps=_steps_hq_val if not _ul else None,
+                    cfg=step_cfg.get("cfg", defaults.get("cfg", 2.0)),
+                    seed=step_cfg.get("seed", -1),
+                    bts=_bts, bts_src=_bts_src,
+                    fi=step_cfg.get("frame_interpolation", defaults.get("frame_interpolation", True)),
+                    lora_high=step_cfg.get("lora_high") or None,
+                    lora_low=step_cfg.get("lora_low") or None,
+                    audio_prompt=step_cfg.get("audio_prompt") or None,
+                    pos=(step_cfg.get("pos", "") or "")[:80],
+                    use_lightning=_ul,
+                    workflow_name=_wf_name,
+                )
 
             success = await loop.run_in_executor(
                 None,
@@ -601,6 +667,13 @@ async def _run_chain(
                     lora_low=sc.get("lora_low") or None,
                     use_lightning=_ul,
                     workflow_override=_wf_override,
+                    ltx_variant=sc.get("ltx_variant"),
+                    ff_strength=sc.get("ff_strength"),
+                    lf_strength=sc.get("lf_strength"),
+                    cfg_pass1=sc.get("cfg_pass1"),
+                    cfg_pass2=sc.get("cfg_pass2"),
+                    loras=sc.get("loras"),
+                    ltx_model=sc.get("ltx_model"),
                 ),
             )
 
@@ -608,6 +681,25 @@ async def _run_chain(
                 raise RuntimeError(f"Backend zwrócił błąd dla step {step_idx}/{total}")
 
             print(f"  ✓ {out_name}")
+
+            # Auto-deblur this step's output in place, before extracting its last
+            # frame - so the NEXT step starts from an already-sharpened predecessor
+            # instead of compounding degradation across the chain. Toggle:
+            # app-config defaults.auto_deblur_chain_steps (default on). A deblur
+            # failure here doesn't abort the chain - falls back to the raw clip.
+            if defaults.get("auto_deblur_chain_steps", True):
+                from app.services.process_service import process_service
+                from app.services.deblur_service import _deblur_clip_core
+
+                process_service.log_sys(f"  🔬 Deblur: {out_name}...")
+                _deblur_t0 = time.time()
+                try:
+                    await _deblur_clip_core(out_path, out_path, run_filename, out_name, "generated")
+                    process_service.log_sys(f"  🔬 Deblur gotowy: {out_name} ({round(time.time() - _deblur_t0, 1)}s)")
+                except Exception as _deblur_err:
+                    process_service.log_sys(
+                        f"  ⚠ Deblur nieudany dla {out_name}: {_deblur_err} — kontynuuję z surowym klipem"
+                    )
 
             # Extract last frame for the next step's start
             last_frame = await loop.run_in_executor(

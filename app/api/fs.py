@@ -4,32 +4,45 @@ Filesystem browser API — used by the Pic Studio for directory/image picking.
 
 Endpoints
 ─────────
-GET /api/fs/browse?path=…   → {path, parent, dirs, images}
-GET /api/fs/image?path=…    → serve any local image file (authenticated)
+GET /api/fs/browse?path=…&media=1   → {path, parent, dirs, images}  (images always; +videos if media=1)
+GET /api/fs/image?path=…            → serve any local image file (authenticated)
+GET /api/fs/thumb?path=…            → serve a thumbnail for an image OR video (first-frame, cached)
 """
 
+import hashlib
+import tempfile
 from pathlib import Path
 from typing import List
 
 from fastapi import APIRouter, HTTPException, Query
 from fastapi.responses import FileResponse, Response
 
+from app.services.media_service import _extract_video_frame
+
 router = APIRouter(prefix="/api/fs", tags=["fs"])
 
 _IMAGE_EXTS = {".jpg", ".jpeg", ".png", ".gif", ".webp", ".bmp", ".tiff", ".tif"}
+_VIDEO_EXTS = {".mp4", ".avi", ".mov", ".mkv", ".webm"}
+_THUMB_CACHE_DIR = Path(tempfile.gettempdir()) / "vidgen_fs_thumbs"
 
 
 @router.get("/browse")
-async def browse(path: str = Query(..., description="Absolute local path to browse")):
+async def browse(
+    path: str = Query(..., description="Absolute local path to browse"),
+    media: bool = Query(False, description="Also include video files (not just images)"),
+):
     """
-    Return directory contents split into sub-directories and image files.
-    Entries are sorted: dirs first (alphabetical), then images (alphabetical).
+    Return directory contents split into sub-directories and media files.
+    Entries are sorted: dirs first (alphabetical), then files (alphabetical).
+    By default only images are listed; pass media=1 to also include videos.
     """
     p = Path(path)
     if not p.exists():
         raise HTTPException(status_code=404, detail=f"Ścieżka nie istnieje: {path}")
     if not p.is_dir():
         raise HTTPException(status_code=400, detail=f"Ścieżka nie jest katalogiem: {path}")
+
+    exts = (_IMAGE_EXTS | _VIDEO_EXTS) if media else _IMAGE_EXTS
 
     try:
         entries = sorted(p.iterdir(), key=lambda x: (not x.is_dir(), x.name.lower()))
@@ -39,9 +52,13 @@ async def browse(path: str = Query(..., description="Absolute local path to brow
             if e.is_dir() and not e.name.startswith(".")
         ]
         images = [
-            {"name": e.name, "path": str(e)}
+            {
+                "name": e.name,
+                "path": str(e),
+                "type": "video" if e.suffix.lower() in _VIDEO_EXTS else "image",
+            }
             for e in entries
-            if e.is_file() and e.suffix.lower() in _IMAGE_EXTS
+            if e.is_file() and e.suffix.lower() in exts
         ]
         parent = str(p.parent) if p.parent != p else None
         return {"path": str(p), "parent": parent, "dirs": dirs, "images": images}
@@ -79,6 +96,32 @@ async def serve_image(path: str = Query(..., description="Absolute local path to
     if p.suffix.lower() not in _IMAGE_EXTS:
         raise HTTPException(status_code=400, detail="Nieobsługiwany format pliku")
     return FileResponse(str(p), headers={"Cache-Control": "no-cache, no-store, must-revalidate"})
+
+
+@router.get("/thumb")
+async def serve_thumb(path: str = Query(..., description="Absolute local path to an image or video")):
+    """
+    Serve a thumbnail: images are returned as-is, videos get their first
+    frame extracted via ffmpeg and cached (by path hash, invalidated on mtime change).
+    """
+    p = Path(path)
+    if not p.exists() or not p.is_file():
+        raise HTTPException(status_code=404, detail="Plik nie istnieje")
+    ext = p.suffix.lower()
+    if ext in _IMAGE_EXTS:
+        return FileResponse(str(p), headers={"Cache-Control": "no-cache, no-store, must-revalidate"})
+    if ext in _VIDEO_EXTS:
+        _THUMB_CACHE_DIR.mkdir(parents=True, exist_ok=True)
+        key = hashlib.md5(str(p.resolve()).encode("utf-8")).hexdigest()
+        thumb_path = _THUMB_CACHE_DIR / f"{key}.jpg"
+        if not thumb_path.exists() or thumb_path.stat().st_mtime < p.stat().st_mtime:
+            if not _extract_video_frame(p, thumb_path):
+                raise HTTPException(status_code=500, detail="Nie udało się wygenerować miniatury wideo")
+        return FileResponse(
+            str(thumb_path), media_type="image/jpeg",
+            headers={"Cache-Control": "no-cache, no-store, must-revalidate"},
+        )
+    raise HTTPException(status_code=400, detail="Nieobsługiwany format pliku")
 
 
 @router.get("/image_in_dirs")

@@ -1,0 +1,104 @@
+workflow_name: "LTX 2.3 FFLF2V"
+workflow_file: "_LTX23_FFLF.json"
+description: "LTX 2.3 GGUF - First+Last Frame (I2V2I), two-pass (spatial upscale x2), RIFE 2x interpolation"
+
+parameters:
+
+  start_image:
+    node_id: 45
+    type: image
+    param_name: image
+    description: "First frame - LoadImage node"
+
+  end_image:
+    node_id: 47
+    type: image
+    param_name: image
+    description: "Last frame - LoadImage node (only exists in FFLF graph)"
+
+  positive_prompt:
+    node_id: 16
+    type: string
+    param_name: text
+
+  negative_prompt:
+    node_id: 11
+    type: string
+    param_name: text
+
+  width:
+    node_id: 2080
+    type: int
+    param_name: value
+
+  height:
+    node_id: 2079
+    type: int
+    param_name: value
+
+  duration:
+    node_id: 2078
+    type: int
+    param_name: value
+    description: "Length in seconds - INTConstant, no frame-count math needed unlike WAN"
+
+  ff_strength:
+    node_id: 2110
+    type: float
+    param_name: value
+    description: "FIRST FRAME STRENGTH - PrimitiveFloat"
+
+  lf_strength:
+    node_id: 2108
+    type: float
+    param_name: value
+    description: "LAST FRAME STRENGTH - PrimitiveFloat (only exists in FFLF graph)"
+
+  lora_strength:
+    node_id: 2199
+    type: float
+    param_name: strength_model
+    description: "Distilled speed LoRA strength (ltx-2.3-22b-distilled-1.1), stays wired for both 8-step and 20-step"
+
+  frame_interpolation:
+    node_id: 2205
+    type: int
+    param_name: multiplier
+    description: "RIFE VFI multiplier: 1=off, 2=2x (default)"
+
+  filename_prefix:
+    node_id: 2192
+    type: string
+    param_name: filename_prefix
+
+constraints:
+  width:
+    min: 128
+    max: 2048
+    divisible_by: 64
+  height:
+    min: 128
+    max: 2048
+    divisible_by: 64
+  frame_interpolation:
+    allowed: [1, 2, 4]
+
+defaults:
+  width: 896
+  height: 1152
+  duration: 6
+  ff_strength: 1.0
+  lf_strength: 1.0
+  lora_strength: 0.61
+  positive_prompt: ""
+  negative_prompt: "blurry, deformed limbs, bad anatomy, low quality"
+  filename_prefix: "Ltx23_FFLF/vid"
+
+# WORKFLOW NOTES:
+# LTXVAddGuide (node 2152) anchors the last frame at frame_idx=-1 BEFORE pass1 sampling,
+# LTXVCropGuides (node 2156) strips the guide AFTER pass2, before VAE decode.
+# Any Switch (node 2207) feeds ColorMatch: prefers LAST FRAME (47), falls back to FIRST FRAME (45).
+# 8-step vs 20-step is NOT a set_parameter, handled directly in ltx_backend.py by rewiring
+# node13.inputs.sigmas (215<->2) + node21.inputs.sigmas (216<->5) + cfg on node36 (pass1) / node8 (pass2)
+# LoRAs (content, plural) injected directly into node 2107 (Power Lora Loader rgthree), not via set_parameter
+# FPS is hardcoded 24 (model requirement, not user-configurable) - node 2076

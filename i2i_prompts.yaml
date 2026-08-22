@@ -43,9 +43,13 @@ categories:
   icon: 🗂
   order: 104
 - id: mmaudio
-  name: MMAudio
+  name: MMAudio_FX
   icon: 🔊
   order: 200
+- id: mmaudio_ambient
+  name: MMAudio_Ambient
+  icon: 🌫
+  order: 200.5
 - id: taniec
   name: Taniec
   icon: 🎭
@@ -807,7 +811,7 @@ prompts:
     cfg: 8.0
     denoise: 1.0
 - id: p0000086
-  category: mmaudio
+  category: mmaudio_ambient
   name: Cisza — brak odgłosów FX
   note: ''
   positive: near silence, very subtle room tone, minimal ambient presence, no distinct sounds
@@ -1088,7 +1092,7 @@ prompts:
     cfg: 8.0
     denoise: 1.0
 - id: p0000102
-  category: mmaudio
+  category: mmaudio_ambient
   name: Radosne Okrzyki
   note: ''
   positive: Excited joyful crowd cheers and shouts at an MMA event, energetic happy yelling, celebratory crowd reactions, people cheering loudly with enthusiasm
@@ -1108,7 +1112,7 @@ prompts:
     cfg: 8.0
     denoise: 1.0
 - id: p0000104
-  category: mmaudio
+  category: mmaudio_ambient
   name: eksklusive shoeshop
   note: ''
   positive: Quiet exclusive shoe store ambience, soft footsteps on wooden floor, gentle rustling of tissue paper, quiet voices in the distance, soft door chime, subtle clothing and shoe movement sounds, calm refined atmosphere, low-level ambient room tone

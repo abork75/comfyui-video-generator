@@ -213,6 +213,28 @@ async def list_loras(dir: str = "WAN2.2_LoraSet"):
     return {"files": files}
 
 
+@router.get("/ltx-unet-models")
+async def list_ltx_unet_models():
+    """
+    Return LTX 2.3 diffusion model filenames from D:\\ComfyUI\\models\\diffusion_models
+    and D:\\ComfyUI\\models\\unet (checked separately - ComfyUI installs vary on which
+    folder they use). Filtered by "ltx-2.3" substring, .safetensors (full) or .gguf (quant).
+    GET /api/media/ltx-unet-models
+    Response: {"files": ["ltx-2.3-...-distilled....safetensors", "ltx-2.3-...-Q3....gguf", ...]}
+    """
+    import os as _os
+    dirs = (r"D:\ComfyUI\models\diffusion_models", r"D:\ComfyUI\models\unet")
+    files: set[str] = set()
+    for base in dirs:
+        if not _os.path.isdir(base):
+            continue
+        for f in _os.listdir(base):
+            fl = f.lower()
+            if "ltx-2.3" in fl and (fl.endswith(".safetensors") or fl.endswith(".gguf")):
+                files.add(f)
+    return {"files": sorted(files)}
+
+
 @router.post("/crop-to-ratio")
 async def crop_to_ratio(request: Request):
     """

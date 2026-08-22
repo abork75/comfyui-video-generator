@@ -76,6 +76,7 @@ _DEFAULTS: dict[str, Any] = {
             {"max_pixels": 9999999, "bts": 40},
         ],
         "frame_interpolation":  True,
+        "auto_deblur_chain_steps": True,
     },
 }
 

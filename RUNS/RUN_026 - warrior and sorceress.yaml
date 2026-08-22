@@ -1,5 +1,5 @@
 # RUN_026 - warrior and sorceress.yaml
-# Edited: 2026-08-19 07:27:08
+# Edited: 2026-08-22 02:11:58
 # Edit this file freely — regenerate .py with generate_py_from_yaml()
 #
 project_folder: E:\FILMY\RUN_026 - warrior_and_sorceress
@@ -84,22 +84,49 @@ flow:
   backend: linux
   duration: 2
   pos: |-
-    The camera slowly pans left at a constant speed. The characters stay seated and standing in their original poses. Only tiny idle motion: slow breathing and a barely visible weight shift. No head turns, no talking, no walking, no gesturing.
+    NONE
+  neg: |-
+    NONE
+
+- type: multichain
+  chain_prefix: 40.69. wejscie_do_karczmy_40.71. wejscie_do_karczmy
+  model_class: ltx
   neg: |-
     exaggerated motion, frantic movement, large gestures, waving arms, walking, talking, jumping, sudden movement, jump cut, twitching, rubber body, distorted faces, blurry, low quality
-  use_lightning: false
-  workflow: _I2V_classic_hq_nog4gg.json
-  steps_hq: 20
-  width: 1296
+  chain:
+  - duration: 10
+    pos: |-
+      The camera slowly pans left at a constant speed. The characters stay seated and standing in their original poses. Only tiny idle motion: slow breathing and a barely visible weight shift. No head turns, no talking, no walking, no gesturing.
+    neg: ""
+    use_lightning: false
+    workflow: _I2V_classic_hq_nog4gg.json
+    ltx_variant: 8step
+    frame_interpolation: false
+  width: 1280
   height: 960
 
 - file: 40.71. wejscie_do_karczmy.png
   backend: linux
   duration: 2
   pos: |-
-    The camera slowly pans to the left. All characters remain standing in place with only natural subtle movements — gentle breathing, slight shifts in posture, and small head turns as they look around. No big actions, no walking. Smooth continuous camera pan, realistic micro-movements, cinematic lighting.
+    NONE
+  neg: |-
+    NONE
+
+- type: multichain
+  chain_prefix: 40.71. wejscie_do_karczmy_40.73. wejscie_do_karczmy
+  model_class: ltx
   neg: |-
     freeze frame, completely static image, no movement, frozen characters, still photo, motionless, jump cut, sudden movement, walking, talking, distorted faces, blurry, low quality
+  chain:
+  - duration: 8
+    pos: |-
+      The camera slowly pans to the left. All characters remain standing in place with only natural subtle movements — gentle breathing, slight shifts in posture, and small head turns as they look around. No big actions, no walking. Smooth continuous camera pan, realistic micro-movements, cinematic lighting.
+    neg: ""
+    frame_interpolation: false
+    ltx_variant: 8step
+  width: 1280
+  height: 960
 
 - file: 40.73. wejscie_do_karczmy.png
   backend: linux
@@ -309,19 +336,18 @@ flow:
   neg: |-
     NONE
 
-- chain:
-    prefix: wyczerpane
-    transitions:
-    - duration: 4
-      pos: |-
-        Two almost naked women hang nearly limp from the ceiling, their wrists bound and tied above their heads. Their bodies hang heavily with little movement, only slight natural swaying. Heads tilted down, exhausted and passive posture. Dim dramatic lighting, 4 seconds.
-      neg: |-
-        standing, strong movement, struggling, smiling, extra people, fully clothed, hands free, blurry, deformed limbs, bad anatomy, low quality
-    backend: linux
-    fps: 16
-    cfg: 2
+- type: multichain
+  chain_prefix: wyczerpane
+  model_class: wan
+  neg: |-
+    static, frozen, no movement
+  chain:
+  - duration: 4
+    pos: |-
+      Two almost naked women hang nearly limp from the ceiling, their wrists bound and tied above their heads. Their bodies hang heavily with little movement, only slight natural swaying. Heads tilted down, exhausted and passive posture. Dim dramatic lighting, 4 seconds.
     neg: |-
-      static, frozen, no movement
+      standing, strong movement, struggling, smiling, extra people, fully clothed, hands free, blurry, deformed limbs, bad anatomy, low quality
+    frame_interpolation: false
 
 - break: true
 
@@ -361,53 +387,111 @@ flow:
   backend: linux
   duration: 2
   pos: |-
-    Soft magical healing light appears and flows over the two wounded women. Their wounds begin to slowly close. Gentle glowing particles and light mist surround them during the motion. Toward the end the magical effect starts to fade slightly.
+    NONE
+  neg: |-
+    NONE
+
+- type: multichain
+  chain_prefix: 51.51. Healing_51.53. Healing
+  model_class: ltx
   neg: |-
     no healing, wounds increasing, extra people, clothing changes, strong magic remaining at the end, blurry, deformed bodies, artifacts
-  audio_prompt: Soft magical spell sounds, gentle glowing energy whooshes, subtle crystalline chimes, light mystical humming, quiet sparkling particles, soft female voice whispering an arcane formula in a strange fictional language
-  audio_negative_prompt: ambient sounds, background noise, room tone, wind, footsteps, continuous atmosphere, music, heavy bass, explosions, screaming, talking in normal language, silence, distorted audio
-  ambient_audio_prompt: Soft magical spell sounds, gentle glowing energy whooshes, subtle crystalline chimes, light mystical humming, quiet sparkling particles,
-  ambient_audio_negative_prompt: ambient sounds, background noise, room tone, wind, footsteps, continuous atmosphere, music, heavy bass, explosions, screaming, talking in normal language, silence, distorted audio
+  chain:
+  - duration: 4
+    pos: |-
+      Soft magical healing light appears and flows over the two wounded women. Their wounds begin to slowly close. Gentle glowing particles and light mist surround them during the motion. Toward the end the magical effect starts to fade slightly.
+    neg: ""
+    frame_interpolation: false
+    audio_prompt: Soft magical spell sounds, gentle glowing energy whooshes, subtle crystalline chimes, light mystical humming, quiet sparkling particles, soft female voice whispering an arcane formula in a strange fictional language
+    audio_negative_prompt: ambient sounds, background noise, room tone, wind, footsteps, continuous atmosphere, music, heavy bass, explosions, screaming, talking in normal language, silence, distorted audio
+    ltx_variant: 8step
 
 - file: 51.53. Healing.png
   backend: linux
   duration: 2
   pos: |-
-    Magical healing light continues over the two women. Wounds keep closing and skin regenerates. Soft glowing particles and light mist are visible during the movement. Toward the end the magical effect gently fades.
+    NONE
+  neg: |-
+    NONE
+
+- type: multichain
+  chain_prefix: 51.53. Healing_51.55. Healing
+  model_class: ltx
   neg: |-
     Magical healing light continues over the two women. Wounds keep closing and skin regenerates. Soft glowing particles and light mist are visible during the movement. Toward the end the magical effect gently fades.
-  audio_prompt: Soft magical spell sounds, gentle glowing energy whooshes, subtle crystalline chimes, light mystical humming, quiet sparkling particles, soft female voice whispering an arcane formula in a strange fictional language
-  audio_negative_prompt: ambient sounds, background noise, room tone, wind, footsteps, continuous atmosphere, music, heavy bass, explosions, screaming, talking in normal language, silence, distorted audio
+  chain:
+  - duration: 4
+    pos: |-
+      Magical healing light continues over the two women. Wounds keep closing and skin regenerates. Soft glowing particles and light mist are visible during the movement. Toward the end the magical effect gently fades.
+    neg: ""
+    frame_interpolation: false
+    audio_prompt: Soft magical spell sounds, gentle glowing energy whooshes, subtle crystalline chimes, light mystical humming, quiet sparkling particles, soft female voice whispering an arcane formula in a strange fictional language
+    audio_negative_prompt: ambient sounds, background noise, room tone, wind, footsteps, continuous atmosphere, music, heavy bass, explosions, screaming, talking in normal language, silence, distorted audio
+    ltx_variant: 8step
 
 - file: 51.55. Healing.png
   backend: linux
   duration: 2
   pos: |-
-    Magical healing light works on both women. Most wounds disappear and skin becomes smoother. Soft glowing particles and light mist visible during the clip. Toward the end the effect starts fading.
+    NONE
+  neg: |-
+    NONE
+
+- type: multichain
+  chain_prefix: 51.55. Healing_51.57. Healing
+  model_class: ltx
   neg: |-
     no healing, wounds remaining heavily, extra people, clothing changes, strong magic remaining at the end, blurry, deformed bodies, artifacts
-  audio_prompt: Soft magical spell sounds, gentle glowing energy whooshes, subtle crystalline chimes, light mystical humming, quiet sparkling particles, soft female voice whispering an arcane formula in a strange fictional language
-  audio_negative_prompt: ambient sounds, background noise, room tone, wind, footsteps, continuous atmosphere, music, heavy bass, explosions, screaming, talking in normal language, silence, distorted audio
+  chain:
+  - duration: 4
+    pos: |-
+      Magical healing light works on both women. Most wounds disappear and skin becomes smoother. Soft glowing particles and light mist visible during the clip. Toward the end the effect starts fading.
+    neg: ""
+    frame_interpolation: false
+    audio_prompt: Soft magical spell sounds, gentle glowing energy whooshes, subtle crystalline chimes, light mystical humming, quiet sparkling particles, soft female voice whispering an arcane formula in a strange fictional language
+    audio_negative_prompt: ambient sounds, background noise, room tone, wind, footsteps, continuous atmosphere, music, heavy bass, explosions, screaming, talking in normal language, silence, distorted audio
 
 - file: 51.57. Healing.png
   backend: linux
   duration: 2
   pos: |-
-    Final wounds close and vanish under soft magical light. The women’s skin becomes clean. Gentle glowing particles are visible during the motion and fade toward the end.
+    NONE
+  neg: |-
+    NONE
+
+- type: multichain
+  chain_prefix: 51.57. Healing_51.59. Healing
+  model_class: ltx
   neg: |-
     wounds remaining, no healing, extra people, clothing changes, strong magic remaining at the end, blurry, deformed bodies, artifacts
-  audio_prompt: Soft magical spell sounds, gentle glowing energy whooshes, subtle crystalline chimes, light mystical humming, quiet sparkling particles, soft female voice whispering an arcane formula in a strange fictional language
-  audio_negative_prompt: ambient sounds, background noise, room tone, wind, footsteps, continuous atmosphere, music, heavy bass, explosions, screaming, talking in normal language, silence, distorted audio
+  chain:
+  - duration: 4
+    pos: |-
+      Final wounds close and vanish under soft magical light. The women’s skin becomes clean. Gentle glowing particles are visible during the motion and fade toward the end.
+    neg: ""
+    frame_interpolation: false
 
 - file: 51.59. Healing.png
   backend: linux
   duration: 2
   pos: |-
-    Soft magical light and glowing particles gently fade away completely. The two fully healed women become dressed again while magic sparkling dust falls upon their from the ceilling. Clean and calm final moment.
+    NONE
+  neg: |-
+    NONE
+
+- type: multichain
+  chain_prefix: 51.59. Healing_51.61. Healing
+  model_class: ltx
   neg: |-
     still wounded, naked, strong magic, extra people, deformed bodies, blurry, artifacts, incomplete clothing
-  audio_prompt: Soft magical spell sounds, gentle glowing energy whooshes, subtle crystalline chimes, light mystical humming, quiet sparkling particles, soft female voice whispering an arcane formula in a strange fictional language
-  audio_negative_prompt: ambient sounds, background noise, room tone, wind, footsteps, continuous atmosphere, music, heavy bass, explosions, screaming, talking in normal language, silence, distorted audio
+  chain:
+  - duration: 4
+    pos: |-
+      Soft magical light and glowing particles gently fade away completely. The two fully healed women become dressed again while magic sparkling dust falls upon their from the ceilling. Clean and calm final moment.
+    neg: ""
+    frame_interpolation: false
+    audio_prompt: Soft magical spell sounds, gentle glowing energy whooshes, subtle crystalline chimes, light mystical humming, quiet sparkling particles, soft female voice whispering an arcane formula in a strange fictional language
+    audio_negative_prompt: ambient sounds, background noise, room tone, wind, footsteps, continuous atmosphere, music, heavy bass, explosions, screaming, talking in normal language, silence, distorted audio
 
 - file: 51.61. Healing.png
   backend: linux

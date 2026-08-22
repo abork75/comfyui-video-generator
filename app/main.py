@@ -19,6 +19,7 @@ from app.api.runs import router as runs_router
 from app.api.generation import router as generation_router
 from app.api.media import router as media_router
 from app.api.upscale import router as upscale_router
+from app.api.deblur import router as deblur_router
 from app.api.env import router as env_router
 from app.api.talks import router as talks_router
 from app.api.multitalks import router as multitalks_router
@@ -58,6 +59,7 @@ app.include_router(runs_router)
 app.include_router(generation_router)
 app.include_router(media_router)
 app.include_router(upscale_router)
+app.include_router(deblur_router)
 app.include_router(env_router)
 app.include_router(talks_router)
 app.include_router(multitalks_router)

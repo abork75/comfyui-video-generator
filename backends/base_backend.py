@@ -159,7 +159,9 @@ class BaseBackend(ABC):
                       frame_interpolation=None, lora_name=None, lora_strength=None,
                       lora_high=None, lora_low=None,
                       audio_prompt=None, audio_negative_prompt=None,
-                      use_lightning=True, steps_hq=None, workflow_override=None):
+                      use_lightning=True, steps_hq=None, workflow_override=None,
+                      ltx_variant=None, ff_strength=None, lf_strength=None,
+                      cfg_pass1=None, cfg_pass2=None, loras=None, ltx_model=None):
         """
         High-level wrapper for transition generation
 
@@ -243,6 +245,20 @@ class BaseBackend(ABC):
                 params['steps_hq'] = steps_hq
             if workflow_override is not None:
                 params['workflow_override'] = workflow_override
+            if ltx_variant is not None:
+                params['ltx_variant'] = ltx_variant
+            if ff_strength is not None:
+                params['ff_strength'] = ff_strength
+            if lf_strength is not None:
+                params['lf_strength'] = lf_strength
+            if cfg_pass1 is not None:
+                params['cfg_pass1'] = cfg_pass1
+            if cfg_pass2 is not None:
+                params['cfg_pass2'] = cfg_pass2
+            if loras:
+                params['loras'] = loras
+            if ltx_model is not None:
+                params['ltx_model'] = ltx_model
 
             # Use existing interface (implemented by subclasses)
             inputs = self.prepare_inputs(pair, workflow=None)
