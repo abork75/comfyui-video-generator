@@ -64,6 +64,19 @@ def cancel_chain() -> dict:
     if _task and not _task.done():
         _task.cancel()
     _state.update({"status": "idle", "error": "Anulowano przez użytkownika"})
+    # Also interrupt whatever ComfyUI is actually computing right now — task
+    # .cancel() above only stops OUR side from waiting on it; without this
+    # the GPU work keeps running regardless (2026-09-11, user request: this
+    # was the reason a stuck job needed killing the whole WSL2 instance).
+    # Best-effort — a failed interrupt doesn't fail the cancel itself.
+    try:
+        from app.services import app_config_service
+        from workflow_base import interrupt_comfyui
+        api_url = app_config_service.get_backend("linux").get("api_url")
+        if api_url:
+            interrupt_comfyui(api_url)
+    except Exception:
+        pass
     return {"ok": True}
 
 
@@ -187,27 +200,36 @@ def _talk_video_relpath(talk_item: dict) -> str:
 
 
 def _find_preceding_file(flow: list, chain_idx: int) -> str | None:
-    """Return the filename (or relative path) of the item that immediately precedes the chain.
+    """Return the filename (or relative path) this chain should extract its
+    start frame from.
+
+    FUNDAMENTAL RULE: only break/scene_break interrupts continuity. A plain
+    "file" tile (pure loader - see project_file_tile_pure_loader) is just an
+    inserted still and must NOT silently reset an ongoing shot - so this scans
+    backward THROUGH any file tiles to find the real predecessor (chain/talk/
+    multitalk) and returns that instead. A file is only used as the actual
+    start frame when it's genuinely the closest thing available - nothing
+    generative sits between it and the previous break/start of flow (case:
+    file → chain used as the single-generation replacement for the old
+    file→file transition, typically right at the start of a shot).
 
     Stops at talk tiles and returns their virtual video path so _get_start_frame
     can extract the last frame from the talk video (case 1: talk → chain).
-    When talk has an explicit transition and a file follows it (case 2:
-    talk → file_B → chain), the file_B item is found first and returned instead.
-    Chain items return the path to their last step's output video (case 3:
-    chain_A → chain_B: chain_B starts from the last frame of chain_A's last step).
+    Chain items return the path to their last step's output video (case 2:
+    chain_A → chain_B: chain_B starts from the last frame of chain_A's last step,
+    even with one or more plain file tiles sitting in between).
     """
+    fallback_file: str | None = None
     for i in range(chain_idx - 1, -1, -1):
         item = flow[i]
         if not isinstance(item, dict):
             continue
         if item.get("break") or item.get("type") == "scene_break":
-            return None
+            return fallback_file
         if "chain" in item:
             prefix = item.get("chain_prefix", "chain_step")
             total  = len(item["chain"])
             return f"transitions/chains/{prefix}_{total:03d}.mp4"
-        if item.get("file"):
-            return item["file"]
         if item.get("type") == "talk":
             # Don't look further back past talk — chain continues from talk's end.
             return _talk_video_relpath(item)
@@ -216,11 +238,32 @@ def _find_preceding_file(flow: list, chain_idx: int) -> str | None:
             if not clip_name.endswith(".mp4"):
                 clip_name += ".mp4"
             return f"transitions/multitalk/{clip_name}"
-    return None
+        if item.get("file") and fallback_file is None:
+            fallback_file = item["file"]  # remember, keep looking for a real predecessor
+    return fallback_file
 
 
 def _find_end_target(flow: list, chain_idx: int) -> str | None:
-    """Return the first static-image filename after the chain (for last-step I2V2I)."""
+    """Return the first static-image filename after the chain (for last-step I2V2I).
+
+    NOTE (2026-09-08): this does NOT follow _find_preceding_file's continuity-
+    first rule, and that's deliberate, not an oversight — the two functions
+    solve different problems. _find_preceding_file picks the START frame
+    (continuity: must reflect what's really there). This picks a DELIBERATE
+    FLF2V drift-anchor for the chain's LAST step: whenever a file sits right
+    after the chain, that chain is steered (via FLF2V) to converge toward it
+    by its final frame, regardless of what comes after the file. That's the
+    primary defense against a chain "inventing nonsense" and drifting away
+    from the intended look partway through a longer generation (see
+    project_start_frame_heuristic_idea / boundary artifact & linear drift).
+
+    A prior attempt (2026-09-08) made this skip-through like
+    _find_preceding_file, returning None whenever another chain followed the
+    file — this was WRONG: it stripped the anchor from exactly the chains
+    that most needed it (the ones continuing into another chain right after),
+    causing real, confirmed mid-clip drift into unrecoverable garbage.
+    Reverted. Do not "fix" this again without re-reading this note.
+    """
     for i in range(chain_idx + 1, len(flow)):
         item = flow[i]
         if not isinstance(item, dict):
@@ -332,13 +375,43 @@ def _get_start_frame(
         if not preceding_file:
             return None
         stem = Path(preceding_file).stem
+        src = pf / preceding_file
+
+        # Staleness guard (2026-09-10): regenerating the predecessor video
+        # leaves the OLD {stem}_end.png / {stem}_real.png in frames/. Without
+        # an mtime check the next chain silently anchors on the PREVIOUS
+        # generation's last frame (user hit this in plik → chain1 → plik →
+        # chain2 after deleting + regenerating both chains). Only meaningful
+        # when the predecessor is a real rendered video (mp4) — a static-
+        # image predecessor has nothing to go stale against, keep trusting
+        # the cache there as before.
+        _src_mtime = None
+        if preceding_file.lower().endswith(".mp4"):
+            try:
+                _src_mtime = src.stat().st_mtime
+            except OSError:
+                pass
+
+        def _fresh(cached: Path) -> bool:
+            if _src_mtime is None:
+                return True
+            try:
+                return cached.stat().st_mtime >= _src_mtime
+            except OSError:
+                return False
+
         # Prefer _real.png (actual last frame of preceding transition)
         real_p = pf / "frames" / f"{stem}_real.png"
         if real_p.exists():
-            return real_p
+            if _fresh(real_p):
+                return real_p
+            real_p.unlink(missing_ok=True)  # stale — predecessor was regenerated
         for ext in ("png", "jpg"):
             end_p = pf / "frames" / f"{stem}_end.{ext}"
             if end_p.exists():
+                if not _fresh(end_p):
+                    end_p.unlink(missing_ok=True)  # stale — fall through to fresh extraction
+                    continue
                 # Validate cached dimensions match target — stale cache causes wrong-image bug
                 # when resolution changed between runs (CapCut VFS hides file from PowerShell
                 # but Python sees it, so the stale file is silently reused without regeneration)
@@ -351,7 +424,6 @@ def _get_start_frame(
                     end_p.unlink(missing_ok=True)
                 except Exception:
                     return end_p  # Can't verify — use as-is
-        src = pf / preceding_file
         # Multi-audio talks have no canonical file — find last numbered segment.
         # e.g. "transitions/talks/talk_Foo.mp4" → "talk_Foo_04.mp4"
         if not src.exists() and src.suffix.lower() == '.mp4':
@@ -701,6 +773,40 @@ async def _run_chain(
                         f"  ⚠ Deblur nieudany dla {out_name}: {_deblur_err} — kontynuuję z surowym klipem"
                     )
 
+            # Auto-lipsync this step's output in place, right after deblur (so
+            # LatentSync gets the sharpened frames) - only if the step has a
+            # lipsync_audio file attached. Toggle: app-config defaults.voice_enabled
+            # (default on) - lets the user skip it for quick test generations even
+            # when the mp3 is already picked. The manual 🗣 button on the clip tile
+            # stays available regardless of this toggle for deferred lipsync work.
+            if step_cfg.get("lipsync_audio") and defaults.get("voice_enabled", True):
+                from app.services.process_service import process_service
+                from app.services.lipsync_service import _lipsync_clip_core
+                from app.services.media_service import _project_folder
+
+                _pf = _project_folder(run_filename)
+                _audio_path = (_pf / step_cfg["lipsync_audio"]) if _pf else None
+                if _audio_path and _audio_path.exists():
+                    _sync_lips = step_cfg.get("lipsync_sync_lips", True) is not False
+                    _label = "Lipsync" if _sync_lips else "Voice"
+                    process_service.log_sys(f"  🗣 {_label}: {out_name}...")
+                    _lipsync_t0 = time.time()
+                    try:
+                        await _lipsync_clip_core(
+                            out_path, _audio_path, out_path, run_filename, out_name,
+                            trim_to_audio=bool(step_cfg.get("lipsync_trim_to_audio", False)),
+                            sync_lips=_sync_lips,
+                        )
+                        process_service.log_sys(f"  🗣 {_label} gotowy: {out_name} ({round(time.time() - _lipsync_t0, 1)}s)")
+                    except Exception as _lipsync_err:
+                        process_service.log_sys(
+                            f"  ⚠ {_label} nieudany dla {out_name}: {_lipsync_err} — kontynuuję bez niego"
+                        )
+                else:
+                    process_service.log_sys(
+                        f"  ⚠ Lipsync: brak pliku audio '{step_cfg.get('lipsync_audio')}' dla {out_name}"
+                    )
+
             # Extract last frame for the next step's start
             last_frame = await loop.run_in_executor(
                 None,
@@ -708,6 +814,49 @@ async def _run_chain(
             )
             if last_frame:
                 frame_cache[out_name] = last_frame
+
+            # Continuity color-stats badge (2026-09-09 MVP, extended same day
+            # after the audit tool grew internal-seam checking — see project_
+            # continuity_audit_tool memory): EVERY step has a seam worth
+            # measuring now, not just step 1 — step 1's FF vs the external
+            # predecessor (chain/talk/multitalk, not a fallback static file —
+            # see _find_preceding_file, "standalone" if none), and step N>1's
+            # FF vs THIS SAME chain's own step N-1 (no ambiguity there, but
+            # still worth checking for generation drift — see
+            # _compute_internal_seam in continuity_audit_service.py, same
+            # logic mirrored here for the live-generation path).
+            # Never aborts the chain on failure - this is diagnostic, not load-bearing.
+            _cont_pred_video: Path | None = None
+            if step_idx == 1:
+                if preceding_file and preceding_file.lower().endswith(".mp4"):
+                    _cont_pred_video = pf / preceding_file
+            else:
+                _prev_step_name = f"{chain_prefix}_{step_idx - 1:03d}.mp4"
+                _prev_step_path = chain_handler.get_chain_output_path(_prev_step_name)
+                if _prev_step_path.exists():
+                    _cont_pred_video = _prev_step_path
+
+            if _cont_pred_video is not None and _cont_pred_video.exists():
+                try:
+                    from app.services.color_grade_service import extract_frame, compute_color_stats
+                    from utils.video_metadata import update_metadata
+
+                    lf_bytes = await loop.run_in_executor(None, extract_frame, _cont_pred_video, "last")
+                    ff_bytes = await loop.run_in_executor(None, extract_frame, out_path, "first")
+                    stats = await loop.run_in_executor(None, compute_color_stats, lf_bytes, ff_bytes)
+                    ok = await loop.run_in_executor(
+                        None,
+                        lambda: update_metadata(
+                            out_path,
+                            continuity_delta_e=stats["delta_e"],
+                            continuity_saturation_diff_pct=stats["saturation_diff_pct"],
+                            continuity_contrast_diff_pct=stats["contrast_diff_pct"],
+                        ),
+                    )
+                    if not ok:
+                        print(f"  WARN: Nie udalo sie zapisac statystyk ciaglosci dla {out_name}")
+                except Exception as _cont_stats_err:
+                    print(f"  WARN: Pominieto statystyki ciaglosci dla {out_name} ({_cont_stats_err})")
 
             # Last step + end_target: write _real.png so the next item starts cleanly
             if step_idx == total and end_target and last_frame:

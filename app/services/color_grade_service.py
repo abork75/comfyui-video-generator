@@ -6,6 +6,8 @@ Provides:
   extract_frame(video_path, position)        → JPEG bytes of first/last frame
   apply_color_grade(...)                     → writes graded MP4 to output_path
   compute_delta_e(frame1_bytes, frame2_bytes)→ perceptual ΔE between two frames
+  compute_color_stats(frame1_bytes, frame2_bytes) → ΔE + saturation/contrast
+    breakdown — see docstring below for why this exists instead of ΔE alone.
 """
 
 import subprocess
@@ -15,6 +17,14 @@ from pathlib import Path
 import cv2
 import numpy as np
 from scipy.linalg import sqrtm
+
+# 2026-09-11: reference frame (prev_clip/next_clip in /api/color-grade/frames
+# and /apply) can now be a plain static image, not just a generated mp4 — a
+# chain right after a scene_break/flow-start often only has a loader image as
+# its "predecessor" (see project_file_tile_pure_loader), and the MKL match
+# itself never needed a video, just one reference frame's bytes. See
+# _cgClipName() in index.html for the frontend side of this.
+_IMAGE_EXTS = {'.jpg', '.jpeg', '.png', '.webp', '.bmp', '.tiff', '.tif'}
 
 
 # ── MKL ───────────────────────────────────────────────────────────────
@@ -71,13 +81,23 @@ def _extract_frames(video: Path, out_dir: Path) -> list[Path]:
 
 
 def _reassemble(frames_dir: Path, audio_src: Path, fps: float, output: Path) -> None:
+    # -g 48 (2026-09-10): without an explicit keyframe interval, libx264
+    # defaults to ~250 frames (~10s @24fps) — longer than our typical 4-5s
+    # clips, so the encoder would place just ONE keyframe for the whole
+    # clip anyway, same degenerate structure found (via direct ffprobe on a
+    # real user clip) to stall progressive browser playback. That clip was
+    # raw LTX/WAN output, not one of ours — but a color-graded SAVE goes
+    # through this exact function, and could later become the "prev_clip"
+    # of another stitched color-grade preview, reproducing the same stall
+    # one step downstream. A short, fixed GOP costs a little more (well
+    # negligible) space, never hurts playback/quality otherwise.
     r = subprocess.run(
         ['ffmpeg', '-y',
          '-framerate', str(fps),
          '-i', str(frames_dir / 'frame_%06d.png'),
          '-i', str(audio_src),
          '-map', '0:v', '-map', '1:a?',
-         '-c:v', 'libx264', '-crf', '18', '-preset', 'fast',
+         '-c:v', 'libx264', '-crf', '18', '-preset', 'fast', '-g', '48',
          '-c:a', 'copy', '-movflags', '+faststart',
          str(output)],
         capture_output=True, timeout=120,
@@ -92,8 +112,14 @@ def extract_frame(video_path: Path, position: str = 'first') -> bytes:
     """
     Extract first or last frame from a video as JPEG bytes.
     position: 'first' | 'last'
+
+    A static image input (video_path itself has no frames to seek within —
+    it IS the one frame) always uses the plain 'first' path regardless of
+    the requested position: -sseof seeking assumes a real duration, which an
+    image doesn't have and can error out or misbehave depending on codec.
     """
-    if position == 'last':
+    is_image = video_path.suffix.lower() in _IMAGE_EXTS
+    if position == 'last' and not is_image:
         # seek to last frame via sseof
         cmd = ['ffmpeg', '-y', '-sseof', '-0.5', '-i', str(video_path),
                '-vframes', '1', '-f', 'image2pipe', '-vcodec', 'mjpeg', 'pipe:1']
@@ -125,6 +151,57 @@ def compute_delta_e(frame1_bytes: bytes, frame2_bytes: bytes) -> float:
     step = max(1, n // 10_000)  # sample at most 10k pixels for speed
     diff = lab1[:n:step] - lab2[:n:step]
     return float(np.sqrt((diff ** 2).sum(axis=1)).mean())
+
+
+def compute_color_stats(frame1_bytes: bytes, frame2_bytes: bytes) -> dict:
+    """
+    Decompose the color mismatch between two frames (frame1 = LF poprzednika,
+    frame2 = FF następnika — the "before"/"after" of a seam) into three
+    interpretable numbers instead of one blended ΔE — 2026-09-09: a raw
+    pixel/ΔE diff conflates color grading with pose/content shift, and users
+    reviewing it said "trzeba zgadywać co do czego dociągać" (have to guess
+    which knob to reach for). This tells you directly:
+
+      delta_e              — overall perceptual color difference (CIE76,
+                              same metric as compute_delta_e / /check).
+      saturation_diff_pct  — mean HSV saturation of frame2 minus frame1, as
+                              % of the full 0-255 range. Positive = frame2
+                              (the new clip) is MORE saturated than frame1
+                              (what it should continue from).
+      contrast_diff_pct    — luminance std-dev of frame2 vs frame1, as % of
+                              frame1's own contrast. Positive = frame2 has
+                              MORE contrast than frame1.
+
+    Sign convention lets a caller phrase this directly: positive saturation
+    means "the successor is oversaturated relative to what came before" (or
+    equivalently, the predecessor undersaturated) — same for contrast.
+    """
+    def _decode_bgr(b: bytes) -> np.ndarray:
+        arr = np.frombuffer(b, np.uint8)
+        return cv2.imdecode(arr, cv2.IMREAD_COLOR)
+
+    bgr1 = _decode_bgr(frame1_bytes)
+    bgr2 = _decode_bgr(frame2_bytes)
+
+    delta_e = compute_delta_e(frame1_bytes, frame2_bytes)
+
+    hsv1 = cv2.cvtColor(bgr1, cv2.COLOR_BGR2HSV)
+    hsv2 = cv2.cvtColor(bgr2, cv2.COLOR_BGR2HSV)
+    sat1 = float(hsv1[:, :, 1].mean())
+    sat2 = float(hsv2[:, :, 1].mean())
+    saturation_diff_pct = (sat2 - sat1) / 255.0 * 100.0
+
+    gray1 = cv2.cvtColor(bgr1, cv2.COLOR_BGR2GRAY).astype(np.float32)
+    gray2 = cv2.cvtColor(bgr2, cv2.COLOR_BGR2GRAY).astype(np.float32)
+    c1 = float(gray1.std())
+    c2 = float(gray2.std())
+    contrast_diff_pct = (c2 - c1) / c1 * 100.0 if c1 > 1e-6 else 0.0
+
+    return {
+        "delta_e": round(delta_e, 2),
+        "saturation_diff_pct": round(saturation_diff_pct, 1),
+        "contrast_diff_pct": round(contrast_diff_pct, 1),
+    }
 
 
 def apply_color_grade(

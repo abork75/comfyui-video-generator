@@ -4,7 +4,7 @@
 # Edit RUN_000 - templates.yaml and regenerate with:
 #     from app.services.yaml_service import generate_py_from_yaml
 #     generate_py_from_yaml(Path("RUNS/RUN_000 - templates.yaml"))
-# Generated: 2026-08-11 08:52:40
+# Generated: 2026-08-28 14:43:11
 # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 import sys
@@ -75,7 +75,11 @@ FLOW_FULL = [
         'neg': 'NONE',
     },
     {
-        "chain": [
+        'type': 'multichain',
+        'chain_prefix': 'sexspoon doggy',
+        'model_class': 'wan',
+        'neg': 'static, frozen, no movement',
+        'chain': [
             {
                 'duration': 4,
                 'pos': "The video begins with a close-up of a woman - Than video jumpcut to scene with same woman is lying on her side, legs slightly bent. A man lying behind her in spooning position, vigorously fucking her from behind. Strong, deep, rhythmic penetration, man's hips thrusting forward against her ass. Clear side view showing the woman's face in profile, breasts exposed and bouncing with each thrust, open mouth, eyes rolling back, intense pleasure and overwhelm expression, heavy breathing. Man's hand gripping her hip and waist tightly, holding her against his body, dynamic and powerful sex motion, detailed anatomy, realistic penetration, dramatic lighting, high detail, erotic atmosphere",
@@ -108,15 +112,14 @@ she looks at the camera throughout the video. same background as the first frame
                 'lora_low': 'WAN2.2_LoraSet/iGoon%2520-%2520Blink_Back_Doggystyle_LOW.safetensors',
             },
         ],
-        "chain_prefix": 'sexspoon doggy',
-        'backend': 'linux',
-        'fps': 16,
-        'cfg': 2,
-        'neg': 'static, frozen, no movement',
     },
 
     {
-        "chain": [
+        'type': 'multichain',
+        'chain_prefix': 'SquatCowgirl missionary',
+        'model_class': 'wan',
+        'neg': 'static, frozen, no movement',
+        'chain': [
             {
                 'duration': 4,
                 'pos': """The video begins with a close-up of a fully nude woman and the man The video then jumpcuts to the same woman now having sex with a same man in squatting cowgirl position her face fills the screen she is leaning over forwards as she bounces up and down aggressively. Man erect penis is in her vagina.
@@ -140,15 +143,14 @@ The video is shot from above looking down on the scene.""",
                 'audio_negative_prompt': 'music, melody, ambient drone, moaning, voice, sustained atmosphere, continuous background noise, low quality, distortion',
             },
         ],
-        "chain_prefix": 'SquatCowgirl missionary',
-        'backend': 'linux',
-        'fps': 16,
-        'cfg': 2,
-        'neg': 'static, frozen, no movement',
     },
 
     {
-        "chain": [
+        'type': 'multichain',
+        'chain_prefix': 'titjob_hndjob_blwhnd_blow_finale',
+        'model_class': 'wan',
+        'neg': 'static, frozen, no movement',
+        'chain': [
             {
                 'duration': 3,
                 'pos': "The video then jumpcuts to the same woman now lying down in same background as the first frame, stone tile floor, building wall with her breasts positioned around the man's erect penis as he thrusts his penis up and down in a titjob motion sliding it between her breasts. she makes various facial expressions during the video she looks like she is talking and has her eyes wide open with a crazy expression. ",
@@ -211,12 +213,6 @@ She looks at the camera throughout the video
                 'audio_negative_prompt': 'music, melody, ambient drone, moaning, voice, sustained atmosphere, continuous background noise, low quality, distortion',
             },
         ],
-        "chain_prefix": 'titjob_hndjob_blwhnd_blow_finale',
-        'backend': 'linux',
-        'fps': 16,
-        'cfg': 2,
-        'neg': 'static, frozen, no movement',
-        'frame_interpolation': False,
     },
 
     {
@@ -231,7 +227,11 @@ She looks at the camera throughout the video
         'neg': 'NONE',
     },
     {
-        "chain": [
+        'type': 'multichain',
+        'chain_prefix': 'Sexspoon FK',
+        'model_class': 'wan',
+        'neg': 'static, frozen, no movement',
+        'chain': [
             {
                 'duration': 4,
                 'pos': "The video begins with a close-up of a woman - Than video jumpcut to scene with same woman is lying on her side, legs slightly bent. A man lying behind her in spooning position, vigorously fucking her from behind. Strong, deep, rhythmic penetration, man's hips thrusting forward against her ass. Clear side view showing the woman's face in profile, breasts exposed and bouncing with each thrust, open mouth, eyes rolling back, intense pleasure and overwhelm expression, heavy breathing. Man's hand gripping her hip and waist tightly, holding her against his body, dynamic and powerful sex motion, detailed anatomy, realistic penetration, dramatic lighting, high detail, erotic atmosphere",
@@ -249,11 +249,6 @@ She looks at the camera throughout the video
                 'lora_low': 'WAN2.2_LoraSet/mql_casting_sex_spoon_wan22_i2v_v1_low_noise.safetensors',
             },
         ],
-        "chain_prefix": 'Sexspoon FK',
-        'backend': 'linux',
-        'fps': 16,
-        'cfg': 2,
-        'neg': 'static, frozen, no movement',
     },
 
     {"break": True},
@@ -266,7 +261,11 @@ She looks at the camera throughout the video
         'neg': 'NONE',
     },
     {
-        "chain": [
+        'type': 'multichain',
+        'chain_prefix': 'Doggy FK',
+        'model_class': 'wan',
+        'neg': 'static, frozen, no movement',
+        'chain': [
             {
                 'duration': 3,
                 'pos': "The video begins with a close-up of a woman. Jumpcut to a same woman kneeling on all fours on the ground, back arched. A naked man standing behind her and vigorously fucking her in doggystyle position. Strong, deep, rhythmic penetration, man's hips slamming against her ass. Clear front view showing the woman's face, breasts hanging and bouncing with each thrust, open mouth, wide eyes, intense pleasure and overwhelm expression, heavy breathing. Man's hands gripping her waist tightly, dynamic and powerful sex motion, detailed anatomy, realistic penetration, forest setting, dramatic lighting, high detail, erotic atmosphere",
@@ -284,11 +283,6 @@ She looks at the camera throughout the video
                 'lora_low': 'WAN2.2_LoraSet/iGoon%20-%20Blink_Front_Doggystyle_I2V_LOW.safetensors',
             },
         ],
-        "chain_prefix": 'Doggy FK',
-        'backend': 'linux',
-        'fps': 16,
-        'cfg': 2,
-        'neg': 'static, frozen, no movement',
     },
 
     {"break": True},
@@ -301,7 +295,11 @@ She looks at the camera throughout the video
         'neg': 'NONE',
     },
     {
-        "chain": [
+        'type': 'multichain',
+        'chain_prefix': 'Back doggy FK',
+        'model_class': 'wan',
+        'neg': 'static, frozen, no movement',
+        'chain': [
             {
                 'duration': 3,
                 'pos': """The video begins with a close-up of a woman. Than video jumpcut to scene with same woman now having sex in doggystyle position with the man. From an overhead perspective, she is on all fours with her back facing the camera. A man is positioned behind her. his hand gripping her hips as he penetrates her from behind. The woman's expression changes throughout the scene, showing moments of pleasure and engagement with her partner. Her legs are spread apart with the man in-between her legs.
@@ -329,11 +327,6 @@ she looks at the camera throughout the video. same background as the first frame
                 'lora_low': 'WAN2.2_LoraSet/iGoon%2520-%2520Blink_Back_Doggystyle_LOW.safetensors',
             },
         ],
-        "chain_prefix": 'Back doggy FK',
-        'backend': 'linux',
-        'fps': 16,
-        'cfg': 2,
-        'neg': 'static, frozen, no movement',
     },
 
     {"break": True},
@@ -346,7 +339,11 @@ she looks at the camera throughout the video. same background as the first frame
         'neg': 'NONE',
     },
     {
-        "chain": [
+        'type': 'multichain',
+        'chain_prefix': 'SquatCowgirl ',
+        'model_class': 'wan',
+        'neg': 'static, frozen, no movement',
+        'chain': [
             {
                 'duration': 4,
                 'pos': """The video begins with a close-up of a fully nude woman. The video then jumpcuts to the same woman now having sex with a same man in squatting cowgirl position her face fills the screen she is leaning over forwards as she bounces up and down aggressively. Man erect penis is in her vagina.
@@ -374,11 +371,6 @@ The video is shot from above looking down on the scene.""",
                 'audio_negative_prompt': 'music, melody, ambient drone, moaning, voice, sustained atmosphere, continuous background noise, low quality, distortion',
             },
         ],
-        "chain_prefix": 'SquatCowgirl ',
-        'backend': 'linux',
-        'fps': 16,
-        'cfg': 2,
-        'neg': 'static, frozen, no movement',
     },
 
     {"break": True},
@@ -391,7 +383,11 @@ The video is shot from above looking down on the scene.""",
         'neg': 'NONE',
     },
     {
-        "chain": [
+        'type': 'multichain',
+        'chain_prefix': 'Missionary FK2',
+        'model_class': 'wan',
+        'neg': 'static, frozen, no movement',
+        'chain': [
             {
                 'duration': 4,
                 'pos': "The video begins with a close-up of a woman and man. The video then immiedately jumpcuts to the same woman now having sex in missionary position with the man from image. She is lying on her back on the ground with her legs spread with her knees to her chest hands on the floor. A man's penis is visible entering her vagina from below. The man is positioned kneeling between her legs infront of her thrusting his penis into her vagina. Throughout the scene, she appears to be experiencing pleasure, often with her mouth open or eyes closed as she lies back. Her hands hold onto her thighs spreading her legs.",
@@ -411,11 +407,6 @@ The video is shot from above looking down on the scene.""",
                 'audio_negative_prompt': 'music, melody, ambient drone, moaning, voice, sustained atmosphere, continuous background noise, low quality, distortion',
             },
         ],
-        "chain_prefix": 'Missionary FK2',
-        'backend': 'linux',
-        'fps': 16,
-        'cfg': 2,
-        'neg': 'static, frozen, no movement',
     },
 
     {"break": True},
@@ -428,7 +419,11 @@ The video is shot from above looking down on the scene.""",
         'neg': 'NONE',
     },
     {
-        "chain": [
+        'type': 'multichain',
+        'chain_prefix': 'titjob_hndjob_blwhnd_blow_finale FK',
+        'model_class': 'wan',
+        'neg': 'static, frozen, no movement',
+        'chain': [
             {
                 'duration': 3,
                 'pos': "The video begins with a close-up of a fully nude woman. The video then jumpcuts to the same woman now lying down in same background as the first frame, stone tile floor, building wall with her breasts positioned around the man's erect penis as he thrusts his penis up and down in a titjob motion sliding it between her breasts. she makes various facial expressions during the video she looks like she is talking and has her eyes wide open with a crazy expression. ",
@@ -491,12 +486,6 @@ She looks at the camera throughout the video
                 'audio_negative_prompt': 'music, melody, ambient drone, moaning, voice, sustained atmosphere, continuous background noise, low quality, distortion',
             },
         ],
-        "chain_prefix": 'titjob_hndjob_blwhnd_blow_finale FK',
-        'backend': 'linux',
-        'fps': 16,
-        'cfg': 2,
-        'neg': 'static, frozen, no movement',
-        'frame_interpolation': False,
     },
 
     {
@@ -511,7 +500,11 @@ She looks at the camera throughout the video
         'neg': 'NONE',
     },
     {
-        "chain": [
+        'type': 'multichain',
+        'chain_prefix': 'doggyback 2',
+        'model_class': 'wan',
+        'neg': 'static, frozen, no movement',
+        'chain': [
             {
                 'duration': 4,
                 'pos': """The same woman - now having sex in doggystyle position with the man. From an overhead perspective, she is on all fours with her back facing the camera. A man is positioned behind her. his hand gripping her hips as he penetrates her from behind. The woman's expression changes throughout the scene, showing moments of pleasure and engagement with her partner. Her legs are spread apart with the man in-between her legs.
@@ -541,11 +534,6 @@ she looks at the camera throughout the video.""",
                 'lora_low': 'WAN2.2_LoraSet/iGoon%2520-%2520Blink_Back_Doggystyle_LOW.safetensors',
             },
         ],
-        "chain_prefix": 'doggyback 2',
-        'backend': 'linux',
-        'fps': 16,
-        'cfg': 2,
-        'neg': 'static, frozen, no movement',
     },
 
     {"break": True},
@@ -564,7 +552,11 @@ she looks at the camera throughout the video.""",
         'height': 672,
     },
     {
-        "chain": [
+        'type': 'multichain',
+        'chain_prefix': 'Erotic dance 1 part 1',
+        'model_class': 'wan',
+        'neg': 'static, frozen, no movement',
+        'chain': [
             {
                 'duration': 4,
                 'pos': """Create a short, seductive video from this image:
@@ -639,11 +631,6 @@ Camera: Static medium shot eye-level, subtle zoom to hips during rear section, f
                 'neg': '',
             },
         ],
-        "chain_prefix": 'Erotic dance 1 part 1',
-        'backend': 'linux',
-        'fps': 16,
-        'cfg': 2,
-        'neg': 'static, frozen, no movement',
     },
 
     {
@@ -656,7 +643,11 @@ Camera: Static medium shot eye-level, subtle zoom to hips during rear section, f
         'height': 672,
     },
     {
-        "chain": [
+        'type': 'multichain',
+        'chain_prefix': 'Erotic dance 1 part 2',
+        'model_class': 'wan',
+        'neg': 'static, frozen, no movement',
+        'chain': [
             {
                 'duration': 4,
                 'pos': """A sensual female dancer performs an intimate, slow-motion erotic dancem, 4-second cinematic video with fluid progression.
@@ -685,11 +676,6 @@ Cinematic hyper-realistic 8K resolution, HDR high contrast, precise motion blur 
                 'neg': '',
             },
         ],
-        "chain_prefix": 'Erotic dance 1 part 2',
-        'backend': 'linux',
-        'fps': 16,
-        'cfg': 2,
-        'neg': 'static, frozen, no movement',
     },
 
     {
@@ -704,7 +690,13 @@ Cinematic hyper-realistic 8K resolution, HDR high contrast, precise motion blur 
         'neg': 'NONE',
     },
     {
-        "chain": [
+        'type': 'multichain',
+        'chain_prefix': 'pee 1',
+        'model_class': 'wan',
+        'neg': 'static, frozen, no movement',
+        'width': 704,
+        'height': 1056,
+        'chain': [
             {
                 'duration': 3,
                 'pos': 'a woman, jumpcut, after the transition, she is nude lying on her back with her legs back, she is pissing on her own face',
@@ -713,13 +705,6 @@ Cinematic hyper-realistic 8K resolution, HDR high contrast, precise motion blur 
                 'lora_low': 'WAN2.2_LoraSet/WAN2.2-I2V_LowNoise_I2Pee-V4.safetensors',
             },
         ],
-        "chain_prefix": 'pee 1',
-        'backend': 'linux',
-        'fps': 16,
-        'cfg': 2,
-        'neg': 'static, frozen, no movement',
-        'width': 704,
-        'height': 1056,
     },
 
     {"break": True},
@@ -732,7 +717,13 @@ Cinematic hyper-realistic 8K resolution, HDR high contrast, precise motion blur 
         'neg': 'NONE',
     },
     {
-        "chain": [
+        'type': 'multichain',
+        'chain_prefix': 'pee 2',
+        'model_class': 'wan',
+        'neg': 'static, frozen, no movement',
+        'width': 704,
+        'height': 1056,
+        'chain': [
             {
                 'duration': 3,
                 'pos': 'a woman, jumpcut, after the transition, she is nude on all fours, a nude man is standing in front of her, he is holding his penis and pissing into her mouth',
@@ -741,13 +732,6 @@ Cinematic hyper-realistic 8K resolution, HDR high contrast, precise motion blur 
                 'lora_low': 'WAN2.2_LoraSet/WAN2.2-I2V_LowNoise_I2Pee-V4.safetensors',
             },
         ],
-        "chain_prefix": 'pee 2',
-        'backend': 'linux',
-        'fps': 16,
-        'cfg': 2,
-        'neg': 'static, frozen, no movement',
-        'width': 704,
-        'height': 1056,
     },
 
     {"break": True},
@@ -760,7 +744,13 @@ Cinematic hyper-realistic 8K resolution, HDR high contrast, precise motion blur 
         'neg': 'NONE',
     },
     {
-        "chain": [
+        'type': 'multichain',
+        'chain_prefix': 'pee 3',
+        'model_class': 'wan',
+        'neg': 'static, frozen, no movement',
+        'width': 704,
+        'height': 1056,
+        'chain': [
             {
                 'duration': 3,
                 'pos': 'a woman, jumpcut, after the transition, she is nude sitting with her legs spread, she is pissing on the ground',
@@ -769,13 +759,6 @@ Cinematic hyper-realistic 8K resolution, HDR high contrast, precise motion blur 
                 'lora_low': 'WAN2.2_LoraSet/WAN2.2-I2V_LowNoise_I2Pee-V4.safetensors',
             },
         ],
-        "chain_prefix": 'pee 3',
-        'backend': 'linux',
-        'fps': 16,
-        'cfg': 2,
-        'neg': 'static, frozen, no movement',
-        'width': 704,
-        'height': 1056,
     },
 
     {"break": True},
@@ -788,7 +771,13 @@ Cinematic hyper-realistic 8K resolution, HDR high contrast, precise motion blur 
         'neg': 'NONE',
     },
     {
-        "chain": [
+        'type': 'multichain',
+        'chain_prefix': 'pee 4',
+        'model_class': 'wan',
+        'neg': 'static, frozen, no movement',
+        'width': 704,
+        'height': 1056,
+        'chain': [
             {
                 'duration': 3,
                 'pos': "woman, jumpcut, after the transition, the man is nude sitting down, the woman is nude sitting on his lap, he is grabbing her neck, she is grabbing the man's penis, while they are tongue kissing, the man is pissing on her chest",
@@ -797,13 +786,6 @@ Cinematic hyper-realistic 8K resolution, HDR high contrast, precise motion blur 
                 'lora_low': 'WAN2.2_LoraSet/WAN2.2-I2V_LowNoise_I2Pee-V4.safetensors',
             },
         ],
-        "chain_prefix": 'pee 4',
-        'backend': 'linux',
-        'fps': 16,
-        'cfg': 2,
-        'neg': 'static, frozen, no movement',
-        'width': 704,
-        'height': 1056,
     },
 
     {"break": True},
@@ -820,7 +802,11 @@ Cinematic hyper-realistic 8K resolution, HDR high contrast, precise motion blur 
         'neg': 'NONE',
     },
     {
-        "chain": [
+        'type': 'multichain',
+        'chain_prefix': 'Back doggy simple',
+        'model_class': 'wan',
+        'neg': 'static, frozen, no movement',
+        'chain': [
             {
                 'duration': 3,
                 'pos': """The video begins with a close-up of a woman. Than video jumpcut to scene with same woman now having sex in doggystyle position with the man. From an overhead perspective, she is on all fours with her back facing the camera. A man is positioned behind her. his hand gripping her hips as he penetrates her from behind. The woman's expression changes throughout the scene, showing moments of pleasure and engagement with her partner. Her legs are spread apart with the man in-between her legs.
@@ -848,11 +834,6 @@ she looks at the camera throughout the video. same background as the first frame
                 'lora_low': 'WAN2.2_LoraSet/iGoon%2520-%2520Blink_Back_Doggystyle_LOW.safetensors',
             },
         ],
-        "chain_prefix": 'Back doggy simple',
-        'backend': 'linux',
-        'fps': 16,
-        'cfg': 2,
-        'neg': 'static, frozen, no movement',
     },
 
     {"break": True},
@@ -869,7 +850,11 @@ she looks at the camera throughout the video. same background as the first frame
         'neg': 'NONE',
     },
     {
-        "chain": [
+        'type': 'multichain',
+        'chain_prefix': 'Sexspoon FK_99_016_ONE_MINUTE_NSFW_FACE_KEEP V2_kopia',
+        'model_class': 'wan',
+        'neg': 'static, frozen, no movement',
+        'chain': [
             {
                 'duration': 4,
                 'pos': "The video begins with a close-up of a woman - Than video jumpcut to scene with same woman is lying on her side, legs slightly bent. A man lying behind her in spooning position, vigorously fucking her from behind. Strong, deep, rhythmic penetration, man's hips thrusting forward against her ass. Clear side view showing the woman's face in profile, breasts exposed and bouncing with each thrust, open mouth, eyes rolling back, intense pleasure and overwhelm expression, heavy breathing. Man's hand gripping her hip and waist tightly, holding her against his body, dynamic and powerful sex motion, detailed anatomy, realistic penetration, dramatic lighting, high detail, erotic atmosphere same background as the first frame.",
@@ -889,11 +874,6 @@ she looks at the camera throughout the video. same background as the first frame
                 'audio_negative_prompt': 'music, melody, speech, words, lyrics, reverb, echo, distortion, cartoon, low quality',
             },
         ],
-        "chain_prefix": 'Sexspoon FK_99_016_ONE_MINUTE_NSFW_FACE_KEEP V2_kopia',
-        'backend': 'linux',
-        'fps': 16,
-        'cfg': 2,
-        'neg': 'static, frozen, no movement',
     },
 
     {"break": True},
@@ -906,7 +886,11 @@ she looks at the camera throughout the video. same background as the first frame
         'neg': 'NONE',
     },
     {
-        "chain": [
+        'type': 'multichain',
+        'chain_prefix': 'Doggy FK_99_016_ONE_MINUTE_NSFW_FACE_KEEP V2_kopia',
+        'model_class': 'wan',
+        'neg': 'static, frozen, no movement',
+        'chain': [
             {
                 'duration': 2.5,
                 'pos': "The video begins with a close-up of a woman. Jumpcut to a same woman kneeling on all fours on the ground, back arched. A naked man standing behind her and vigorously fucking her in doggystyle position. Strong, deep, rhythmic penetration, man's hips slamming against her ass. Clear front view showing the woman's face, breasts hanging and bouncing with each thrust, open mouth, wide eyes, intense pleasure and overwhelm expression, heavy breathing. Man's hands gripping her waist tightly, dynamic and powerful sex motion, detailed anatomy, realistic penetration, forest setting, dramatic lighting, high detail, erotic atmosphere same background as the first frame",
@@ -926,12 +910,6 @@ she looks at the camera throughout the video. same background as the first frame
                 'lora_low': 'WAN2.2_LoraSet/iGoon%20-%20Blink_Front_Doggystyle_I2V_LOW.safetensors',
             },
         ],
-        "chain_prefix": 'Doggy FK_99_016_ONE_MINUTE_NSFW_FACE_KEEP V2_kopia',
-        'backend': 'linux',
-        'fps': 16,
-        'cfg': 2,
-        'neg': 'static, frozen, no movement',
-        'use_lightning': True,
     },
 
     {"break": True},
@@ -944,7 +922,11 @@ she looks at the camera throughout the video. same background as the first frame
         'neg': 'NONE',
     },
     {
-        "chain": [
+        'type': 'multichain',
+        'chain_prefix': 'Backdoggy FK_99_016_ONE_MINUTE_NSFW_FACE_KEEP V2_kopia',
+        'model_class': 'wan',
+        'neg': 'static, frozen, no movement',
+        'chain': [
             {
                 'duration': 3,
                 'pos': """The video begins with a close-up of a woman. Than video jumpcut to scene with same woman now having sex in doggystyle position with the man. From an overhead perspective, she is on all fours with her back facing the camera. A man is positioned behind her. his hand gripping her hips as he penetrates her from behind. The woman's expression changes throughout the scene, showing moments of pleasure and engagement with her partner. Her legs are spread apart with the man in-between her legs.
@@ -976,11 +958,6 @@ she looks at the camera throughout the video. same background as the first frame
                 'audio_negative_prompt': 'music, melody, speech, words, lyrics, reverb, echo, distortion, cartoon, low quality',
             },
         ],
-        "chain_prefix": 'Backdoggy FK_99_016_ONE_MINUTE_NSFW_FACE_KEEP V2_kopia',
-        'backend': 'linux',
-        'fps': 16,
-        'cfg': 2,
-        'neg': 'static, frozen, no movement',
     },
 
     {"break": True},
@@ -993,7 +970,11 @@ she looks at the camera throughout the video. same background as the first frame
         'neg': 'NONE',
     },
     {
-        "chain": [
+        'type': 'multichain',
+        'chain_prefix': 'SquatCowgirl FK_99_016_ONE_MINUTE_NSFW_FACE_KEEP V2_kopia',
+        'model_class': 'wan',
+        'neg': 'static, frozen, no movement',
+        'chain': [
             {
                 'duration': 4,
                 'pos': """The video begins with a close-up of a fully nude woman. The video then jumpcuts to the same woman now having sex with a same man in squatting cowgirl position her face fills the screen she is leaning over forwards as she bounces up and down aggressively. Man erect penis is in her vagina.
@@ -1021,11 +1002,6 @@ The video is shot from above looking down on the scene. same background as the f
                 'audio_negative_prompt': 'music, melody, speech, words, lyrics, reverb, echo, distortion, cartoon, low quality',
             },
         ],
-        "chain_prefix": 'SquatCowgirl FK_99_016_ONE_MINUTE_NSFW_FACE_KEEP V2_kopia',
-        'backend': 'linux',
-        'fps': 16,
-        'cfg': 2,
-        'neg': 'static, frozen, no movement',
     },
 
     {"break": True},
@@ -1038,7 +1014,11 @@ The video is shot from above looking down on the scene. same background as the f
         'neg': 'NONE',
     },
     {
-        "chain": [
+        'type': 'multichain',
+        'chain_prefix': 'Missionary FK2_99_016_ONE_MINUTE_NSFW_FACE_KEEP V2_kopia',
+        'model_class': 'wan',
+        'neg': 'static, frozen, no movement',
+        'chain': [
             {
                 'duration': 4,
                 'pos': "The video begins with a close-up of a woman and man. The video then immiedately jumpcuts to the same woman now having sex in missionary position with the man from image. She is lying on her back on the ground with her legs spread with her knees to her chest hands on the floor. A man's penis is visible entering her vagina from below. The man is positioned kneeling between her legs infront of her thrusting his penis into her vagina. Throughout the scene, she appears to be experiencing pleasure, often with her mouth open or eyes closed as she lies back. Her hands hold onto her thighs spreading her legs. same background as the first frame.",
@@ -1062,11 +1042,6 @@ The video is shot from above looking down on the scene. same background as the f
                 'workflow': '_I2V_classic_4s1200_nog4gg.json',
             },
         ],
-        "chain_prefix": 'Missionary FK2_99_016_ONE_MINUTE_NSFW_FACE_KEEP V2_kopia',
-        'backend': 'linux',
-        'fps': 16,
-        'cfg': 2,
-        'neg': 'static, frozen, no movement',
     },
 
     {"break": True},
@@ -1079,7 +1054,11 @@ The video is shot from above looking down on the scene. same background as the f
         'neg': 'NONE',
     },
     {
-        "chain": [
+        'type': 'multichain',
+        'chain_prefix': 'titjob_hndjob_blwhnd_blow_finale FK_99_016_ONE_MINUTE_NSFW_FACE_KEEP V2_kopia',
+        'model_class': 'wan',
+        'neg': 'static, frozen, no movement',
+        'chain': [
             {
                 'duration': 3,
                 'pos': "The video begins with a close-up of a fully nude woman. The video then jumpcuts to the same woman now kneeling down in same background as the first frame, with her breasts positioned around the man's erect penis as he thrusts his penis up and down in a titjob motion sliding it between her breasts. she makes various facial expressions during the video she looks like she is talking and has her eyes wide open with a crazy expression.  same background as the first frame.",
@@ -1141,12 +1120,6 @@ She looks at the camera throughout the video same background as the first frame.
                 'audio_negative_prompt': 'music, melody, ambient drone, moaning, voice, sustained atmosphere, continuous background noise, low quality, distortion',
             },
         ],
-        "chain_prefix": 'titjob_hndjob_blwhnd_blow_finale FK_99_016_ONE_MINUTE_NSFW_FACE_KEEP V2_kopia',
-        'backend': 'linux',
-        'fps': 16,
-        'cfg': 2,
-        'neg': 'static, frozen, no movement',
-        'frame_interpolation': False,
     },
 
     {"break": True},
@@ -1163,7 +1136,11 @@ She looks at the camera throughout the video same background as the first frame.
         'neg': 'NONE',
     },
     {
-        "chain": [
+        'type': 'multichain',
+        'chain_prefix': 'MST 1_kopia',
+        'model_class': 'wan',
+        'neg': 'static, frozen, no movement',
+        'chain': [
             {
                 'duration': 2,
                 'pos': """Technical specifications:
@@ -1186,11 +1163,6 @@ Face is visible only after the turn and matches the provided top-left face perfe
                 'neg': '',
             },
         ],
-        "chain_prefix": 'MST 1_kopia',
-        'backend': 'linux',
-        'fps': 16,
-        'cfg': 2,
-        'neg': 'static, frozen, no movement',
     },
 
     {
@@ -1201,7 +1173,11 @@ Face is visible only after the turn and matches the provided top-left face perfe
         'neg': 'NONE',
     },
     {
-        "chain": [
+        'type': 'multichain',
+        'chain_prefix': 'MST 2_kopia',
+        'model_class': 'wan',
+        'neg': 'static, frozen, no movement',
+        'chain': [
             {
                 'duration': 3,
                 'pos': """- One hand lingers on breast, kneading softly while maintaining eye contact and soft humming moan.
@@ -1225,11 +1201,6 @@ Face is visible only after the turn and matches the provided top-left face perfe
                 'neg': '',
             },
         ],
-        "chain_prefix": 'MST 2_kopia',
-        'backend': 'linux',
-        'fps': 16,
-        'cfg': 2,
-        'neg': 'static, frozen, no movement',
     },
 
     {
@@ -1240,7 +1211,11 @@ Face is visible only after the turn and matches the provided top-left face perfe
         'neg': 'NONE',
     },
     {
-        "chain": [
+        'type': 'multichain',
+        'chain_prefix': 'MST 3_kopia',
+        'model_class': 'wan',
+        'neg': 'static, frozen, no movement',
+        'chain': [
             {
                 'duration': 3,
                 'pos': """- Begins slow masturbation: fingers circle clitoris in deliberate lazy spirals, building wetness visible in glistening light.
@@ -1268,11 +1243,6 @@ Face is visible only after the turn and matches the provided top-left face perfe
                 'workflow': '_I2V_dasiwa_3step_nog4gg.json',
             },
         ],
-        "chain_prefix": 'MST 3_kopia',
-        'backend': 'linux',
-        'fps': 16,
-        'cfg': 2,
-        'neg': 'static, frozen, no movement',
     },
 
     {
@@ -1283,7 +1253,11 @@ Face is visible only after the turn and matches the provided top-left face perfe
         'neg': 'NONE',
     },
     {
-        "chain": [
+        'type': 'multichain',
+        'chain_prefix': 'MST 4_kopia',
+        'model_class': 'wan',
+        'neg': 'static, frozen, no movement',
+        'chain': [
             {
                 'duration': 4,
                 'pos': """She slowly rotates her upper body and hips toward the camera in a smooth 90-degree turn until she is facing forward directly into the lens. As her face enters the frame, apply the exact face from the top-left corner of the original photo as her consistent face – perfectly matched to lighting, skin tone, hair, and expressions. The top-left corner must now be empty / clean / showing only the background.
@@ -1311,11 +1285,6 @@ She continues masturbating visibly and intensely until the very end of the video
                 'workflow': '_I2V_dasiwa_3step_nog4gg.json',
             },
         ],
-        "chain_prefix": 'MST 4_kopia',
-        'backend': 'linux',
-        'fps': 16,
-        'cfg': 2,
-        'neg': 'static, frozen, no movement',
     },
 
     {
@@ -1326,7 +1295,11 @@ She continues masturbating visibly and intensely until the very end of the video
         'neg': 'NONE',
     },
     {
-        "chain": [
+        'type': 'multichain',
+        'chain_prefix': 'MST 5_kopia',
+        'model_class': 'wan',
+        'neg': 'static, frozen, no movement',
+        'chain': [
             {
                 'duration': 5,
                 'pos': """The naked woman sits on the floor facing the camera. She locks intense, heavy-lidded eye contact with the lens, slow aroused half-smile, parted lips. She spreads her legs very wide, fully exposing her vulva.
@@ -1350,11 +1323,6 @@ She builds to a powerful orgasm: movements turn frantic, body arches, legs tremb
                 'neg': '',
             },
         ],
-        "chain_prefix": 'MST 5_kopia',
-        'backend': 'linux',
-        'fps': 16,
-        'cfg': 2,
-        'neg': 'static, frozen, no movement',
     },
 
 ]

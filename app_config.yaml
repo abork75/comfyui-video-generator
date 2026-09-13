@@ -18,6 +18,10 @@ backends:
         workflow_json: D:\streamlit_project\comfyui_integration\workflow_configs\multitalk_wanvideo_test_api.json
       dubit:
         workflow_json: D:\streamlit_project\comfyui_integration\workflow_configs\dubit_workflow_api.json
+      upscale_video:
+        workflow_json: D:\streamlit_project\comfyui_integration\workflow_configs\upscaler_video.json
+      upscale_image:
+        workflow_json: D:\streamlit_project\comfyui_integration\workflow_configs\upscaler_image.json
     comfyui_input_dir: D:\ComfyUI\input
   windows:
     api_url: http://127.0.0.1:8190
@@ -66,6 +70,7 @@ defaults:
     bts: 40
   frame_interpolation: true
   auto_deblur_chain_steps: false
+  voice_enabled: false
   steps: 8
   use_lightning: true
   steps_hq: 15

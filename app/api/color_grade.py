@@ -2,12 +2,14 @@
 """
 Color-grade API
 
-GET  /api/color-grade/frames          — extract context frames for a clip
-POST /api/color-grade/preview         — generate preview (temp file)
-POST /api/color-grade/apply           — archive original + save graded version
-GET  /api/color-grade/check           — ΔE auto-detector for a whole run
+GET  /api/color-grade/frames           — extract context frames for a clip
+POST /api/color-grade/preview          — generate preview (temp file)
+POST /api/color-grade/preview-stitched — concat [prev?, preview, next?] for in-context preview
+POST /api/color-grade/apply            — archive original + save graded version
+GET  /api/color-grade/check            — ΔE auto-detector for a whole run
 """
 
+import asyncio
 import base64
 import tempfile
 from pathlib import Path
@@ -22,6 +24,8 @@ from app.services.color_grade_service import (
     extract_frame,
 )
 from app.services.media_service import archive_video, resolve_video, _project_folder
+from app.services.multitalk_service import _concatenate_clips
+from app.api.trim import _get_video_info
 
 router = APIRouter(prefix="/api/color-grade", tags=["color-grade"])
 
@@ -46,8 +50,12 @@ async def get_context_frames(
     next_clip: str | None = Query(None),
 ):
     """
-    Return first/last frames for clip and its neighbours as base64 JPEG.
-    Response: {end_prev, start_clip, end_clip, start_next}  — null if not available.
+    Return first/last frames for clip and its neighbours as base64 JPEG,
+    plus clip's own total_frames (2026-09-09, user request: the fade/curve
+    sliders need a real upper bound instead of raw unclamped number inputs —
+    "narzędzie kompletnie nie mówi jak ustawić te parametry jakie są zakresy").
+    Response: {end_prev, start_clip, end_clip, start_next, total_frames}
+    — total_frames is null if ffprobe fails.
     """
     def _resolve(name: str | None) -> Path | None:
         if not name:
@@ -69,11 +77,17 @@ async def get_context_frames(
         except Exception:
             return None
 
+    try:
+        total_frames = _get_video_info(clip_path)['total_frames']
+    except Exception:
+        total_frames = None
+
     return {
         'end_prev':   _safe(prev_path, 'last'),
         'start_clip': _safe(clip_path, 'first'),
         'end_clip':   _safe(clip_path, 'last'),
         'start_next': _safe(next_path, 'first'),
+        'total_frames': total_frames,
     }
 
 
@@ -169,6 +183,92 @@ async def serve_preview(preview_id: str):
     return FileResponse(str(path), media_type='video/mp4')
 
 
+class StitchRequest(BaseModel):
+    run: str
+    preview_id: str
+    prev_clip: str | None = None
+    next_clip: str | None = None
+
+
+@router.post("/preview-stitched")
+async def preview_color_grade_stitched(req: StitchRequest):
+    """
+    Concatenate [prev_clip?, the already-generated preview, next_clip?] into
+    one video, so the seam(s) can be judged in motion/context instead of just
+    as a bare isolated clip — a single graded clip alone doesn't show much.
+    Returns a new preview_id (served via the same /preview/{id} endpoint);
+    falls back gracefully (caller keeps using the plain preview_id) if there's
+    nothing to stitch to. On an actual concat failure (mismatched codecs/
+    resolutions — rare for our own pipeline, more likely once footage from
+    another source, e.g. WAN 2.7, enters the mix) this now raises a proper
+    error instead of a silent skip (2026-09-09, user request) — caller still
+    falls back to the bare preview, just tells the user why.
+
+    Also returns seam_times (seconds into the STITCHED video where each join
+    falls — len(clips)-1 values) and fps, so the player can jump exactly to a
+    seam and step frame-by-frame from there (2026-09-09, user request).
+    """
+    preview_path = _previews.get(req.preview_id)
+    if not preview_path or not preview_path.exists():
+        raise HTTPException(404, 'Preview not found or expired')
+
+    clips: list[Path] = []
+    if req.prev_clip:
+        p = resolve_video(req.run, req.prev_clip)
+        if p:
+            clips.append(p)
+    clips.append(preview_path)
+    if req.next_clip:
+        p = resolve_video(req.run, req.next_clip)
+        if p:
+            clips.append(p)
+
+    if len(clips) == 1:
+        return {'preview_id': req.preview_id, 'stitched': False}
+
+    tmp = tempfile.NamedTemporaryFile(suffix='.mp4', delete=False)
+    tmp.close()
+    out_path = Path(tmp.name)
+
+    try:
+        loop = asyncio.get_running_loop()
+        # reencode=True (2026-09-10): stream-copy alone isn't enough for a
+        # browser <video> preview — some source clips (LTX/WAN output) have
+        # a single I-frame for the whole clip plus irregular P/B cadence,
+        # which stalls progressive playback mid-clip, not at the seam. See
+        # _concatenate_clips docstring — found via direct ffprobe on a real
+        # user clip that reproduced the exact reported freeze.
+        await _concatenate_clips(clips, out_path, loop, reencode=True)
+    except Exception as e:
+        raise HTTPException(500, f'Sklejenie podglądu nie powiodło się — niezgodne kodeki/rozdzielczości między klipami: {e}')
+
+    stitched_id = f'{req.preview_id}_stitched'
+    old = _previews.get(stitched_id)
+    if old and old.exists():
+        try:
+            old.unlink()
+        except Exception:
+            pass
+    _previews[stitched_id] = out_path
+
+    # Seam timestamps — cumulative duration of every clip before each join.
+    # Best-effort: a failed ffprobe just means no seam-jump buttons, not a
+    # broken preview (the stitched video itself is already saved above).
+    seam_times: list[float] = []
+    fps = 24.0
+    try:
+        infos = [_get_video_info(p) for p in clips]
+        fps = infos[0]['fps'] or fps
+        cum = 0.0
+        for info in infos[:-1]:
+            cum += info['total_frames'] / (info['fps'] or fps)
+            seam_times.append(round(cum, 3))
+    except Exception:
+        seam_times = []
+
+    return {'preview_id': stitched_id, 'stitched': True, 'seam_times': seam_times, 'fps': fps}
+
+
 class ApplyRequest(BaseModel):
     run: str
     clip: str
@@ -201,19 +301,50 @@ async def apply_color_grade_endpoint(req: ApplyRequest):
     fade     = _auto_fade(clip_path, req.fade_frames)
     fade_bwd = _auto_fade(clip_path, req.fade_frames_bwd) if req.fade_frames_bwd else fade
 
-    arc = archive_video(req.run, req.clip)
-    if not arc['ok']:
-        raise HTTPException(500, f'Archive failed: {arc["error"]}')
-
+    # Compute into a TEMP file FIRST, reading the canonical clip directly —
+    # it stays fully intact and playable/readable the entire time this runs
+    # (real seconds, sometimes longer). Only the final swap (archive
+    # original + move temp into place) touches the canonical path, and
+    # that's now a near-instant filesystem operation instead of spanning
+    # the whole processing window (2026-09-10: the OLD archive-first
+    # ordering left the canonical name genuinely missing for the whole
+    # apply_color_grade call — a real audit run caught this mid-window and
+    # correctly, if confusingly, reported the row as "pending". Same class
+    # of bug already fixed for deblur's save step; same fix here).
+    tmp_out = clip_path.parent / f"_tmp_cg_{clip_path.name}"
     try:
-        apply_color_grade(clip_path.parent / arc['new_name'], ref_bytes, fade,
-                          req.curve_power, req.direction, clip_path,
+        apply_color_grade(clip_path, ref_bytes, fade,
+                          req.curve_power, req.direction, tmp_out,
                           ref_frame_bytes_bwd=ref_bytes_bwd, fade_frames_bwd=fade_bwd)
     except Exception as e:
+        tmp_out.unlink(missing_ok=True)
+        raise HTTPException(500, f'Color grade failed: {e}')
+
+    arc = archive_video(req.run, req.clip)
+    if not arc['ok']:
+        tmp_out.unlink(missing_ok=True)
+        raise HTTPException(500, f'Archive failed: {arc["error"]}')
+
+    # Retry the final move like deblur's swap does — clip_path is free now
+    # that archive_video moved the original away, but the rename itself can
+    # still transiently fail if something has a handle open right at that
+    # instant (e.g. a viewer streaming it).
+    swapped = False
+    last_err: Exception | None = None
+    for _attempt in range(8):
+        try:
+            tmp_out.rename(clip_path)
+            swapped = True
+            break
+        except OSError as e:
+            last_err = e
+            await asyncio.sleep(2)
+    if not swapped:
         archived = clip_path.parent / arc['new_name']
         if archived.exists():
             archived.rename(clip_path)
-        raise HTTPException(500, f'Color grade failed: {e}')
+        tmp_out.unlink(missing_ok=True)
+        raise HTTPException(500, f'Nie mozna zapisac poprawionego pliku — {clip_path.name} jest zajety (odtwarzacz/podglad?). Zamknij podglad i sprobuj ponownie. ({last_err})')
 
     return {'ok': True, 'archived_as': arc['new_name'], 'fade_frames': fade, 'fade_frames_bwd': fade_bwd}
 

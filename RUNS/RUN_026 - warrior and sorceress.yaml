@@ -1,5 +1,5 @@
 # RUN_026 - warrior and sorceress.yaml
-# Edited: 2026-08-22 02:11:58
+# Edited: 2026-08-26 15:08:52
 # Edit this file freely — regenerate .py with generate_py_from_yaml()
 #
 project_folder: E:\FILMY\RUN_026 - warrior_and_sorceress
@@ -19,6 +19,7 @@ flow:
     NONE
 
 - break: true
+  label: ida do lasu
 
 - file: 40.53. zblizaja sie do obozu.mp4
   backend: linux

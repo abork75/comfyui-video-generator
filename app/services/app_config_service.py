@@ -77,6 +77,7 @@ _DEFAULTS: dict[str, Any] = {
         ],
         "frame_interpolation":  True,
         "auto_deblur_chain_steps": True,
+        "voice_enabled": True,
     },
 }
 

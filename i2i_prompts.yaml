@@ -58,6 +58,10 @@ categories:
   name: POZY
   icon: 🗂
   order: 202
+- id: ltx
+  name: LTX
+  icon: 🎬
+  order: 210
 defaults:
   steps: 30
   cfg: 8
@@ -1121,4 +1125,99 @@ prompts:
     steps: 30
     cfg: 8.0
     denoise: 1.0
-last_id: 104
+- id: p0000105
+  category: mmaudio_ambient
+  name: Odłosy duże miasto
+  note: ''
+  positive: Realistic large city street ambience, continuous traffic noise, cars and buses passing, distant sirens far away, pedestrian footsteps, scattered voices, bicycle bells, air brakes, city rumble, natural outdoor urban soundscape, no music, no narration
+  negative: ''
+  params:
+    steps: 30
+    cfg: 8.0
+    denoise: 1.0
+- id: p0000106
+  category: ltx
+  name: Standard Fix Scene
+  note: Tylko dla static/locked-off shots - nie uzywac gdy kamera ma podazac za postacia (tracking shot)
+  positive: Static, locked-off camera. Focus fixed on the main subject throughout. Only persons visivle on screen no other persons
+  negative: camera pan, camera tilt, zoom, dolly movement, handheld camera shake, rack focus, focus pull, depth of field shift, new characters, additional people, someone entering or exiting the scene, moving background, shifting walls, furniture moving
+  params:
+    steps: 30
+    cfg: 8.0
+    denoise: 1.0
+- id: p0000107
+  category: ltx
+  name: Tracking Shot (kamera podąża)
+  note: Do uzycia zamiast Standard Fix Scene gdy kamera ma isc za postacia (np. wchodzenie po schodach) - nie ograniczac ruchu kamery, tylko go ustabilizowac
+  positive: Smooth tracking shot, camera follows the subject steadily, keeping consistent framing and distance as they move. Camera motion is fluid and matches the subject's pace exactly. Only persons visible on screen, no other persons
+  negative: camera lag, subject leaving frame, jerky camera movement, rack focus, focus pull, depth of field shift, new characters, additional people, someone entering or exiting the scene, moving background, shifting walls, furniture moving
+  params:
+    steps: 30
+    cfg: 8.0
+    denoise: 1.0
+- id: p0000108
+  category: ltx
+  name: Zoom In On Subject
+  note: Do uzycia gdy kamera ma zrobic zoom/push-in na jedna z postaci w scenie - generyczny, bez wskazania ktora postac ani opisu sceny
+  positive: Camera slowly zooms in on one subject in the scene, smoothly pushing closer while keeping them centered and in focus. The subject's face and identity remain fully consistent throughout the motion.
+  negative: camera shake, jerky zoom, subject leaving frame, changing facial features, identity drift, morphing face, new characters, additional people, someone entering or exiting the scene, moving background, shifting walls, furniture moving
+  params:
+    steps: 30
+    cfg: 8.0
+    denoise: 1.0
+- id: p0000109
+  category: ltx
+  name: Walking Side By Side (dolly-back)
+  note: 'Grupa (2+ osob) idzie WPROST na kamere, kamera cofa sie w tym samym tempie. Klucz do utrzymania pozycji obok siebie: "side by side" powiedziane wczesnie i wprost, nie tylko raz w srodku opisu sceny - potwierdzone dzialajace 2026-09-07 (bez tego modelki szly pojedynczo)'
+  positive: 5 second continuous tracking shot, front view. Camera dollies backward at a matching walking pace, keeping all subjects in frame at all times. The subjects walk toward the camera side by side, shoulder to shoulder, exactly matching pace and stride throughout - never single file, neither one ahead of the other. Natural walking motion, photorealistic street, daylight.
+  negative: single file, one subject ahead of the other, staggered positions, walking in a line, changing distance between them, camera lag, subject leaving frame, jerky camera movement, new characters, additional people, someone entering or exiting the scene, moving background, shifting walls, furniture moving
+  params:
+    steps: 30
+    cfg: 8.0
+    denoise: 1.0
+- id: p0000110
+  category: ltx
+  name: Walking Side By Side (rear view)
+  note: Jak p0000109 ale postacie tylem do kamery, oddalaja sie zamiast zblizac. Potwierdzone dzialajace 2026-09-07 (pozycja obok siebie utrzymana).
+  positive: 5 second continuous tracking shot, rear view. Camera follows behind the subjects at a matching walking pace, keeping all subjects in frame at all times. The subjects walk away from the camera side by side, shoulder to shoulder, exactly matching pace and stride throughout - never single file, neither one ahead of the other. Natural walking motion, photorealistic environment, daylight.
+  negative: single file, one subject ahead of the other, staggered positions, walking in a line, changing distance between them, camera lag, subject leaving frame, jerky camera movement, new characters, additional people, someone entering or exiting the scene, moving background, shifting walls, furniture moving
+  params:
+    steps: 30
+    cfg: 8.0
+    denoise: 1.0
+- id: p0000111
+  category: mmaudio_ambient
+  name: Osiedle domków
+  note: ''
+  positive: 'Quiet suburban residential neighborhood ambience.
+
+    Soft distant traffic from a nearby street, occasional cars passing far away,
+
+    light wind moving through trees and gardens, faint birdsong,
+
+    and a very distant dog barking once in a while.
+
+
+    Natural outdoor daytime ambience. No speech is present. No music is present.'
+  negative: ''
+  params:
+    steps: 30
+    cfg: 8.0
+    denoise: 1.0
+- id: p0000112
+  category: mmaudio
+  name: Kroki - wchodzenie po schodach w szpilkach
+  note: ''
+  positive: 'A woman in thin high-heeled stiletto shoes walks up a staircase.
+
+    Each step makes a consistent sharp, hard heel click on stone stairs.
+
+    The footsteps have a natural spacious reverberation in a large empty mansion hall.
+
+    Quiet indoor room ambience. No speech is present. No music is present.'
+  negative: music, melody, song, singing, vocals, score, soundtrack, beat, rhythm bed, instrumental backing, tinny, thin, harsh, clipped, distorted, low bitrate, crackle, static noise, vinyl crackle, white noise, hiss, popping sounds
+  params:
+    steps: 30
+    cfg: 8.0
+    denoise: 1.0
+last_id: 112

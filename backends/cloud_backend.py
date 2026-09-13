@@ -170,6 +170,13 @@ class CloudBackend(BaseBackend):
         seed = params.get('seed')
         if seed is None:
             seed = random.randint(0, 2**32 - 1)
+        try:
+            from debug_state import get_fix_seed
+            _forced = get_fix_seed()
+            if _forced is not None:
+                seed = _forced  # FIX-seed DEBUG mode (UI toggle) — verbatim
+        except Exception:
+            pass
         prompt["57"]["inputs"]["noise_seed"] = seed
         
         prompt["58"]["inputs"]["steps"] = params['steps']

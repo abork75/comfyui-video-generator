@@ -57,6 +57,16 @@ def cancel() -> dict:
     if _task and not _task.done():
         _task.cancel()
     _state.update({"status": "idle", "error": "Anulowano przez użytkownika"})
+    # Also interrupt whatever ComfyUI is actually computing — see
+    # chain_service.cancel_chain for why this matters (2026-09-11).
+    try:
+        from app.services import app_config_service
+        from workflow_base import interrupt_comfyui
+        api_url = app_config_service.get_backend("linux").get("api_url")
+        if api_url:
+            interrupt_comfyui(api_url)
+    except Exception:
+        pass
     return {"ok": True}
 
 

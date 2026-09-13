@@ -303,17 +303,46 @@ def _extract_last_frame(video_path: Path, output_path: Path) -> None:
         )
 
 
-async def _concatenate_clips(clips: list[Path], output: Path, loop: asyncio.AbstractEventLoop) -> None:
-    """Concatenate MP4 clips with ffmpeg concat demuxer (stream copy)."""
+async def _concatenate_clips(clips: list[Path], output: Path, loop: asyncio.AbstractEventLoop,
+                              reencode: bool = False) -> None:
+    """Concatenate MP4 clips with ffmpeg concat demuxer.
+
+    -movflags +faststart (2026-09-10): without it, ffmpeg's default mp4 muxer
+    puts the moov atom (the index the player needs to know where everything
+    is) at the very END of the file, which can stall progressive/streamed
+    playback partway through — NOT at any real content boundary. Kept
+    regardless of reencode.
+
+    reencode=False (default, unchanged behavior) — stream-copy (-c copy),
+    instant, lossless, fine for final saved output that isn't played back
+    progressively from a cold start the way a browser <video> tag does.
+
+    reencode=True (2026-09-10, user request — color-grade stitched preview
+    specifically) — found via direct ffprobe on a real clip that stream-copy
+    alone doesn't fix every stall: some of our own source clips (LTX/WAN
+    output) carry a single I-frame for the ENTIRE clip (one giant GOP) plus
+    occasional irregular P/B cadence — fine for a local player decoding the
+    whole file at once, but browsers doing progressive HTTP playback can
+    stall partway through such a stream, unrelated to +faststart or to any
+    actual seam. Re-encoding with a short, regular keyframe interval fixes
+    this at the cost of a slower (non-instant) concat pass — acceptable for
+    a throwaway preview, NOT applied to real saved/rendered output (still
+    stream-copy there, unchanged) where this tradeoff isn't worth it.
+    """
     concat_list = output.parent / f"_concat_{output.stem}.txt"
     concat_list.write_text(
         "\n".join(f"file '{p.as_posix()}'" for p in clips),
         encoding="utf-8",
     )
+    codec_args = (
+        ["-c:v", "libx264", "-preset", "veryfast", "-crf", "20", "-pix_fmt", "yuv420p", "-g", "48", "-c:a", "aac"]
+        if reencode else
+        ["-c", "copy"]
+    )
     def _run():
         r = subprocess.run(
             ["ffmpeg", "-y", "-f", "concat", "-safe", "0",
-             "-i", str(concat_list), "-c", "copy", str(output)],
+             "-i", str(concat_list), *codec_args, "-movflags", "+faststart", str(output)],
             capture_output=True, timeout=120,
         )
         if r.returncode != 0:

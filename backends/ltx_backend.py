@@ -21,7 +21,7 @@ from workflow_base import WorkflowRunner, Logger
 from utils.video_utils import ensure_24fps
 
 # Default model = full precision (NOT gguf) - node 2213 (UNETLoader), distilled variant
-_DEFAULT_LTX_MODEL = "ltx-2.3-22b-distilled-1.1_transformer_only_fp8_scaled.safetensors"
+_DEFAULT_LTX_MODEL = "ltx-2.3-22b-dev-UD-Q5_K_M.gguf"
 
 
 class LtxBackend(BaseBackend):
@@ -106,7 +106,7 @@ class LtxBackend(BaseBackend):
             # obrazów/promptów (swap przepina połączenia w grafie)
             # ============================================================
 
-            ltx_variant = params.get('ltx_variant') or '8step'
+            ltx_variant = params.get('ltx_variant') or '20step'
             if ltx_variant == '20step':
                 self._swap_to_20step(self.workflow_runner, params)
             # 8-step: nic nie robić, to baked-in default w pliku
@@ -358,9 +358,22 @@ class LtxBackend(BaseBackend):
             timestamp_variation = int(time.time() * 1000) % 100000
             return (base + timestamp_variation) % (2**63)
 
+        try:
+            from debug_state import get_fix_seed
+            _forced = get_fix_seed()
+        except Exception:
+            _forced = None
+
         wf = self.workflow_runner.workflow
-        seed_pass1 = _unique(seed)
-        seed_pass2 = _unique((seed + 1) if seed not in (None, -1) else None)
+        if _forced is not None:
+            # FIX-seed DEBUG mode (UI toggle) — verbatim, no jitter. Two
+            # independent RandomNoise still get distinct values (pass2 = +1)
+            # so both passes stay deterministic AND different from each other.
+            seed_pass1, seed_pass2 = _forced, _forced + 1
+            self.logger.info(f"  ⚠️ FIX-seed DEBUG: pass1={seed_pass1}, pass2={seed_pass2} (verbatim, no jitter)")
+        else:
+            seed_pass1 = _unique(seed)
+            seed_pass2 = _unique((seed + 1) if seed not in (None, -1) else None)
         if '15' in wf:
             wf['15']['inputs']['noise_seed'] = seed_pass1
         if '14' in wf:

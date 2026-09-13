@@ -16,12 +16,12 @@ from fastapi import APIRouter, HTTPException, Request
 from app.services.app_config_service import get_backend as cfg_get_backend
 from app.services.process_service import process_service
 from app.services.yaml_service import get_yaml_globals
+from utils.mmaudio_utils import FALLBACK_AUDIO_PROMPT as _FALLBACK_AUDIO_PROMPT
+from utils.mmaudio_utils import FALLBACK_AUDIO_NEG_PROMPT as _FALLBACK_AUDIO_NEG_PROMPT
 
 PROJECT_ROOT = Path(__file__).parent.parent.parent
 RUNS_FOLDER  = PROJECT_ROOT / "RUNS"
 
-_FALLBACK_AUDIO_PROMPT         = "foley sound effects, physical interactions, footsteps, cloth movement, object handling, impacts, synchronized with video, crisp, realistic"
-_FALLBACK_AUDIO_NEG_PROMPT     = "music, melody, ambient drone, continuous atmosphere, background noise, reverb, sustained tones, low quality, distortion"
 _FALLBACK_AMBIENT_PROMPT       = "natural environment ambience, continuous atmospheric sound, wind, room tone, immersive background, seamless"
 _FALLBACK_AMBIENT_NEG_PROMPT   = "music, melody, instruments, sudden impacts, foley, footsteps, cloth, synchronized effects, stingers, low quality, distortion"
 
@@ -36,6 +36,9 @@ class _LogBridge:
     def error(self, msg):   process_service.log_sys(f"❌ {msg}")
 
 
+from utils.mmaudio_utils import fx_dir as _fx_dir, fx_sidecar_path as _fx_sidecar_path
+
+
 async def _run_audio_bg(
     video_path: Path,
     prompt: str,
@@ -45,7 +48,23 @@ async def _run_audio_bg(
 ) -> None:
     from utils.mmaudio_utils import add_audio as _add_audio
     logger = _LogBridge()
-    logger.info(f"MMAudio re-generacja: {video_path.name}")
+
+    # 2026-09-09: FX ALWAYS goes to a standalone side file now, never muxed
+    # into the main mp4 - "tertium non datur" for a clip's own audio track:
+    # it's either silence or lipsync dialogue, nothing else. This used to be
+    # conditional on has_lipsync_applied (Model A: protect dialogue from
+    # being clobbered) - now it's unconditional, so every clip's FX lands in
+    # the same place regardless of when lipsync happens to be applied, and
+    # deblur_service's own free-FX pass (_classify_source_audio) never has to
+    # deal with a legacy "FX baked into the main track" clip going forward.
+    # video_path is either project_folder/transitions/name or
+    # project_folder/transitions/chains/name (see add_audio_to_clip) - walk
+    # up to whichever one holds "transitions" to find project_folder.
+    transitions_dir = video_path.parent if video_path.parent.name == "transitions" else video_path.parent.parent
+    project_folder = transitions_dir.parent
+    sidecar = _fx_sidecar_path(project_folder, video_path.name)
+    logger.info(f"MMAudio: {video_path.name} → FX jako osobny plik ({sidecar.name})")
+
     loop = asyncio.get_running_loop()
     ok = await loop.run_in_executor(None, lambda: _add_audio(
         video_path=video_path,
@@ -57,11 +76,12 @@ async def _run_audio_bg(
         cfg=4.5,
         seed=-1,
         logger=logger,
+        output_sidecar=sidecar,
     ))
     if not ok:
         process_service.log_sys(f"⚠️  MMAudio: nie dodano audio do {video_path.name}")
     else:
-        process_service.log_sys(f"[AUDIO_READY] {video_path.name}")
+        process_service.log_sys(f"[FX_READY] {video_path.name}")
 
 
 @router.post("/{run_filename}")
@@ -231,6 +251,41 @@ def _ambient_path(project_folder: Path, filename: str) -> Path | None:
     return None
 
 
+@router.get("/fx/{run_filename}")
+async def list_fx_files(run_filename: str):
+    """List per-clip FX side files (transitions/fx/*.mp3) - see
+    lipsync_service.has_lipsync_applied / _fx_sidecar_path."""
+    yaml_path = RUNS_FOLDER / run_filename
+    if not yaml_path.exists():
+        raise HTTPException(status_code=404, detail=f"Plik nie istnieje: {run_filename}")
+    globals_data = get_yaml_globals(yaml_path)
+    if not globals_data:
+        raise HTTPException(status_code=400, detail="Nie można odczytać YAML")
+    project_folder = Path(globals_data.get("project_folder") or "")
+    fx_dir = project_folder / "transitions" / "fx"
+    if not fx_dir.exists():
+        return {"files": []}
+    files = [p.name for p in fx_dir.glob("*.mp3")]
+    return {"files": files}
+
+
+@router.get("/fx/{run_filename}/{filename}")
+async def serve_fx_file(run_filename: str, filename: str):
+    """Serve a per-clip FX side file mp3."""
+    from fastapi.responses import FileResponse
+    yaml_path = RUNS_FOLDER / run_filename
+    globals_data = get_yaml_globals(yaml_path) if yaml_path.exists() else None
+    if not globals_data:
+        raise HTTPException(status_code=404)
+    if not filename.endswith(".mp3"):
+        raise HTTPException(status_code=404)
+    project_folder = Path(globals_data.get("project_folder") or "")
+    p = project_folder / "transitions" / "fx" / filename
+    if not p.exists():
+        raise HTTPException(status_code=404)
+    return FileResponse(str(p), media_type="audio/mpeg")
+
+
 @router.get("/ambient/{run_filename}")
 async def list_ambient_files(run_filename: str):
     """List sequence_ambient_*.mp3 files (from transitions/podklad/ and project root legacy)."""
@@ -317,6 +372,115 @@ async def delete_ambient_file(run_filename: str, filename: str):
     return {"ok": True}
 
 
+@router.post("/ambient/{run_filename}/trim")
+async def trim_ambient_file(run_filename: str, request: Request):
+    """
+    Trim an EXISTING ambient file at a clip boundary, instead of archiving it
+    wholesale, when a new ambient sequence being generated only partially
+    overlaps it (see generateAmbientAudio() in the frontend, which classifies
+    the overlap and computes the boundary index before calling this).
+    Body: {"filename": "old.mp3", "mode": "tail"|"head", "index": N}
+      mode=tail: keep clips[0:N]  (drop the overlapping tail - old ends where
+                 the new sequence begins)
+      mode=head: keep clips[N:]   (drop the overlapping head - old now starts
+                 where the new sequence ends)
+    A full-containment or split overlap (old extends on both sides of the new
+    range, or is entirely swallowed by it) can't be expressed as a single cut
+    and isn't handled here - the frontend falls back to archiving in that case.
+    """
+    import json as _json
+
+    try:
+        body = await request.json()
+        filename = str(body.get("filename", ""))
+        mode = str(body.get("mode", ""))
+        index = int(body.get("index", -1))
+    except Exception:
+        raise HTTPException(status_code=422, detail="Invalid JSON body")
+
+    if mode not in ("head", "tail") or index < 0:
+        raise HTTPException(status_code=422, detail="mode musi być 'head'/'tail', index >= 0")
+    if not filename.endswith(".mp3"):
+        raise HTTPException(status_code=422, detail="Oczekiwano pliku .mp3")
+
+    yaml_path = RUNS_FOLDER / run_filename
+    if not yaml_path.exists():
+        raise HTTPException(status_code=404, detail=f"Plik nie istnieje: {run_filename}")
+    globals_data = get_yaml_globals(yaml_path)
+    if not globals_data:
+        raise HTTPException(status_code=400, detail="Nie można odczytać YAML")
+    project_folder = Path(globals_data.get("project_folder") or "")
+    p = _ambient_path(project_folder, filename)
+    if not p:
+        raise HTTPException(status_code=404, detail=f"Nie znaleziono pliku ambient: {filename}")
+
+    sidecar = p.with_suffix(".json")
+    if not sidecar.exists():
+        raise HTTPException(status_code=404, detail="Brak metadanych (sidecar JSON) dla tego ambientu")
+    try:
+        meta = _json.loads(sidecar.read_text(encoding="utf-8"))
+    except Exception:
+        raise HTTPException(status_code=400, detail="Nie można odczytać metadanych ambientu")
+
+    clips = meta.get("clips") or []
+    durations = meta.get("clip_durations") or []
+    if not clips or len(clips) != len(durations):
+        raise HTTPException(status_code=400, detail="Niekompletne metadane ambientu - nie da się przyciąć")
+
+    if mode == "tail":
+        if not (0 < index <= len(clips)):
+            raise HTTPException(status_code=422, detail="Nieprawidłowy index dla trybu tail")
+        keep_clips, keep_durations = clips[:index], durations[:index]
+        cut_start_s = sum(durations[:index])
+        cmd = ["ffmpeg", "-y", "-i", str(p), "-t", f"{cut_start_s:.3f}", "-c", "copy"]
+    else:
+        if not (0 <= index < len(clips)):
+            raise HTTPException(status_code=422, detail="Nieprawidłowy index dla trybu head")
+        keep_clips, keep_durations = clips[index:], durations[index:]
+        cut_from_s = sum(durations[:index])
+        cmd = ["ffmpeg", "-y", "-ss", f"{cut_from_s:.3f}", "-i", str(p), "-c", "copy"]
+
+    if not keep_clips:
+        raise HTTPException(status_code=422, detail="Po przycięciu nic by nie zostało - zarchiwizuj cały plik zamiast przycinać")
+
+    tmp_out = p.with_suffix(f".tmp_trim{p.suffix}")
+    cmd = cmd + [str(tmp_out)]
+    try:
+        import subprocess
+        r = subprocess.run(cmd, capture_output=True, timeout=60)
+        if r.returncode != 0 or not tmp_out.exists() or tmp_out.stat().st_size == 0:
+            raise HTTPException(status_code=500, detail=f"ffmpeg trim nieudany: {r.stderr.decode(errors='replace')[:300]}")
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"ffmpeg trim błąd: {e}")
+
+    # Recompute offsets for the kept clips, replace the mp3, update the sidecar
+    offsets = []
+    acc = 0.0
+    for d in keep_durations:
+        offsets.append(round(acc, 4))
+        acc += d
+
+    for _attempt in range(5):
+        try:
+            tmp_out.replace(p)
+            break
+        except PermissionError:
+            if _attempt == 4:
+                tmp_out.unlink(missing_ok=True)
+                raise HTTPException(status_code=500, detail="Plik ambient zajęty (otwarty gdzie indziej) - spróbuj ponownie")
+            import time as _time
+            _time.sleep(1)
+
+    meta["clips"] = keep_clips
+    meta["clip_durations"] = [round(d, 4) for d in keep_durations]
+    meta["offsets"] = offsets
+    sidecar.write_text(_json.dumps(meta, ensure_ascii=False, indent=2), encoding="utf-8")
+
+    return {"ok": True, "clips": keep_clips, "duration_s": round(acc, 2)}
+
+
 @router.post("/ambient/{run_filename}/archive/{filename}")
 async def archive_ambient_file(run_filename: str, filename: str):
     """Move ambient mp3+json to /podklad/archiwum/ instead of deleting."""
@@ -343,6 +507,314 @@ async def archive_ambient_file(run_filename: str, filename: str):
     if sidecar.exists():
         sidecar.rename(dst.with_suffix('.json'))
     return {"ok": True}
+
+
+# ── Sequence narrator audio (user-supplied mp3, not MMAudio-generated) ──────
+#
+# Mirrors the ambient endpoints above (storage layout, sidecar JSON schema,
+# trim/archive semantics) but as a fully separate, parallel set — narrator
+# and ambient sequences are attached/generated independently and can overlap
+# the same clip ranges without interfering with each other's state.
+# The one real difference: there's no MMAudio job here. "Attach" just copies
+# an existing mp3 (already on disk, picked via the fs browser) into
+# transitions/podklad/ and records which clips it spans - synchronous, no
+# background task/polling needed.
+
+def _narrator_path(project_folder: Path, filename: str) -> Path | None:
+    p = project_folder / "transitions" / "podklad" / filename
+    return p if p.exists() else None
+
+
+@router.get("/narrator/{run_filename}")
+async def list_narrator_files(run_filename: str):
+    """List sequence_narrator_*.mp3 files (transitions/podklad/, excluding archiwum)."""
+    import json
+    yaml_path = RUNS_FOLDER / run_filename
+    if not yaml_path.exists():
+        raise HTTPException(status_code=404, detail=f"Plik nie istnieje: {run_filename}")
+    globals_data = get_yaml_globals(yaml_path)
+    if not globals_data:
+        raise HTTPException(status_code=400, detail="Nie można odczytać YAML")
+    project_folder = Path(globals_data.get("project_folder") or "")
+    if not project_folder or not project_folder.exists():
+        return {"files": []}
+
+    podklad = project_folder / "transitions" / "podklad"
+    archivum = podklad / "archiwum"
+    all_files: list[Path] = []
+    if podklad.exists():
+        for p in podklad.glob("sequence_narrator_*.mp3"):
+            if archivum in p.parents:
+                continue
+            all_files.append(p)
+    all_files.sort(key=lambda p: p.stat().st_mtime, reverse=True)
+
+    result = []
+    for p in all_files:
+        sidecar = p.with_suffix('.json')
+        clips, offsets = [], []
+        if sidecar.exists():
+            try:
+                data = json.loads(sidecar.read_text(encoding='utf-8'))
+                clips = data.get("clips", [])
+                offsets = data.get("offsets", [])
+            except Exception:
+                pass
+        result.append({
+            "name": p.name,
+            "size_mb": round(p.stat().st_size / 1_048_576, 2),
+            "clips": clips,
+            "offsets": offsets,
+        })
+    return {"files": result}
+
+
+@router.get("/narrator/{run_filename}/{filename}")
+async def serve_narrator_file(run_filename: str, filename: str):
+    """Serve a sequence_narrator_*.mp3 file."""
+    from fastapi.responses import FileResponse
+    yaml_path = RUNS_FOLDER / run_filename
+    globals_data = get_yaml_globals(yaml_path) if yaml_path.exists() else None
+    if not globals_data:
+        raise HTTPException(status_code=404)
+    if not filename.endswith(".mp3"):
+        raise HTTPException(status_code=404)
+    project_folder = Path(globals_data.get("project_folder") or "")
+    p = _narrator_path(project_folder, filename)
+    if not p:
+        raise HTTPException(status_code=404)
+    return FileResponse(str(p), media_type="audio/mpeg")
+
+
+@router.delete("/narrator/{run_filename}/{filename}")
+async def delete_narrator_file(run_filename: str, filename: str):
+    """Delete a sequence_narrator_*.mp3 file and its sidecar JSON."""
+    yaml_path = RUNS_FOLDER / run_filename
+    globals_data = get_yaml_globals(yaml_path) if yaml_path.exists() else None
+    if not globals_data:
+        raise HTTPException(status_code=404)
+    if not filename.endswith(".mp3"):
+        raise HTTPException(status_code=404)
+    project_folder = Path(globals_data.get("project_folder") or "")
+    p = _narrator_path(project_folder, filename)
+    if not p:
+        raise HTTPException(status_code=404)
+    p.unlink()
+    p.with_suffix('.json').unlink(missing_ok=True)
+    return {"ok": True}
+
+
+@router.post("/narrator/{run_filename}/trim")
+async def trim_narrator_file(run_filename: str, request: Request):
+    """Trim an EXISTING narrator file at a clip boundary - same semantics as
+    trim_ambient_file (see its docstring). Body: {"filename", "mode": "tail"|"head", "index"}."""
+    import json as _json
+
+    try:
+        body = await request.json()
+        filename = str(body.get("filename", ""))
+        mode = str(body.get("mode", ""))
+        index = int(body.get("index", -1))
+    except Exception:
+        raise HTTPException(status_code=422, detail="Invalid JSON body")
+
+    if mode not in ("head", "tail") or index < 0:
+        raise HTTPException(status_code=422, detail="mode musi być 'head'/'tail', index >= 0")
+    if not filename.endswith(".mp3"):
+        raise HTTPException(status_code=422, detail="Oczekiwano pliku .mp3")
+
+    yaml_path = RUNS_FOLDER / run_filename
+    if not yaml_path.exists():
+        raise HTTPException(status_code=404, detail=f"Plik nie istnieje: {run_filename}")
+    globals_data = get_yaml_globals(yaml_path)
+    if not globals_data:
+        raise HTTPException(status_code=400, detail="Nie można odczytać YAML")
+    project_folder = Path(globals_data.get("project_folder") or "")
+    p = _narrator_path(project_folder, filename)
+    if not p:
+        raise HTTPException(status_code=404, detail=f"Nie znaleziono pliku narrator: {filename}")
+
+    sidecar = p.with_suffix(".json")
+    if not sidecar.exists():
+        raise HTTPException(status_code=404, detail="Brak metadanych (sidecar JSON) dla tego narratora")
+    try:
+        meta = _json.loads(sidecar.read_text(encoding="utf-8"))
+    except Exception:
+        raise HTTPException(status_code=400, detail="Nie można odczytać metadanych narratora")
+
+    clips = meta.get("clips") or []
+    durations = meta.get("clip_durations") or []
+    if not clips or len(clips) != len(durations):
+        raise HTTPException(status_code=400, detail="Niekompletne metadane narratora - nie da się przyciąć")
+
+    if mode == "tail":
+        if not (0 < index <= len(clips)):
+            raise HTTPException(status_code=422, detail="Nieprawidłowy index dla trybu tail")
+        keep_clips, keep_durations = clips[:index], durations[:index]
+        cut_start_s = sum(durations[:index])
+        cmd = ["ffmpeg", "-y", "-i", str(p), "-t", f"{cut_start_s:.3f}", "-c", "copy"]
+    else:
+        if not (0 <= index < len(clips)):
+            raise HTTPException(status_code=422, detail="Nieprawidłowy index dla trybu head")
+        keep_clips, keep_durations = clips[index:], durations[index:]
+        cut_from_s = sum(durations[:index])
+        cmd = ["ffmpeg", "-y", "-ss", f"{cut_from_s:.3f}", "-i", str(p), "-c", "copy"]
+
+    if not keep_clips:
+        raise HTTPException(status_code=422, detail="Po przycięciu nic by nie zostało - zarchiwizuj cały plik zamiast przycinać")
+
+    tmp_out = p.with_suffix(f".tmp_trim{p.suffix}")
+    cmd = cmd + [str(tmp_out)]
+    try:
+        import subprocess
+        r = subprocess.run(cmd, capture_output=True, timeout=60)
+        if r.returncode != 0 or not tmp_out.exists() or tmp_out.stat().st_size == 0:
+            raise HTTPException(status_code=500, detail=f"ffmpeg trim nieudany: {r.stderr.decode(errors='replace')[:300]}")
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"ffmpeg trim błąd: {e}")
+
+    offsets = []
+    acc = 0.0
+    for d in keep_durations:
+        offsets.append(round(acc, 4))
+        acc += d
+
+    for _attempt in range(5):
+        try:
+            tmp_out.replace(p)
+            break
+        except PermissionError:
+            if _attempt == 4:
+                tmp_out.unlink(missing_ok=True)
+                raise HTTPException(status_code=500, detail="Plik narrator zajęty (otwarty gdzie indziej) - spróbuj ponownie")
+            import time as _time
+            _time.sleep(1)
+
+    meta["clips"] = keep_clips
+    meta["clip_durations"] = [round(d, 4) for d in keep_durations]
+    meta["offsets"] = offsets
+    sidecar.write_text(_json.dumps(meta, ensure_ascii=False, indent=2), encoding="utf-8")
+
+    return {"ok": True, "clips": keep_clips, "duration_s": round(acc, 2)}
+
+
+@router.post("/narrator/{run_filename}/archive/{filename}")
+async def archive_narrator_file(run_filename: str, filename: str):
+    """Move narrator mp3+json to /podklad/archiwum/ instead of deleting."""
+    yaml_path = RUNS_FOLDER / run_filename
+    globals_data = get_yaml_globals(yaml_path) if yaml_path.exists() else None
+    if not globals_data:
+        raise HTTPException(status_code=404)
+    if not filename.endswith(".mp3"):
+        raise HTTPException(status_code=404)
+    project_folder = Path(globals_data.get("project_folder") or "")
+    p = _narrator_path(project_folder, filename)
+    if not p:
+        raise HTTPException(status_code=404)
+    archivum = project_folder / "transitions" / "podklad" / "archiwum"
+    archivum.mkdir(parents=True, exist_ok=True)
+    dst = archivum / filename
+    if dst.exists():
+        stem, suffix = filename.rsplit('.', 1)
+        import time
+        dst = archivum / f"{stem}_{int(time.time())}.{suffix}"
+    p.rename(dst)
+    sidecar = p.with_suffix('.json')
+    if sidecar.exists():
+        sidecar.rename(dst.with_suffix('.json'))
+    return {"ok": True}
+
+
+@router.post("/narrator/{run_filename}")
+async def attach_narrator_audio(run_filename: str, request: Request):
+    """
+    Attach an EXISTING mp3 (already on disk, e.g. picked via the fs browser)
+    as a narrator track spanning a sequence of clips. No MMAudio job - just
+    copies the file into transitions/podklad/ and writes the same sidecar
+    JSON schema as ambient (clips/clip_durations/offsets), so the existing
+    trim/archive/overlap-detection logic works unchanged for narrator too.
+    The mp3's own duration is NOT trimmed/padded to match the clip range -
+    the user is responsible for supplying a fitting file (or adjusting later
+    in their NLE).
+    Body: { "clips": ["a.mp4", ...], "source_path": "C:\\...\\narration.mp3", "output_name"?: "..." }
+    """
+    try:
+        body = await request.json()
+    except Exception:
+        body = {}
+
+    clip_names: list[str] = body.get("clips") or []
+    source_path_s: str = str(body.get("source_path") or "").strip()
+    if not clip_names:
+        raise HTTPException(status_code=400, detail="Brak listy klipów")
+    if not source_path_s:
+        raise HTTPException(status_code=400, detail="Brak source_path (wybierz plik mp3)")
+
+    source_path = Path(source_path_s)
+    if not source_path.exists() or not source_path.is_file():
+        raise HTTPException(status_code=404, detail=f"Plik nie istnieje: {source_path_s}")
+    if source_path.suffix.lower() != ".mp3":
+        raise HTTPException(status_code=422, detail="Oczekiwano pliku .mp3")
+
+    yaml_path = RUNS_FOLDER / run_filename
+    if not yaml_path.exists():
+        raise HTTPException(status_code=404, detail=f"Plik nie istnieje: {run_filename}")
+    globals_data = get_yaml_globals(yaml_path)
+    if not globals_data:
+        raise HTTPException(status_code=400, detail="Nie można odczytać YAML")
+    project_folder = Path(globals_data.get("project_folder") or "")
+    if not project_folder or not project_folder.exists():
+        raise HTTPException(status_code=400, detail="Folder projektu nie istnieje")
+
+    from app.services.media_service import resolve_video
+    clips: list[Path] = []
+    for name in clip_names:
+        p = resolve_video(run_filename, name)
+        if p and p.exists():
+            clips.append(p)
+        else:
+            raise HTTPException(status_code=404, detail=f"Klip nie znaleziony: {name}")
+
+    from utils.video_utils import get_video_info
+    clip_durations: list[float] = []
+    for cp in clips:
+        try:
+            info = get_video_info(cp)
+            clip_durations.append(float(info.get("duration") or 0.0))
+        except Exception:
+            clip_durations.append(0.0)
+
+    podklad = _podklad_dir(project_folder)
+    output_name: str = (body.get("output_name") or "").strip()
+    if not output_name or not output_name.endswith(".mp3"):
+        from datetime import datetime
+        ts = datetime.now().strftime("%y%m%d%H%M%S")
+        output_name = f"sequence_narrator_{ts}.mp3"
+    elif not output_name.startswith("sequence_narrator_"):
+        output_name = f"sequence_narrator_{output_name}"
+    output_mp3 = podklad / output_name
+
+    import shutil as _shutil
+    _shutil.copy2(str(source_path), str(output_mp3))
+
+    import json as _json
+    offsets = []
+    acc = 0.0
+    for d in clip_durations:
+        offsets.append(round(acc, 4))
+        acc += d
+    sidecar = output_mp3.with_suffix('.json')
+    sidecar.write_text(_json.dumps({
+        "clips": clip_names,
+        "clip_durations": [round(d, 4) for d in clip_durations],
+        "offsets": offsets,
+        "source_path": str(source_path),
+    }, ensure_ascii=False, indent=2), encoding='utf-8')
+
+    process_service.log_sys(f"[NARRATOR_READY] {output_mp3.name}")
+    return {"ok": True, "output": output_mp3.name}
 
 
 @router.post("/sequence/{run_filename}")
@@ -503,12 +975,17 @@ async def _run_batch_audio(clips: list, project_folder: Path, api_url: str) -> N
             except Exception:
                 duration = 10.0
 
-            logger.info(f"MMAudio [{i+1}/{len(clips)}]: {name}")
-            await loop.run_in_executor(None, lambda vp=video_path, p=prompt, n=neg, d=duration: _add_audio(
+            # 2026-09-09: FX always goes to a side file now (see _run_audio_bg
+            # for the full rationale) - unconditional, not just for lipsync.
+            sidecar = _fx_sidecar_path(project_folder, name)
+
+            logger.info(f"MMAudio [{i+1}/{len(clips)}]: {name} (FX → side file)")
+            await loop.run_in_executor(None, lambda vp=video_path, p=prompt, n=neg, d=duration, sc=sidecar: _add_audio(
                 video_path=vp, prompt=p, negative_prompt=n,
                 api_url=api_url, duration=d, steps=25, cfg=4.5, seed=-1, logger=logger,
+                output_sidecar=sc,
             ))
-            process_service.log_sys(f"[AUDIO_READY] {name}")
+            process_service.log_sys(f"[FX_READY] {name}")
             _batch_state["done"] = i + 1
 
         _batch_state["status"] = "done"

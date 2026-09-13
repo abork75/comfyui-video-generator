@@ -4,7 +4,7 @@
 # Edit RUN_026 - warrior and sorceress.yaml and regenerate with:
 #     from app.services.yaml_service import generate_py_from_yaml
 #     generate_py_from_yaml(Path("RUNS/RUN_026 - warrior and sorceress.yaml"))
-# Generated: 2026-08-22 02:11:58
+# Generated: 2026-08-26 15:08:52
 # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 import sys

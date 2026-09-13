@@ -1,15 +1,21 @@
 # -*- coding: utf-8 -*-
 """
-Upscale service — upscales a single generated video clip using RealESRGAN
-running on the Windows ComfyUI instance (port 8100).
+Upscale service — upscales a single generated video clip using RealESRGAN.
+
+2026-09-11: runs on whichever ComfyUI instance is reachable, preferring linux
+(WSL2, same instance as WAN/LTX, port 8189) and falling back to windows
+(port 8190) only if linux is unreachable — see _resolve_upscale_backend().
+Both instances have the required nodes/model installed; the workflow JSON is
+a plain API-format graph with no host baked in, so it runs unchanged on either.
 
 Flow:
-  1. Copy source clip → ComfyUI input dir (unique temp name)
-  2. Build workflow from template (swap file + dimensions)
-  3. POST to ComfyUI /prompt
-  4. Poll /history/{prompt_id} until done (every 3 s, max 15 min)
-  5. On success: archive original → move upscaled file to original path
-  6. Clean up temp input file
+  1. Resolve backend (linux preferred, windows fallback)
+  2. Copy source clip → ComfyUI input dir (unique temp name)
+  3. Build workflow from template (swap file + dimensions)
+  4. POST to ComfyUI /prompt
+  5. Poll /history/{prompt_id} until done (every 3 s, max 40 min)
+  6. On success: archive original → move upscaled file to original path
+  7. Clean up temp input file
 """
 
 import asyncio
@@ -103,6 +109,7 @@ _state: dict = {
     "error":        None,
     "started_at":   None,
     "elapsed_s":    None,
+    "backend":      None,     # "linux" or "windows" — resolved once the job actually starts running
 }
 
 _task: asyncio.Task | None = None
@@ -128,6 +135,7 @@ def _reset_state() -> None:
         "error":        None,
         "started_at":   None,
         "elapsed_s":    None,
+        "backend":      None,
     })
 
 
@@ -147,6 +155,46 @@ def _http_post(url: str, payload: dict, timeout: int = 15) -> dict:
 def _http_get(url: str, timeout: int = 10) -> dict:
     with urllib.request.urlopen(url, timeout=timeout) as resp:
         return json.loads(resp.read())
+
+
+def _resolve_upscale_backend() -> tuple[str, str, Path, Path]:
+    """Pick which ComfyUI instance runs the upscale job.
+
+    2026-09-11: linux (WSL2, same instance as WAN/LTX, port 8189) preferred —
+    RealESRGAN_x4plus + every node the workflow needs (UpscaleModelLoader,
+    ImageUpscaleWithModel, LoadVideo/GetVideoComponents/CreateVideo/SaveVideo,
+    ImageResize+) confirmed already installed there (checked live via
+    /object_info before building this). Falls back to windows only when linux
+    is unreachable. Blocking (network health-check) — call via run_in_executor.
+
+    input_dir/output_dir for linux deliberately reuse the SAME generic
+    D:\\ComfyUI paths the 'ltx' backend already trusts — NOT linux's own
+    comfyui_output_folder (that one is WAN-scoped to Wan22_I2V and gets swept
+    of every *.mp4 at the start of each WAN generation, see local_backend.py
+    step 5 — reusing it here would risk a WAN job deleting an in-flight or
+    just-finished upscale output).
+    """
+    linux_cfg = app_config_service.get_backend("linux")
+    linux_url = linux_cfg.get("api_url")
+    if linux_url:
+        try:
+            with urllib.request.urlopen(f"{linux_url}/system_stats", timeout=3) as resp:
+                resp.read()
+            ltx_cfg    = app_config_service.get_backend("ltx")
+            input_dir  = linux_cfg.get("comfyui_input_dir")
+            output_dir = ltx_cfg.get("comfyui_output_folder")
+            if input_dir and output_dir:
+                return "linux", linux_url, Path(input_dir), Path(output_dir)
+        except Exception:
+            pass   # linux unreachable/misconfigured — fall through to windows
+
+    win_cfg = app_config_service.get_backend("windows")
+    return (
+        "windows",
+        win_cfg.get("api_url") or settings.comfyui_upscale_url,
+        Path(win_cfg.get("input_dir")  or settings.comfyui_upscale_input_dir),
+        Path(win_cfg.get("output_dir") or settings.comfyui_upscale_output_dir),
+    )
 
 
 # ── Background task ──────────────────────────────────────────────────────────
@@ -242,12 +290,17 @@ async def _run_upscale(
       1. ComfyUI /history/{prompt_id} — scan ALL output nodes for mp4
       2. Directory fallback — any new mp4 in output/video since job start
     """
-    loop         = asyncio.get_running_loop()
-    _win         = app_config_service.get_backend("windows")
-    upscale_url  = _win.get("api_url")  or settings.comfyui_upscale_url
-    input_dir    = Path(_win.get("input_dir")  or settings.comfyui_upscale_input_dir)
-    output_dir   = Path(_win.get("output_dir") or settings.comfyui_upscale_output_dir)
-    video_dir   = output_dir / "video"
+    loop = asyncio.get_running_loop()
+
+    # 2026-09-11: linux (WSL2, same instance as WAN/LTX) preferred, windows
+    # fallback — see _resolve_upscale_backend() for why. Blocking health-check,
+    # runs in executor so it doesn't stall the event loop.
+    backend_name, upscale_url, input_dir, output_dir = await loop.run_in_executor(
+        None, _resolve_upscale_backend
+    )
+    _state["backend"] = backend_name
+    print(f"  [upscale] backend: {backend_name} ({upscale_url})")
+    video_dir = output_dir / "video"
 
     ts       = datetime.now().strftime("%Y%m%d%H%M%S")
     tmp_name = f"upscale_{ts}_{source_path.name}"
@@ -262,7 +315,7 @@ async def _run_upscale(
         shutil.copy2(str(source_path), str(tmp_in))
 
         # 3. Build workflow — prefer file from config, fallback to hardcoded template
-        _wf_path_str = app_config_service.get_backend("windows").get("models", {}).get("upscale_video", {}).get("workflow_json", "")
+        _wf_path_str = app_config_service.get_backend(backend_name).get("models", {}).get("upscale_video", {}).get("workflow_json", "")
         if _wf_path_str:
             _wf_path = Path(_wf_path_str)
             if _wf_path.exists():
@@ -286,9 +339,10 @@ async def _run_upscale(
                 return _http_post(f"{upscale_url}/prompt", {"prompt": workflow})
             except OSError as e:
                 if getattr(e, "errno", None) in (10061, 111):  # Windows / Linux "connection refused"
+                    label = "Linux (WSL2)" if backend_name == "linux" else "Windows"
                     raise RuntimeError(
-                        f"Windows ComfyUI niedostępny ({upscale_url}). "
-                        f"Uruchom środowisko Windows i spróbuj ponownie."
+                        f"{label} ComfyUI niedostępny ({upscale_url}). "
+                        f"Uruchom środowisko {label} i spróbuj ponownie."
                     ) from e
                 raise
 

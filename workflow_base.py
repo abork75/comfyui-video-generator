@@ -53,6 +53,27 @@ class Logger:
         print(f"{Fore.BLUE}{'─'*70}{Style.RESET_ALL}")
 
 
+def interrupt_comfyui(api_url: str, timeout: float = 5.0) -> dict:
+    """POST {api_url}/interrupt — ComfyUI's own standard endpoint to abort
+    whatever prompt is CURRENTLY EXECUTING on that instance, immediately.
+
+    2026-09-11 (user request): none of the app's existing "cancel"/"stop"
+    actions (chain_service.cancel_chain, single_transition_service.cancel,
+    process_service.stop) call this — they only stop OUR side from waiting
+    on the result (task.cancel() / subprocess.terminate()). The actual GPU
+    work inside ComfyUI keeps running regardless until ComfyUI itself
+    finishes, which is why the only way to truly stop a stuck job was
+    killing the whole WSL2 instance. This is the missing piece: a direct
+    call to ComfyUI's own interrupt API. No body needed — ComfyUI interrupts
+    whatever is running on THAT instance, there's no per-job scoping (matches
+    how ComfyUI itself only ever executes one prompt at a time)."""
+    try:
+        r = requests.post(f"{api_url}/interrupt", timeout=timeout)
+        return {"ok": r.status_code == 200, "status_code": r.status_code}
+    except Exception as exc:
+        return {"ok": False, "error": str(exc)}
+
+
 class WorkflowRunner:
     """Uniwersalny runner dla różnych workflow ComfyUI"""
     
@@ -261,8 +282,20 @@ class WorkflowRunner:
         # Without this, ComfyUI returns cached result (0.03s instead of 2min)
         # Problem: seed 608297159670858 był identyczny między runami
         # ========================================
-        
-        if seed is None:
+
+        try:
+            from debug_state import get_fix_seed
+            _forced = get_fix_seed()
+        except Exception:
+            _forced = None
+
+        if _forced is not None:
+            # FIX-seed DEBUG mode (UI toggle) — verbatim seed, NO jitter, so
+            # A/B runs are directly comparable. ComfyUI may cache-hit on an
+            # otherwise-identical workflow; that's the accepted trade-off.
+            seed = _forced
+            logger.info(f"  ⚠️ FIX-seed DEBUG: seed = {seed} (verbatim, no jitter)")
+        elif seed is None:
             # Generate unique seed using timestamp + random
             timestamp_part = int(time.time() * 1000000) % (2**31)  # Microseconds
             random_part = random.randint(0, 2**20)
@@ -401,8 +434,17 @@ class WorkflowRunner:
             self.logger.error(f"Wyjątek: {e}")
             return None
     
-    def _wait_for_completion(self, prompt_id, timeout=3600, check_interval=5):
-        """Czeka aż generacja się skończy"""
+    def _wait_for_completion(self, prompt_id, timeout=14400, check_interval=5):
+        """Czeka aż generacja się skończy.
+
+        timeout=14400 (4h, było 3600/1h — 2026-09-11): realne generacje WAN
+        na trudniejszych scenach/rozdzielczościach potrafią przekroczyć
+        godzinę (potwierdzone: 21min pass wysoki + ~56min pass niski = >77min
+        na jednym kroku). Krótki timeout tu nic nie oszczędza — porzucenie
+        czekania NIE zatrzymuje ComfyUI, GPU liczy dalej niezależnie — tylko
+        fałszywie zgłasza błąd apce, mimo że generacja i tak się skończy.
+        Do prawdziwego przerywania służy /interrupt (patrz workflow_base.
+        interrupt_comfyui), nie ten timeout."""
         url = f"{self.api_url}/history/{prompt_id}"
         start_time = time.time()
         

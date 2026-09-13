@@ -22,6 +22,11 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
+from utils.video_metadata import has_deblur_applied
+# has_lipsync_applied is imported lazily inside _get_clip_meta() below —
+# lipsync_service imports from this module (resolve_video, _project_folder),
+# so a top-level import here would be circular.
+
 # ── ffprobe result caches ─────────────────────────────────────────────
 # Key: (str(path), mtime_ns) — auto-invalidates when file changes.
 # Values are the parsed results so ffprobe is never re-run for unchanged files.
@@ -169,7 +174,12 @@ def get_transition_status(run_filename: str) -> dict | None:
       * Within a section, the LAST item is gray (nothing comes after it).
       * A FILE immediately before a CHAIN is gray —
         the chain item owns all step outputs, including step 1.
-      * A FILE → FILE pair produces a normal _transition.mp4.
+      * A FILE → FILE pair is gray UNLESS the leading file has a real
+        generation prompt (pos not empty/'NONE') — new pure-loader file
+        tiles (addFilePicker/insertFileRelative) always set pos:'NONE' and
+        never own a transition; only old-style file tiles with an actual
+        prompt still expect a _transition.mp4 (single_transition_service,
+        deprecated but kept working for existing RUN_*.yaml).
       * A CHAIN produces one file per step (chain_prefix_NNN.mp4).
     """
     pf = _project_folder(run_filename)
@@ -234,6 +244,11 @@ def get_transition_status(run_filename: str) -> dict | None:
                     "size_mb":      round(p.stat().st_size / 1_048_576, 1) if exists else None,
                     "path":         str(p) if exists else None,
                     "has_audio":    step_meta.get("has_audio", False),
+                    "deblurred":    step_meta.get("deblurred", False),
+                    "lipsync_applied": step_meta.get("lipsync_applied", False),
+                    "continuity_delta_e": step_meta.get("continuity_delta_e"),
+                    "continuity_saturation_diff_pct": step_meta.get("continuity_saturation_diff_pct"),
+                    "continuity_contrast_diff_pct": step_meta.get("continuity_contrast_diff_pct"),
                 })
             all_exist = all(s["exists"] for s in steps)
             any_exist = any(s["exists"] for s in steps)
@@ -477,7 +492,20 @@ def get_transition_status(run_filename: str) -> dict | None:
                              "source_size_mb": _source_size(fname), "path": None})
             continue
 
-        # Normal FILE → FILE transition
+        item_pos_field = item.get("pos")
+        if not item_pos_field or item_pos_field == "NONE":
+            # Pure-loader file tile (addFilePicker/insertFileRelative always set
+            # pos: 'NONE') - no transition is ever generated for it, so it must
+            # not be counted as a missing film. Only old file tiles with a real
+            # generation prompt still own a _transition.mp4 (single_transition_service,
+            # deprecated but still supported for existing RUN_*.yaml) - see below.
+            fname = item.get("file") or ""
+            results.append({"index": i_flow, "type": "file", "status": "gray",
+                             "name": fname, "size_mb": None,
+                             "source_size_mb": _source_size(fname), "path": None})
+            continue
+
+        # Normal FILE → FILE transition (old-style file tile with a real prompt)
         p = transition_path(pf, item.get("file", ""), next_item.get("file", ""))
         exists = p.exists()
         has_arch = _has_archived(p.parent, p.stem)
@@ -534,17 +562,39 @@ def get_transition_status(run_filename: str) -> dict | None:
 
 def _get_clip_meta(path: Path) -> dict:
     """
-    Return {duration_s, width, height, fps, has_audio} via ffprobe, cached by (path, mtime).
-    Falls back to None values on any error.
+    Return {duration_s, width, height, fps, has_audio, deblurred, lipsync_applied,
+    continuity_delta_e, continuity_saturation_diff_pct, continuity_contrast_diff_pct}
+    via ffprobe, cached by (path, mtime). Falls back to None values on any error.
     """
-    empty = {"duration_s": None, "width": None, "height": None, "fps": None, "has_audio": False}
+    _cont_empty = {"continuity_delta_e": None, "continuity_saturation_diff_pct": None, "continuity_contrast_diff_pct": None}
+    empty = {"duration_s": None, "width": None, "height": None, "fps": None, "has_audio": False, "deblurred": False, "lipsync_applied": False, **_cont_empty}
     key = _cache_key(path)
     if key is None:
         return empty
     if key in _clip_meta_cache:
         return _clip_meta_cache[key]
 
-    meta = {"duration_s": None, "width": None, "height": None, "fps": None, "has_audio": False}
+    meta = {"duration_s": None, "width": None, "height": None, "fps": None, "has_audio": False, "deblurred": False, "lipsync_applied": False, **_cont_empty}
+    try:
+        meta["deblurred"] = has_deblur_applied(path)
+    except Exception:
+        pass
+    try:
+        from app.services.lipsync_service import has_lipsync_applied
+        meta["lipsync_applied"] = has_lipsync_applied(path)
+    except Exception:
+        pass
+    try:
+        # Continuity color-stats badge (2026-09-09 MVP) - written by
+        # chain_service._run_chain right after a chain's step 1 finishes.
+        from utils.video_metadata import read_metadata
+        _cmeta = read_metadata(path)
+        if "continuity_delta_e" in _cmeta:
+            meta["continuity_delta_e"] = _cmeta.get("continuity_delta_e")
+            meta["continuity_saturation_diff_pct"] = _cmeta.get("continuity_saturation_diff_pct")
+            meta["continuity_contrast_diff_pct"] = _cmeta.get("continuity_contrast_diff_pct")
+    except Exception:
+        pass
     try:
         audio_probe = subprocess.run(
             ["ffprobe", "-v", "quiet", "-select_streams", "a:0",
@@ -756,6 +806,10 @@ def get_post_clips(run_filename: str) -> list | None:
                     "has_archived": has_arch,
                     "size_mb":      round(p.stat().st_size / 1_048_576, 1) if exists else None,
                     "mtime":        int(p.stat().st_mtime) if exists else None,
+                    # dialogue mp3 attached in the YAML step (may or may not be
+                    # applied yet — meta['lipsync_applied'] tells that part).
+                    "lipsync_audio": (item["chain"][si].get("lipsync_audio") or None)
+                                     if isinstance(item["chain"][si], dict) else None,
                     **meta,
                 })
                 seq += 1
@@ -995,8 +1049,16 @@ def resolve_video_thumb(run_filename: str, video_name: str) -> Path | None:
 
 def clear_frame_cache(run_filename: str) -> dict:
     """
-    Delete the frames/ thumbnail cache directory so all thumbnails
-    are re-extracted from source on next request.
+    Clear the frames/ thumbnail cache so all thumbnails are re-extracted
+    from source on next request.
+
+    2026-09-10: was shutil.rmtree(frames/) — which also nuked the
+    frames/_continuity_audit/ SUBDIR holding the audit's accepted.json +
+    results_cache.json, so every dry-run / flow-item edit / sort-thumb
+    refresh silently wiped the user's manual audit acceptances. Now deletes
+    only the flat thumbnail FILES directly in frames/ (*_thumb.jpg,
+    *_end.png, *_start.png, *_real.png, …) and leaves any subdirectory
+    (private caches, prefixed "_") untouched.
     """
     pf = _project_folder(run_filename)
     if pf is None:
@@ -1004,7 +1066,9 @@ def clear_frame_cache(run_filename: str) -> dict:
     frames_dir = pf / "frames"
     if frames_dir.exists():
         try:
-            shutil.rmtree(frames_dir)
+            for entry in frames_dir.iterdir():
+                if entry.is_file():
+                    entry.unlink()
         except OSError as exc:
             return {"ok": False, "error": str(exc)}
     return {"ok": True}

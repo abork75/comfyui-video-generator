@@ -21,6 +21,28 @@ import urllib.error
 import urllib.request
 from pathlib import Path
 
+# Fallback FX prompts, used when neither a step's own audio_prompt nor the
+# run's defaults.default_audio_prompt is set (see app/api/audio.py and
+# deblur_service.py's always-generate-FX-if-missing behavior).
+FALLBACK_AUDIO_PROMPT     = "foley sound effects, physical interactions, footsteps, cloth movement, object handling, impacts, synchronized with video, crisp, realistic"
+FALLBACK_AUDIO_NEG_PROMPT = "music, melody, ambient drone, continuous atmosphere, background noise, reverb, sustained tones, low quality, distortion"
+
+
+def fx_dir(project_folder: Path) -> Path:
+    d = project_folder / "transitions" / "fx"
+    d.mkdir(parents=True, exist_ok=True)
+    return d
+
+
+def fx_sidecar_path(project_folder: Path, clip_name: str) -> Path:
+    """One FX side file per clip, named after the clip - see
+    lipsync_service.has_lipsync_applied / _save_audio_sidecar. Shared by
+    app/api/audio.py (real MMAudio generation) and deblur_service.py (reuses
+    the deblur workflow's own hallucinated audio as a free FX pass) so both
+    write to the exact same place."""
+    return fx_dir(project_folder) / f"{Path(clip_name).stem}.mp3"
+
+
 _MODEL_MAIN    = "mmaudio_large_44k_v2_fp16.safetensors"
 _MODEL_VAE     = "mmaudio_vae_44k_fp16.safetensors"
 _MODEL_SYNCH   = "mmaudio_synchformer_fp16.safetensors"
@@ -129,9 +151,9 @@ def _queue_workflow(workflow: dict, api_url: str) -> str:
     return result["prompt_id"]
 
 
-def _poll_history(prompt_id: str, api_url: str) -> dict | None:
+def _poll_history(prompt_id: str, api_url: str, timeout_s: float = _TIMEOUT_S) -> dict | None:
     """Poll until job done. Returns outputs dict or None on timeout."""
-    deadline = time.time() + _TIMEOUT_S
+    deadline = time.time() + timeout_s
     while time.time() < deadline:
         try:
             raw = _http_get(f"{api_url}/history/{prompt_id}")
@@ -229,6 +251,43 @@ def _merge_audio_into_video(video_path: Path, audio_bytes: bytes, audio_ext: str
             tmp_video.unlink(missing_ok=True)
 
 
+def _save_audio_sidecar(audio_bytes: bytes, audio_ext: str, dest_mp3: Path, logger=None) -> bool:
+    """
+    Save generated audio as a standalone .mp3 side file instead of muxing it
+    into a video ("Model A": FX stays freely regeneratable/editable as its
+    own file for clips whose audio track is otherwise frame-locked, e.g.
+    lipsync dialogue - see lipsync_service.has_lipsync_applied). Converts to
+    mp3 via ffmpeg when ComfyUI returned a different container (usually flac).
+    """
+    suffix = audio_ext if audio_ext.startswith(".") else f".{audio_ext}"
+    tmp_raw = dest_mp3.with_suffix(f".tmp_fx{suffix}")
+    tmp_mp3 = dest_mp3.with_suffix(".tmp_fx.mp3")
+    try:
+        dest_mp3.parent.mkdir(parents=True, exist_ok=True)
+        tmp_raw.write_bytes(audio_bytes)
+
+        if suffix.lower() == ".mp3":
+            tmp_raw.replace(dest_mp3)
+            return True
+
+        cmd = ["ffmpeg", "-y", "-i", str(tmp_raw), "-q:a", "2", str(tmp_mp3)]
+        r = subprocess.run(cmd, capture_output=True, timeout=60)
+        if r.returncode != 0 or not tmp_mp3.exists() or tmp_mp3.stat().st_size == 0:
+            if logger:
+                logger.warning(f"  ffmpeg fx-sidecar convert failed: {r.stderr.decode(errors='replace')[:300]}")
+            return False
+
+        tmp_mp3.replace(dest_mp3)
+        return True
+    except Exception as e:
+        if logger:
+            logger.warning(f"  Błąd zapisu FX sidecar: {type(e).__name__}: {e}")
+        return False
+    finally:
+        tmp_raw.unlink(missing_ok=True)
+        tmp_mp3.unlink(missing_ok=True)
+
+
 def add_audio(
     video_path: Path,
     prompt: str,
@@ -239,10 +298,13 @@ def add_audio(
     cfg: float = 4.5,
     seed: int = -1,
     logger=None,
+    output_sidecar: Path | None = None,
 ) -> bool:
     """
     Generate and add audio to video_path using MMAudio via WSL ComfyUI.
-    Modifies video_path in-place.
+    Modifies video_path in-place - unless output_sidecar is given, in which
+    case the generated audio is saved there as a standalone mp3 instead
+    (video_path is only read, for duration/framing - see _save_audio_sidecar).
     Returns True on success, False on any error (original video unchanged).
     """
     if seed == -1:
@@ -264,11 +326,16 @@ def add_audio(
         if logger:
             logger.info(f"  MMAudio: kolejka ({prompt_id[:8]}...) czekam...")
 
-        # 3. Poll until done
-        outputs = _poll_history(prompt_id, api_url)
+        # 3. Poll until done. Generation time scales with duration - the fixed
+        # _TIMEOUT_S (5 min) is plenty for a single ~10s clip but ComfyUI
+        # legitimately needs longer for a many-clips-long ambient sequence
+        # (tens of seconds of audio); without this the job finishes fine
+        # server-side while the client gives up and reports a false timeout.
+        poll_timeout = max(_TIMEOUT_S, int(duration * 20) + 120)
+        outputs = _poll_history(prompt_id, api_url, poll_timeout)
         if outputs is None:
             if logger:
-                logger.warning(f"  MMAudio: timeout po {_TIMEOUT_S}s")
+                logger.warning(f"  MMAudio: timeout po {poll_timeout}s")
             return False
 
         # 4. Find and download audio
@@ -282,15 +349,21 @@ def add_audio(
         audio_ext = Path(audio_filename).suffix or ".flac"
         audio_bytes = _download_audio(audio_filename, audio_subfolder, api_url)
 
-        # 5. Merge into video
-        if logger:
-            logger.info(f"  MMAudio: merge audio ({audio_filename}) → {video_path.name}")
-        ok = _merge_audio_into_video(video_path, audio_bytes, audio_ext, logger)
+        # 5. Merge into video, or save as a standalone side file (Model A: FX
+        # stays a separate file when the clip's own audio track is frame-locked)
+        if output_sidecar is not None:
+            if logger:
+                logger.info(f"  MMAudio: zapis jako osobny plik FX → {output_sidecar.name}")
+            ok = _save_audio_sidecar(audio_bytes, audio_ext, output_sidecar, logger)
+        else:
+            if logger:
+                logger.info(f"  MMAudio: merge audio ({audio_filename}) → {video_path.name}")
+            ok = _merge_audio_into_video(video_path, audio_bytes, audio_ext, logger)
 
         if ok and logger:
             logger.success(f"  MMAudio: audio OK")
         elif not ok and logger:
-            logger.warning(f"  MMAudio: merge nieudany, wideo bez audio")
+            logger.warning(f"  MMAudio: {'zapis FX' if output_sidecar is not None else 'merge'} nieudany")
 
         return ok
 

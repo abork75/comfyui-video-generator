@@ -20,6 +20,8 @@ from app.api.generation import router as generation_router
 from app.api.media import router as media_router
 from app.api.upscale import router as upscale_router
 from app.api.deblur import router as deblur_router
+from app.api.continuity_audit import router as continuity_audit_router
+from app.api.lipsync import router as lipsync_router
 from app.api.env import router as env_router
 from app.api.talks import router as talks_router
 from app.api.multitalks import router as multitalks_router
@@ -39,6 +41,7 @@ from app.api.frames import router as frames_router
 from app.api.sound import router as sound_router
 from app.api.scene_conf import router as scene_conf_router
 from app.api.dubit import router as dubit_router
+from app.api.debug import router as debug_router
 from app.services.process_service import process_service
 
 # ============================================================
@@ -60,6 +63,8 @@ app.include_router(generation_router)
 app.include_router(media_router)
 app.include_router(upscale_router)
 app.include_router(deblur_router)
+app.include_router(continuity_audit_router)
+app.include_router(lipsync_router)
 app.include_router(env_router)
 app.include_router(talks_router)
 app.include_router(multitalks_router)
@@ -79,6 +84,7 @@ app.include_router(frames_router)
 app.include_router(sound_router)
 app.include_router(scene_conf_router)
 app.include_router(dubit_router)
+app.include_router(debug_router)
 
 # Static files
 FRONTEND_DIR = Path(__file__).parent / "frontend"

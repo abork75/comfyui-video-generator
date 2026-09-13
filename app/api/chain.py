@@ -61,20 +61,35 @@ async def chain_cancel():
 @router.post("/rename-files")
 async def chain_rename_files(request: Request):
     """
-    Rename chain output files when chain_prefix changes.
+    Rename chain output files when chain_prefix changes — video (transitions/
+    chains/*.mp4, including archive/marker variants like _ver..._beforedeblur)
+    AND its FX side file (transitions/fx/*.mp3, see utils.mmaudio_utils.
+    fx_sidecar_path). Renaming only the video used to leave the FX sidecar
+    orphaned under the old name (2026-09-09 incident — confirmed real data
+    loss reported by the user, root cause not fully pinned down, but this was
+    a definite, independently-confirmed gap worth closing regardless).
+
+    Two-pass / all-or-nothing per file: EVERY planned (src, dst) pair is
+    validated up front — dst must not already exist, and no two sources may
+    collide on the same dst — before any actual rename happens. A file is
+    only ever renamed if its destination was free at validation time; a
+    partial failure elsewhere can't leave one directory renamed and the
+    other not (video and fx move together or neither does, per name).
 
     Body JSON:
     {
         "run_filename": "RUN_001.yaml",
         "old_prefix":   "ewelina_stands",
-        "new_prefix":   "ewelina_sits"
+        "new_prefix":   "ewelina_sits",
+        "dry_run":      false
     }
 
     Returns:
     {
-        "renamed": ["ewelina_stands_001.mp4", ...],
-        "skipped": [],
-        "errors":  []
+        "renamed": ["ewelina_stands_001.mp4", "ewelina_stands_001.mp3", ...],
+        "skipped": [...],   # destination already existed, or collided with another planned rename
+        "errors":  [...],   # rename() itself failed (e.g. transient file lock)
+        "dry_run": false
     }
     """
     try:
@@ -89,37 +104,60 @@ async def chain_rename_files(request: Request):
     if not run_filename or not old_prefix or not new_prefix:
         raise HTTPException(status_code=422, detail="Required fields: run_filename, old_prefix, new_prefix")
     if old_prefix == new_prefix:
-        return {"renamed": [], "skipped": [], "errors": []}
+        return {"renamed": [], "skipped": [], "errors": [], "dry_run": bool(body.get("dry_run", False))}
 
     pf = _project_folder(run_filename)
     if pf is None:
         raise HTTPException(status_code=404, detail=f"Project folder not found for: {run_filename}")
 
     chains_dir = pf / "transitions" / "chains"
+    fx_dir     = pf / "transitions" / "fx"
     dry_run = bool(body.get("dry_run", False))
-    renamed, skipped, errors = [], [], []
 
-    if chains_dir.exists():
-        for src in sorted(chains_dir.iterdir()):
+    # Pass 1: collect every candidate (src, dst) across both directories —
+    # nothing is touched yet.
+    def _candidates(directory, ext):
+        out = []
+        if not directory.exists():
+            return out
+        for src in sorted(directory.iterdir()):
             if not src.is_file():
                 continue
             name = src.name
-            if name.startswith(old_prefix + "_") and name.endswith(".mp4"):
-                suffix = name[len(old_prefix):]   # e.g. "_001.mp4"
-                dst = chains_dir / (new_prefix + suffix)
-                if dst.exists():
-                    skipped.append(name)
-                    continue
-                if dry_run:
-                    renamed.append(name)
-                else:
-                    try:
-                        src.rename(dst)
-                        renamed.append(name)
-                    except Exception as e:
-                        errors.append(f"{name}: {e}")
+            if name.startswith(old_prefix + "_") and name.endswith(ext):
+                suffix = name[len(old_prefix):]   # e.g. "_001.mp4" / "_001.mp3"
+                dst = directory / (new_prefix + suffix)
+                out.append((src, dst))
+        return out
 
-    return {"renamed": renamed, "skipped": skipped, "errors": errors, "dry_run": dry_run}
+    planned = _candidates(chains_dir, ".mp4") + _candidates(fx_dir, ".mp3")
+
+    # Pass 2: validate ALL destinations up front — free, and no collision
+    # between two planned renames landing on the same dst.
+    seen_dst = set()
+    valid, skipped = [], []
+    for src, dst in planned:
+        dst_key = str(dst)
+        if dst.exists() or dst_key in seen_dst:
+            skipped.append(src.name)
+            continue
+        seen_dst.add(dst_key)
+        valid.append((src, dst))
+
+    if dry_run:
+        return {"renamed": [s.name for s, d in valid], "skipped": skipped, "errors": [], "dry_run": True}
+
+    # Pass 3: only now actually rename — every pair here was already
+    # confirmed collision-free.
+    renamed, errors = [], []
+    for src, dst in valid:
+        try:
+            src.rename(dst)
+            renamed.append(src.name)
+        except Exception as e:
+            errors.append(f"{src.name}: {e}")
+
+    return {"renamed": renamed, "skipped": skipped, "errors": errors, "dry_run": False}
 
 
 @router.post("/split")

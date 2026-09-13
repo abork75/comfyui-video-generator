@@ -626,6 +626,7 @@ def generate_capcut_project(
     video_materials: list[dict] = []
     segments:        list[dict] = []
     clip_timeline:   dict[str, int] = {}   # clip name → timeline start (µs)
+    clip_durations_us: dict[str, int] = {} # clip name → duration (µs)
     cursor_us = 0
 
     for clip in existing:
@@ -653,6 +654,7 @@ def generate_capcut_project(
         height = int(clip.get("height") or 1080)
 
         clip_timeline[name] = cursor_us
+        clip_durations_us[name] = dur_us
         mat_id = _new_id()
         seg_id = _new_id()
         video_materials.append(_video_material(clip_path, dur_us, width, height, mat_id))
@@ -701,6 +703,35 @@ def generate_capcut_project(
             mat_id = _new_id()
             seg_id = _new_id()
             audio_materials.append(_audio_material(mp3_path, dur_us, mat_id))
+            audio_tracks.append({
+                "attribute": 0, "flag": 0, "id": _new_id(),
+                "is_default_name": True, "name": "",
+                "type": "audio",
+                "segments": [_audio_segment(mat_id, seg_id, 0, dur_us, timeline_start_us)],
+            })
+
+    # ── Load per-clip FX side files from fx/ ──────────────────────────────────
+    # Model A: a clip with lipsync applied keeps its dialogue baked into the
+    # video's own audio (CapCut plays that natively via the video material -
+    # no separate track needed for it). Any FX generated for that clip lives
+    # here as a standalone mp3 instead of being muxed in, so it gets its own
+    # track, aligned 1:1 with the clip's position on the timeline.
+    fx_dir = pf / "transitions" / "fx"
+    if fx_dir.exists():
+        for name, timeline_start_us in clip_timeline.items():
+            fx_path = fx_dir / f"{Path(name).stem}.mp3"
+            if not fx_path.exists():
+                continue
+            dur_us = _ffprobe_duration_us(fx_path)
+            if dur_us <= 0:
+                continue
+            # Clamp to the clip's own duration - FX shouldn't bleed into the next clip
+            dur_us = min(dur_us, clip_durations_us.get(name, dur_us))
+            if dur_us <= 0:
+                continue
+            mat_id = _new_id()
+            seg_id = _new_id()
+            audio_materials.append(_audio_material(fx_path, dur_us, mat_id))
             audio_tracks.append({
                 "attribute": 0, "flag": 0, "id": _new_id(),
                 "is_default_name": True, "name": "",

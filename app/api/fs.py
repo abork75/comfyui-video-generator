@@ -23,6 +23,7 @@ router = APIRouter(prefix="/api/fs", tags=["fs"])
 
 _IMAGE_EXTS = {".jpg", ".jpeg", ".png", ".gif", ".webp", ".bmp", ".tiff", ".tif"}
 _VIDEO_EXTS = {".mp4", ".avi", ".mov", ".mkv", ".webm"}
+_AUDIO_EXTS = {".mp3", ".wav", ".m4a", ".flac", ".ogg"}
 _THUMB_CACHE_DIR = Path(tempfile.gettempdir()) / "vidgen_fs_thumbs"
 
 
@@ -30,11 +31,14 @@ _THUMB_CACHE_DIR = Path(tempfile.gettempdir()) / "vidgen_fs_thumbs"
 async def browse(
     path: str = Query(..., description="Absolute local path to browse"),
     media: bool = Query(False, description="Also include video files (not just images)"),
+    audio: bool = Query(False, description="List audio files instead of images/video"),
 ):
     """
     Return directory contents split into sub-directories and media files.
     Entries are sorted: dirs first (alphabetical), then files (alphabetical).
     By default only images are listed; pass media=1 to also include videos.
+    Pass audio=1 to list audio files (mp3/wav/...) instead - mutually exclusive
+    with media (audio takes priority if both are set).
     """
     p = Path(path)
     if not p.exists():
@@ -42,7 +46,7 @@ async def browse(
     if not p.is_dir():
         raise HTTPException(status_code=400, detail=f"Ścieżka nie jest katalogiem: {path}")
 
-    exts = (_IMAGE_EXTS | _VIDEO_EXTS) if media else _IMAGE_EXTS
+    exts = _AUDIO_EXTS if audio else ((_IMAGE_EXTS | _VIDEO_EXTS) if media else _IMAGE_EXTS)
 
     try:
         entries = sorted(p.iterdir(), key=lambda x: (not x.is_dir(), x.name.lower()))
@@ -55,7 +59,7 @@ async def browse(
             {
                 "name": e.name,
                 "path": str(e),
-                "type": "video" if e.suffix.lower() in _VIDEO_EXTS else "image",
+                "type": "video" if e.suffix.lower() in _VIDEO_EXTS else ("audio" if e.suffix.lower() in _AUDIO_EXTS else "image"),
             }
             for e in entries
             if e.is_file() and e.suffix.lower() in exts

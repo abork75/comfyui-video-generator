@@ -3,15 +3,18 @@
 API router for generation control.
 
 Endpoints:
-    GET    /api/generate/status      — current process status
-    POST   /api/generate/{filename}  — start generation
-    DELETE /api/generate             — stop generation
-    POST   /api/generate/stdin       — answer interactive input() prompt
+    GET    /api/generate/status           — current process status
+    POST   /api/generate/{filename}       — start generation
+    DELETE /api/generate                  — stop generation
+    POST   /api/generate/stdin            — answer interactive input() prompt
+    POST   /api/generate/interrupt-comfyui — abort whatever ComfyUI is currently computing
 """
 
 from fastapi import APIRouter, HTTPException, Request
 
 from app.services.process_service import process_service
+from app.services import app_config_service
+from workflow_base import interrupt_comfyui
 
 router = APIRouter(prefix="/api/generate", tags=["generation"])
 
@@ -77,8 +80,36 @@ async def start_generation(filename: str, request: Request):
 
 @router.delete("")
 async def stop_generation():
-    """Stop the currently running generation process."""
+    """Stop the currently running generation process AND interrupt whatever
+    ComfyUI (linux/WSL2 instance — WAN + LTX both live there) is actually
+    computing right now. 2026-09-11: previously this only stopped OUR side
+    from waiting on the result (subprocess.terminate()) — the GPU work kept
+    running inside ComfyUI regardless, so a truly stuck job needed killing
+    the whole WSL2 instance. Best-effort: interrupt failing doesn't block
+    the stop itself, just gets logged."""
     result = await process_service.stop()
     if not result["ok"]:
         raise HTTPException(status_code=400, detail=result["error"])
+    try:
+        api_url = app_config_service.get_backend("linux").get("api_url")
+        if api_url:
+            result["comfyui_interrupt"] = interrupt_comfyui(api_url)
+    except Exception as exc:
+        result["comfyui_interrupt"] = {"ok": False, "error": str(exc)}
+    return result
+
+
+@router.post("/interrupt-comfyui")
+async def interrupt_comfyui_endpoint(backend: str = "linux"):
+    """Directly abort whatever prompt ComfyUI is currently executing on the
+    given backend's instance (default 'linux' — WAN + LTX both run there).
+    Doesn't touch our own task/process state, just tells ComfyUI to stop
+    computing — use this when a job is stuck and you don't want to (or
+    can't cleanly) go through the normal stop flow."""
+    api_url = app_config_service.get_backend(backend).get("api_url")
+    if not api_url:
+        raise HTTPException(status_code=404, detail=f"Brak api_url dla backendu: {backend}")
+    result = interrupt_comfyui(api_url)
+    if not result["ok"]:
+        raise HTTPException(status_code=502, detail=f"Interrupt nie powiódł się: {result.get('error') or result.get('status_code')}")
     return result

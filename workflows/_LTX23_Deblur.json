@@ -93,12 +93,25 @@
   },
   "3940": {
     "inputs": {
-      "unet_name": "ltx-2.3-22b-distilled-1.1_transformer_only_fp8_scaled.safetensors",
-      "weight_dtype": "default"
+      "unet_name": "ltx-2.3-22b-dev-UD-Q5_K_M.gguf"
     },
-    "class_type": "UNETLoader",
+    "class_type": "UnetLoaderGGUF",
     "_meta": {
-      "title": "FP8 distilled 1.1"
+      "title": "Dev GGUF"
+    }
+  },
+  "2199": {
+    "inputs": {
+      "lora_name": "ltx-2.3-22b-distilled-1.1_lora-dynamic_fro09_avg_rank_111_bf16.safetensors",
+      "strength_model": 0.61,
+      "model": [
+        "3940",
+        0
+      ]
+    },
+    "class_type": "LoraLoaderModelOnly",
+    "_meta": {
+      "title": "Distilled 1.1 LoRA"
     }
   },
   "3980": {
@@ -306,7 +319,7 @@
       "lora_name": "ltx-2.3-22b-ic-lora-deblur-0.9.safetensors",
       "strength_model": 1,
       "model": [
-        "3940",
+        "2199",
         0
       ]
     },
@@ -384,7 +397,7 @@
   },
   "5023": {
     "inputs": {
-      "clip_name1": "gemma-3-12b-it-heretic-v2-Q4_K_M.gguf",
+      "clip_name1": "gemma-3-12b-it-qat-UD-Q4_K_XL.gguf",
       "clip_name2": "ltx-2.3-22b-dev_embeddings_connectors.safetensors",
       "type": "ltxv"
     },
