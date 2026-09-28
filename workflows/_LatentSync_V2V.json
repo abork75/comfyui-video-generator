@@ -48,6 +48,7 @@
       "seed": 1247,
       "lips_expression": 1.5,
       "inference_steps": 20,
+      "position_index": -1,
       "images": [
         "30",
         0

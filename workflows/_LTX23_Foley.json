@@ -1,0 +1,457 @@
+{
+  "1": {
+    "inputs": {
+      "file": "na miejsce kary_001.mp4",
+      "video-preview": ""
+    },
+    "class_type": "LoadVideo",
+    "_meta": {
+      "title": "Load Video"
+    }
+  },
+  "2": {
+    "inputs": {
+      "video": [
+        "1",
+        0
+      ]
+    },
+    "class_type": "GetVideoComponents",
+    "_meta": {
+      "title": "Get Video Components"
+    }
+  },
+  "6": {
+    "inputs": {
+      "text": "foley sound effects, physical interactions, footsteps, cloth movement, object handling, impacts, synchronized with video, crisp, realistic",
+      "clip": [
+        "33",
+        0
+      ]
+    },
+    "class_type": "CLIPTextEncode",
+    "_meta": {
+      "title": "Positive Prompt"
+    }
+  },
+  "7": {
+    "inputs": {
+      "text": "music, melody, song, singing, vocals, score, soundtrack, beat, rhythm bed, instrumental backing, tinny, thin, harsh, clipped, distorted, low bitrate, crackle, static noise, vinyl crackle, white noise, hiss, popping sounds",
+      "clip": [
+        "33",
+        0
+      ]
+    },
+    "class_type": "CLIPTextEncode",
+    "_meta": {
+      "title": "Negative Prompt"
+    }
+  },
+  "8": {
+    "inputs": {
+      "frame_rate": [
+        "2",
+        2
+      ],
+      "positive": [
+        "6",
+        0
+      ],
+      "negative": [
+        "7",
+        0
+      ]
+    },
+    "class_type": "LTXVConditioning",
+    "_meta": {
+      "title": "LTXVConditioning"
+    }
+  },
+  "9": {
+    "inputs": {
+      "frame_rate": [
+        "2",
+        2
+      ],
+      "window_frames": 145,
+      "overlap_seconds": 0.5,
+      "max_windows": 16,
+      "images": [
+        "2",
+        0
+      ]
+    },
+    "class_type": "LTXFoleyWindowPlan",
+    "_meta": {
+      "title": "LTX Foley Window Plan"
+    }
+  },
+  "10": {
+    "inputs": {
+      "lora_name": "ltx-2.3-foley-400-steps.safetensors",
+      "strength_model": 1,
+      "model": [
+        "29",
+        0
+      ]
+    },
+    "class_type": "LoraLoaderModelOnly",
+    "_meta": {
+      "title": "Load LoRA"
+    }
+  },
+  "11": {
+    "inputs": {
+      "remaining": [
+        "9",
+        1
+      ]
+    },
+    "class_type": "LTXFoleyForLoopOpen",
+    "_meta": {
+      "title": "LTX Foley For Loop Open"
+    }
+  },
+  "12": {
+    "inputs": {
+      "remaining": [
+        "11",
+        1
+      ],
+      "images": [
+        "2",
+        0
+      ],
+      "window_plan": [
+        "9",
+        0
+      ]
+    },
+    "class_type": "LTXFoleyWindowSelect",
+    "_meta": {
+      "title": "LTX Foley Window Select"
+    }
+  },
+  "13": {
+    "inputs": {
+      "frame_rate": [
+        "2",
+        2
+      ],
+      "width": 576,
+      "height": 576,
+      "frames": 145,
+      "images": [
+        "12",
+        0
+      ],
+      "positive": [
+        "8",
+        0
+      ],
+      "negative": [
+        "8",
+        1
+      ],
+      "video_vae": [
+        "31",
+        0
+      ],
+      "audio_vae": [
+        "32",
+        0
+      ]
+    },
+    "class_type": "LTXFoleyVideoToAudioLatent",
+    "_meta": {
+      "title": "LTX Foley Video To Audio Latent"
+    }
+  },
+  "14": {
+    "inputs": {
+      "max_shift": 2.05,
+      "base_shift": 0.95,
+      "model": [
+        "10",
+        0
+      ],
+      "latent": [
+        "13",
+        2
+      ]
+    },
+    "class_type": "ModelSamplingLTXV",
+    "_meta": {
+      "title": "ModelSamplingLTXV"
+    }
+  },
+  "15": {
+    "inputs": {
+      "block_indices": "14, 19",
+      "model": [
+        "14",
+        0
+      ]
+    },
+    "class_type": "LTXVApplySTG",
+    "_meta": {
+      "title": "🅛🅣🅧 LTXV Apply STG"
+    }
+  },
+  "16": {
+    "inputs": {
+      "cfg": 4,
+      "stg": 1,
+      "rescale": 0.7,
+      "model": [
+        "15",
+        0
+      ],
+      "positive": [
+        "13",
+        0
+      ],
+      "negative": [
+        "13",
+        1
+      ]
+    },
+    "class_type": "STGGuiderNode",
+    "_meta": {
+      "title": "🅛🅣🅧 STG Guider Node"
+    }
+  },
+  "17": {
+    "inputs": {
+      "noise_seed": 42
+    },
+    "class_type": "RandomNoise",
+    "_meta": {
+      "title": "RandomNoise"
+    }
+  },
+  "18": {
+    "inputs": {
+      "sampler_name": "euler_ancestral_cfg_pp"
+    },
+    "class_type": "KSamplerSelect",
+    "_meta": {
+      "title": "KSamplerSelect"
+    }
+  },
+  "19": {
+    "inputs": {
+      "steps": 30,
+      "max_shift": 2.05,
+      "base_shift": 0.95,
+      "stretch": true,
+      "terminal": 0.1,
+      "latent": [
+        "13",
+        2
+      ]
+    },
+    "class_type": "LTXVScheduler",
+    "_meta": {
+      "title": "LTXVScheduler"
+    }
+  },
+  "20": {
+    "inputs": {
+      "noise": [
+        "17",
+        0
+      ],
+      "guider": [
+        "16",
+        0
+      ],
+      "sampler": [
+        "18",
+        0
+      ],
+      "sigmas": [
+        "19",
+        0
+      ],
+      "latent_image": [
+        "13",
+        2
+      ]
+    },
+    "class_type": "SamplerCustomAdvanced",
+    "_meta": {
+      "title": "SamplerCustomAdvanced"
+    }
+  },
+  "21": {
+    "inputs": {
+      "av_latent": [
+        "20",
+        0
+      ]
+    },
+    "class_type": "LTXVSeparateAVLatent",
+    "_meta": {
+      "title": "LTXVSeparateAVLatent"
+    }
+  },
+  "22": {
+    "inputs": {
+      "samples": [
+        "21",
+        1
+      ],
+      "audio_vae": [
+        "32",
+        0
+      ]
+    },
+    "class_type": "LTXFoleyAudioVAEDecode",
+    "_meta": {
+      "title": "LTX Foley Audio VAE Decode"
+    }
+  },
+  "23": {
+    "inputs": {
+      "save_audio": true,
+      "filename_prefix": "ltx_foley_window",
+      "audio": [
+        "22",
+        0
+      ],
+      "window_info": [
+        "12",
+        1
+      ]
+    },
+    "class_type": "LTXFoleyWindowAudioSave",
+    "_meta": {
+      "title": "LTX Foley Window Audio Save"
+    }
+  },
+  "24": {
+    "inputs": {
+      "window_record": [
+        "23",
+        1
+      ],
+      "accumulation": [
+        "11",
+        2
+      ]
+    },
+    "class_type": "LTXFoleyAudioAccumulator",
+    "_meta": {
+      "title": "LTX Foley Audio Accumulator"
+    }
+  },
+  "25": {
+    "inputs": {
+      "flow_control": [
+        "11",
+        0
+      ],
+      "audio_accumulation": [
+        "24",
+        0
+      ]
+    },
+    "class_type": "LTXFoleyForLoopClose",
+    "_meta": {
+      "title": "LTX Foley For Loop Close"
+    }
+  },
+  "26": {
+    "inputs": {
+      "accumulation": [
+        "25",
+        0
+      ],
+      "window_plan": [
+        "9",
+        0
+      ]
+    },
+    "class_type": "LTXFoleyAudioStitch",
+    "_meta": {
+      "title": "LTX Foley Audio Stitch"
+    }
+  },
+  "27": {
+    "inputs": {
+      "fps": [
+        "2",
+        2
+      ],
+      "bit_depth": 8,
+      "images": [
+        "2",
+        0
+      ],
+      "audio": [
+        "26",
+        0
+      ]
+    },
+    "class_type": "CreateVideo",
+    "_meta": {
+      "title": "Create Video"
+    }
+  },
+  "28": {
+    "inputs": {
+      "filename_prefix": "ltx_foley_loop",
+      "format": "auto",
+      "codec": "auto",
+      "video-preview": "",
+      "video": [
+        "27",
+        0
+      ]
+    },
+    "class_type": "SaveVideo",
+    "_meta": {
+      "title": "Save Video"
+    }
+  },
+  "29": {
+    "inputs": {
+      "unet_name": "ltx-2.3-22b-distilled-1.1_transformer_only_fp8_scaled.safetensors",
+      "weight_dtype": "default"
+    },
+    "class_type": "UNETLoader",
+    "_meta": {
+      "title": "Load Diffusion Model"
+    }
+  },
+  "31": {
+    "inputs": {
+      "vae_name": "ltx-2.3-22b-distilled_video_vae.safetensors"
+    },
+    "class_type": "VAELoader",
+    "_meta": {
+      "title": "Load VAE"
+    }
+  },
+  "32": {
+    "inputs": {
+      "vae_name": "ltx-2.3-22b-distilled_audio_vae.safetensors"
+    },
+    "class_type": "VAELoader",
+    "_meta": {
+      "title": "Load VAE"
+    }
+  },
+  "33": {
+    "inputs": {
+      "clip_name1": "gemma-3-12b-it-qat-UD-Q4_K_XL.gguf",
+      "clip_name2": "ltx-2.3-22b-dev_embeddings_connectors.safetensors",
+      "type": "ltxv"
+    },
+    "class_type": "DualCLIPLoaderGGUF",
+    "_meta": {
+      "title": "Gemma CLIP GGUF"
+    }
+  }
+}

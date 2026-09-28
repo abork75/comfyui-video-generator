@@ -1,0 +1,1140 @@
+# RUN_029_Night club story Rev.yaml
+# Edited: 2026-09-26 23:55:07
+# Edit this file freely — regenerate .py with generate_py_from_yaml()
+#
+project_folder: E:\FILMY\RUN_029 Night club story V3
+
+use_test_flow: false
+
+# ──────────────────────────────────────────────────────────
+# FLOW — lista generacji
+# ──────────────────────────────────────────────────────────
+flow:
+- type: scene_break
+  name: MANAGER PRZYCHODZI
+
+- file: 1.00. Enter.mp4
+  backend: linux
+  duration: 2
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- break: true
+  label: Enter the club
+
+- type: scene_break
+  name: KOLEŻANKI TAŃCZĄ
+
+- file: 01.01_pytanie.mp4
+  backend: linux
+  duration: 2
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- break: true
+  label: Show what you can do
+
+- file: 02.01_odpowiedz.mp4
+  backend: linux
+  duration: 2
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- break: true
+  label: Models first dance
+
+- file: 02.03_pytanie.mp4
+  backend: linux
+  duration: 2
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- break: true
+  label: Show more
+
+- file: 02.004_odpowiedz.mp4
+  backend: linux
+  duration: 2
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- break: true
+  label: Models second dance
+
+- type: scene_break
+  name: NAGANA DLA EWELINY
+
+- file: 02.2_pytanie.mp4
+  backend: linux
+  duration: 2
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- break: true
+  label: I am shy
+
+- file: 02.50_odpowiedz.mp4
+  backend: linux
+  duration: 2
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- break: true
+  label: First tim dress like this
+
+- file: 02.60_odpowiedz.mp4
+  backend: linux
+  duration: 2
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- break: true
+  label: Line up
+
+- file: 02.63 odpowiedz.jpg
+  backend: linux
+  duration: 2
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- type: multichain
+  chain_prefix: przychodzą
+  model_class: ltx
+  neg: |-
+    blur, noise, watermark, text, low quality, worst quality, deformed
+  chain:
+  - duration: 5
+    pos: |-
+      Static, locked-off camera. Focus fixed on the main subject throughout. To woman slowly approaches the scene and no other persons appears. Person standing in the middle of the sce
+    neg: |-
+      camera pan, camera tilt, zoom, dolly movement, handheld camera shake, rack focus, focus pull, depth of field shift, new characters, moving background, shifting walls, furniture moving
+    ltx_variant: 20step
+    frame_interpolation: true
+
+- file: 02.65 odpowiedz.jpg
+  backend: linux
+  duration: 2
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- break: true
+  label: Models approach
+
+- file: 03_pytanie.mp4
+  backend: linux
+  duration: 2
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- break: true
+  label: Order to apologize
+
+- file: 04.01_odpowiedz.mp4
+  backend: linux
+  duration: 2
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- break: true
+  label: Ewelina apologize
+
+- type: scene_break
+  name: ZDEJMOOWANIE SPÓDNICY
+
+- file: 05._pytanie.mp4
+  backend: linux
+  duration: 2
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- break: true
+  label: Take off your skirt
+
+- file: 06_odpowiedz.jpg
+  backend: linux
+  duration: 2
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- type: multichain
+  chain_prefix: powoli wstaje
+  model_class: ltx
+  neg: |-
+    blur, noise, watermark, text, low quality, worst quality, deformed
+  chain:
+  - duration: 5
+    pos: |-
+      Preserve the exact people, room, furniture, background, lighting, composition, and wardrobe from the reference frames throughout the entire shot. Only the persons already visible in the reference frames remain on screen; no other persons appear. The women in the background remain perfectly still.
+
+      The woman in the foreground smoothly rises from the pose in the first frame to the final upright standing pose shown in the last frame. Her feet remain planted in exactly the same position on the floor throughout the transition; she does not walk, step, advance, or move toward the camera. Her final body position, orientation, placement in the scene, and distance from the camera exactly match the last frame.
+
+      She keeps the same fitted black miniskirt, with the hem at mid-thigh above the knees. She continues to wear opaque, seamless, full-length black footed stockings: continuous black fabric covers both legs from the upper thighs over the ankles and fully covers her feet and toes throughout the clip.
+
+      The camera alone smoothly tilts upward during her rise, following the change in her vertical height while maintaining the framing and elevated three-quarter viewing angle defined by the first and last frames. The room, walls, furniture, all objects, lighting, and background remain completely unchanged and motionless. No other motion occurs.
+    neg: |-
+      walking, stepping, moving forward, moving toward camera, advancing, approaching camera, feet sliding, feet changing position, changing distance from camera, lateral movement,
+
+      new characters, additional people, people appearing, people entering frame, people exiting frame, background people moving,
+
+      moving background, background shifting, shifting walls, furniture moving, moving objects, props moving, changing room layout, changing lighting,
+
+      bare feet, bare toes, exposed toes, exposed ankles, ankle socks, cropped stockings, stockings ending above the ankle, disappearing stockings, torn stockings,
+
+      sandals, strappy heels, ankle-strap heels, open-toe shoes, peep-toe shoes, shoe straps, shoe morphing, mismatched shoes,
+
+      extra legs, duplicate legs, extra feet, duplicate feet, deformed feet, malformed shoes,
+
+      camera shake, camera lag, jerky camera movement, rack focus, focus pull, depth-of-field shift, flicker, frame jump, temporal inconsistency, identity drift, wardrobe change
+    ltx_variant: 20step
+    frame_interpolation: true
+    loras:
+    - name: LTX/LTX-2.3-OmniNFT-RL-Lora_bf16.safetensors
+      strength: 1
+  width: 896
+  height: 1344
+
+- file: 06_02. odpowiedz.jpg
+  backend: linux
+  duration: 2
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- break: true
+  label: Standing up slowly
+
+- file: 06_01 odpowiedzNEW.mp4
+  backend: linux
+  duration: 2
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- break: true
+  label: Pospiesz się
+
+- file: 06.03. Zdejmowanie start.jpg
+  backend: linux
+  duration: 2
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- type: multichain
+  chain_prefix: zrzuca spódnicę
+  model_class: ltx
+  neg: |-
+    blur, noise, watermark, text, low quality, worst quality, deformed
+  chain:
+  - duration: 6
+    pos: |-
+      Preserve the exact people, room, furniture, background, lighting, composition, and camera framing from the first and last reference frames throughout the shot. Only the persons already visible in the reference frames remain on screen; no other persons appear. The women in the background remain perfectly still.
+
+      The woman in the foreground remains standing in the same place. At the beginning, she holds the upper waistband of her black skirt with both hands, exactly as shown in the first frame. In one continuous, natural motion, she uses both hands to pull and slide the skirt downward over her hips and thighs. She releases the skirt near her knees; it then falls naturally under gravity down her lower legs and gathers loosely on the floor around her feet. At the end of the motion, the skirt is fully removed and lies naturally crumpled around her feet exactly as shown in the last frame. Her hands rest naturally on the fronts of her thighs, matching the final hand position in the last frame.
+
+      The woman does not walk, step, move forward, change her position, or move toward the camera. Her feet remain planted in the same position throughout the shot. The camera remains locked and static. The room, walls, furniture, objects, background, and lighting remain completely unchanged and motionless.
+    neg: |-
+      walking, stepping, moving forward, moving toward camera, advancing, changing position, feet moving, feet sliding, body drifting, camera following subject,
+
+      new characters, additional people, people appearing, people entering frame, people exiting frame, background people moving,
+
+      moving background, shifting walls, furniture moving, moving objects, props moving, changing room layout, changing lighting,
+
+      skirt disappearing, skirt vanishing, skirt dissolving, skirt floating, skirt flying upward, skirt clipping through legs, skirt stuck to legs, skirt transforming, skirt changing color, skirt changing length, skirt remaining on body, extra skirt, duplicate skirt,
+
+      extra arms, extra hands, malformed hands, deformed hands, hands clipping through clothing, arms changing position unexpectedly,
+
+      camera movement, camera shake, camera lag, jerky camera movement, zoom, pan, tilt, rack focus, focus pull, depth-of-field shift,
+
+      flicker, frame jump, temporal inconsistency, identity drift, wardrobe change
+    ltx_variant: 20step
+    frame_interpolation: false
+
+- file: 06.04. Zdejmowanie end.png
+  backend: linux
+  duration: 2
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- break: true
+  label: Removing skirt
+
+- type: scene_break
+  name: KOLEŻANKI WRACAJĄ DO PRACY
+
+- file: 07.01_pytanie_1.mp4
+  backend: linux
+  duration: 2
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- break: true
+  label: Go back to work
+
+- file: 08.01_odpowiedz.mp4
+  backend: linux
+  duration: 2
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- break: true
+  label: Models leave scene
+
+- type: scene_break
+  name: PRZYPOMNIENIE POPRZEDNIEJ KARY
+
+- file: 08.03_odpowiedzNEW.mp4
+  backend: linux
+  duration: 2
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- break: true
+  label: Beginning of punishment
+
+- file: 08.03. odpowiedz.mp4
+  backend: linux
+  duration: 2
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- break: true
+  label: Please dont flogg
+
+- file: 09.01_pytanie.mp4
+  backend: linux
+  duration: 2
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- break: true
+  label: Obey or flogging
+
+- file: 10.01_odpowiedz.mp4
+  backend: linux
+  duration: 2
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- break: true
+  label: Remind prev punishment
+
+- file: 10.50. odpowiedz.mp4
+  backend: linux
+  duration: 2
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- break: true
+  label: Remind yourself
+
+- type: scene_break
+  name: RETROSPEKCJA - POPRZEDNIA KARA
+
+- file: 10.60_odpowiedz.mp4
+  backend: linux
+  duration: 2
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- break: true
+  label: Ewelina stands at pole
+
+- file: 15.50. Blow.png
+  backend: linux
+  duration: 2
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- type: multichain
+  chain_prefix: modelka_stoi
+  model_class: ltx
+  neg: |-
+    blur, noise, watermark, text, low quality, worst quality, deformed
+  chain:
+  - duration: 3
+    pos: |-
+      NONE
+    neg: ""
+    ltx_variant: 20step
+    frame_interpolation: false
+    lipsync_audio: 10.70 Oh no please no.MP3
+    lipsync_sync_lips: false
+
+- break: true
+  label: Ewelina bound to pole
+
+- file: 10.73_odpowiedz.mp4
+  backend: linux
+  duration: 2
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- break: true
+  label: Dominatrix goes
+
+- file: 10.75_odpowiedz.png
+  backend: linux
+  duration: 2
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- type: multichain
+  chain_prefix: zoom na ślady
+  model_class: ltx
+  neg: |-
+    blur, noise, watermark, text, low quality, worst quality, deformed
+  chain:
+  - duration: 6
+    pos: |-
+      Camera slowly zooms in on one subject in the scene, smoothly pushing closer while keeping them centered and in focus. The subject's face and identity remain fully consistent throughout the motion. Camera slowly zooms on woman's whipped buttocks
+    neg: |-
+      camera shake, jerky zoom, subject leaving frame, changing facial features, identity drift, morphing face, new characters, additional people, someone entering or exiting the scene, moving background, shifting walls, furniture moving
+    ltx_variant: 20step
+    frame_interpolation: false
+
+- break: true
+  label: Zoom na ślady
+
+- type: scene_break
+  name: POKAZ TAŃCA EWELINY
+
+- file: 10.77_odpowiedz.mp4
+  backend: linux
+  duration: 2
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- break: true
+  label: Show some sensuality
+
+- file: 10.79_odpowiedz.mp4
+  backend: linux
+  duration: 2
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- break: true
+  label: Ewelina's dance
+
+- type: scene_break
+  name: OGŁOSZENIE KARY
+
+- file: 10.81_odpowiedz.mp4
+  backend: linux
+  duration: 2
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- break: true
+  label: Think about the task
+
+- file: 10.83_odpowiedz.jpg
+  backend: linux
+  duration: 2
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- type: multichain
+  chain_prefix: zaskoczenie
+  model_class: ltx
+  neg: |-
+    blur, noise, watermark, text, low quality, worst quality, deformed
+  chain:
+  - duration: 2
+    pos: |-
+      Static, locked-off camera. Focus fixed on the main subject throughout. Only persons visivle on screen no other persons. Woman has scary face and looks frightened directly into camera
+    neg: |-
+      camera pan, camera tilt, zoom, dolly movement, handheld camera shake, rack focus, focus pull, depth of field shift, new characters, additional people, someone entering or exiting the scene, moving background, shifting walls, furniture moving
+    ltx_variant: 20step
+    frame_interpolation: false
+    lipsync_audio: 10.83 No please.MP3
+
+- break: true
+  label: Surprised
+
+- type: scene_break
+  name: POSZUKIWANIE KLIENTA
+
+- file: 11.01_pytanie.mp4
+  backend: linux
+  duration: 2
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- break: true
+  label: 5min to find customer
+
+- file: 12.50_pytanie.mp4
+  backend: linux
+  duration: 2
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- break: true
+  label: Run for customer
+
+- file: 12.60_pytanie.mp4
+  backend: linux
+  duration: 2
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- break: true
+  label: Doubt she will do it
+
+- file: 12.65. odpowiedz.mp4
+  backend: linux
+  duration: 2
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- break: true
+  label: Empty corridor
+
+- file: 12.70 odpowiedz.mp4
+  backend: linux
+  duration: 2
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- break: true
+  label: Only 10s reamains
+
+- file: 14.01_odpowiedz.mp4
+  backend: linux
+  duration: 2
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- break: true
+  label: Coming with man
+
+- type: scene_break
+  name: ZABAWA Z KLIENTEM
+
+- file: 15_odpowiedz.mp4
+  backend: linux
+  duration: 2
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- break: true
+  label: You know what to do
+
+- file: 15.51. Blow.png
+  backend: linux
+  duration: 2
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- type: multichain
+  chain_prefix: Blow in club
+  model_class: wan
+  neg: |-
+    static, frozen, no movement
+  chain:
+  - duration: 4
+    pos: |-
+      Woman kneeeling nextg to man giving a blowjob to the man standing in the same location. penis of man is visiblea and his legs. She is kneeling in front of him, looking up as she performs the blowjob. She is holding the man penis with both hands. She shoves the man penis deep in her mouth, sucking intensely with visible effort, saliva dripping, cheeks hollowed. Dynamic oral sex, high detail, explicit, realistic anatomy and size difference same background as the first frame.
+    neg: |-
+      bad anatomy, deformed penis, extra limbs, blurry, low quality, censored, small penis, no saliva, closed mouth, no eye contact, bad hand position, teeth visible, static pose, cartoon, plastic skin, poor connection, weak motion
+    audio_prompt: wet mouth sounds, oral suction, saliva dripping, lips sliding, rhythmic sucking and slurping, oral motion foley, synchronized with video, crisp, high quality, realistic
+    audio_negative_prompt: music, melody, ambient drone, moaning, voice, sustained atmosphere, continuous background noise, low quality, distortion
+    lora_high: WAN2.2_LoraSet/iGOON_Blink_Blowjob_I2V_HIGH.safetensors
+    lora_low: WAN2.2_LoraSet/iGOON_Blink_Blowjob_I2V_LOW.safetensors
+    use_lightning: true
+    workflow: _I2V_classic_4s1200_nog4gg.json
+  - duration: 4
+    pos: |-
+      Woman kneeeling nextg to man giving a blowjob to the man standing in the same location. penis of man is visiblea and his legs. She is kneeling in front of him, looking up as she performs the blowjob. She is holding the man penis with both hands. She shoves the man penis deep in her mouth, sucking intensely with visible effort, saliva dripping, cheeks hollowed. Dynamic oral sex, high detail, explicit, realistic anatomy and size difference same background as the first frame.
+    neg: |-
+      bad anatomy, deformed penis, extra limbs, blurry, low quality, censored, small penis, no saliva, closed mouth, no eye contact, bad hand position, teeth visible, static pose, cartoon, plastic skin, poor connection, weak motion
+    audio_prompt: wet mouth sounds, oral suction, saliva dripping, lips sliding, rhythmic sucking and slurping, oral motion foley, synchronized with video, crisp, high quality, realistic
+    audio_negative_prompt: music, melody, ambient drone, moaning, voice, sustained atmosphere, continuous background noise, low quality, distortion
+    lora_high: WAN2.2_LoraSet/iGOON_Blink_Blowjob_I2V_HIGH.safetensors
+    lora_low: WAN2.2_LoraSet/iGOON_Blink_Blowjob_I2V_LOW.safetensors
+    use_lightning: true
+    workflow: _I2V_classic_4s1200_nog4gg.json
+
+- break: true
+  label: Blow job
+
+- file: 15.53. take client.mp4
+  backend: linux
+  duration: 2
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- break: true
+
+- file: 15.55 part 1.mp4
+  backend: linux
+  duration: 2
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- break: true
+  label: Go to room
+
+- file: 15.59. SexStart.png
+  backend: linux
+  duration: 2
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+  ambient_audio_prompt: near silence, very subtle room tone, minimal ambient presence, no distinct sounds
+  ambient_audio_negative_prompt: music, melody, voice, moaning, footsteps, impacts, foley, sound effects, loud sounds, sustained atmosphere, continuous noise, low quality, distortion
+
+- type: multichain
+  chain_prefix: Doggy
+  model_class: wan
+  neg: |-
+    static, frozen, no movement
+  chain:
+  - duration: 3
+    pos: |-
+      The video begins with a close-up of a woman. Jumpcut to a same woman kneeling on all fours on the bed from image, back arched. A man standing behind her and vigorously fucking her in doggystyle position. Strong, deep, rhythmic penetration, man's hips slamming against her ass. Clear front view showing the woman's face, breasts hanging and bouncing with each thrust, open mouth, wide eyes, intense pleasure and overwhelm expression, heavy breathing. Man's hands gripping her waist tightly, dynamic and powerful sex motion, detailed anatomy, realistic penetration, forest setting, dramatic lighting, high detail, erotic atmosphere same background as the first frame
+    neg: |-
+      side view, back view, wrong camera angle, no penetration, bad anatomy, deformed body, extra limbs, blurry, low quality, censored, clothes on, monster not behind her, weak motion, static pose, cartoon, floating, unrealistic scale, poor connection between bodies
+    lora_high: WAN2.2_LoraSet/iGoon%20-%20Blink_Front_Doggystyle_I2V_HIGH.safetensors
+    lora_low: WAN2.2_LoraSet/iGoon%20-%20Blink_Front_Doggystyle_I2V_LOW.safetensors
+    audio_prompt: female moaning loud pleasure, rhythmic thrusting sounds, skin slapping wet impact, gasping breath, increasing intensity, climax vocal
+    audio_negative_prompt: music, melody, speech, words, lyrics, reverb, echo, distortion, cartoon, low quality
+    use_lightning: false
+  - duration: 3
+    pos: |-
+      Woman kneeling on all fours on the ground, back arched. A naked man standing behind her and vigorously fucking her in doggystyle position. Strong, deep, rhythmic penetration, man's hips slamming against her ass. Clear front view showing the woman's face, breasts hanging and bouncing with each thrust, open mouth, wide eyes, intense pleasure and overwhelm expression, heavy breathing. Man's hands gripping her waist tightly, dynamic and powerful sex motion, detailed anatomy, realistic penetration, forest setting, dramatic lighting, high detail, erotic atmosphere same background as the first frame
+    neg: |-
+      side view only, back view, no eye contact, woman not looking at camera, static pose, weak thrusting, bad anatomy, deformed body, extra limbs, blurry motion, low quality, censored, clothes on, poor penetration, unrealistic scale, cartoon
+    audio_prompt: female moaning loud pleasure, rhythmic thrusting sounds, skin slapping wet impact, gasping breath, increasing intensity, climax vocal
+    audio_negative_prompt: music, melody, speech, words, lyrics, reverb, echo, distortion, cartoon, low quality
+    lora_high: WAN2.2_LoraSet/iGoon%20-%20Blink_Front_Doggystyle_I2V_HIGH.safetensors
+    lora_low: WAN2.2_LoraSet/iGoon%20-%20Blink_Front_Doggystyle_I2V_LOW.safetensors
+
+- break: true
+
+- file: 15.55 part 2.mp4
+  backend: linux
+  duration: 2
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- break: true
+  label: Doggy clothed room
+
+- file: 15.57. SexStart.png
+  backend: linux
+  duration: 2
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- type: multichain
+  chain_prefix: Sexspoon
+  model_class: wan
+  neg: |-
+    static, frozen, no movement
+  chain:
+  - duration: 4
+    pos: |-
+      The video begins with a close-up of a woman - Than video jumpcut to scene with same woman is lying on her side on the bed from image, legs slightly bent. A man lying behind her in spooning position, vigorously fucking her from behind. Strong, deep, rhythmic penetration, man's hips thrusting forward against her ass. Clear side view showing the woman's face in profile, breasts exposed and bouncing with each thrust, open mouth, eyes rolling back, intense pleasure and overwhelm expression, heavy breathing. Man's hand gripping her hip and waist tightly, holding her against his body, dynamic and powerful sex motion, detailed anatomy, realistic penetration, dramatic lighting, high detail, erotic atmosphere same background as the first frame.
+    neg: |-
+      side view only, back view, no eye contact, woman not looking at camera, static pose, weak thrusting, bad anatomy, deformed body, extra limbs, blurry motion, low quality, censored, clothes on, poor penetration, unrealistic scale, cartoon
+    lora_high: WAN2.2_LoraSet/mql_casting_sex_spoon_wan22_i2v_v1_high_noise.safetensors
+    lora_low: WAN2.2_LoraSet/mql_casting_sex_spoon_wan22_i2v_v1_low_noise.safetensors
+    audio_prompt: female moaning loud pleasure, rhythmic thrusting sounds, skin slapping wet impact, gasping breath, increasing intensity, climax vocal
+    audio_negative_prompt: music, melody, speech, words, lyrics, reverb, echo, distortion, cartoon, low quality
+  - duration: 3
+    pos: |-
+      Woman is lying on her side, legs slightly bent. A man lying behind her in spooning position, vigorously fucking her from behind. Strong, deep, rhythmic penetration, man's hips thrusting forward against her ass. Clear side view showing the woman's face in profile, breasts exposed and bouncing with each thrust, open mouth, eyes rolling back, intense pleasure and overwhelm expression, heavy breathing. Man's hand gripping her hip and waist tightly, holding her against his body, dynamic and powerful sex motion, detailed anatomy, realistic penetration, dramatic lighting, high detail, erotic atmosphere same background as the first frame.
+    neg: |-
+      side view, back view, wrong camera angle, no penetration, bad anatomy, deformed body, extra limbs, blurry, low quality, censored, clothes on, monster not behind her, weak motion, static pose, cartoon, floating, unrealistic scale, poor connection between bodies
+    lora_high: WAN2.2_LoraSet/mql_casting_sex_spoon_wan22_i2v_v1_high_noise.safetensors
+    lora_low: WAN2.2_LoraSet/mql_casting_sex_spoon_wan22_i2v_v1_low_noise.safetensors
+    audio_prompt: female moaning loud pleasure, rhythmic thrusting sounds, skin slapping wet impact, gasping breath, increasing intensity, climax vocal
+    audio_negative_prompt: music, melody, speech, words, lyrics, reverb, echo, distortion, cartoon, low quality
+
+- break: true
+  label: Spoon half clothed room
+
+- file: 15.61. SexStart.png
+  backend: linux
+  duration: 2
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- type: multichain
+  chain_prefix: Backdoggy
+  model_class: wan
+  neg: |-
+    static, frozen, no movement
+  chain:
+  - duration: 3
+    pos: |-
+      The video begins with a close-up of a woman. Than video jumpcut to scene with same woman now having sex in doggystyle position with the man on the bed from image. From an overhead perspective, she is on all fours with her back facing the camera. A man is positioned behind her. his hand gripping her hips as he penetrates her from behind. The woman's expression changes throughout the scene, showing moments of pleasure and engagement with her partner. Her legs are spread apart with the man in-between her legs.
+
+      she is looking directly at the camera fully facing it.
+
+      she looks back at the camera.
+
+      she looks at the camera throughout the video. same background as the first frame.
+    neg: |-
+      side view only, back view, no eye contact, woman not looking at camera, static pose, weak thrusting, bad anatomy, deformed body, extra limbs, blurry motion, low quality, censored, clothes on, poor penetration, unrealistic scale, cartoon
+    lora_high: WAN2.2_LoraSet/iGoon%2520-%2520Blink_Back_Doggystyle_HIGH.safetensors
+    lora_low: WAN2.2_LoraSet/iGoon%2520-%2520Blink_Back_Doggystyle_LOW.safetensors
+    audio_prompt: female moaning loud pleasure, rhythmic thrusting sounds, skin slapping wet impact, gasping breath, increasing intensity, climax vocal
+    audio_negative_prompt: music, melody, speech, words, lyrics, reverb, echo, distortion, cartoon, low quality
+  - duration: 3
+    pos: |-
+      Woman now having sex in doggystyle position with the man. From an overhead perspective, she is on all fours with her back facing the camera. A man is positioned behind her. his hand gripping her hips as he penetrates her from behind. The woman's expression changes throughout the scene, showing moments of pleasure and engagement with her partner. Her legs are spread apart with the man in-between her legs.
+
+      she is looking directly at the camera fully facing it.
+
+      she looks back at the camera.
+
+      she looks at the camera throughout the video. same background as the first frame.
+    neg: |-
+      side view only, back view, no eye contact, woman not looking at camera, static pose, weak thrusting, bad anatomy, deformed body, extra limbs, blurry motion, low quality, censored, clothes on, poor penetration, unrealistic scale, cartoon
+    lora_high: WAN2.2_LoraSet/iGoon%2520-%2520Blink_Back_Doggystyle_HIGH.safetensors
+    lora_low: WAN2.2_LoraSet/iGoon%2520-%2520Blink_Back_Doggystyle_LOW.safetensors
+    audio_prompt: female moaning loud pleasure, rhythmic thrusting sounds, skin slapping wet impact, gasping breath, increasing intensity, climax vocal
+    audio_negative_prompt: music, melody, speech, words, lyrics, reverb, echo, distortion, cartoon, low quality
+
+- break: true
+  label: Backdoggy naked room
+
+- file: 15.50. Blow.png
+  backend: linux
+  duration: 2
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- type: multichain
+  chain_prefix: Blow in club_2
+  model_class: wan
+  neg: |-
+    static, frozen, no movement
+  chain:
+  - duration: 4
+    pos: |-
+      The video then jumpcuts to the same woman now kneeling between a man's legs and feet with her upper body is bent forward over him, and her face is close to his lap. Man is wearing a black suit and dark formal dress shoes. With one hand, she grasps the man's penis and moves it up and down its shaft in a steady rhythm, performing the handjob. She goes through various facial expressions throughout the video from happy to gasping she looks like she is talking.
+
+      She looks at the camera throughout the video
+
+      Man's feet are seen in the background same background as the first frame.
+    neg: |-
+      bad anatomy, deformed penis, extra limbs, blurry, low quality, censored, small penis, no saliva, closed mouth, no eye contact, bad hand position, teeth visible, static pose, cartoon, plastic skin, poor connection, weak motion
+    audio_prompt: wet mouth sounds, oral suction, saliva dripping, lips sliding, rhythmic sucking and slurping, oral motion foley, synchronized with video, crisp, high quality, realistic
+    audio_negative_prompt: music, melody, ambient drone, moaning, voice, sustained atmosphere, continuous background noise, low quality, distortion
+    lora_high: WAN2.2_LoraSet/iGoon%20-%20Blink_Handjob_I2V_HIGH.safetensors
+    lora_low: WAN2.2_LoraSet/iGoon%20-%20Blink_Handjob_I2V_LOW.safetensors
+  - duration: 4
+    pos: |-
+      The video then jumpcuts to the same woman now kneeling between a man's legs and feet with her upper body is bent forward over him, and her face is close to his lap. Man is wearing a black suit and dark formal dress shoes. With one hand, she grasps the man's penis and moves it up and down its shaft in a steady rhythm, performing the handjob. She goes through various facial expressions throughout the video from happy to gasping she looks like she is talking.
+
+      She looks at the camera throughout the video
+
+      Man's feet are seen in the background same background as the first frame.
+    neg: |-
+      bad anatomy, deformed penis, extra limbs, blurry, low quality, censored, small penis, no saliva, closed mouth, no eye contact, bad hand position, teeth visible, static pose, cartoon, plastic skin, poor connection, weak motion
+    audio_prompt: wet mouth sounds, oral suction, saliva dripping, lips sliding, rhythmic sucking and slurping, oral motion foley, synchronized with video, crisp, high quality, realistic
+    audio_negative_prompt: music, melody, ambient drone, moaning, voice, sustained atmosphere, continuous background noise, low quality, distortion
+    lora_high: WAN2.2_LoraSet/iGoon%20-%20Blink_Handjob_I2V_HIGH.safetensors
+    lora_low: WAN2.2_LoraSet/iGoon%20-%20Blink_Handjob_I2V_LOW.safetensors
+
+- break: true
+  label: Hand job - naked 1 floor
+
+- file: 15.53. Blow.png
+  backend: linux
+  duration: 2
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- type: multichain
+  chain_prefix: Blow in club_4
+  model_class: wan
+  neg: |-
+    static, frozen, no movement
+  chain:
+  - duration: 4
+    pos: |-
+      The video begins with a close-up of a woman. The video then jumpcuts to the same woman now kneeling down in same background as the first frame, with her breasts positioned around the man's erect penis as he thrusts his penis up and down in a titjob motion sliding it between her breasts. she makes various facial expressions during the video she looks like she is talking and has her eyes wide open with a crazy expression.  same background as the first frame.
+    neg: |-
+      bad anatomy, deformed penis, extra limbs, blurry, low quality, censored, small penis, no saliva, closed mouth, no eye contact, bad hand position, teeth visible, static pose, cartoon, plastic skin, poor connection, weak motion
+    audio_prompt: wet mouth sounds, oral suction, saliva dripping, lips sliding, rhythmic sucking and slurping, oral motion foley, synchronized with video, crisp, high quality, realistic
+    audio_negative_prompt: music, melody, ambient drone, moaning, voice, sustained atmosphere, continuous background noise, low quality, distortion
+    lora_high: WAN2.2_LoraSet/iGoon_Blink_Titjob_I2V_HIGH.safetensors
+    lora_low: WAN2.2_LoraSet/iGoon_Blink_Titjob_I2V_LOW.safetensors
+    use_lightning: true
+    frame_interpolation: true
+    workflow: _I2V_classic_4s1200_nog4gg.json
+  - duration: 4
+    pos: |-
+      The woman now kneeling down in same background as the first frame, with her breasts positioned around the man's erect penis as he thrusts his penis up and down in a titjob motion sliding it between her breasts. she makes various facial expressions during the video she looks like she is talking and has her eyes wide open with a crazy expression.  same background as the first frame.
+    neg: |-
+      bad anatomy, deformed penis, extra limbs, blurry, low quality, censored, small penis, no saliva, closed mouth, no eye contact, bad hand position, teeth visible, static pose, cartoon, plastic skin, poor connection, weak motion
+    audio_prompt: wet mouth sounds, oral suction, saliva dripping, lips sliding, rhythmic sucking and slurping, oral motion foley, synchronized with video, crisp, high quality, realistic
+    audio_negative_prompt: music, melody, ambient drone, moaning, voice, sustained atmosphere, continuous background noise, low quality, distortion
+    lora_high: WAN2.2_LoraSet/iGoon_Blink_Titjob_I2V_HIGH.safetensors
+    lora_low: WAN2.2_LoraSet/iGoon_Blink_Titjob_I2V_LOW.safetensors
+    use_lightning: true
+    frame_interpolation: true
+    workflow: _I2V_classic_4s1200_nog4gg.json
+
+- break: true
+  label: Tit job naked any
+
+- file: 15.52. Blow.png
+  backend: linux
+  duration: 2
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- type: multichain
+  chain_prefix: Blow in club_3
+  model_class: wan
+  neg: |-
+    static, frozen, no movement
+  chain:
+  - duration: 4
+    pos: |-
+      The video then jumpcuts to the same woman now kneeling between a man's legs and feet with her upper body is bent forward over him, and her face is close to his lap. With one hand, she grasps the man's penis and moves it up and down its shaft in a steady rhythm, performing the handjob. She goes through various facial expressions throughout the video from happy to gasping she looks like she is talking.
+
+      She looks at the camera throughout the video
+
+      Man's feet are seen in the background same background as the first frame.
+    neg: |-
+      bad anatomy, deformed penis, extra limbs, blurry, low quality, censored, small penis, no saliva, closed mouth, no eye contact, bad hand position, teeth visible, static pose, cartoon, plastic skin, poor connection, weak motion
+    audio_prompt: wet mouth sounds, oral suction, saliva dripping, lips sliding, rhythmic sucking and slurping, oral motion foley, synchronized with video, crisp, high quality, realistic
+    audio_negative_prompt: music, melody, ambient drone, moaning, voice, sustained atmosphere, continuous background noise, low quality, distortion
+    lora_high: WAN2.2_LoraSet/iGoon%20-%20Blink_Handjob_I2V_HIGH.safetensors
+    lora_low: WAN2.2_LoraSet/iGoon%20-%20Blink_Handjob_I2V_LOW.safetensors
+    use_lightning: true
+    workflow: _I2V_classic_4s1200_nog4gg.json
+  - duration: 4
+    pos: |-
+      Woman now kneeling between a man's legs and feet with her upper body is bent forward over him, and her face is close to his lap. With one hand, she grasps the man's penis and moves it up and down its shaft in a steady rhythm, performing the handjob. She goes through various facial expressions throughout the video from happy to gasping she looks like she is talking.
+
+      She looks at the camera throughout the video
+
+      Man's feet are seen in the background same background as the first frame.
+    neg: |-
+      bad anatomy, deformed penis, extra limbs, blurry, low quality, censored, small penis, no saliva, closed mouth, no eye contact, bad hand position, teeth visible, static pose, cartoon, plastic skin, poor connection, weak motion
+    audio_prompt: wet mouth sounds, oral suction, saliva dripping, lips sliding, rhythmic sucking and slurping, oral motion foley, synchronized with video, crisp, high quality, realistic
+    audio_negative_prompt: music, melody, ambient drone, moaning, voice, sustained atmosphere, continuous background noise, low quality, distortion
+    lora_high: WAN2.2_LoraSet/iGoon%20-%20Blink_Handjob_I2V_HIGH.safetensors
+    lora_low: WAN2.2_LoraSet/iGoon%20-%20Blink_Handjob_I2V_LOW.safetensors
+    use_lightning: true
+    workflow: _I2V_classic_4s1200_nog4gg.json
+
+- break: true
+  label: Hand job naked 2 floor
+
+- file: 15.65. SexStart.png
+  backend: linux
+  duration: 2
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- type: multichain
+  chain_prefix: Missionary
+  model_class: wan
+  neg: |-
+    static, frozen, no movement
+  chain:
+  - duration: 4
+    pos: |-
+      The video begins with a close-up of a woman and man. The video then immiedately jumpcuts to the same woman now having sex in missionary position with the man from image on the bed from image. She is lying on her back on the ground with her legs spread with her knees to her chest hands on the floor. A man's penis is visible entering her vagina from below. The man is positioned kneeling between her legs infront of her thrusting his penis into her vagina. Throughout the scene, she appears to be experiencing pleasure, often with her mouth open or eyes closed as she lies back. Her hands hold onto her thighs spreading her legs. same background as the first frame.
+    neg: |-
+      static, frozen, thigh highs, socks, hosiery, legwear
+    lora_high: WAN2.2_LoraSet/iGoon%20-%20Blink_Missionary_I2V_HIGH.safetensors
+    lora_low: WAN2.2_LoraSet/iGoon%20-%20Blink_Missionary_I2V_LOW.safetensors
+    audio_prompt: female moaning loud pleasure, rhythmic thrusting sounds, skin slapping wet impact, gasping breath, increasing intensity, climax vocal
+    audio_negative_prompt: music, melody, speech, words, lyrics, reverb, echo, distortion, cartoon, low quality
+    use_lightning: true
+    workflow: _I2V_classic_4s1200_nog4gg.json
+  - duration: 3
+    pos: |-
+      Woman now having sex in missionary position with the man from image. She is lying on her back on the ground with her legs spread with her knees to her chest hands on the floor. A man's penis is visible entering her vagina from below. The man is positioned kneeling between her legs infront of her thrusting his penis into her vagina. Throughout the scene, she appears to be experiencing pleasure, often with her mouth open or eyes closed as she lies back. Her hands hold onto her thighs spreading her legs. same background as the first frame.
+    neg: ""
+    lora_high: WAN2.2_LoraSet/iGoon%20-%20Blink_Missionary_I2V_HIGH.safetensors
+    lora_low: WAN2.2_LoraSet/iGoon%20-%20Blink_Missionary_I2V_LOW.safetensors
+    audio_prompt: female moaning loud pleasure, rhythmic thrusting sounds, skin slapping wet impact, gasping breath, increasing intensity, climax vocal
+    audio_negative_prompt: music, melody, speech, words, lyrics, reverb, echo, distortion, cartoon, low quality
+    use_lightning: true
+    workflow: _I2V_classic_4s1200_nog4gg.json
+
+- break: true
+  label: Missionary naked room stockings top
+
+- file: 15.63. SexStart.png
+  backend: linux
+  duration: 2
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- type: multichain
+  chain_prefix: SquatCowgirl
+  model_class: wan
+  neg: |-
+    static, frozen, no movement
+  chain:
+  - duration: 4
+    pos: |-
+      The video begins with a close-up of a fully nude woman. The video then jumpcuts to the same woman now having sex with a same man in squatting cowgirl position her face fills the screen she is leaning over forwards as she bounces up and down aggressively. Man erect penis is in her vagina.
+
+      she looks at the camera throughout the video.
+
+      The video is shot from above looking down on the scene. same background as the first frame.
+    neg: |-
+      static, frozen, thigh highs, socks, hosiery, legwear
+    lora_high: WAN2.2_LoraSet/Blink_Squatting_Cowgirl_Position_I2V_HIGH.safetensors
+    lora_low: WAN2.2_LoraSet/Blink_Squatting_Cowgirl_Position_I2V_LOW.safetensors
+    audio_prompt: female moaning loud pleasure, rhythmic thrusting sounds, skin slapping wet impact, gasping breath, increasing intensity, climax vocal
+    audio_negative_prompt: music, melody, speech, words, lyrics, reverb, echo, distortion, cartoon, low quality
+  - duration: 3
+    pos: |-
+      Woman now having sex with a same man in squatting cowgirl position her face fills the screen she is leaning over forwards as she bounces up and down aggressively. Man erect penis is in her vagina.
+
+      she looks at the camera throughout the video.
+
+      The video is shot from above looking down on the scene. same background as the first frame.
+    neg: ""
+    lora_high: WAN2.2_LoraSet/Blink_Squatting_Cowgirl_Position_I2V_HIGH.safetensors
+    lora_low: WAN2.2_LoraSet/Blink_Squatting_Cowgirl_Position_I2V_LOW.safetensors
+    audio_prompt: female moaning loud pleasure, rhythmic thrusting sounds, skin slapping wet impact, gasping breath, increasing intensity, climax vocal
+    audio_negative_prompt: music, melody, speech, words, lyrics, reverb, echo, distortion, cartoon, low quality
+
+- break: true
+  label: Squat cowgirl naked room stockings
+
+- file: 15.67. Blow.png
+  backend: linux
+  duration: 2
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- type: multichain
+  chain_prefix: Blow in club_5
+  model_class: wan
+  neg: |-
+    static, frozen, no movement
+  chain:
+  - duration: 4
+    pos: |-
+      The video begins with a close-up of a woman - Than video jumpcut to scene with same woman now receiving a facial from a man's penis. She is sitting on the bed looking up with a open mouth. The cum shoots all over her face. The man's hand holds his erect penis masturbating his penis and shooting the thick white cum directly onto her face, forehead, eyes, cheek and mouth. The thick white cum slowly drips down her face onto her body. An explosion of thick white cum blasts her face. she looks directly at the camera throughout the video. same background as the first frame.
+    neg: |-
+      bad anatomy, deformed penis, extra limbs, blurry, low quality, censored, small penis, no saliva, closed mouth, no eye contact, bad hand position, teeth visible, static pose, cartoon, plastic skin, poor connection, weak motion
+    lora_high: WAN2.2_LoraSet/iGoon%2520-%2520Blink_Facial_I2V_HIGH.safetensors
+    lora_low: WAN2.2_LoraSet/iGoon%2520-%2520Blink_Facial_I2V_LOW.safetensors
+    audio_prompt: wet splashing sounds, thick liquid impact, fluid spray, viscous liquid dripping and hitting skin, wet surface contact, synchronized with video, crisp, high quality, realistic
+    audio_negative_prompt: music, melody, ambient drone, moaning, voice, sustained atmosphere, continuous background noise, low quality, distortion
+
+- break: true
+  label: Cum shot
+
+- type: scene_break
+  name: HAPPY END
+
+- file: 16.50_odpowiedz.mp4
+  backend: linux
+  duration: 2
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- break: true
+  label: If you want you can
+
+- file: 16.53. jogurt.png
+  backend: linux
+  duration: 2
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- type: multichain
+  chain_prefix: jogurt
+  model_class: ltx
+  neg: |-
+    blur, noise, watermark, text, low quality, worst quality, deformed
+  chain:
+  - duration: 6
+    pos: |-
+      Camera slowly zooms in on one subject in the scene, smoothly pushing closer while keeping them centered and in focus. The subject's face and identity remain fully consistent throughout the motion. Camera slowly zooms on woman's face. Joghurt on her face slowly drops down. Woman smiles embarassed.
+    neg: |-
+      camera shake, jerky zoom, subject leaving frame, changing facial features, identity drift, morphing face, new characters, additional people, someone entering or exiting the scene, moving background, shifting walls, furniture moving
+    ltx_variant: 20step
+    frame_interpolation: false
+
+- break: true
+  label: Zoom on woman's face
+
+- file: 18.01_pytanie.mp4
+  backend: linux
+  duration: 2
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- break: true
+  label: Get back to work
+
+- file: 18.03. jogurt.png
+  backend: linux
+  duration: 2
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- type: multichain
+  chain_prefix: Odwraca się
+  model_class: ltx
+  neg: |-
+    blur, noise, watermark, text, low quality, worst quality, deformed
+  chain:
+  - duration: 3
+    pos: |-
+      Static, locked-off camera. Focus fixed on the main subject throughout. Only persons visivle on screen no other persons. Woman standing still. She has Semen on her face.
+    neg: |-
+      camera pan, camera tilt, zoom, dolly movement, handheld camera shake, rack focus, focus pull, depth of field shift, new characters, additional people, someone entering or exiting the scene, moving background, shifting walls, furniture moving
+    frame_interpolation: false
+    lipsync_audio: Odzywa sie yes mam.MP3
+  - duration: 6
+    pos: |-
+      Smooth tracking shot, camera follows the subject steadily, keeping consistent framing and distance as they move. Camera motion is fluid and matches the subject's pace exactly. Only persons visible on screen, no other persons. Woman's turns back and runs away. She has semen on her face. The woman is wearing only black stockings and black high-heeled pumps. Apart of that she is naked
+    neg: |-
+      camera lag, subject leaving frame, jerky camera movement, rack focus, focus pull, depth of field shift, new characters, additional people, someone entering or exiting the scene, moving background, shifting walls, furniture moving, snickers, bra, panties
+    ltx_variant: 20step
+    frame_interpolation: false
+  - duration: 6
+    pos: |-
+      Smooth tracking shot, camera follows the subject steadily, keeping consistent framing and distance as they move. Camera motion is fluid and matches the subject's pace exactly. Only persons visible on screen, no other persons. Woman start running and runs away down the hall. The woman is wearing only black stockings and black high-heeled pumps. Apart of that she is naked
+    neg: |-
+      camera lag, subject leaving frame, jerky camera movement, rack focus, focus pull, depth of field shift, new characters, additional people, someone entering or exiting the scene, moving background, shifting walls, furniture moving, snickers, bra, panties
+    ltx_variant: 20step
+    frame_interpolation: false
+
+- file: 18.05. jogurt.png
+  backend: linux
+  duration: 2
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- break: true
+  label: Woman's turns back
+
+defaults:
+  auto_blocks_to_swap: true
+  resolution:
+  - 768
+  - 1152

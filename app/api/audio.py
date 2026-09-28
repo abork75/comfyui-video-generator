@@ -146,6 +146,53 @@ async def add_audio_to_clip(run_filename: str, request: Request):
     return {"ok": True}
 
 
+@router.post("/foley/{run_filename}")
+async def add_foley_audio_to_clip(run_filename: str, request: Request):
+    """
+    Regenerate FX audio for an already-generated transition video using LTX
+    2.3 Foley (manual alternative to MMAudio - see app/services/foley_service.py).
+    Runs in background — progress streamed to log panel via WebSocket, same
+    UX as the MMAudio path above.
+    """
+    try:
+        body = await request.json()
+    except Exception:
+        body = {}
+
+    name: str = (body.get("name") or "").strip()
+    if not name:
+        raise HTTPException(status_code=400, detail="Brak parametru 'name'")
+
+    yaml_path = RUNS_FOLDER / run_filename
+    if not yaml_path.exists():
+        raise HTTPException(status_code=404, detail=f"Plik nie istnieje: {run_filename}")
+
+    globals_data = get_yaml_globals(yaml_path)
+    if not globals_data:
+        raise HTTPException(status_code=400, detail="Nie można odczytać YAML")
+
+    # Audio prompts: request body → YAML defaults → system fallback (same
+    # 3-tier chain as the MMAudio path, so switching models on the same step
+    # doesn't change what prompt actually gets used)
+    defs = globals_data.get("defaults") or {}
+    audio_prompt = (
+        body.get("audio_prompt")
+        or defs.get("default_audio_prompt")
+        or _FALLBACK_AUDIO_PROMPT
+    )
+    audio_negative_prompt = (
+        body.get("audio_negative_prompt")
+        or defs.get("default_audio_negative_prompt")
+        or _FALLBACK_AUDIO_NEG_PROMPT
+    )
+
+    from app.services.foley_service import start_foley
+    result = start_foley(run_filename, name, audio_prompt, audio_negative_prompt)
+    if not result.get("ok"):
+        raise HTTPException(status_code=400, detail=result.get("error"))
+    return result
+
+
 # ── Sequence ambient audio ───────────────────────────────────────────────────
 
 async def _run_sequence_audio_bg(
@@ -284,6 +331,24 @@ async def serve_fx_file(run_filename: str, filename: str):
     if not p.exists():
         raise HTTPException(status_code=404)
     return FileResponse(str(p), media_type="audio/mpeg")
+
+
+@router.delete("/fx/{run_filename}/{filename}")
+async def delete_fx_file(run_filename: str, filename: str):
+    """Delete a per-clip FX side file (no sidecar JSON to clean up - unlike
+    ambient/narrator, FX has no clip-range metadata, just the mp3 itself)."""
+    yaml_path = RUNS_FOLDER / run_filename
+    globals_data = get_yaml_globals(yaml_path) if yaml_path.exists() else None
+    if not globals_data:
+        raise HTTPException(status_code=404)
+    if not filename.endswith(".mp3"):
+        raise HTTPException(status_code=404)
+    project_folder = Path(globals_data.get("project_folder") or "")
+    p = project_folder / "transitions" / "fx" / filename
+    if not p.exists():
+        raise HTTPException(status_code=404)
+    p.unlink()
+    return {"ok": True}
 
 
 @router.get("/ambient/{run_filename}")

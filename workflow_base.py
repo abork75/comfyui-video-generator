@@ -447,38 +447,71 @@ class WorkflowRunner:
         interrupt_comfyui), nie ten timeout."""
         url = f"{self.api_url}/history/{prompt_id}"
         start_time = time.time()
-        
+
+        # 2026-09-28 (user-reported multi-hour stall, cause not pinned down):
+        # this loop can legitimately run for up to `timeout` seconds (4h)
+        # with ZERO log output otherwise - `self.logger` below is a plain
+        # print() (see class Logger above), never reaches logs/gen_*.log, so
+        # a genuine network/ComfyUI stall here was previously indistinguishable
+        # from "just a slow generation" after the fact. Heartbeat every ~5min
+        # through process_service.log_sys (same persisted/UI-visible channel
+        # as the rest of the app's generation log) so a future stall shows
+        # either regular heartbeats with no completion (ComfyUI/WSL2-side) or
+        # heartbeats stopping outright (a single HTTP call stuck past its own
+        # stated timeout - a known class of WSL2 virtual-adapter flakiness).
+        # Lazy/guarded: this module also runs standalone outside the FastAPI
+        # app (legacy subprocess scripts) where app.services isn't importable;
+        # heartbeat silently no-ops there instead of breaking generation.
+        def _heartbeat(elapsed_s: float) -> None:
+            try:
+                from app.services.process_service import process_service
+                process_service.log_sys(
+                    f"  ⏳ Nadal czekam na ComfyUI (prompt_id={prompt_id}, {elapsed_s/60:.1f} min)..."
+                )
+            except Exception:
+                pass
+
+        last_heartbeat = start_time
+
         while time.time() - start_time < timeout:
             try:
                 response = requests.get(url, timeout=10)
-                
+
                 if response.status_code == 200:
                     history = response.json()
-                    
+
                     if prompt_id in history:
                         result = history[prompt_id]
-                        
+
                         if "outputs" in result:
                             elapsed = time.time() - start_time
                             print()
                             self.logger.success(f"Generacja zakończona! Czas: {elapsed:.1f}s")
                             return result["outputs"]
-                        
+
                         if "status" in result:
                             status = result["status"]
                             if status.get("status_str") == "error":
                                 print()
                                 self.logger.error(f"Błąd: {status.get('messages', [])}")
                                 return None
-                
+
                 print(".", end="", flush=True)
+                now = time.time()
+                if now - last_heartbeat >= 300:
+                    _heartbeat(now - start_time)
+                    last_heartbeat = now
                 time.sleep(check_interval)
-                
+
             except Exception as e:
                 print()
                 self.logger.warning(f"Błąd sprawdzania: {e}")
+                now = time.time()
+                if now - last_heartbeat >= 300:
+                    _heartbeat(now - start_time)
+                    last_heartbeat = now
                 time.sleep(check_interval)
-        
+
         print()
         self.logger.error(f"Timeout po {timeout}s")
         return None

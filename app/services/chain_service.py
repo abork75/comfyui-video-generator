@@ -595,6 +595,39 @@ async def _run_chain(
 
         _state["status"] = "running"
 
+        # Ensure the immediate predecessor step (if any) is deblurred BEFORE
+        # we anchor this run's first step on its last frame. The in-loop
+        # auto-deblur below already enforces "deblur this step before
+        # extracting its last frame for the NEXT one" - but only within a
+        # single _run_chain call. When step N-1 was generated in an earlier,
+        # separate call (frame_cache is empty on a fresh invocation - e.g.
+        # resuming a chain via "Generuj zaznaczone" after only step 1 was
+        # ever generated), _get_start_frame reads step N-1's file straight
+        # off disk in whatever state it's currently in, deblurred or not.
+        # This closes that gap at the one point it matters: the boundary
+        # between two separate chain-generation calls (2026-09-27,
+        # user-reported).
+        if from_step > 1 and defaults.get("auto_deblur_chain_steps", True):
+            _prev_name = f"{chain_prefix}_{from_step - 1:03d}.mp4"
+            _prev_path = chain_handler.get_chain_output_path(_prev_name)
+            if _prev_path.exists():
+                from app.services.media_service import _get_clip_meta
+                if not _get_clip_meta(_prev_path).get("deblurred"):
+                    from app.services.process_service import process_service
+                    from app.services.deblur_service import _deblur_clip_core
+
+                    process_service.log_sys(f"  🔬 Deblur poprzednika przed zakotwiczeniem: {_prev_name}...")
+                    _prev_deblur_t0 = time.time()
+                    try:
+                        await _deblur_clip_core(_prev_path, _prev_path, run_filename, _prev_name, "generated")
+                        process_service.log_sys(
+                            f"  🔬 Deblur poprzednika gotowy: {_prev_name} ({round(time.time() - _prev_deblur_t0, 1)}s)"
+                        )
+                    except Exception as _prev_deblur_err:
+                        process_service.log_sys(
+                            f"  ⚠ Deblur poprzednika nieudany dla {_prev_name}: {_prev_deblur_err} — kotwiczę na surowej klatce"
+                        )
+
         for step_idx in range(from_step, to_step + 1):
             _state["step"] = step_idx
 
@@ -753,6 +786,25 @@ async def _run_chain(
                 raise RuntimeError(f"Backend zwrócił błąd dla step {step_idx}/{total}")
 
             print(f"  ✓ {out_name}")
+
+            # Stamp lipsync_applied=False on every freshly generated step output,
+            # unconditionally - not just leave the field absent. A brand new
+            # generation is definitionally not lipsynced yet, even when it
+            # overwrites a filename that WAS lipsynced before (regenerate-in-place,
+            # or a deleted-and-regenerated clip). Without this explicit stamp,
+            # has_lipsync_applied() has nothing but a stale sibling _beforelipsync
+            # archive to fall back on, which doesn't know the video underneath it
+            # changed - see lipsync_service.has_lipsync_applied (2026-09-15 fix,
+            # this is the other half of it: that fix stops the metadata tag from
+            # going STALE once written; this stamp stops it from being ABSENT in
+            # the first place). Auto-lipsync below (if configured) correctly
+            # overwrites this to True moments later via its own _replace_original
+            # call - this stamp only matters when nothing downstream sets it.
+            try:
+                from utils.video_metadata import update_metadata as _reset_lipsync_meta
+                _reset_lipsync_meta(out_path, lipsync_applied=False)
+            except Exception as _meta_reset_err:
+                print(f"  WARN: Nie udalo sie zresetowac metadanych lipsync dla {out_name} ({_meta_reset_err})")
 
             # Auto-deblur this step's output in place, before extracting its last
             # frame - so the NEXT step starts from an already-sharpened predecessor

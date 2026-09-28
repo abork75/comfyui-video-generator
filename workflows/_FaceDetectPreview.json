@@ -1,0 +1,37 @@
+{
+  "10": {
+    "inputs": {
+      "image": "PLACEHOLDER.jpg"
+    },
+    "class_type": "LoadImage",
+    "_meta": {
+      "title": "KLATKA (frame do sprawdzenia twarzy)"
+    }
+  },
+  "20": {
+    "inputs": {
+      "threshold": 0.5,
+      "image": [
+        "10",
+        0
+      ]
+    },
+    "class_type": "FaceDetectPreviewNode",
+    "_meta": {
+      "title": "Podglad wykrytych twarzy (numeracja od lewej)"
+    }
+  },
+  "30": {
+    "inputs": {
+      "filename_prefix": "facepreview",
+      "images": [
+        "20",
+        0
+      ]
+    },
+    "class_type": "SaveImage",
+    "_meta": {
+      "title": "ZAPIS podgladu"
+    }
+  }
+}

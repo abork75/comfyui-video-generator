@@ -69,7 +69,7 @@ defaults:
   - max_pixels: 9999999
     bts: 40
   frame_interpolation: true
-  auto_deblur_chain_steps: false
+  auto_deblur_chain_steps: true
   voice_enabled: false
   steps: 8
   use_lightning: true

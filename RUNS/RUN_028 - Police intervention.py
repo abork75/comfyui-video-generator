@@ -4,7 +4,7 @@
 # Edit RUN_028 - Police intervention.yaml and regenerate with:
 #     from app.services.yaml_service import generate_py_from_yaml
 #     generate_py_from_yaml(Path("RUNS/RUN_028 - Police intervention.yaml"))
-# Generated: 2026-09-13 22:35:54
+# Generated: 2026-09-14 23:54:58
 # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 import sys
@@ -571,10 +571,20 @@ Redhead woman on bed is hiding face in hand, Policewomen stands still, A red-hai
         'chain': [
             {
                 'duration': 6,
-                'pos': 'The police car pulls away and turns on its flashing lights.',
+                'pos': 'Cars drives away',
                 'neg': '',
                 'ltx_variant': '8step',
                 'frame_interpolation': False,
+                'audio_prompt': """Quiet suburban residential neighborhood ambience.
+Soft distant traffic from a nearby street, occasional cars passing far away,
+light wind moving through trees and gardens, faint birdsong,
+and a very distant dog barking once in a while.
+
+Natural outdoor daytime ambience. No speech is present. No music is present.""",
+                'audio_negative_prompt': """music, song, melody, score, soundtrack, singing, vocals,
+speech, voices, conversation, shouting, crowd,
+close traffic, loud engines, sirens, construction,
+close dog barking, footsteps, distorted, clipped, low bitrate""",
             },
         ],
     },
@@ -591,6 +601,13 @@ Redhead woman on bed is hiding face in hand, Policewomen stands still, A red-hai
         'duration': 2,
         'pos': 'NONE',
         'neg': 'NONE',
+        'ambient_audio_prompt': """Soft, quiet mechanical office room tone.
+Low air-conditioning hum, faint computer fan noise,
+occasional page turns, paper handling, light keyboard taps,
+gentle chair movement, and sparse distant footsteps.
+
+Only non-vocal environmental sounds.""",
+        'ambient_audio_negative_prompt': 'human voices, music, singing, radio, television',
     },
     {
         'type': 'multichain',
@@ -670,6 +687,11 @@ Redhead woman on bed is hiding face in hand, Policewomen stands still, A red-hai
                 'neg': 'camera lag, subject leaving frame, jerky camera movement, rack focus, focus pull, depth of field shift, new characters, additional people, someone entering or exiting the scene, moving background, shifting walls, furniture moving',
                 'ltx_variant': '20step',
                 'frame_interpolation': False,
+                'audio_prompt': """Redhead woman and touching her poicewoman walks on wooden floor.
+Each step makes a consistent sharp, hard heel click on stone stairs.
+The footsteps have a natural spacious reverberation in a large empty mansion hall.
+Quiet indoor room ambience. No speech is present. No music is present. No run. Only footstep, no other sounds no ambient.""",
+                'audio_negative_prompt': 'music, melody, song, singing, vocals, score, soundtrack, beat, rhythm bed, instrumental backing, tinny, thin, harsh, clipped, distorted, low bitrate, crackle, static noise, vinyl crackle, white noise, hiss, popping sounds',
             },
         ],
     },
@@ -686,6 +708,17 @@ Redhead woman on bed is hiding face in hand, Policewomen stands still, A red-hai
         'duration': 2,
         'pos': 'NONE',
         'neg': 'NONE',
+        'ambient_audio_prompt': """Quiet dark dungeon cell ambience.
+Cold damp stone walls, distant water drips echoing through the corridor,
+a low draft of wind, occasional faint chain rattles,
+and subtle iron bars creaking in the distance.
+
+Deep, natural stone reverberation in an old underground prison.
+No voices, no speech, no whispers, no music.""",
+        'ambient_audio_negative_prompt': """music, soundtrack, score, melody, singing, vocals,
+speech, voices, conversation, whispering, screaming, laughing,
+modern machinery, vehicles, city traffic, electronic beeps,
+loud impacts, distorted audio, clipped audio, low bitrate""",
     },
     {
         'type': 'multichain',
@@ -1007,6 +1040,13 @@ moving background, shifting walls, furniture moving""",
         'duration': 2,
         'pos': 'NONE',
         'neg': 'NONE',
+        'ambient_audio_prompt': """Soft, quiet mechanical office room tone.
+Low air-conditioning hum, faint computer fan noise,
+occasional page turns, paper handling, light keyboard taps,
+gentle chair movement, and sparse distant footsteps.
+
+Only non-vocal environmental sounds.""",
+        'ambient_audio_negative_prompt': 'human voices, music, singing, radio, television',
     },
     {
         'type': 'multichain',
@@ -1179,6 +1219,13 @@ No other people. No extra motion.""",
         'duration': 2,
         'pos': 'NONE',
         'neg': 'NONE',
+        'ambient_audio_prompt': """Soft, quiet mechanical office room tone.
+Low air-conditioning hum, faint computer fan noise,
+occasional page turns, paper handling, light keyboard taps,
+gentle chair movement, and sparse distant footsteps.
+
+Only non-vocal environmental sounds.""",
+        'ambient_audio_negative_prompt': 'human voices, music, singing, radio, television',
     },
     {
         'type': 'multichain',
@@ -1583,6 +1630,7 @@ She looks at the camera throughout the video same background as the first frame.
         'duration': 2,
         'pos': 'NONE',
         'neg': 'NONE',
+        'ambient_audio_prompt': 'Realistic large city street ambience, continuous traffic noise, cars and buses passing, distant sirens far away, pedestrian footsteps, scattered voices, bicycle bells, air brakes, city rumble, natural outdoor urban soundscape, no music, no narration',
     },
     {
         'type': 'multichain',
@@ -1654,6 +1702,8 @@ Pedestrians pass in the background going the opposite direction. Photorealistic 
         ],
     },
 
+    {"break": True},
+
     {
         'file': '80.61 under the cross.png',
         'backend': 'linux',
@@ -1661,8 +1711,6 @@ Pedestrians pass in the background going the opposite direction. Photorealistic 
         'pos': 'NONE',
         'neg': 'NONE',
     },
-    {"break": True},
-
     {
         'type': 'multichain',
         'chain_prefix': 'under the cross',
@@ -1684,6 +1732,8 @@ No other people appear. No extra motion.""",
                 'lipsync_sync_lips': False,
             },
         ],
+        'width': 2048,
+        'height': 1152,
     },
 
     {
@@ -1785,8 +1835,8 @@ No other people appear. No extra motion.""",
         'duration': 2,
         'pos': 'NONE',
         'neg': 'NONE',
-        'ambient_audio_prompt': '',
-        'ambient_audio_negative_prompt': '',
+        'ambient_audio_prompt': 'Realistic large city street ambience, continuous traffic noise, cars and buses passing, distant sirens far away, pedestrian footsteps, scattered voices, bicycle bells, air brakes, city rumble, natural outdoor urban soundscape, no music, no narration, no talks',
+        'ambient_audio_negative_prompt': 'talks, whispers',
     },
     {
         'type': 'multichain',
@@ -2174,7 +2224,7 @@ Locked-off wide shot of a woman bound to a cross standing exactly in the center 
     {"break": True},
 
     {
-        'file': '83.63. zoom na policjantke.jpg',
+        'file': '83.63. zoom na policjantke.png',
         'backend': 'linux',
         'duration': 2,
         'pos': 'NONE',
@@ -2187,8 +2237,8 @@ Locked-off wide shot of a woman bound to a cross standing exactly in the center 
         'neg': 'blur, noise, watermark, text, low quality, worst quality, deformed',
         'chain': [
             {
-                'duration': 4,
-                'pos': 'Static, locked-off camera. Focus fixed on the main subject throughout. Only persons visivle on screen no other persons. Police woman is steadily looking straight ahead, barely not move. Eyes open.',
+                'duration': 6,
+                'pos': 'Static, locked-off camera. Focus fixed on the main subject throughout. Only persons visivle on screen no other persons. Police woman is steadily looking at left side of scene, barely not move. Eyes open. Police stands in place',
                 'neg': 'camera pan, camera tilt, zoom, dolly movement, handheld camera shake, rack focus, focus pull, depth of field shift, new characters, additional people, someone entering or exiting the scene, moving background, shifting walls, furniture moving',
                 'ltx_variant': '20step',
                 'frame_interpolation': False,
@@ -2200,7 +2250,7 @@ Locked-off wide shot of a woman bound to a cross standing exactly in the center 
     {"break": True},
 
     {
-        'file': '83.65. Zoom na zone.jpg',
+        'file': '83.65. Zoom na zone.png',
         'backend': 'linux',
         'duration': 2,
         'pos': 'NONE',
@@ -2226,7 +2276,7 @@ Locked-off wide shot of a woman bound to a cross standing exactly in the center 
     {"break": True},
 
     {
-        'file': '83.67. zoom na policjantke.jpg',
+        'file': '83.67. zoom na policjantke.png',
         'backend': 'linux',
         'duration': 2,
         'pos': 'NONE',
@@ -2240,7 +2290,7 @@ Locked-off wide shot of a woman bound to a cross standing exactly in the center 
         'chain': [
             {
                 'duration': 4,
-                'pos': 'Static, locked-off camera. Focus fixed on the main subject throughout. Only persons visivle on screen no other persons. Police woman is steadily looking straight ahead, barely not move. Eyes open.',
+                'pos': 'Static, locked-off camera. Focus fixed on the main subject throughout. Only persons visivle on screen no other persons. Police woman is steadily looking at left side of scene, barely not move. Eyes open.',
                 'neg': 'camera pan, camera tilt, zoom, dolly movement, handheld camera shake, rack focus, focus pull, depth of field shift, new characters, additional people, someone entering or exiting the scene, moving background, shifting walls, furniture moving',
                 'ltx_variant': '20step',
                 'frame_interpolation': False,
@@ -2248,11 +2298,17 @@ Locked-off wide shot of a woman bound to a cross standing exactly in the center 
             },
             {
                 'duration': 6,
-                'pos': 'Static, locked-off camera. Focus fixed on the main subject throughout. Only persons visivle on screen no other persons. Police woman is steadily looking straight ahead, barely not move. Eyes open.',
+                'pos': 'Static, locked-off camera. Focus fixed on the main subject throughout. Only policewoman visible on screen, no other persons. Police woman is steadily looking at left side of scene, barely not move. Eyes open.',
                 'neg': 'camera pan, camera tilt, zoom, dolly movement, handheld camera shake, rack focus, focus pull, depth of field shift, new characters, additional people, someone entering or exiting the scene, moving background, shifting walls, furniture moving',
                 'ltx_variant': '20step',
                 'frame_interpolation': False,
                 'lipsync_audio': '05J Jessica policewoman nice shave here.mp3',
+                'loras': [
+                    {
+                        'name': 'LTX/LTX-2.3-OmniNFT-RL-Lora_bf16.safetensors',
+                        'strength': 1,
+                    },
+                ],
             },
         ],
     },
@@ -2260,7 +2316,7 @@ Locked-off wide shot of a woman bound to a cross standing exactly in the center 
     {"break": True},
 
     {
-        'file': '83.69. Zoom na zone.jpg',
+        'file': '83.69. Zoom na zone.png',
         'backend': 'linux',
         'duration': 2,
         'pos': 'NONE',
@@ -2286,7 +2342,7 @@ Locked-off wide shot of a woman bound to a cross standing exactly in the center 
     {"break": True},
 
     {
-        'file': '83.71. zoom na policjantke.jpg',
+        'file': '83.71. zoom na policjantke.png',
         'backend': 'linux',
         'duration': 2,
         'pos': 'NONE',
@@ -2300,7 +2356,7 @@ Locked-off wide shot of a woman bound to a cross standing exactly in the center 
         'chain': [
             {
                 'duration': 7,
-                'pos': 'Static, locked-off camera. Focus fixed on the main subject throughout. Only persons visivle on screen no other persons. Police woman is steadily looking straight ahead, barely not move. Eyes open.',
+                'pos': 'Static, locked-off camera. Focus fixed on the main subject throughout. Only persons visivle on screen no other persons. Police woman is steadily looking at left side of scene, barely not move. Eyes open.',
                 'neg': 'camera pan, camera tilt, zoom, dolly movement, handheld camera shake, rack focus, focus pull, depth of field shift, new characters, additional people, someone entering or exiting the scene, moving background, shifting walls, furniture moving',
                 'ltx_variant': '20step',
                 'frame_interpolation': False,
@@ -2511,7 +2567,7 @@ For the next 2 seconds, after the bottle is gone: she looks around, dazed and di
     {"break": True},
 
     {
-        'file': '83.61. zoom na policjantke.jpg',
+        'file': '83.61. zoom na policjantke.png',
         'backend': 'linux',
         'duration': 2,
         'pos': 'NONE',
@@ -2952,12 +3008,25 @@ Her face, identity and features stay fully consistent and sharp throughout the z
         'neg': 'blur, noise, watermark, text, low quality, worst quality, deformed',
         'chain': [
             {
-                'duration': 6,
-                'pos': 'Static, locked-off camera. Focus fixed on the main subject throughout. Only persons visivle on screen no other persons',
+                'duration': 8,
+                'pos': 'Static, locked-off camera. Focus fixed on the main subject throughout. Only persons visible on screen no other persons. The female police officers remain silent; their lips do not move.',
                 'neg': 'camera pan, camera tilt, zoom, dolly movement, handheld camera shake, rack focus, focus pull, depth of field shift, new characters, additional people, someone entering or exiting the scene, moving background, shifting walls, furniture moving',
                 'ltx_variant': '20step',
                 'frame_interpolation': False,
                 'lipsync_audio': 'Jessica policewoman busy day.mp3',
+                'lipsync_mode': 'multi',
+                'lipsync_multi': [
+                    {
+                        'audio': 'Jessica policewoman busy day.mp3',
+                        'sync_lips': True,
+                        'position_index': 1,
+                    },
+                    {
+                        'audio': 'Kasia policewoman absolutely letsgo.mp3',
+                        'sync_lips': True,
+                        'position_index': 0,
+                    },
+                ],
             },
         ],
     },
@@ -3023,36 +3092,6 @@ Her face, identity and features stay fully consistent and sharp throughout the z
                 'neg': 'camera pan, camera tilt, zoom, dolly movement, handheld camera shake, rack focus, focus pull, depth of field shift, new characters, additional people, someone entering or exiting the scene, moving background, shifting walls, furniture moving. Turning back visible redhair woman face',
                 'ltx_variant': '20step',
                 'frame_interpolation': False,
-            },
-        ],
-    },
-
-    {"break": True},
-
-    {
-        'file': '91.71 outro.png',
-        'backend': 'linux',
-        'duration': 2,
-        'pos': 'NONE',
-        'neg': 'NONE',
-    },
-    {
-        'type': 'multichain',
-        'chain_prefix': 'test',
-        'model_class': 'ltx',
-        'neg': 'blur, noise, watermark, text, low quality, worst quality, deformed',
-        'chain': [
-            {
-                'duration': 6,
-                'pos': 'Static, locked-off camera. Focus fixed on the main subject throughout. Only persons visivle on screen no other persons. An exhausted woman shuffles up the stairs; her head is bowed, and she does not turn toward the camera.',
-                'neg': 'camera pan, camera tilt, zoom, dolly movement, handheld camera shake, rack focus, focus pull, depth of field shift, new characters, additional people, someone entering or exiting the scene, moving background, shifting walls, furniture moving. Turning back visible redhair woman face',
-                'ltx_variant': '20step',
-                'frame_interpolation': False,
-                'audio_prompt': """A woman in thin high-heeled stiletto shoes walks up a staircase.
-Each step makes a consistent sharp, hard heel click on stone stairs.
-The footsteps have a natural spacious reverberation in a large empty mansion hall.
-Quiet indoor room ambience. No speech is present. No music is present.""",
-                'audio_negative_prompt': 'music, melody, song, singing, vocals, score, soundtrack, beat, rhythm bed, instrumental backing, tinny, thin, harsh, clipped, distorted, low bitrate, crackle, static noise, vinyl crackle, white noise, hiss, popping sounds',
             },
         ],
     },

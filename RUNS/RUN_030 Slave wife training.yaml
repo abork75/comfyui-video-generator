@@ -1,0 +1,288 @@
+# RUN_030 Slave wife training.yaml
+# Edited: 2026-09-28 08:36:34
+# Edit this file freely — regenerate .py with generate_py_from_yaml()
+#
+project_folder: E:\FILMY\RUN_030 - Slave wife training
+
+use_test_flow: false
+
+# ──────────────────────────────────────────────────────────
+# FLOW — lista generacji
+# ──────────────────────────────────────────────────────────
+flow:
+- file: 50.51 Spanking.png
+  backend: linux
+  duration: 2
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- type: multichain
+  chain_prefix: spanking
+  model_class: wan
+  neg: |-
+    blur, noise, watermark, text, low quality, worst quality, deformed
+  chain:
+  - duration: 4
+    pos: |-
+      spanked, A black clothed woman vigorously spanking a woman lying face-down on spakning woman knees with her ass fully sticking out and raised high. The black clothed  woman delivers fast, hard, sharp spanking strikes with his open hand on her bare buttocks. Clear motion dynamics: quick powerful hits, exactly two strong spankings every 2 seconds, realistic impact, skin jiggle and bounce with each strike, hand moving rapidly up and down. Dynamic camera, natural motion blur on the fast hand movements, realistic physics, detailed skin deformation on impact,  high quality, smooth motion, cinematic lighting
+    neg: |-
+      slow motion, slow hits, soft spanking, weak strikes, blurry, deformed hands, extra fingers, bad anatomy, static image, no movement, frozen frame, low quality, artifacts, distorted body, unnatural physics, cartoon, anime, overexposed, underexposed
+    ltx_variant: 20step
+    frame_interpolation: false
+    lora_high: WAN2.2_LoraSet/Spanking_HIGH.safetensors
+    lora_low: WAN2.2_LoraSet/Spanking_LOW.safetensors
+    audio_prompt: sharp slap impact, flesh impact sound, skin contact, crisp smack, physical strike, body percussion, high quality, realistic foley,woman cries loud
+    audio_negative_prompt: music, melody, ambient drone, echo, reverb, wet sound, low quality, distortion
+  - duration: 4
+    pos: |-
+      spanked, A black clothed woman vigorously spanking a woman lying face-down on spakning woman knees with her ass fully sticking out and raised high. The black clothed  woman delivers fast, hard, sharp spanking strikes with his open hand on her bare buttocks. Clear motion dynamics: quick powerful hits, exactly two strong spankings every 2 seconds, realistic impact, skin jiggle and bounce with each strike, hand moving rapidly up and down. Dynamic camera, natural motion blur on the fast hand movements, realistic physics, detailed skin deformation on impact,  high quality, smooth motion, cinematic lighting
+    neg: |-
+      slow motion, slow hits, soft spanking, weak strikes, blurry, deformed hands, extra fingers, bad anatomy, static image, no movement, frozen frame, low quality, artifacts, distorted body, unnatural physics, cartoon, anime, overexposed, underexposed
+    ltx_variant: 20step
+    frame_interpolation: false
+    lora_high: WAN2.2_LoraSet/Spanking_HIGH.safetensors
+    lora_low: WAN2.2_LoraSet/Spanking_LOW.safetensors
+    audio_prompt: sharp slap impact, flesh impact sound, skin contact, crisp smack, physical strike, body percussion, high quality, realistic foley,woman cries loud
+    audio_negative_prompt: music, melody, ambient drone, echo, reverb, wet sound, low quality, distortion
+
+- break: true
+
+- file: 50.53 Spanking.png
+  backend: linux
+  duration: 2
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- type: multichain
+  chain_prefix: spanking_2
+  model_class: wan
+  neg: |-
+    blur, noise, watermark, text, low quality, worst quality, deformed
+  chain:
+  - duration: 4
+    pos: |-
+      spanked, A black clothed woman vigorously spanking a woman lying face-down on spakning woman knees with her ass fully sticking out and raised high. The black clothed  woman delivers fast, hard, sharp spanking strikes with his open hand on her bare buttocks. Clear motion dynamics: quick powerful hits, exactly two strong spankings every 2 seconds, realistic impact, skin jiggle and bounce with each strike, hand moving rapidly up and down. Dynamic camera, natural motion blur on the fast hand movements, realistic physics, detailed skin deformation on impact,  high quality, smooth motion, cinematic lighting
+    neg: |-
+      slow motion, slow hits, soft spanking, weak strikes, blurry, deformed hands, extra fingers, bad anatomy, static image, no movement, frozen frame, low quality, artifacts, distorted body, unnatural physics, cartoon, anime, overexposed, underexposed
+    ltx_variant: 20step
+    frame_interpolation: false
+    lora_high: WAN2.2_LoraSet/Spanking_HIGH.safetensors
+    lora_low: WAN2.2_LoraSet/Spanking_LOW.safetensors
+    audio_prompt: sharp slap impact, flesh impact sound, skin contact, crisp smack, physical strike, body percussion, high quality, realistic foley,woman cries loud
+    audio_negative_prompt: music, melody, ambient drone, echo, reverb, wet sound, low quality, distortion
+  - duration: 4
+    pos: |-
+      spanked, A black clothed woman vigorously spanking a woman lying face-down on spakning woman knees with her ass fully sticking out and raised high. The black clothed  woman delivers fast, hard, sharp spanking strikes with his open hand on her bare buttocks. Clear motion dynamics: quick powerful hits, exactly two strong spankings every 2 seconds, realistic impact, skin jiggle and bounce with each strike, hand moving rapidly up and down. Dynamic camera, natural motion blur on the fast hand movements, realistic physics, detailed skin deformation on impact,  high quality, smooth motion, cinematic lighting
+    neg: |-
+      slow motion, slow hits, soft spanking, weak strikes, blurry, deformed hands, extra fingers, bad anatomy, static image, no movement, frozen frame, low quality, artifacts, distorted body, unnatural physics, cartoon, anime, overexposed, underexposed
+    ltx_variant: 20step
+    frame_interpolation: false
+    lora_high: WAN2.2_LoraSet/Spanking_HIGH.safetensors
+    lora_low: WAN2.2_LoraSet/Spanking_LOW.safetensors
+    audio_prompt: sharp slap impact, flesh impact sound, skin contact, crisp smack, physical strike, body percussion, high quality, realistic foley,woman cries loud
+    audio_negative_prompt: music, melody, ambient drone, echo, reverb, wet sound, low quality, distortion
+
+- break: true
+
+- file: 50.55 Spanking.png
+  backend: linux
+  duration: 2
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- type: multichain
+  chain_prefix: spanking_3
+  model_class: wan
+  neg: |-
+    blur, noise, watermark, text, low quality, worst quality, deformed
+  chain:
+  - duration: 4
+    pos: |-
+      spanked, A black clothed woman vigorously spanking a woman lying face-down on spakning woman knees with her ass fully sticking out and raised high. The black clothed  woman delivers fast, hard, sharp spanking strikes with his open hand on her bare buttocks. Clear motion dynamics: quick powerful hits, exactly two strong spankings every 2 seconds, realistic impact, skin jiggle and bounce with each strike, hand moving rapidly up and down. Dynamic camera, natural motion blur on the fast hand movements, realistic physics, detailed skin deformation on impact,  high quality, smooth motion, cinematic lighting
+    neg: |-
+      slow motion, slow hits, soft spanking, weak strikes, blurry, deformed hands, extra fingers, bad anatomy, static image, no movement, frozen frame, low quality, artifacts, distorted body, unnatural physics, cartoon, anime, overexposed, underexposed
+    ltx_variant: 20step
+    frame_interpolation: false
+    lora_high: WAN2.2_LoraSet/Spanking_HIGH.safetensors
+    lora_low: WAN2.2_LoraSet/Spanking_LOW.safetensors
+    audio_prompt: sharp slap impact, flesh impact sound, skin contact, crisp smack, physical strike, body percussion, high quality, realistic foley,woman cries loud
+    audio_negative_prompt: music, melody, ambient drone, echo, reverb, wet sound, low quality, distortion
+  - duration: 4
+    pos: |-
+      spanked, A black clothed woman vigorously spanking a woman lying face-down on spakning woman knees with her ass fully sticking out and raised high. The black clothed  woman delivers fast, hard, sharp spanking strikes with his open hand on her bare buttocks. Clear motion dynamics: quick powerful hits, exactly two strong spankings every 2 seconds, realistic impact, skin jiggle and bounce with each strike, hand moving rapidly up and down. Dynamic camera, natural motion blur on the fast hand movements, realistic physics, detailed skin deformation on impact,  high quality, smooth motion, cinematic lighting
+    neg: |-
+      slow motion, slow hits, soft spanking, weak strikes, blurry, deformed hands, extra fingers, bad anatomy, static image, no movement, frozen frame, low quality, artifacts, distorted body, unnatural physics, cartoon, anime, overexposed, underexposed
+    ltx_variant: 20step
+    frame_interpolation: false
+    lora_high: WAN2.2_LoraSet/Spanking_HIGH.safetensors
+    lora_low: WAN2.2_LoraSet/Spanking_LOW.safetensors
+    audio_prompt: sharp slap impact, flesh impact sound, skin contact, crisp smack, physical strike, body percussion, high quality, realistic foley,woman cries loud
+    audio_negative_prompt: music, melody, ambient drone, echo, reverb, wet sound, low quality, distortion
+
+- break: true
+
+- file: 50.57 Spanking.png
+  backend: linux
+  duration: 2
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- type: multichain
+  chain_prefix: spanking_4
+  model_class: wan
+  neg: |-
+    blur, noise, watermark, text, low quality, worst quality, deformed
+  chain:
+  - duration: 4
+    pos: |-
+      spanked, A black clothed woman vigorously spanking a woman lying face-down on spakning woman knees with her ass fully sticking out and raised high. The black clothed  woman delivers fast, hard, sharp spanking strikes with his open hand on her bare buttocks. Clear motion dynamics: quick powerful hits, exactly two strong spankings every 2 seconds, realistic impact, skin jiggle and bounce with each strike, hand moving rapidly up and down. Dynamic camera, natural motion blur on the fast hand movements, realistic physics, detailed skin deformation on impact,  high quality, smooth motion, cinematic lighting
+    neg: |-
+      slow motion, slow hits, soft spanking, weak strikes, blurry, deformed hands, extra fingers, bad anatomy, static image, no movement, frozen frame, low quality, artifacts, distorted body, unnatural physics, cartoon, anime, overexposed, underexposed
+    ltx_variant: 20step
+    frame_interpolation: false
+    lora_high: WAN2.2_LoraSet/Spanking_HIGH.safetensors
+    lora_low: WAN2.2_LoraSet/Spanking_LOW.safetensors
+    audio_prompt: sharp slap impact, flesh impact sound, skin contact, crisp smack, physical strike, body percussion, high quality, realistic foley,woman cries loud
+    audio_negative_prompt: music, melody, ambient drone, echo, reverb, wet sound, low quality, distortion
+  - duration: 4
+    pos: |-
+      spanked, A black clothed woman vigorously spanking a woman lying face-down on spakning woman knees with her ass fully sticking out and raised high. The black clothed  woman delivers fast, hard, sharp spanking strikes with his open hand on her bare buttocks. Clear motion dynamics: quick powerful hits, exactly two strong spankings every 2 seconds, realistic impact, skin jiggle and bounce with each strike, hand moving rapidly up and down. Dynamic camera, natural motion blur on the fast hand movements, realistic physics, detailed skin deformation on impact,  high quality, smooth motion, cinematic lighting
+    neg: |-
+      slow motion, slow hits, soft spanking, weak strikes, blurry, deformed hands, extra fingers, bad anatomy, static image, no movement, frozen frame, low quality, artifacts, distorted body, unnatural physics, cartoon, anime, overexposed, underexposed
+    ltx_variant: 20step
+    frame_interpolation: false
+    lora_high: WAN2.2_LoraSet/Spanking_HIGH.safetensors
+    lora_low: WAN2.2_LoraSet/Spanking_LOW.safetensors
+    audio_prompt: sharp slap impact, flesh impact sound, skin contact, crisp smack, physical strike, body percussion, high quality, realistic foley,woman cries loud
+    audio_negative_prompt: music, melody, ambient drone, echo, reverb, wet sound, low quality, distortion
+
+- break: true
+
+- file: 50.59 Spanking.png
+  backend: linux
+  duration: 2
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- type: multichain
+  chain_prefix: spanking_5
+  model_class: wan
+  neg: |-
+    blur, noise, watermark, text, low quality, worst quality, deformed
+  chain:
+  - duration: 4
+    pos: |-
+      spanked, A black clothed woman vigorously spanking a woman kneeling face-down  with her ass fully sticking out and raised high. The black clothed  woman delivers fast, hard, sharp spanking strikes with his open hand on her bare buttocks. Clear motion dynamics: quick powerful hits, exactly two strong spankings every 2 seconds, realistic impact, skin jiggle and bounce with each strike, hand moving rapidly up and down. Dynamic camera, natural motion blur on the fast hand movements, realistic physics, detailed skin deformation on impact,  high quality, smooth motion, cinematic lighting
+    neg: |-
+      slow motion, slow hits, soft spanking, weak strikes, blurry, deformed hands, extra fingers, bad anatomy, static image, no movement, frozen frame, low quality, artifacts, distorted body, unnatural physics, cartoon, anime, overexposed, underexposed
+    ltx_variant: 20step
+    frame_interpolation: false
+    lora_high: WAN2.2_LoraSet/Spanking_HIGH.safetensors
+    lora_low: WAN2.2_LoraSet/Spanking_LOW.safetensors
+    audio_prompt: sharp slap impact, flesh impact sound, skin contact, crisp smack, physical strike, body percussion, high quality, realistic foley,woman cries loud
+    audio_negative_prompt: music, melody, ambient drone, echo, reverb, wet sound, low quality, distortion
+  - duration: 4
+    pos: |-
+      spanked, A black clothed woman vigorously spanking a woman kneeling face-down  with her ass fully sticking out and raised high. The black clothed  woman delivers fast, hard, sharp spanking strikes with his open hand on her bare buttocks. Clear motion dynamics: quick powerful hits, exactly two strong spankings every 2 seconds, realistic impact, skin jiggle and bounce with each strike, hand moving rapidly up and down. Dynamic camera, natural motion blur on the fast hand movements, realistic physics, detailed skin deformation on impact,  high quality, smooth motion, cinematic lighting
+    neg: |-
+      slow motion, slow hits, soft spanking, weak strikes, blurry, deformed hands, extra fingers, bad anatomy, static image, no movement, frozen frame, low quality, artifacts, distorted body, unnatural physics, cartoon, anime, overexposed, underexposed
+    ltx_variant: 20step
+    frame_interpolation: false
+    lora_high: WAN2.2_LoraSet/Spanking_HIGH.safetensors
+    lora_low: WAN2.2_LoraSet/Spanking_LOW.safetensors
+    audio_prompt: sharp slap impact, flesh impact sound, skin contact, crisp smack, physical strike, body percussion, high quality, realistic foley,woman cries loud
+    audio_negative_prompt: music, melody, ambient drone, echo, reverb, wet sound, low quality, distortion
+
+- break: true
+
+- file: 50.61 Spanking.png
+  backend: linux
+  duration: 2
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- type: multichain
+  chain_prefix: spanking_6
+  model_class: wan
+  neg: |-
+    blur, noise, watermark, text, low quality, worst quality, deformed
+  chain:
+  - duration: 4
+    pos: |-
+      spanked, A black clothed woman vigorously spanking a woman kneeling face-down  with her ass fully sticking out and raised high. The black clothed  woman delivers fast, hard, sharp spanking strikes with his open hand on her bare buttocks. Clear motion dynamics: quick powerful hits, exactly two strong spankings every 2 seconds, realistic impact, skin jiggle and bounce with each strike, hand moving rapidly up and down. Dynamic camera, natural motion blur on the fast hand movements, realistic physics, detailed skin deformation on impact,  high quality, smooth motion, cinematic lighting
+    neg: |-
+      slow motion, slow hits, soft spanking, weak strikes, blurry, deformed hands, extra fingers, bad anatomy, static image, no movement, frozen frame, low quality, artifacts, distorted body, unnatural physics, cartoon, anime, overexposed, underexposed
+    ltx_variant: 20step
+    frame_interpolation: false
+    lora_high: WAN2.2_LoraSet/Spanking_HIGH.safetensors
+    lora_low: WAN2.2_LoraSet/Spanking_LOW.safetensors
+    audio_prompt: sharp slap impact, flesh impact sound, skin contact, crisp smack, physical strike, body percussion, high quality, realistic foley,woman cries loud
+    audio_negative_prompt: music, melody, ambient drone, echo, reverb, wet sound, low quality, distortion
+  - duration: 4
+    pos: |-
+      spanked, A black clothed woman vigorously spanking a woman kneeling face-down  with her ass fully sticking out and raised high. The black clothed  woman delivers fast, hard, sharp spanking strikes with his open hand on her bare buttocks. Clear motion dynamics: quick powerful hits, exactly two strong spankings every 2 seconds, realistic impact, skin jiggle and bounce with each strike, hand moving rapidly up and down. Dynamic camera, natural motion blur on the fast hand movements, realistic physics, detailed skin deformation on impact,  high quality, smooth motion, cinematic lighting
+    neg: |-
+      slow motion, slow hits, soft spanking, weak strikes, blurry, deformed hands, extra fingers, bad anatomy, static image, no movement, frozen frame, low quality, artifacts, distorted body, unnatural physics, cartoon, anime, overexposed, underexposed
+    ltx_variant: 20step
+    frame_interpolation: false
+    lora_high: WAN2.2_LoraSet/Spanking_HIGH.safetensors
+    lora_low: WAN2.2_LoraSet/Spanking_LOW.safetensors
+    audio_prompt: sharp slap impact, flesh impact sound, skin contact, crisp smack, physical strike, body percussion, high quality, realistic foley,woman cries loud
+    audio_negative_prompt: music, melody, ambient drone, echo, reverb, wet sound, low quality, distortion
+
+- break: true
+
+- file: 50.63 Spanking.png
+  backend: linux
+  duration: 2
+  pos: |-
+    NONE
+  neg: |-
+    NONE
+
+- type: multichain
+  chain_prefix: spanking_7
+  model_class: wan
+  neg: |-
+    blur, noise, watermark, text, low quality, worst quality, deformed
+  chain:
+  - duration: 4
+    pos: |-
+      spanked, A black clothed woman vigorously spanking a woman kneeling face-down  with her ass fully sticking out and raised high. The black clothed  woman delivers fast, hard, sharp spanking strikes with his open hand on her bare buttocks. Clear motion dynamics: quick powerful hits, exactly two strong spankings every 2 seconds, realistic impact, skin jiggle and bounce with each strike, hand moving rapidly up and down. Dynamic camera, natural motion blur on the fast hand movements, realistic physics, detailed skin deformation on impact,  high quality, smooth motion, cinematic lighting
+    neg: |-
+      slow motion, slow hits, soft spanking, weak strikes, blurry, deformed hands, extra fingers, bad anatomy, static image, no movement, frozen frame, low quality, artifacts, distorted body, unnatural physics, cartoon, anime, overexposed, underexposed
+    ltx_variant: 20step
+    frame_interpolation: false
+    lora_high: WAN2.2_LoraSet/Spanking_HIGH.safetensors
+    lora_low: WAN2.2_LoraSet/Spanking_LOW.safetensors
+    audio_prompt: sharp slap impact, flesh impact sound, skin contact, crisp smack, physical strike, body percussion, high quality, realistic foley,woman cries loud
+    audio_negative_prompt: music, melody, ambient drone, echo, reverb, wet sound, low quality, distortion
+  - duration: 4
+    pos: |-
+      spanked, A black clothed woman vigorously spanking a woman kneeling face-down  with her ass fully sticking out and raised high. The black clothed  woman delivers fast, hard, sharp spanking strikes with his open hand on her bare buttocks. Clear motion dynamics: quick powerful hits, exactly two strong spankings every 2 seconds, realistic impact, skin jiggle and bounce with each strike, hand moving rapidly up and down. Dynamic camera, natural motion blur on the fast hand movements, realistic physics, detailed skin deformation on impact,  high quality, smooth motion, cinematic lighting
+    neg: |-
+      slow motion, slow hits, soft spanking, weak strikes, blurry, deformed hands, extra fingers, bad anatomy, static image, no movement, frozen frame, low quality, artifacts, distorted body, unnatural physics, cartoon, anime, overexposed, underexposed
+    ltx_variant: 20step
+    frame_interpolation: false
+    lora_high: WAN2.2_LoraSet/Spanking_HIGH.safetensors
+    lora_low: WAN2.2_LoraSet/Spanking_LOW.safetensors
+    audio_prompt: sharp slap impact, flesh impact sound, skin contact, crisp smack, physical strike, body percussion, high quality, realistic foley,woman cries loud
+    audio_negative_prompt: music, melody, ambient drone, echo, reverb, wet sound, low quality, distortion
+
+defaults:
+  auto_blocks_to_swap: true
+  resolution:
+  - 1472
+  - 832

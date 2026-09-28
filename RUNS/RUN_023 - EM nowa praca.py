@@ -4,7 +4,7 @@
 # Edit RUN_023 - EM nowa praca.yaml and regenerate with:
 #     from app.services.yaml_service import generate_py_from_yaml
 #     generate_py_from_yaml(Path("RUNS/RUN_023 - EM nowa praca.yaml"))
-# Generated: 2026-08-17 16:34:52
+# Generated: 2026-09-25 22:12:37
 # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 import sys
@@ -2460,6 +2460,8 @@ She is in the same clothes as on start image, dress hiked high up.""",
                 'neg': '',
                 'audio_prompt': 'female moaning loud pleasure, rhythmic thrusting sounds, skin slapping wet impact, gasping breath, increasing intensity, climax vocal',
                 'audio_negative_prompt': 'music, melody, speech, words, lyrics, reverb, echo, distortion, cartoon, low quality',
+                'lora_high': 'WAN2.2_LoraSet/mql_casting_sex_reverse_cowgirl_lie_front_vagina_wan22_i2v_v1_high_noise.safetensors',
+                'lora_low': 'WAN2.2_LoraSet/mql_casting_sex_reverse_cowgirl_lie_front_vagina_wan22_i2v_v1_low_noise.safetensors',
             },
             {
                 'duration': 3,
@@ -2467,6 +2469,8 @@ She is in the same clothes as on start image, dress hiked high up.""",
                 'neg': '',
                 'audio_prompt': 'female moaning loud pleasure, rhythmic thrusting sounds, skin slapping wet impact, gasping breath, increasing intensity, climax vocal',
                 'audio_negative_prompt': 'music, melody, speech, words, lyrics, reverb, echo, distortion, cartoon, low quality',
+                'lora_high': 'WAN2.2_LoraSet/mql_casting_sex_reverse_cowgirl_lie_front_vagina_wan22_i2v_v1_high_noise.safetensors',
+                'lora_low': 'WAN2.2_LoraSet/mql_casting_sex_reverse_cowgirl_lie_front_vagina_wan22_i2v_v1_low_noise.safetensors',
             },
         ],
         "chain_prefix": 'first anal',

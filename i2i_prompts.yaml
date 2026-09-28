@@ -1220,4 +1220,75 @@ prompts:
     steps: 30
     cfg: 8.0
     denoise: 1.0
-last_id: 112
+- id: p0000113
+  category: mmaudio
+  name: Ruszający samochód
+  note: ''
+  positive: 'Quiet suburban residential neighborhood ambience.
+
+    Soft distant traffic from a nearby street, occasional cars passing far away,
+
+    light wind moving through trees and gardens, faint birdsong,
+
+    and a very distant dog barking once in a while.
+
+
+    Natural outdoor daytime ambience. No speech is present. No music is present.'
+  negative: 'music, song, melody, score, soundtrack, singing, vocals,
+
+    speech, voices, conversation, shouting, crowd,
+
+    close traffic, loud engines, sirens, construction,
+
+    close dog barking, footsteps, distorted, clipped, low bitrate'
+  params:
+    steps: 30
+    cfg: 8.0
+    denoise: 1.0
+- id: p0000114
+  category: mmaudio_ambient
+  name: biuro
+  note: ''
+  positive: 'Soft, quiet mechanical office room tone.
+
+    Low air-conditioning hum, faint computer fan noise,
+
+    occasional page turns, paper handling, light keyboard taps,
+
+    gentle chair movement, and sparse distant footsteps.
+
+
+    Only non-vocal environmental sounds.'
+  negative: human voices, music, singing, radio, television
+  params:
+    steps: 30
+    cfg: 8.0
+    denoise: 1.0
+- id: p0000115
+  category: mmaudio_ambient
+  name: loch - mroczny
+  note: ''
+  positive: 'Quiet dark dungeon cell ambience.
+
+    Cold damp stone walls, distant water drips echoing through the corridor,
+
+    a low draft of wind, occasional faint chain rattles,
+
+    and subtle iron bars creaking in the distance.
+
+
+    Deep, natural stone reverberation in an old underground prison.
+
+    No voices, no speech, no whispers, no music.'
+  negative: 'music, soundtrack, score, melody, singing, vocals,
+
+    speech, voices, conversation, whispering, screaming, laughing,
+
+    modern machinery, vehicles, city traffic, electronic beeps,
+
+    loud impacts, distorted audio, clipped audio, low bitrate'
+  params:
+    steps: 30
+    cfg: 8.0
+    denoise: 1.0
+last_id: 115

@@ -4,9 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ComfyUI Video Generator</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
+    <script src="/static/vendor/tailwind.js"></script>
+    <script defer src="/static/vendor/alpine-3.x.x.min.js"></script>
+    <script src="/static/vendor/sortable-1.15.2.min.js"></script>
     <script>
         // Redirect to /login on any 401 (session expired / idle logout)
         (function () {
@@ -346,6 +346,18 @@
                     title="Zaznacz wszystkie kafelki z brakującym video lub deblurem">
                 ☑️ Zaznacz niewygenerowane
             </button>
+            <!-- Kopiuj zaznaczone — te same klucze co "Generuj zaznaczone"/checkboxy
+                 na Flow, w kolejności FLOW (nie kolejności klikania). Wklejanie to
+                 już istniejący pasteFromClipboard() (+ wstaw element → 📋) — obsługuje
+                 tablicę elementów i sam rozwiązuje kolizje chain_prefix, zero zmian
+                 tam potrzebnych. -->
+            <button @click="copySelectedToClipboard()"
+                    :disabled="!selectedClips.size"
+                    :class="selectedClips.size ? 'text-gray-300 border-gray-600 hover:border-gray-400 hover:text-white' : 'text-gray-600 border-gray-700 cursor-not-allowed'"
+                    class="text-sm border rounded-lg px-3 py-1.5 transition"
+                    title="Kopiuj zaznaczone kafelki do schowka, w kolejności FLOW (wklej przez + wstaw element → 📋)">
+                📋 Kopiuj zaznaczone
+            </button>
             <!-- Stop (zatrzymuje zarówno Generuj zaznaczone jak i stary subprocess, jeśli akurat coś innego go uruchomiło) -->
             <button @click="stopGeneration()" :disabled="!isRunning && !batchGenRunning"
                     :class="(isRunning || batchGenRunning) ? 'bg-red-700 hover:bg-red-600 cursor-pointer' : 'bg-gray-700 opacity-40 cursor-not-allowed'"
@@ -417,7 +429,7 @@
                             : 'text-gray-500 border border-gray-600 hover:border-gray-400 hover:bg-gray-700/30'"
                         class="text-sm px-3 py-1.5 rounded-lg transition flex items-center gap-1.5"
                         title="Auto-lipsync po każdym kroku chaina, gdy krok ma podpięty plik audio (ustawienie globalne)">
-                    <span x-text="(globalDefaults?.voice_enabled ?? true) ? '🗣 Voice ON' : '🗣 Voice OFF'"></span>
+                    <span x-text="(globalDefaults?.voice_enabled ?? true) ? '🗣 Lipsync ON' : '🗣 Lipsync OFF'"></span>
                 </button>
             </template>
             <!-- FIX seed — szybki debug mode do A/B (LoRA itp.): wymusza stały
@@ -1098,9 +1110,10 @@
                                                                                     :class="(isRunning || (chainJobStatus.chain_prefix === entry.item.chain_prefix && (chainJobStatus.status === 'running' || chainJobStatus.status === 'queued'))) ? 'opacity-30 cursor-not-allowed text-gray-600' : 'text-gray-500 hover:text-blue-400'"
                                                                                     class="text-sm px-1 transition"
                                                                                     :title="'Re-generuj od step '+(si+1)+' do '+entry.item.chain.length">↺</button>
-                                                                            <button @click="regenAudio(fname, step.audio_prompt, step.audio_negative_prompt)"
+                                                                            <button @click="regenAudio(fname, step.audio_prompt, step.audio_negative_prompt, step.audio_fx_model)"
                                                                                     class="text-violet-600 hover:text-violet-400 text-sm px-1 transition"
-                                                                                    :title="step.audio_prompt ? 'Re-generuj audio [custom prompt]' : 'Re-generuj samo audio (MMAudio)'">🔊</button>
+                                                                                    :title="(step.audio_fx_model === 'ltx_foley' ? 'Re-generuj audio (LTX Foley)' : 'Re-generuj samo audio (MMAudio)') + (step.audio_prompt ? ' [custom prompt]' : '')"
+                                                                                    x-text="step.audio_fx_model === 'ltx_foley' ? '🦊' : '🔊'"></button>
                                                                             <button @click="removeAudioFromClip(fname)"
                                                                                     class="text-gray-600 hover:text-orange-400 text-sm px-1 transition"
                                                                                     title="Usuń audio z klipu">🔇</button>
@@ -1304,7 +1317,7 @@
                                                                             <span x-show="deblurStatus.status==='running' && deblurStatus.clip_name===fname" class="animate-spin inline-block">⟳</span>
                                                                             <span x-show="!(deblurStatus.status==='running' && deblurStatus.clip_name===fname)">🔬</span>
                                                                         </button>
-                                                                        <template x-if="step.lipsync_audio">
+                                                                        <template x-if="step.lipsync_mode !== 'multi' && step.lipsync_audio">
                                                                             <button @click.stop="startLipsync(fname, step.lipsync_audio, !!step.lipsync_trim_to_audio, (step.lipsync_sync_lips ?? true) !== false)"
                                                                                     :disabled="lipsyncStatus.status==='running'||lipsyncStatus.status==='queued'"
                                                                                     :class="(lipsyncStatus.status==='running'||lipsyncStatus.status==='queued') ? 'opacity-30 cursor-not-allowed' : 'hover:text-teal-300'"
@@ -1312,6 +1325,16 @@
                                                                                     :title="((step.lipsync_sync_lips ?? true) !== false ? 'Lipsync (LatentSync 1.5) z: ' : 'Voice offscreen (bez sync ust) z: ') + step.lipsync_audio">
                                                                                 <span x-show="lipsyncStatus.status==='running' && lipsyncStatus.clip_name===fname" class="animate-spin inline-block">⟳</span>
                                                                                 <span x-show="!(lipsyncStatus.status==='running' && lipsyncStatus.clip_name===fname)" x-text="(step.lipsync_sync_lips ?? true) !== false ? '🗣' : '🎙️'"></span>
+                                                                            </button>
+                                                                        </template>
+                                                                        <template x-if="step.lipsync_mode === 'multi' && step.lipsync_multi && step.lipsync_multi.filter(a=>a.audio).length > 0">
+                                                                            <button @click.stop="startLipsyncMulti(fname, step.lipsync_multi)"
+                                                                                    :disabled="lipsyncStatus.status==='running'||lipsyncStatus.status==='queued'"
+                                                                                    :class="(lipsyncStatus.status==='running'||lipsyncStatus.status==='queued') ? 'opacity-30 cursor-not-allowed' : 'hover:text-teal-300'"
+                                                                                    class="text-gray-600 text-sm px-1 transition"
+                                                                                    :title="'Multi-talk (' + step.lipsync_multi.filter(a=>a.audio).length + ' osoby): ' + step.lipsync_multi.filter(a=>a.audio).map(a=>a.audio).join(' + ')">
+                                                                                <span x-show="lipsyncStatus.status==='running' && lipsyncStatus.clip_name===fname" class="animate-spin inline-block">⟳</span>
+                                                                                <span x-show="!(lipsyncStatus.status==='running' && lipsyncStatus.clip_name===fname)">👥</span>
                                                                             </button>
                                                                         </template>
                                                                         <button @click="openTrimModal(fname)"
@@ -1325,9 +1348,10 @@
                                                                                 :class="(isRunning || (chainJobStatus.chain_prefix === entry.item.chain_prefix && (chainJobStatus.status === 'running' || chainJobStatus.status === 'queued'))) ? 'opacity-30 cursor-not-allowed text-gray-600' : 'text-gray-500 hover:text-blue-400'"
                                                                                 class="text-sm px-1 transition"
                                                                                 :title="'Re-generuj od step '+(si+1)+' do '+entry.item.chain.length">↺</button>
-                                                                        <button @click="regenAudio(fname, step.audio_prompt, step.audio_negative_prompt)"
+                                                                        <button @click="regenAudio(fname, step.audio_prompt, step.audio_negative_prompt, step.audio_fx_model)"
                                                                                 class="text-violet-600 hover:text-violet-400 text-sm px-1 transition"
-                                                                                :title="step.audio_prompt ? 'Re-generuj audio [custom prompt]' : 'Re-generuj samo audio (MMAudio)'">🔊</button>
+                                                                                :title="(step.audio_fx_model === 'ltx_foley' ? 'Re-generuj audio (LTX Foley)' : 'Re-generuj samo audio (MMAudio)') + (step.audio_prompt ? ' [custom prompt]' : '')"
+                                                                                x-text="step.audio_fx_model === 'ltx_foley' ? '🦊' : '🔊'"></button>
                                                                         <button @click="removeAudioFromClip(fname)"
                                                                                 class="text-gray-600 hover:text-orange-400 text-sm px-1 transition"
                                                                                 title="Usuń audio z klipu">🔇</button>
@@ -1522,12 +1546,12 @@
                                                                         :class="isRunning ? 'opacity-30 cursor-not-allowed text-gray-600' : 'text-gray-500 hover:text-blue-400'"
                                                                         class="text-sm px-1 py-0.5 rounded transition"
                                                                         title="Re-generuj (zarchiwizuj i uruchom ponownie)">↺</button>
-                                                                <button @click="regenAudio(fileItemName(entry.idx), entry.item.audio_prompt, entry.item.audio_negative_prompt)"
+                                                                <button @click="regenAudio(fileItemName(entry.idx), entry.item.audio_prompt, entry.item.audio_negative_prompt, entry.item.audio_fx_model)"
                                                                         :disabled="isRunning"
                                                                         :class="isRunning ? 'opacity-30 cursor-not-allowed text-gray-600' : 'text-violet-600 hover:text-violet-400'"
                                                                         class="text-sm px-1 py-0.5 rounded transition"
-                                                                        :title="entry.item.audio_prompt ? 'Re-generuj audio [custom prompt]' : 'Re-generuj samo audio (MMAudio)'"
-                                                                        >🔊</button>
+                                                                        :title="(entry.item.audio_fx_model === 'ltx_foley' ? 'Re-generuj audio (LTX Foley)' : 'Re-generuj samo audio (MMAudio)') + (entry.item.audio_prompt ? ' [custom prompt]' : '')"
+                                                                        x-text="entry.item.audio_fx_model === 'ltx_foley' ? '🦊' : '🔊'"></button>
                                                                 <button @click="removeAudioFromClip(fileItemName(entry.idx))"
                                                                         :disabled="isRunning"
                                                                         :class="isRunning ? 'opacity-30 cursor-not-allowed text-gray-600' : 'text-gray-600 hover:text-orange-400'"
@@ -3041,6 +3065,7 @@
 
                     <!-- ── FILMSTRIP (poziomy scroll) ── -->
                     <div x-ref="postFilmstrip"
+                         @scroll="const sl = $event.target.scrollLeft; if ($refs.postFxLane) $refs.postFxLane.scrollLeft = sl; if ($refs.postAmbientLane) $refs.postAmbientLane.scrollLeft = sl; if ($refs.postNarratorLane) $refs.postNarratorLane.scrollLeft = sl;"
                          class="flex-1 min-h-0 overflow-x-auto overflow-y-hidden bg-gray-950 flex items-center px-3 gap-2"
                          style="min-height:110px; max-height:110px">
                         <template x-if="postLoading">
@@ -3090,86 +3115,114 @@
                         </template>
                     </div>
 
-                    <!-- ── AUDIO TRACK ROW ── -->
+                    <!-- ── AUDIO TRACK ROWS (one labeled row per audio kind, its own lane strip aligned to filmstrip) ── -->
+                    <audio x-ref="postPreviewPlayer" preload="none" class="hidden" @ended="postPreviewPlaying = null"></audio>
                     <audio x-ref="ambientPlayer" preload="none" class="hidden"></audio>
                     <audio x-ref="narratorPlayer" preload="none" class="hidden"></audio>
                     <audio x-ref="fxPlayer" preload="none" class="hidden"></audio>
-                    <div class="flex-shrink-0 border-t border-gray-800 bg-gray-950 px-3 py-1.5 flex items-center gap-2 overflow-x-auto"
-                         style="min-height:44px">
-                        <!-- FX (per-clip side file, present when the clip has lipsync baked in) -->
-                        <template x-if="_fxFor(postClips[postCurrentIndex]?.name)">
-                            <div class="flex items-center gap-1 flex-shrink-0">
-                                <span class="text-gray-600 text-xs select-none" style="font-size:10px">🔊 FX</span>
-                                <button @click="toggleFxMute()"
-                                        :title="fxMuted ? 'Włącz FX' : 'Wycisz FX'"
-                                        :class="fxMuted ? 'text-red-500 hover:text-red-400' : 'text-gray-500 hover:text-white'"
-                                        class="text-xs px-1 transition">
-                                    <span x-text="fxMuted ? '🔇' : '🔊'"></span>
-                                </button>
-                            </div>
-                        </template>
-                        <div class="h-4 w-px bg-gray-800 flex-shrink-0"></div>
-                        <!-- Label + mute -->
-                        <span class="text-gray-600 text-xs flex-shrink-0 select-none" style="font-size:10px">🎵 Ambient</span>
-                        <button @click="toggleAmbientMute()"
-                                :title="ambientMuted ? 'Włącz ambient' : 'Wycisz ambient'"
-                                :class="ambientMuted ? 'text-red-500 hover:text-red-400' : 'text-gray-500 hover:text-white'"
-                                class="text-xs flex-shrink-0 px-1 transition">
-                            <span x-text="ambientMuted ? '🔇' : '🔊'"></span>
-                        </button>
 
-                        <template x-if="ambientFiles.length === 0">
-                            <span class="text-gray-700 text-xs italic flex-shrink-0">brak plików — zaznacz klipy i kliknij "Ambient audio"</span>
-                        </template>
-                        <template x-for="(af, afi) in ambientFiles" :key="af.name">
-                            <div class="flex items-center gap-1.5 bg-gray-900 border rounded px-2 py-1 flex-shrink-0 transition"
-                                 :class="afi === 0 ? 'border-violet-700' : 'border-gray-700'">
-                                <!-- Active indicator (newest = index 0) -->
-                                <span x-show="afi === 0" class="text-violet-400 flex-shrink-0" style="font-size:9px" title="Aktywny (synchronizowany z playerem)">● SYNC</span>
-                                <span class="text-gray-400 text-xs truncate max-w-28" x-text="af.name.replace('sequence_ambient_','').replace('.mp3','')" :title="af.name"></span>
-                                <span x-show="af.clips && af.clips.length > 0" class="text-gray-600" style="font-size:9px" x-text="af.clips.length + ' klipów'"></span>
-                                <span class="text-gray-700" style="font-size:9px" x-text="af.size_mb + ' MB'"></span>
-                                <audio controls preload="none"
-                                       :src="`/api/audio/ambient/${encodeURIComponent(selectedRun?.filename)}/${encodeURIComponent(af.name)}`"
-                                       class="h-6 flex-shrink-0"
-                                       style="width:160px; accent-color:#7c3aed"></audio>
-                                <button @click="deleteAmbientFile(af.name)"
-                                        class="text-gray-600 hover:text-red-400 text-xs flex-shrink-0 px-1 transition"
-                                        title="Usuń">✕</button>
+                    <!-- FX row (per-clip side file, one marker per clip that has one - not a range like ambient/narrator) -->
+                    <div class="flex-shrink-0 border-t border-gray-800 bg-gray-950">
+                        <div class="flex items-center gap-1 px-3 pt-1">
+                            <span class="text-gray-600 text-xs select-none" style="font-size:10px">🔊 FX</span>
+                            <button @click="toggleFxMute()"
+                                    :title="fxMuted ? 'Włącz FX' : 'Wycisz FX'"
+                                    :class="fxMuted ? 'text-red-500 hover:text-red-400' : 'text-gray-500 hover:text-white'"
+                                    class="text-xs px-1 transition">
+                                <span x-text="fxMuted ? '🔇' : '🔊'"></span>
+                            </button>
+                        </div>
+                        <div x-ref="postFxLane" class="overflow-x-hidden px-3 pb-1" style="height:22px">
+                            <div class="relative h-full" :style="`width:${postClips.length * 128 - 8}px`">
+                                <template x-for="track in postFxMarks()" :key="track.key">
+                                    <div class="absolute rounded flex items-center gap-1 px-1.5 overflow-hidden select-none transition bg-amber-900/80 border border-amber-600"
+                                         :class="postCurrentIndex===track.startIdx ? 'ring-1 ring-green-400' : ''"
+                                         :style="`left:${track.startIdx*128}px; width:120px; top:0px; height:22px;`"
+                                         :title="'🔊 FX: ' + track.label">
+                                        <button @click.stop="togglePreviewAudio(track)"
+                                                class="flex-shrink-0 leading-none text-white/90 hover:text-white"
+                                                style="font-size:11px" title="Odtwórz/zatrzymaj sam dźwięk">
+                                            <span x-text="postPreviewPlaying===track.key ? '⏸' : '▶'"></span>
+                                        </button>
+                                        <span class="flex-1 min-w-0 truncate text-white/80" style="font-size:9px" x-text="track.shortLabel"></span>
+                                        <button @click.stop="deleteFxFile(track.fileName)"
+                                                class="flex-shrink-0 leading-none text-white/60 hover:text-red-300"
+                                                style="font-size:10px" title="Usuń">✕</button>
+                                    </div>
+                                </template>
                             </div>
-                        </template>
-                        <div class="h-4 w-px bg-gray-800 flex-shrink-0"></div>
-                        <!-- Narrator: label + mute -->
-                        <span class="text-gray-600 text-xs flex-shrink-0 select-none" style="font-size:10px">📖 Narrator</span>
-                        <button @click="toggleNarratorMute()"
-                                :title="narratorMuted ? 'Włącz narratora' : 'Wycisz narratora'"
-                                :class="narratorMuted ? 'text-red-500 hover:text-red-400' : 'text-gray-500 hover:text-white'"
-                                class="text-xs flex-shrink-0 px-1 transition">
-                            <span x-text="narratorMuted ? '🔇' : '🔊'"></span>
-                        </button>
+                        </div>
+                    </div>
 
-                        <template x-if="narratorFiles.length === 0">
-                            <span class="text-gray-700 text-xs italic flex-shrink-0">brak plików — zaznacz klipy i kliknij "Narrator"</span>
-                        </template>
-                        <template x-for="(nf, nfi) in narratorFiles" :key="nf.name">
-                            <div class="flex items-center gap-1.5 bg-gray-900 border rounded px-2 py-1 flex-shrink-0 transition"
-                                 :class="nfi === 0 ? 'border-teal-700' : 'border-gray-700'">
-                                <span x-show="nfi === 0" class="text-teal-400 flex-shrink-0" style="font-size:9px" title="Aktywny (synchronizowany z playerem)">● SYNC</span>
-                                <span class="text-gray-400 text-xs truncate max-w-28" x-text="nf.name.replace('sequence_narrator_','').replace('.mp3','')" :title="nf.name"></span>
-                                <span x-show="nf.clips && nf.clips.length > 0" class="text-gray-600" style="font-size:9px" x-text="nf.clips.length + ' klipów'"></span>
-                                <span class="text-gray-700" style="font-size:9px" x-text="nf.size_mb + ' MB'"></span>
-                                <audio controls preload="none"
-                                       :src="`/api/audio/narrator/${encodeURIComponent(selectedRun?.filename)}/${encodeURIComponent(nf.name)}`"
-                                       class="h-6 flex-shrink-0"
-                                       style="width:160px; accent-color:#0d9488"></audio>
-                                <button @click="deleteNarratorFile(nf.name)"
-                                        class="text-gray-600 hover:text-red-400 text-xs flex-shrink-0 px-1 transition"
-                                        title="Usuń">✕</button>
+                    <!-- AMBIENT row -->
+                    <div class="flex-shrink-0 border-t border-gray-800 bg-gray-950">
+                        <div class="flex items-center gap-1 px-3 pt-1">
+                            <span class="text-gray-600 text-xs select-none" style="font-size:10px">🎵 Ambient</span>
+                            <button @click="toggleAmbientMute()"
+                                    :title="ambientMuted ? 'Włącz ambient' : 'Wycisz ambient'"
+                                    :class="ambientMuted ? 'text-red-500 hover:text-red-400' : 'text-gray-500 hover:text-white'"
+                                    class="text-xs px-1 transition">
+                                <span x-text="ambientMuted ? '🔇' : '🔊'"></span>
+                            </button>
+                            <button @click="loadAmbientFiles(); loadNarratorFiles()"
+                                    class="ml-auto text-gray-700 hover:text-gray-400 text-xs px-1.5 rounded hover:bg-gray-800 transition"
+                                    title="Odśwież listę">⟳</button>
+                        </div>
+                        <div x-ref="postAmbientLane" class="overflow-x-hidden px-3 pb-1"
+                             :style="`height:${Math.max(1, postAudioTracks(['ambient']).reduce((m,t)=>Math.max(m,t.lane+1),0)) * 26}px`">
+                            <div class="relative h-full" :style="`width:${postClips.length * 128 - 8}px`">
+                                <template x-for="track in postAudioTracks(['ambient'])" :key="track.key">
+                                    <div class="absolute rounded flex items-center gap-1 px-1.5 overflow-hidden select-none transition bg-violet-900/80 border border-violet-600"
+                                         :class="(postCurrentIndex>=track.startIdx && postCurrentIndex<=track.endIdx) ? 'ring-1 ring-green-400' : ''"
+                                         :style="`left:${track.startIdx*128}px; width:${(track.endIdx-track.startIdx+1)*128-8}px; top:${track.lane*26}px; height:22px;`"
+                                         :title="'🎵 Ambient: ' + track.label">
+                                        <button @click.stop="togglePreviewAudio(track)"
+                                                class="flex-shrink-0 leading-none text-white/90 hover:text-white"
+                                                style="font-size:11px" title="Odtwórz/zatrzymaj sam dźwięk">
+                                            <span x-text="postPreviewPlaying===track.key ? '⏸' : '▶'"></span>
+                                        </button>
+                                        <span class="flex-1 min-w-0 truncate text-white/80" style="font-size:9px" x-text="track.shortLabel"></span>
+                                        <button @click.stop="deleteAmbientFile(track.fileName)"
+                                                class="flex-shrink-0 leading-none text-white/60 hover:text-red-300"
+                                                style="font-size:10px" title="Usuń">✕</button>
+                                    </div>
+                                </template>
                             </div>
-                        </template>
-                        <button @click="loadAmbientFiles(); loadNarratorFiles()"
-                                class="ml-auto text-gray-700 hover:text-gray-400 text-xs flex-shrink-0 px-1.5 py-0.5 rounded hover:bg-gray-800 transition"
-                                title="Odśwież listę">⟳</button>
+                        </div>
+                    </div>
+
+                    <!-- NARRATOR row -->
+                    <div class="flex-shrink-0 border-t border-gray-800 bg-gray-950">
+                        <div class="flex items-center gap-1 px-3 pt-1">
+                            <span class="text-gray-600 text-xs select-none" style="font-size:10px">📖 Narrator</span>
+                            <button @click="toggleNarratorMute()"
+                                    :title="narratorMuted ? 'Włącz narratora' : 'Wycisz narratora'"
+                                    :class="narratorMuted ? 'text-red-500 hover:text-red-400' : 'text-gray-500 hover:text-white'"
+                                    class="text-xs px-1 transition">
+                                <span x-text="narratorMuted ? '🔇' : '🔊'"></span>
+                            </button>
+                        </div>
+                        <div x-ref="postNarratorLane" class="overflow-x-hidden px-3 pb-1"
+                             :style="`height:${Math.max(1, postAudioTracks(['narrator']).reduce((m,t)=>Math.max(m,t.lane+1),0)) * 26}px`">
+                            <div class="relative h-full" :style="`width:${postClips.length * 128 - 8}px`">
+                                <template x-for="track in postAudioTracks(['narrator'])" :key="track.key">
+                                    <div class="absolute rounded flex items-center gap-1 px-1.5 overflow-hidden select-none transition bg-teal-900/80 border border-teal-600"
+                                         :class="(postCurrentIndex>=track.startIdx && postCurrentIndex<=track.endIdx) ? 'ring-1 ring-green-400' : ''"
+                                         :style="`left:${track.startIdx*128}px; width:${(track.endIdx-track.startIdx+1)*128-8}px; top:${track.lane*26}px; height:22px;`"
+                                         :title="'📖 Narrator: ' + track.label">
+                                        <button @click.stop="togglePreviewAudio(track)"
+                                                class="flex-shrink-0 leading-none text-white/90 hover:text-white"
+                                                style="font-size:11px" title="Odtwórz/zatrzymaj sam dźwięk">
+                                            <span x-text="postPreviewPlaying===track.key ? '⏸' : '▶'"></span>
+                                        </button>
+                                        <span class="flex-1 min-w-0 truncate text-white/80" style="font-size:9px" x-text="track.shortLabel"></span>
+                                        <button @click.stop="deleteNarratorFile(track.fileName)"
+                                                class="flex-shrink-0 leading-none text-white/60 hover:text-red-300"
+                                                style="font-size:10px" title="Usuń">✕</button>
+                                    </div>
+                                </template>
+                            </div>
+                        </div>
                     </div>
 
                 </div>
@@ -3251,6 +3304,27 @@
                 </div>
             </div>
         </template>
+    </div>
+</div>
+
+<!-- ═══ FACE PREVIEW MODAL (multi-talk, 2026-09-15; z-[60] — above chain/tile edit modal z-50) ══ -->
+<div x-show="facePreviewModal.open" x-cloak
+     class="fixed inset-0 bg-black/80 flex items-center justify-center z-[60] p-4"
+     @click.self="facePreviewModal.open = false"
+     @keydown.escape.window="facePreviewModal.open = false">
+    <div class="bg-gray-900 rounded-xl border border-gray-700 max-w-2xl w-full p-4">
+        <div class="flex items-center justify-between mb-3">
+            <h3 class="text-sm font-semibold text-gray-300" x-text="facePreviewModal.title"></h3>
+            <button @click="facePreviewModal.open = false" class="text-gray-500 hover:text-white text-xl leading-none">×</button>
+        </div>
+        <div x-show="facePreviewModal.loading" class="text-center py-10 text-gray-500 text-sm">
+            <span class="animate-spin inline-block mr-1.5">⟳</span> Wykrywam twarze na klatce...
+        </div>
+        <div x-show="!facePreviewModal.loading && facePreviewModal.error" class="text-center py-6 text-red-400 text-sm" x-text="facePreviewModal.error"></div>
+        <div x-show="!facePreviewModal.loading && !facePreviewModal.error" class="text-center">
+            <img :src="facePreviewModal.imageSrc" class="max-h-[70vh] mx-auto rounded object-contain bg-gray-800">
+            <p class="text-xs text-gray-600 mt-2">Numery = to, co dostanie LatentSync jako „Osoba 1/2/3..." (od lewej).</p>
+        </div>
     </div>
 </div>
 
@@ -3832,6 +3906,7 @@
 
 <!-- ═══ TRIM MODAL ══════════════════════════════════════════════════ -->
 <div x-show="trimModal.open" x-cloak
+     x-effect="if (!trimModal.open && trimModal.playing) trimStopSilently()"
      class="fixed inset-0 bg-black/95 flex items-center justify-center z-[70] p-4"
      @keydown.escape.window="trimModal.open = false"
      @keydown.arrow-left.window="if(trimModal.open) trimPrev()"
@@ -3849,14 +3924,21 @@
 
         <!-- Frame preview -->
         <div class="flex-1 flex items-center justify-center bg-black overflow-hidden" style="min-height:300px;max-height:55vh">
-            <template x-if="trimModal.loading">
+            <!-- Odtwarzacz (▶ Odtwórz, z dźwiękiem). Widoczny tylko w trakcie grania -
+                 po pauzie wracamy do pojedynczej klatki z ffmpeg, żeby IN/OUT były
+                 co do klatki zgodne z tym, co zostanie zapisane. -->
+            <video x-ref="trimPlayer" x-show="trimModal.playerOn"
+                   @ended="trimPause()" @timeupdate="trimOnTimeUpdate()"
+                   playsinline preload="auto"
+                   class="max-w-full object-contain" style="max-height:55vh"></video>
+            <template x-if="trimModal.loading && !trimModal.playerOn">
                 <span class="text-gray-500 animate-pulse text-sm">Ładowanie klatki…</span>
             </template>
-            <template x-if="!trimModal.loading && trimModal.frameImg">
+            <template x-if="!trimModal.loading && !trimModal.playerOn && trimModal.frameImg">
                 <img :src="'data:image/jpeg;base64,' + trimModal.frameImg"
                      class="max-w-full object-contain" style="max-height:55vh" />
             </template>
-            <template x-if="!trimModal.loading && !trimModal.frameImg && !trimModal.error">
+            <template x-if="!trimModal.loading && !trimModal.playerOn && !trimModal.frameImg && !trimModal.error">
                 <span class="text-gray-600 text-sm">Brak podglądu</span>
             </template>
         </div>
@@ -3873,7 +3955,16 @@
                     class="px-3 py-1 bg-gray-700 hover:bg-gray-600 rounded text-sm disabled:opacity-30 transition">▶</button>
             <span class="text-xs text-gray-500">/ <span x-text="trimModal.totalFrames - 1"></span></span>
             <span class="text-xs text-gray-400 ml-1" x-text="'(' + trimFrameToTime(trimModal.currentFrame) + ')'"></span>
-            <span class="text-xs text-gray-600 ml-auto" x-text="'fps: ' + trimModal.fps"></span>
+            <span class="text-xs text-teal-400 ml-2"
+                  title="Ile klatek zostało do końca klipu, razem z bieżącą. Tyle wpisz w Fade OUT, żeby ściemnianie zaczęło się od tej klatki."
+                  x-text="'do końca: ' + (trimModal.totalFrames - trimModal.currentFrame) + ' kl.'"></span>
+            <button @click="trimTogglePlay()"
+                    :disabled="!trimModal.totalFrames || (trimModal.loading && !trimModal.playing)"
+                    class="ml-auto px-3 py-1 bg-yellow-700 hover:bg-yellow-600 rounded text-sm text-white disabled:opacity-30 transition"
+                    title="Odtwarza klip z dźwiękiem od bieżącej klatki. Po pauzie okno wraca do dokładnej klatki.">
+                <span x-text="trimModal.playing ? '⏸ Pauza' : '▶ Odtwórz'"></span>
+            </button>
+            <span class="text-xs text-gray-600 ml-2" x-text="'fps: ' + trimModal.fps"></span>
         </div>
 
         <!-- Scrubber — drag to any frame at once instead of stepping ◀▶ one
@@ -3939,7 +4030,10 @@
                 <span class="flex items-center gap-1">
                     <input type="number" x-model.number="trimModal.fadeInFrames" min="1" max="72"
                            class="w-14 text-center bg-gray-800 border border-gray-600 rounded px-1 py-0.5 text-xs text-white">
-                    <span class="text-xs text-gray-500">kl. (<span x-text="(trimModal.fadeInFrames/trimModal.fps).toFixed(2)"></span>s)</span>
+                    <span class="text-xs text-gray-500"
+                          :title="'Długość fade in: ' + (trimModal.fadeInFrames/trimModal.fps).toFixed(2) + ' s'">
+                        = pierwsze <span x-text="trimModal.fadeInFrames"></span> kl. klipu
+                    </span>
                 </span>
             </template>
             <label class="flex items-center gap-1.5 cursor-pointer select-none ml-2">
@@ -3950,7 +4044,11 @@
                 <span class="flex items-center gap-1">
                     <input type="number" x-model.number="trimModal.fadeOutFrames" min="1" max="72"
                            class="w-14 text-center bg-gray-800 border border-gray-600 rounded px-1 py-0.5 text-xs text-white">
-                    <span class="text-xs text-gray-500">kl. (<span x-text="(trimModal.fadeOutFrames/trimModal.fps).toFixed(2)"></span>s)</span>
+                    <span class="text-xs text-gray-500"
+                          :title="'Długość fade out: ' + (trimModal.fadeOutFrames/trimModal.fps).toFixed(2) + ' s. Fade zawsze kończy się na końcu klipu (OUT).'">
+                        = ostatnie <span x-text="trimModal.fadeOutFrames"></span> kl. klipu
+                        (od kl. <span x-text="Math.max(trimModal.inFrame, (trimModal.outFrame < 0 ? trimModal.totalFrames : trimModal.outFrame) - trimModal.fadeOutFrames)"></span>)
+                    </span>
                 </span>
             </template>
             <label class="flex items-center gap-1.5 cursor-pointer select-none ml-2">
@@ -3971,8 +4069,15 @@
                               x-text="'(' + trimFrameToTime(trimModal.inFrame) + ' → ' + (trimModal.outFrame < 0 ? 'koniec' : trimFrameToTime(trimModal.outFrame)) + ')'"></span>
                     </span>
                 </template>
-                <template x-if="trimModal.inFrame === 0 && trimModal.outFrame < 0">
-                    <span class="text-gray-600">Brak zmian — ustaw IN lub OUT</span>
+                <template x-if="trimModal.inFrame === 0 && trimModal.outFrame < 0 && (trimModal.fadeIn || trimModal.fadeOut || trimModal.removeAudio)">
+                    <span>
+                        Cały klip, bez cięcia
+                        <span class="text-gray-500 ml-1"
+                              x-text="'+ ' + [trimModal.fadeIn ? 'fade in' : '', trimModal.fadeOut ? 'fade out' : '', trimModal.removeAudio ? 'bez audio' : ''].filter(Boolean).join(', ')"></span>
+                    </span>
+                </template>
+                <template x-if="trimModal.inFrame === 0 && trimModal.outFrame < 0 && !trimModal.fadeIn && !trimModal.fadeOut && !trimModal.removeAudio">
+                    <span class="text-gray-600">Brak zmian — ustaw IN/OUT, fade albo usuń audio</span>
                 </template>
             </div>
             <p x-show="trimModal.error" class="text-xs text-red-400" x-text="trimModal.error"></p>
@@ -5025,7 +5130,19 @@
                             <span class="text-xs text-gray-600">— zostaw puste = użyj domyślnych projektu</span>
                         </div>
                         <div class="space-y-2">
-                            <p class="text-xs text-gray-600 font-semibold uppercase tracking-wide">FX (per klip)</p>
+                            <div class="flex items-center gap-2">
+                                <p class="text-xs text-gray-600 font-semibold uppercase tracking-wide">FX (per klip)</p>
+                                <div class="flex rounded overflow-hidden border border-gray-700 ml-auto">
+                                    <button type="button" @click="editModal.data.audio_fx_model = 'mmaudio'"
+                                            :class="(editModal.data.audio_fx_model ?? 'mmaudio') === 'mmaudio' ? 'bg-violet-700 text-white' : 'bg-gray-800 text-gray-500 hover:text-gray-300'"
+                                            class="text-xs px-2 py-0.5 transition"
+                                            title="Generator FX: MMAudio (szybki, domyślny)">🔊 MMAudio</button>
+                                    <button type="button" @click="editModal.data.audio_fx_model = 'ltx_foley'"
+                                            :class="editModal.data.audio_fx_model === 'ltx_foley' ? 'bg-violet-700 text-white' : 'bg-gray-800 text-gray-500 hover:text-gray-300'"
+                                            class="text-xs px-2 py-0.5 transition border-l border-gray-700"
+                                            title="Generator FX: LTX Foley (wolniejszy, ratunkowy gdy MMAudio zawodzi - np. niepożądane szepty)">🦊 LTX Foley</button>
+                                </div>
+                            </div>
                             <div>
                                 <label class="flex items-center gap-2 text-xs text-violet-300 mb-1">
                                     Audio FX prompt (pozytywny)
@@ -5441,6 +5558,16 @@
                                                 <span class="text-xs text-violet-400">Audio (MMAudio)</span>
                                                 <span class="text-xs text-gray-700">— puste = domyślny projektu</span>
                                             </div>
+                                            <div class="flex gap-0.5 mb-1.5">
+                                                <button type="button" @click="step.audio_fx_model = 'mmaudio'"
+                                                        :class="(step.audio_fx_model ?? 'mmaudio') === 'mmaudio' ? 'bg-violet-700 text-white border-violet-500' : 'bg-gray-800 text-gray-500 hover:text-gray-300 border-gray-700'"
+                                                        class="text-xs px-2 py-0.5 rounded border transition"
+                                                        title="Generator FX: MMAudio (szybki, domyślny)">🔊 MMAudio</button>
+                                                <button type="button" @click="step.audio_fx_model = 'ltx_foley'"
+                                                        :class="step.audio_fx_model === 'ltx_foley' ? 'bg-violet-700 text-white border-violet-500' : 'bg-gray-800 text-gray-500 hover:text-gray-300 border-gray-700'"
+                                                        class="text-xs px-2 py-0.5 rounded border transition"
+                                                        title="Generator FX: LTX Foley (wolniejszy, ratunkowy gdy MMAudio zawodzi - np. niepożądane szepty)">🦊 LTX Foley</button>
+                                            </div>
                                             <div class="flex items-center gap-1.5 mb-1">
                                                 <button @click="openPromptPickerForField((p) => { step.audio_prompt = p.positive; if(p.negative) step.audio_negative_prompt = p.negative; }, 'mmaudio')"
                                                         class="text-purple-400 hover:text-purple-300 border border-purple-800 hover:border-purple-500 rounded px-1.5 py-0 transition text-xs leading-4">📚 Biblioteka</button>
@@ -5464,38 +5591,124 @@
                                                 <span class="text-teal-400 text-xs">🗣</span>
                                                 <span class="text-xs text-teal-400">Lipsync (LatentSync 1.5)</span>
                                                 <span class="text-xs text-gray-700">— puste = brak</span>
+                                                <div class="flex rounded overflow-hidden border border-gray-700 ml-auto">
+                                                    <button type="button" @click="step.lipsync_mode = 'simple'"
+                                                            :class="(step.lipsync_mode ?? 'simple') === 'simple' ? 'bg-teal-700 text-white' : 'bg-gray-800 text-gray-500 hover:text-gray-300'"
+                                                            class="text-xs px-2 py-0.5 transition">Prosty</button>
+                                                    <button type="button" @click="step.lipsync_mode = 'multi'; if (!Array.isArray(step.lipsync_multi)) step.lipsync_multi = []"
+                                                            :class="step.lipsync_mode === 'multi' ? 'bg-teal-700 text-white' : 'bg-gray-800 text-gray-500 hover:text-gray-300'"
+                                                            class="text-xs px-2 py-0.5 transition border-l border-gray-700"
+                                                            title="Kilka osób w jednym klipie, każda ma własny fragment czasu i pozycję (od lewej)">👥 Multi-talk</button>
+                                                </div>
                                             </div>
-                                            <div class="flex gap-0.5 mb-1.5" x-show="step.lipsync_audio">
-                                                <button type="button" @click="step.lipsync_sync_lips = true"
-                                                        :class="(step.lipsync_sync_lips ?? true) ? 'bg-teal-700 text-white border-teal-500' : 'bg-gray-800 text-gray-500 hover:text-gray-300 border-gray-700'"
-                                                        class="text-xs px-2 py-0.5 rounded border transition">🗣 Sync ust</button>
-                                                <button type="button" @click="step.lipsync_sync_lips = false"
-                                                        :class="(step.lipsync_sync_lips ?? true) === false ? 'bg-teal-700 text-white border-teal-500' : 'bg-gray-800 text-gray-500 hover:text-gray-300 border-gray-700'"
-                                                        class="text-xs px-2 py-0.5 rounded border transition">🎙️ Voice (offscreen, bez sync)</button>
-                                            </div>
-                                            <div class="flex items-center gap-1.5 mb-1" x-show="step.lipsync_audio">
-                                                <span class="text-xs font-mono text-teal-300 truncate" x-text="'🎵 ' + step.lipsync_audio"></span>
-                                                <button type="button" @click="step.lipsync_audio = ''"
-                                                        class="px-1.5 py-0.5 bg-gray-700 hover:bg-gray-600 text-gray-400 text-xs rounded transition">✕ wyczyść</button>
-                                            </div>
-                                            <template x-if="editModal.audioFiles && editModal.audioFiles.length > 0">
-                                                <div class="bg-gray-950 border border-gray-700 rounded max-h-28 overflow-y-auto">
-                                                    <template x-for="f in editModal.audioFiles" :key="f">
-                                                        <button type="button" @click="step.lipsync_audio = f"
-                                                                class="w-full text-left px-2 py-1 text-xs font-mono transition truncate block"
-                                                                :class="step.lipsync_audio === f ? 'bg-teal-950 text-teal-200' : 'text-teal-500 hover:bg-teal-950 hover:text-teal-200'">
-                                                            🎵 <span x-text="f"></span>
-                                                        </button>
+
+                                            <!-- PROSTY (default, unchanged) -->
+                                            <template x-if="(step.lipsync_mode ?? 'simple') === 'simple'">
+                                                <div>
+                                                    <div class="flex gap-0.5 mb-1.5" x-show="step.lipsync_audio">
+                                                        <button type="button" @click="step.lipsync_sync_lips = true"
+                                                                :class="(step.lipsync_sync_lips ?? true) ? 'bg-teal-700 text-white border-teal-500' : 'bg-gray-800 text-gray-500 hover:text-gray-300 border-gray-700'"
+                                                                class="text-xs px-2 py-0.5 rounded border transition">🗣 Sync ust</button>
+                                                        <button type="button" @click="step.lipsync_sync_lips = false"
+                                                                :class="(step.lipsync_sync_lips ?? true) === false ? 'bg-teal-700 text-white border-teal-500' : 'bg-gray-800 text-gray-500 hover:text-gray-300 border-gray-700'"
+                                                                class="text-xs px-2 py-0.5 rounded border transition">🎙️ Voice (offscreen, bez sync)</button>
+                                                        <button type="button" @click="previewFaceForStep(step, si, null)"
+                                                                class="ml-auto px-1.5 py-0.5 bg-gray-700 hover:bg-violet-800 text-gray-400 hover:text-white text-xs rounded transition"
+                                                                title="Podgląd: czy twarz jest wykrywana na tym klipie">👁 podgląd</button>
+                                                    </div>
+                                                    <div class="flex items-center gap-1.5 mb-1" x-show="step.lipsync_audio">
+                                                        <span class="text-xs font-mono text-teal-300 truncate" x-text="'🎵 ' + step.lipsync_audio"></span>
+                                                        <button type="button" @click="step.lipsync_audio = ''"
+                                                                class="px-1.5 py-0.5 bg-gray-700 hover:bg-gray-600 text-gray-400 text-xs rounded transition">✕ wyczyść</button>
+                                                    </div>
+                                                    <template x-if="editModal.audioFiles && editModal.audioFiles.length > 0">
+                                                        <div class="bg-gray-950 border border-gray-700 rounded max-h-28 overflow-y-auto">
+                                                            <template x-for="f in editModal.audioFiles" :key="f">
+                                                                <button type="button" @click="step.lipsync_audio = f"
+                                                                        class="w-full text-left px-2 py-1 text-xs font-mono transition truncate block"
+                                                                        :class="step.lipsync_audio === f ? 'bg-teal-950 text-teal-200' : 'text-teal-500 hover:bg-teal-950 hover:text-teal-200'">
+                                                                    🎵 <span x-text="f"></span>
+                                                                </button>
+                                                            </template>
+                                                        </div>
                                                     </template>
+                                                    <p x-show="!editModal.audioFiles || editModal.audioFiles.length === 0"
+                                                       class="text-xs text-gray-700">brak plików audio w project_folder</p>
+                                                    <label x-show="step.lipsync_audio" class="flex items-center gap-1.5 mt-1.5 text-xs text-gray-500 cursor-pointer">
+                                                        <input type="checkbox" x-model="step.lipsync_trim_to_audio" class="accent-teal-500">
+                                                        Przytnij wideo do audio
+                                                        <span class="text-gray-700">(domyślnie wyłączone — długość klipu zostaje bez zmian, dźwięk dopasowuje się do niego)</span>
+                                                    </label>
                                                 </div>
                                             </template>
-                                            <p x-show="!editModal.audioFiles || editModal.audioFiles.length === 0"
-                                               class="text-xs text-gray-700">brak plików audio w project_folder</p>
-                                            <label x-show="step.lipsync_audio" class="flex items-center gap-1.5 mt-1.5 text-xs text-gray-500 cursor-pointer">
-                                                <input type="checkbox" x-model="step.lipsync_trim_to_audio" class="accent-teal-500">
-                                                Przytnij wideo do audio
-                                                <span class="text-gray-700">(domyślnie wyłączone — długość klipu zostaje bez zmian, dźwięk dopasowuje się do niego)</span>
-                                            </label>
+
+                                            <!-- MULTI-TALK: ordered list of {audio, sync_lips}. List order = position
+                                                 order (#1 = najbardziej z lewej twarz) AND time-window order (#1 obejmuje
+                                                 początek klipu, długość = długość JEGO audio, kolejne po kolei, ostatni
+                                                 zawsze dojeżdża do końca klipu). Sam trigger (przycisk generowania) jest
+                                                 na kaflu w Flow, nie tutaj - to okno tylko konfiguruje. -->
+                                            <template x-if="step.lipsync_mode === 'multi'">
+                                                <div class="space-y-1.5">
+                                                    <template x-for="(a, ai) in (step.lipsync_multi || [])" :key="ai">
+                                                        <div class="bg-gray-950 border border-gray-700 rounded p-1.5">
+                                                            <div class="flex items-center gap-1.5 mb-1">
+                                                                <span class="text-xs text-teal-400 font-semibold" x-text="'Dialog #' + (ai+1)"></span>
+                                                                <div class="flex gap-0.5 ml-auto">
+                                                                    <button type="button" @click="editMoveLipsyncMultiRow(step, ai, -1)" :disabled="ai===0"
+                                                                            :class="ai===0 ? 'opacity-30 cursor-not-allowed' : 'hover:bg-gray-600'"
+                                                                            class="px-1.5 py-0.5 bg-gray-700 text-gray-400 text-xs rounded transition" title="Przesuń wcześniej">↑</button>
+                                                                    <button type="button" @click="editMoveLipsyncMultiRow(step, ai, 1)" :disabled="ai === step.lipsync_multi.length - 1"
+                                                                            :class="ai === step.lipsync_multi.length - 1 ? 'opacity-30 cursor-not-allowed' : 'hover:bg-gray-600'"
+                                                                            class="px-1.5 py-0.5 bg-gray-700 text-gray-400 text-xs rounded transition" title="Przesuń później">↓</button>
+                                                                    <button type="button" @click="editRemoveLipsyncMultiRow(step, ai)"
+                                                                            class="px-1.5 py-0.5 bg-gray-700 hover:bg-red-800 text-gray-400 hover:text-white text-xs rounded transition">✕ usuń</button>
+                                                                </div>
+                                                            </div>
+                                                            <div class="flex items-center gap-1 mb-1">
+                                                                <span class="text-xs text-gray-500">Osoba (pozycja od lewej):</span>
+                                                                <div class="flex gap-0.5">
+                                                                    <template x-for="pi in 5" :key="pi">
+                                                                        <button type="button" @click="a.position_index = pi - 1"
+                                                                                :class="(a.position_index ?? 0) === (pi - 1) ? 'bg-violet-700 text-white border-violet-500' : 'bg-gray-800 text-gray-500 hover:text-gray-300 border-gray-700'"
+                                                                                class="text-xs w-5 h-5 rounded border transition" x-text="pi"></button>
+                                                                    </template>
+                                                                </div>
+                                                                <button type="button" @click="previewFaceForStep(step, si, ai)"
+                                                                        class="ml-auto px-1.5 py-0.5 bg-gray-700 hover:bg-violet-800 text-gray-400 hover:text-white text-xs rounded transition"
+                                                                        title="Podgląd: która twarz to która pozycja, na klatce z okna czasowego tego dialogu">👁 podgląd</button>
+                                                            </div>
+                                                            <div class="flex gap-0.5 mb-1">
+                                                                <button type="button" @click="a.sync_lips = true"
+                                                                        :class="(a.sync_lips ?? true) ? 'bg-teal-700 text-white border-teal-500' : 'bg-gray-800 text-gray-500 hover:text-gray-300 border-gray-700'"
+                                                                        class="text-xs px-2 py-0.5 rounded border transition">🗣 Sync ust</button>
+                                                                <button type="button" @click="a.sync_lips = false"
+                                                                        :class="(a.sync_lips ?? true) === false ? 'bg-teal-700 text-white border-teal-500' : 'bg-gray-800 text-gray-500 hover:text-gray-300 border-gray-700'"
+                                                                        class="text-xs px-2 py-0.5 rounded border transition">🎙️ Voice (bez sync)</button>
+                                                            </div>
+                                                            <div class="flex items-center gap-1.5" x-show="a.audio">
+                                                                <span class="text-xs font-mono text-teal-300 truncate" x-text="'🎵 ' + a.audio"></span>
+                                                                <button type="button" @click="a.audio = ''"
+                                                                        class="px-1.5 py-0.5 bg-gray-700 hover:bg-gray-600 text-gray-400 text-xs rounded transition">✕ wyczyść</button>
+                                                            </div>
+                                                            <template x-if="!a.audio && editModal.audioFiles && editModal.audioFiles.length > 0">
+                                                                <div class="bg-gray-900 border border-gray-700 rounded max-h-24 overflow-y-auto">
+                                                                    <template x-for="f in editModal.audioFiles" :key="f">
+                                                                        <button type="button" @click="a.audio = f"
+                                                                                class="w-full text-left px-2 py-1 text-xs font-mono transition truncate block text-teal-500 hover:bg-teal-950 hover:text-teal-200">
+                                                                            🎵 <span x-text="f"></span>
+                                                                        </button>
+                                                                    </template>
+                                                                </div>
+                                                            </template>
+                                                        </div>
+                                                    </template>
+                                                    <button type="button" @click="editAddLipsyncMultiRow(step)"
+                                                            class="w-full text-xs px-2 py-1 bg-gray-800 hover:bg-gray-700 text-teal-400 rounded border border-dashed border-gray-600 transition">
+                                                        + Dodaj dialog
+                                                    </button>
+                                                    <p class="text-xs text-gray-700">Kolejność wierszy = kolejność czasowa (Dialog #1 mówi pierwszy, przez tyle sekund ile trwa jego audio). Numer przy „Osoba" = pozycja twarzy w kadrze liczona od lewej — może się powtarzać (ta sama osoba może mówić kilka razy, np. 2/1/2).</p>
+                                                </div>
+                                            </template>
                                         </div>
                                     </template>
                                 </div>
@@ -5725,6 +5938,16 @@
                                         <span class="text-xs text-violet-400">Audio (MMAudio)</span>
                                         <span class="text-xs text-gray-700">— puste = domyślny projektu</span>
                                     </div>
+                                    <div class="flex gap-0.5 mb-1.5">
+                                        <button type="button" @click="step.audio_fx_model = 'mmaudio'"
+                                                :class="(step.audio_fx_model ?? 'mmaudio') === 'mmaudio' ? 'bg-violet-700 text-white border-violet-500' : 'bg-gray-800 text-gray-500 hover:text-gray-300 border-gray-700'"
+                                                class="text-xs px-2 py-0.5 rounded border transition"
+                                                title="Generator FX: MMAudio (szybki, domyślny)">🔊 MMAudio</button>
+                                        <button type="button" @click="step.audio_fx_model = 'ltx_foley'"
+                                                :class="step.audio_fx_model === 'ltx_foley' ? 'bg-violet-700 text-white border-violet-500' : 'bg-gray-800 text-gray-500 hover:text-gray-300 border-gray-700'"
+                                                class="text-xs px-2 py-0.5 rounded border transition"
+                                                title="Generator FX: LTX Foley (wolniejszy, ratunkowy gdy MMAudio zawodzi - np. niepożądane szepty)">🦊 LTX Foley</button>
+                                    </div>
                                     <div class="flex items-center gap-1.5 mb-1">
                                         <button @click="openPromptPickerForField((p) => { step.audio_prompt = p.positive; if(p.negative) step.audio_negative_prompt = p.negative; }, 'mmaudio')"
                                                 class="text-purple-400 hover:text-purple-300 border border-purple-800 hover:border-purple-500 rounded px-1.5 py-0 transition text-xs leading-4">📚 Biblioteka</button>
@@ -5746,38 +5969,116 @@
                                         <span class="text-teal-400 text-xs">🗣</span>
                                         <span class="text-xs text-teal-400">Lipsync (LatentSync 1.5)</span>
                                         <span class="text-xs text-gray-700">— puste = brak</span>
+                                        <div class="flex rounded overflow-hidden border border-gray-700 ml-auto">
+                                            <button type="button" @click="step.lipsync_mode = 'simple'"
+                                                    :class="(step.lipsync_mode ?? 'simple') === 'simple' ? 'bg-teal-700 text-white' : 'bg-gray-800 text-gray-500 hover:text-gray-300'"
+                                                    class="text-xs px-2 py-0.5 transition">Prosty</button>
+                                            <button type="button" @click="step.lipsync_mode = 'multi'; if (!Array.isArray(step.lipsync_multi)) step.lipsync_multi = []"
+                                                    :class="step.lipsync_mode === 'multi' ? 'bg-teal-700 text-white' : 'bg-gray-800 text-gray-500 hover:text-gray-300'"
+                                                    class="text-xs px-2 py-0.5 transition border-l border-gray-700"
+                                                    title="Kilka osób w jednym klipie, każda ma własny fragment czasu i pozycję (od lewej)">👥 Multi-talk</button>
+                                        </div>
                                     </div>
-                                    <div class="flex gap-0.5 mb-1.5" x-show="step.lipsync_audio">
-                                        <button type="button" @click="step.lipsync_sync_lips = true"
-                                                :class="(step.lipsync_sync_lips ?? true) ? 'bg-teal-700 text-white border-teal-500' : 'bg-gray-800 text-gray-500 hover:text-gray-300 border-gray-700'"
-                                                class="text-xs px-2 py-0.5 rounded border transition">🗣 Sync ust</button>
-                                        <button type="button" @click="step.lipsync_sync_lips = false"
-                                                :class="(step.lipsync_sync_lips ?? true) === false ? 'bg-teal-700 text-white border-teal-500' : 'bg-gray-800 text-gray-500 hover:text-gray-300 border-gray-700'"
-                                                class="text-xs px-2 py-0.5 rounded border transition">🎙️ Voice (offscreen, bez sync)</button>
-                                    </div>
-                                    <div class="flex items-center gap-1.5 mb-1" x-show="step.lipsync_audio">
-                                        <span class="text-xs font-mono text-teal-300 truncate" x-text="'🎵 ' + step.lipsync_audio"></span>
-                                        <button type="button" @click="step.lipsync_audio = ''"
-                                                class="px-1.5 py-0.5 bg-gray-700 hover:bg-gray-600 text-gray-400 text-xs rounded transition">✕ wyczyść</button>
-                                    </div>
-                                    <template x-if="editModal.audioFiles && editModal.audioFiles.length > 0">
-                                        <div class="bg-gray-950 border border-gray-700 rounded max-h-28 overflow-y-auto">
-                                            <template x-for="f in editModal.audioFiles" :key="f">
-                                                <button type="button" @click="step.lipsync_audio = f"
-                                                        class="w-full text-left px-2 py-1 text-xs font-mono transition truncate block"
-                                                        :class="step.lipsync_audio === f ? 'bg-teal-950 text-teal-200' : 'text-teal-500 hover:bg-teal-950 hover:text-teal-200'">
-                                                    🎵 <span x-text="f"></span>
-                                                </button>
+                                    <template x-if="(step.lipsync_mode ?? 'simple') === 'simple'">
+                                        <div>
+                                            <div class="flex gap-0.5 mb-1.5" x-show="step.lipsync_audio">
+                                                <button type="button" @click="step.lipsync_sync_lips = true"
+                                                        :class="(step.lipsync_sync_lips ?? true) ? 'bg-teal-700 text-white border-teal-500' : 'bg-gray-800 text-gray-500 hover:text-gray-300 border-gray-700'"
+                                                        class="text-xs px-2 py-0.5 rounded border transition">🗣 Sync ust</button>
+                                                <button type="button" @click="step.lipsync_sync_lips = false"
+                                                        :class="(step.lipsync_sync_lips ?? true) === false ? 'bg-teal-700 text-white border-teal-500' : 'bg-gray-800 text-gray-500 hover:text-gray-300 border-gray-700'"
+                                                        class="text-xs px-2 py-0.5 rounded border transition">🎙️ Voice (offscreen, bez sync)</button>
+                                                <button type="button" @click="previewFaceForStep(step, si, null)"
+                                                        class="ml-auto px-1.5 py-0.5 bg-gray-700 hover:bg-violet-800 text-gray-400 hover:text-white text-xs rounded transition"
+                                                        title="Podgląd: czy twarz jest wykrywana na tym klipie">👁 podgląd</button>
+                                            </div>
+                                            <div class="flex items-center gap-1.5 mb-1" x-show="step.lipsync_audio">
+                                                <span class="text-xs font-mono text-teal-300 truncate" x-text="'🎵 ' + step.lipsync_audio"></span>
+                                                <button type="button" @click="step.lipsync_audio = ''"
+                                                        class="px-1.5 py-0.5 bg-gray-700 hover:bg-gray-600 text-gray-400 text-xs rounded transition">✕ wyczyść</button>
+                                            </div>
+                                            <template x-if="editModal.audioFiles && editModal.audioFiles.length > 0">
+                                                <div class="bg-gray-950 border border-gray-700 rounded max-h-28 overflow-y-auto">
+                                                    <template x-for="f in editModal.audioFiles" :key="f">
+                                                        <button type="button" @click="step.lipsync_audio = f"
+                                                                class="w-full text-left px-2 py-1 text-xs font-mono transition truncate block"
+                                                                :class="step.lipsync_audio === f ? 'bg-teal-950 text-teal-200' : 'text-teal-500 hover:bg-teal-950 hover:text-teal-200'">
+                                                            🎵 <span x-text="f"></span>
+                                                        </button>
+                                                    </template>
+                                                </div>
                                             </template>
+                                            <p x-show="!editModal.audioFiles || editModal.audioFiles.length === 0"
+                                               class="text-xs text-gray-700">brak plików audio w project_folder</p>
+                                            <label x-show="step.lipsync_audio" class="flex items-center gap-1.5 mt-1.5 text-xs text-gray-500 cursor-pointer">
+                                                <input type="checkbox" x-model="step.lipsync_trim_to_audio" class="accent-teal-500">
+                                                Przytnij wideo do audio
+                                                <span class="text-gray-700">(domyślnie wyłączone — długość klipu zostaje bez zmian, dźwięk dopasowuje się do niego)</span>
+                                            </label>
                                         </div>
                                     </template>
-                                    <p x-show="!editModal.audioFiles || editModal.audioFiles.length === 0"
-                                       class="text-xs text-gray-700">brak plików audio w project_folder</p>
-                                    <label x-show="step.lipsync_audio" class="flex items-center gap-1.5 mt-1.5 text-xs text-gray-500 cursor-pointer">
-                                        <input type="checkbox" x-model="step.lipsync_trim_to_audio" class="accent-teal-500">
-                                        Przytnij wideo do audio
-                                        <span class="text-gray-700">(domyślnie wyłączone — długość klipu zostaje bez zmian, dźwięk dopasowuje się do niego)</span>
-                                    </label>
+                                    <template x-if="step.lipsync_mode === 'multi'">
+                                        <div class="space-y-1.5">
+                                            <template x-for="(a, ai) in (step.lipsync_multi || [])" :key="ai">
+                                                <div class="bg-gray-950 border border-gray-700 rounded p-1.5">
+                                                    <div class="flex items-center gap-1.5 mb-1">
+                                                        <span class="text-xs text-teal-400 font-semibold" x-text="'Dialog #' + (ai+1)"></span>
+                                                        <div class="flex gap-0.5 ml-auto">
+                                                            <button type="button" @click="editMoveLipsyncMultiRow(step, ai, -1)" :disabled="ai===0"
+                                                                    :class="ai===0 ? 'opacity-30 cursor-not-allowed' : 'hover:bg-gray-600'"
+                                                                    class="px-1.5 py-0.5 bg-gray-700 text-gray-400 text-xs rounded transition" title="Przesuń wcześniej">↑</button>
+                                                            <button type="button" @click="editMoveLipsyncMultiRow(step, ai, 1)" :disabled="ai === step.lipsync_multi.length - 1"
+                                                                    :class="ai === step.lipsync_multi.length - 1 ? 'opacity-30 cursor-not-allowed' : 'hover:bg-gray-600'"
+                                                                    class="px-1.5 py-0.5 bg-gray-700 text-gray-400 text-xs rounded transition" title="Przesuń później">↓</button>
+                                                            <button type="button" @click="editRemoveLipsyncMultiRow(step, ai)"
+                                                                    class="px-1.5 py-0.5 bg-gray-700 hover:bg-red-800 text-gray-400 hover:text-white text-xs rounded transition">✕ usuń</button>
+                                                        </div>
+                                                    </div>
+                                                    <div class="flex items-center gap-1 mb-1">
+                                                        <span class="text-xs text-gray-500">Osoba (pozycja od lewej):</span>
+                                                        <div class="flex gap-0.5">
+                                                            <template x-for="pi in 5" :key="pi">
+                                                                <button type="button" @click="a.position_index = pi - 1"
+                                                                        :class="(a.position_index ?? 0) === (pi - 1) ? 'bg-violet-700 text-white border-violet-500' : 'bg-gray-800 text-gray-500 hover:text-gray-300 border-gray-700'"
+                                                                        class="text-xs w-5 h-5 rounded border transition" x-text="pi"></button>
+                                                            </template>
+                                                        </div>
+                                                        <button type="button" @click="previewFaceForStep(step, si, ai)"
+                                                                class="ml-auto px-1.5 py-0.5 bg-gray-700 hover:bg-violet-800 text-gray-400 hover:text-white text-xs rounded transition"
+                                                                title="Podgląd: która twarz to która pozycja, na klatce z okna czasowego tego dialogu">👁 podgląd</button>
+                                                    </div>
+                                                    <div class="flex gap-0.5 mb-1">
+                                                        <button type="button" @click="a.sync_lips = true"
+                                                                :class="(a.sync_lips ?? true) ? 'bg-teal-700 text-white border-teal-500' : 'bg-gray-800 text-gray-500 hover:text-gray-300 border-gray-700'"
+                                                                class="text-xs px-2 py-0.5 rounded border transition">🗣 Sync ust</button>
+                                                        <button type="button" @click="a.sync_lips = false"
+                                                                :class="(a.sync_lips ?? true) === false ? 'bg-teal-700 text-white border-teal-500' : 'bg-gray-800 text-gray-500 hover:text-gray-300 border-gray-700'"
+                                                                class="text-xs px-2 py-0.5 rounded border transition">🎙️ Voice (bez sync)</button>
+                                                    </div>
+                                                    <div class="flex items-center gap-1.5" x-show="a.audio">
+                                                        <span class="text-xs font-mono text-teal-300 truncate" x-text="'🎵 ' + a.audio"></span>
+                                                        <button type="button" @click="a.audio = ''"
+                                                                class="px-1.5 py-0.5 bg-gray-700 hover:bg-gray-600 text-gray-400 text-xs rounded transition">✕ wyczyść</button>
+                                                    </div>
+                                                    <template x-if="!a.audio && editModal.audioFiles && editModal.audioFiles.length > 0">
+                                                        <div class="bg-gray-900 border border-gray-700 rounded max-h-24 overflow-y-auto">
+                                                            <template x-for="f in editModal.audioFiles" :key="f">
+                                                                <button type="button" @click="a.audio = f"
+                                                                        class="w-full text-left px-2 py-1 text-xs font-mono transition truncate block text-teal-500 hover:bg-teal-950 hover:text-teal-200">
+                                                                    🎵 <span x-text="f"></span>
+                                                                </button>
+                                                            </template>
+                                                        </div>
+                                                    </template>
+                                                </div>
+                                            </template>
+                                            <button type="button" @click="editAddLipsyncMultiRow(step)"
+                                                    class="w-full text-xs px-2 py-1 bg-gray-800 hover:bg-gray-700 text-teal-400 rounded border border-dashed border-gray-600 transition">
+                                                + Dodaj dialog
+                                            </button>
+                                            <p class="text-xs text-gray-700">Kolejność wierszy = kolejność czasowa (Dialog #1 mówi pierwszy, przez tyle sekund ile trwa jego audio). Numer przy „Osoba" = pozycja twarzy w kadrze liczona od lewej — może się powtarzać (ta sama osoba może mówić kilka razy, np. 2/1/2).</p>
+                                        </div>
+                                    </template>
                                 </div>
                                 <div class="mt-2 pt-2 border-t border-gray-700/50 space-y-1.5">
                                     <div>
@@ -10586,6 +10887,7 @@ function app() {
         genStatus: 'idle', genFile: null, _genRefreshTimer: null,
         awaitingInput: false, inputPrompt: '',
         frameModal: { open: false, title: '', isImage: false, startUrl: '', endUrl: '' },
+        facePreviewModal: { open: false, loading: false, error: '', imageSrc: '', title: '' },
         videoModal: { open: false, name: '', url: '' },
         cgModal: {
             open: false, clip: '', prevClip: null, nextClip: null,
@@ -10606,6 +10908,7 @@ function app() {
             fadeOut: false, fadeOutFrames: 12,
             removeAudio: false,
             frameImg: '', loading: false, busy: false, error: '',
+            playing: false, playerOn: false, playerSrc: '',
         },
         versionsModal: { open: false, name: '', files: [], loading: false },
         uploadModal:   { open: false, name: '', file: null, previewUrl: null, uploading: false, error: null, dragging: false },
@@ -11493,6 +11796,10 @@ function app() {
             m.frameImg = '';
             m.error = '';
             m.busy = false;
+            m.playing = false;
+            m.playerOn = false;
+            // Cache-buster: the same file name may have been trimmed/replaced since last time.
+            m.playerSrc = `/api/media/video?run=${encodeURIComponent(m.run)}&name=${encodeURIComponent(m.clip)}&t=${Date.now()}`;
             m.open = true;
             m.loading = true;
             try {
@@ -11509,8 +11816,76 @@ function app() {
             await this.trimLoadFrame(0);
         },
 
+        // ▶ Odtwórz / ⏸ Pauza — playback with sound in the trim modal. While playing,
+        // a <video> replaces the still; on pause we snap to the exact frame and go back
+        // to the ffmpeg still so IN/OUT stay frame-accurate (the browser's clock can be
+        // off by a frame vs ffmpeg's frame index).
+        async trimTogglePlay() {
+            const m = this.trimModal;
+            const v = this.$refs.trimPlayer;
+            if (!v || !m.totalFrames) return;
+            if (m.playing) { await this.trimPause(); return; }
+            const fps = m.fps || 24;
+            const startFrame = m.currentFrame >= m.totalFrames - 1 ? 0 : m.currentFrame;
+            m.error = '';
+            try {
+                if (v.dataset.src !== m.playerSrc) {
+                    v.src = m.playerSrc;
+                    v.dataset.src = m.playerSrc;
+                    v.load();
+                }
+                if (v.readyState < 1) {
+                    await new Promise((resolve, reject) => {
+                        v.addEventListener('loadedmetadata', resolve, { once: true });
+                        v.addEventListener('error', () => reject(new Error('nie można załadować wideo')), { once: true });
+                    });
+                }
+                v.currentTime = (startFrame + 0.5) / fps;   // +0.5 = middle of the frame, avoids landing on the previous one
+                m.playerOn = true;
+                m.playing = true;
+                await v.play();
+                if (typeof v.requestVideoFrameCallback === 'function') {
+                    const cb = (now, meta) => {
+                        if (!m.playing) return;
+                        m.currentFrame = Math.max(0, Math.min(m.totalFrames - 1, Math.round(meta.mediaTime * fps)));
+                        v.requestVideoFrameCallback(cb);
+                    };
+                    v.requestVideoFrameCallback(cb);
+                }
+            } catch(e) {
+                m.playing = false;
+                m.playerOn = false;
+                m.error = 'Odtwarzanie: ' + (e.message || e);
+            }
+        },
+        // Fallback frame counter for browsers without requestVideoFrameCallback.
+        trimOnTimeUpdate() {
+            const m = this.trimModal;
+            const v = this.$refs.trimPlayer;
+            if (!m.playing || !v || typeof v.requestVideoFrameCallback === 'function') return;
+            m.currentFrame = Math.max(0, Math.min(m.totalFrames - 1, Math.floor(v.currentTime * (m.fps || 24) + 1e-3)));
+        },
+        async trimPause() {
+            const m = this.trimModal;
+            const v = this.$refs.trimPlayer;
+            let f = m.currentFrame;
+            if (v) { v.pause(); f = Math.floor(v.currentTime * (m.fps || 24) + 1e-3); }
+            m.playing = false;
+            m.playerOn = false;
+            await this.trimLoadFrame(f);
+        },
+        // Stop without loading a still (modal closed / another action takes over).
+        trimStopSilently() {
+            const m = this.trimModal;
+            const v = this.$refs.trimPlayer;
+            if (v) v.pause();
+            m.playing = false;
+            m.playerOn = false;
+        },
+
         async trimLoadFrame(n) {
             const m = this.trimModal;
+            if (m.playing || m.playerOn) this.trimStopSilently();
             n = Math.max(0, Math.min(n, m.totalFrames - 1));
             m.currentFrame = n;
             m.loading = true;
@@ -12384,24 +12759,29 @@ function app() {
             }, false, true);
         },
 
-        async regenAudio(name, audioPrompt='', audioNegPrompt='') {
+        async regenAudio(name, audioPrompt='', audioNegPrompt='', model='mmaudio') {
             if (!name || !this.selectedRun) return;
             if (!confirm(`Re-generować audio dla:\n${name}\n\nJeśli plik ma już dźwięk — zostanie nadpisany.`)) return;
-            this.logLine('sys', `🔊 Re-generuję audio: ${name}${audioPrompt ? ' [custom prompt]' : ''}...`);
+            const isFoley = model === 'ltx_foley';
+            const label = isFoley ? 'LTX Foley' : 'MMAudio';
+            this.logLine('sys', `${isFoley ? '🦊' : '🔊'} Re-generuję audio (${label}): ${name}${audioPrompt ? ' [custom prompt]' : ''}...`);
             try {
                 const body = { name };
                 if (audioPrompt)    body.audio_prompt          = audioPrompt;
                 if (audioNegPrompt) body.audio_negative_prompt = audioNegPrompt;
-                const res = await fetch(`/api/audio/${encodeURIComponent(this.selectedRun.filename)}`, {
+                const url = isFoley
+                    ? `/api/audio/foley/${encodeURIComponent(this.selectedRun.filename)}`
+                    : `/api/audio/${encodeURIComponent(this.selectedRun.filename)}`;
+                const res = await fetch(url, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(body),
                 });
                 const data = await res.json();
                 if (!res.ok) {
-                    this.logLine('sys', `❌ MMAudio błąd: ${data.detail || JSON.stringify(data)}`);
+                    this.logLine('sys', `❌ ${label} błąd: ${data.detail || JSON.stringify(data)}`);
                 } else {
-                    this.logLine('sys', `🔊 MMAudio uruchomiony w tle — wyniki w logu...`);
+                    this.logLine('sys', `${isFoley ? '🦊' : '🔊'} ${label} uruchomiony w tle — wyniki w logu...`);
                 }
             } catch(e) { this.logLine('sys', `❌ ${e.message}`); }
         },
@@ -12512,11 +12892,27 @@ function app() {
                                     duration_s: step.duration_s || null, is_chain: true,
                                 });
                             }
-                        } else if (si.status === 'green' && si.name) {
-                            files.push({
-                                name: si.name, has_audio: si.has_audio || false,
-                                duration_s: si.duration_s || null, is_chain: false,
-                            });
+                        } else {
+                            // Source mp4 loaded by a "file" tile plays as its own clip
+                            // (same rule as get_post_clips). Such a tile is usually a
+                            // gray pure-loader, so it never has a generated transition
+                            // to show - without this the shot preview said "Brak
+                            // wygenerowanych plików" although the mp4 exists.
+                            // has_audio:false keeps it out of the in-place audio
+                            // smoothing - that must never touch a source file.
+                            if (item.file && /\.(mp4|mov|avi|mkv|webm)$/i.test(item.file)
+                                && (si.status !== 'gray' || si.source_size_mb != null)) {
+                                files.push({
+                                    name: item.file, has_audio: false,
+                                    duration_s: null, is_chain: false, external: true,
+                                });
+                            }
+                            if (si.status === 'green' && si.name) {
+                                files.push({
+                                    name: si.name, has_audio: si.has_audio || false,
+                                    duration_s: si.duration_s || null, is_chain: false,
+                                });
+                            }
                         }
                     }
                     this.shotModal.files = files;
@@ -12530,9 +12926,10 @@ function app() {
             if (vid) { vid.pause(); vid.src = ''; }
             this.shotModal.open = false;
         },
-        _shotVideoUrl(name) {
+        _shotVideoUrl(name, external = false) {
             if (!this.selectedRun) return '';
-            return `/api/media/video?run=${encodeURIComponent(this.selectedRun.filename)}&name=${encodeURIComponent(name)}&t=${Date.now()}`;
+            const ep = external ? 'source-video' : 'video';
+            return `/api/media/${ep}?run=${encodeURIComponent(this.selectedRun.filename)}&name=${encodeURIComponent(name)}&t=${Date.now()}`;
         },
         _shotPlayerLoad(idx) {
             const files = this.shotModal.files;
@@ -12541,7 +12938,7 @@ function app() {
             this.shotModal.playerIdx = idx;
             const vid = this.$refs.shotPlayer;
             if (!vid) return;
-            vid.src = this._shotVideoUrl(files[idx].name);
+            vid.src = this._shotVideoUrl(files[idx].name, !!files[idx].external);
             vid.load();
             if (this.shotModal.playerPlaying) vid.play().catch(() => {});
         },
@@ -13443,6 +13840,7 @@ function app() {
         postFilmPosition:  0,    // seconds from film start (for display)
         postIsPlaying:     false,
         postLoading:       false,
+        postPreviewPlaying: null,   // key of the ambient/narrator track bar currently previewing standalone audio, or null
 
         // ─ FLOW folder creation ───────────────────────────────
         flowCreating: false,
@@ -13554,6 +13952,95 @@ function app() {
             return 'border-transparent hover:border-gray-600';
         },
 
+        // Ambient/narrator span bars under the filmstrip (2026-09-13) — each
+        // file's "clips" list (exact same clip_names array the backend already
+        // stores in the sidecar JSON, see app/api/audio.py) maps onto postClips
+        // indices to draw a start->end bracket, mirroring an audio-editor track
+        // lane. Overlapping tracks get packed into separate lanes greedily
+        // (sorted by start, first lane whose last end < this start wins).
+        postAudioTracks(kinds) {
+            const wantKinds = kinds || ['ambient', 'narrator'];
+            const indexOf = (name) => this.postClips.findIndex(c => c.name === name);
+            const tracks = [];
+            const collect = (files, kind) => {
+                if (!wantKinds.includes(kind)) return;
+                (files || []).forEach((f, fi) => {
+                    if (!f.clips || !f.clips.length) return;
+                    const idxs = f.clips.map(indexOf).filter(idx => idx !== -1);
+                    if (!idxs.length) return;
+                    const shortLabel = f.name.replace(/^sequence_(ambient|narrator)_/, '').replace(/\.mp3$/, '');
+                    tracks.push({
+                        key: kind + ':' + f.name,
+                        kind,
+                        fileName: f.name,
+                        shortLabel,
+                        label: shortLabel + ' (' + f.clips.length + ' klipów, ' + f.size_mb + ' MB)',
+                        startIdx: Math.min(...idxs),
+                        endIdx: Math.max(...idxs),
+                        active: fi === 0,
+                    });
+                });
+            };
+            collect(this.ambientFiles, 'ambient');
+            collect(this.narratorFiles, 'narrator');
+            tracks.sort((a, b) => a.startIdx - b.startIdx);
+            const laneLastEnd = [];
+            tracks.forEach(t => {
+                let lane = laneLastEnd.findIndex(end => end < t.startIdx);
+                if (lane === -1) { lane = laneLastEnd.length; laneLastEnd.push(t.endIdx); }
+                else { laneLastEnd[lane] = t.endIdx; }
+                t.lane = lane;
+            });
+            return tracks;
+        },
+
+        // FX bars for the FX row - shaped like postAudioTracks()'s track
+        // objects (same bar template gets reused) but one per clip that has
+        // a per-clip FX sidecar (see _fxFor); always startIdx===endIdx (FX
+        // is 1:1 with a clip, never a range) and always lane 0 (two FX bars
+        // can never share a clip index, so they never need lane-packing).
+        postFxMarks() {
+            return this.postClips
+                .map((clip, idx) => {
+                    const fxName = this._fxFor(clip.name);
+                    if (!fxName) return null;
+                    return {
+                        key: 'fx:' + clip.name,
+                        kind: 'fx',
+                        fileName: fxName,
+                        clipName: clip.name,
+                        shortLabel: fxName.replace(/\.mp3$/, ''),
+                        label: fxName,
+                        startIdx: idx,
+                        endIdx: idx,
+                        lane: 0,
+                    };
+                })
+                .filter(Boolean);
+        },
+
+        // Standalone play/pause for one track bar - independent of the video
+        // player/postCurrentIndex (that sync happens only via clicking a
+        // filmstrip thumbnail, see postPlayFrom). One shared <audio> element,
+        // so starting a new preview naturally stops whichever was playing.
+        togglePreviewAudio(track) {
+            const p = this.$refs.postPreviewPlayer;
+            if (!p || !this.selectedRun) return;
+            if (this.postPreviewPlaying === track.key) {
+                p.pause();
+                this.postPreviewPlaying = null;
+                return;
+            }
+            const run = encodeURIComponent(this.selectedRun.filename);
+            const name = encodeURIComponent(track.fileName);
+            const base = track.kind === 'ambient' ? 'ambient' : track.kind === 'fx' ? 'fx' : 'narrator';
+            p.src = `/api/audio/${base}/${run}/${name}`;
+            p.load();
+            p.currentTime = 0;
+            p.play().catch(() => {});
+            this.postPreviewPlaying = track.key;
+        },
+
         async createFlow() {
             if (!this.selectedRun || this.flowCreating) return;
             this.flowCreating = true;
@@ -13605,7 +14092,11 @@ function app() {
                 );
                 const data = await res.json();
                 if (res.ok) {
-                    const audioInfo = data.audio_count > 0 ? `, ${data.audio_count} ambient` : '';
+                    const audioParts = [];
+                    if (data.ambient_count)  audioParts.push(`${data.ambient_count} ambient`);
+                    if (data.narrator_count) audioParts.push(`${data.narrator_count} narrator`);
+                    if (data.fx_count)       audioParts.push(`${data.fx_count} FX`);
+                    const audioInfo = audioParts.length ? `, ${audioParts.join(' + ')} (${data.audio_track_count} ścieżki)` : '';
                     const msg = `✅ CapCut: ${data.clip_count} klipów${audioInfo}, ${data.duration_s}s → ${data.project_name}`;
                     this.capcutResult = msg;
                     this.logLine('sys', msg);
@@ -14577,6 +15068,97 @@ function app() {
                 this.lipsyncStatus = { status: 'error', clip_name: clipName, error: e.message, elapsed_s: null };
             }
         },
+        async startLipsyncMulti(clipName, assignments) {
+            if (!clipName || !this.selectedRun) return;
+            const usable = (assignments || []).filter(a => a.audio);
+            if (usable.length === 0) {
+                this.logLine('sys', '❌ Multi-talk: brak przypisanych plików audio (ustaw w edycji kroku)');
+                return;
+            }
+            if (this.lipsyncStatus.status === 'running' || this.lipsyncStatus.status === 'queued') {
+                this.logLine('sys', '❌ Lipsync już w toku — poczekaj lub anuluj');
+                return;
+            }
+            const listTxt = usable.map((a, i) => `Dialog #${i+1} (osoba ${(a.position_index ?? 0) + 1} od lewej, ${a.sync_lips !== false ? 'sync' : 'voice'}): ${a.audio}`).join('\n');
+            if (!confirm(
+                `Uruchomić multi-talk na klipie:\n${clipName}\n\n${listTxt}\n\n` +
+                `Oryginalny plik zostanie zarchiwizowany przed nadpisaniem. Kolejność dialogów = kolejność czasowa, "osoba" = pozycja twarzy w kadrze.`
+            )) return;
+            this.lipsyncStatus = { status: 'queued', clip_name: clipName, error: null, elapsed_s: null };
+            this.logLine('sys', `👥 Multi-talk: kolejkuję ${clipName} (${usable.length} osoby)...`);
+            try {
+                const res = await fetch('/api/lipsync/start_multi', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        run: this.selectedRun.filename, name: clipName,
+                        assignments: usable.map(a => ({ audio: a.audio, sync_lips: a.sync_lips !== false, position_index: a.position_index ?? 0 })),
+                    }),
+                });
+                const data = await res.json();
+                if (!res.ok) {
+                    this.logLine('sys', `❌ Multi-talk: ${data.detail}`);
+                    this.lipsyncStatus = { status: 'error', clip_name: clipName, error: data.detail, elapsed_s: null };
+                    return;
+                }
+                if (this._lipsyncPollTimer) clearInterval(this._lipsyncPollTimer);
+                this._lipsyncPollTimer = setInterval(() => this._pollLipsyncStatus(), 3000);
+            } catch(e) {
+                this.logLine('sys', `❌ Multi-talk: ${e.message}`);
+                this.lipsyncStatus = { status: 'error', clip_name: clipName, error: e.message, elapsed_s: null };
+            }
+        },
+        // rowIndex === null -> "Prosty" mode preview (single window = whole
+        // clip, step.lipsync_audio). rowIndex >= 0 -> Multi-talk Dialog #N
+        // preview, sampled from THAT turn's own computed time window (same
+        // cumulative-duration math the real /start_multi job uses).
+        async previewFaceForStep(step, si, rowIndex) {
+            const prefix = this.editModal.data.chain_prefix;
+            if (!prefix || !this.selectedRun) return;
+            const fname = prefix + '_' + String(si + 1).padStart(3, '0') + '.mp4';
+
+            let assignments, targetIndex, title;
+            if (rowIndex === null) {
+                if (!step.lipsync_audio) {
+                    this.logLine('sys', '❌ Podgląd twarzy: brak przypisanego audio');
+                    return;
+                }
+                assignments = [{ audio: step.lipsync_audio }];
+                targetIndex = 0;
+                title = `Podgląd twarzy — ${fname}`;
+            } else {
+                if (!step.lipsync_multi?.[rowIndex]?.audio) {
+                    this.logLine('sys', `❌ Podgląd twarzy: Dialog #${rowIndex + 1} nie ma przypisanego audio`);
+                    return;
+                }
+                assignments = step.lipsync_multi.map(a => ({ audio: a.audio || '' }));
+                targetIndex = rowIndex;
+                title = `Podgląd twarzy — ${fname} — Dialog #${rowIndex + 1}`;
+            }
+
+            this.facePreviewModal = { open: true, loading: true, error: '', imageSrc: '', title };
+            try {
+                const res = await fetch('/api/lipsync/face_preview', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        run: this.selectedRun.filename, name: fname,
+                        assignments, target_index: targetIndex,
+                    }),
+                });
+                const data = await res.json();
+                if (!res.ok) {
+                    this.facePreviewModal.loading = false;
+                    this.facePreviewModal.error = data.detail || 'Błąd podglądu twarzy';
+                    return;
+                }
+                this.facePreviewModal.loading = false;
+                this.facePreviewModal.imageSrc = 'data:image/png;base64,' + data.image_base64;
+            } catch(e) {
+                this.facePreviewModal.loading = false;
+                this.facePreviewModal.error = e.message;
+            }
+        },
         async _pollLipsyncStatus() {
             try {
                 const res = await fetch('/api/lipsync/status');
@@ -15086,6 +15668,11 @@ function app() {
 
         async deleteAmbientFile(name) {
             if (!this.selectedRun) return;
+            if (!confirm(`Usunąć plik ambient:\n${name}?`)) return;
+            if (this.postPreviewPlaying === 'ambient:' + name) {
+                this.$refs.postPreviewPlayer?.pause();
+                this.postPreviewPlaying = null;
+            }
             try {
                 await fetch(`/api/audio/ambient/${encodeURIComponent(this.selectedRun.filename)}/${encodeURIComponent(name)}`, { method: 'DELETE' });
                 await this.loadAmbientFiles();
@@ -15227,10 +15814,28 @@ function app() {
 
         async deleteNarratorFile(name) {
             if (!this.selectedRun) return;
+            if (!confirm(`Usunąć plik narrator:\n${name}?`)) return;
+            if (this.postPreviewPlaying === 'narrator:' + name) {
+                this.$refs.postPreviewPlayer?.pause();
+                this.postPreviewPlaying = null;
+            }
             try {
                 await fetch(`/api/audio/narrator/${encodeURIComponent(this.selectedRun.filename)}/${encodeURIComponent(name)}`, { method: 'DELETE' });
                 await this.loadNarratorFiles();
             } catch(e) { console.error('delete narrator error', e); }
+        },
+
+        async deleteFxFile(name) {
+            if (!this.selectedRun) return;
+            if (!confirm(`Usunąć plik FX:\n${name}?`)) return;
+            if (this.postPreviewPlaying === 'fx:' + name) {
+                this.$refs.postPreviewPlayer?.pause();
+                this.postPreviewPlaying = null;
+            }
+            try {
+                await fetch(`/api/audio/fx/${encodeURIComponent(this.selectedRun.filename)}/${encodeURIComponent(name)}`, { method: 'DELETE' });
+                await this.loadFxFiles();
+            } catch(e) { console.error('delete fx error', e); }
         },
 
         async archiveNarratorFile(name) {
@@ -16166,6 +16771,43 @@ function app() {
             }
         },
 
+        // Copies every currently-selected tile (same selection Set as "Generuj
+        // zaznaczone" / checkboxy na Flow) to the clipboard as a JSON array, in
+        // FLOW order (not click order) — mirrors the key-matching branches of
+        // _selectableClipKeys() but collects the actual flow items instead of
+        // just their keys. pasteFromClipboard() already accepts an array and
+        // resolves chain_prefix collisions on its own, so nothing there changes.
+        async copySelectedToClipboard() {
+            if (!this.selectedClips.size) return;
+            const items = [];
+            for (const seg of this.flowSegments()) {
+                for (const entry of seg.items) {
+                    const item = entry.item || {};
+                    let key = null;
+                    if (item.chain && item.chain_prefix && this.chainStatusOk(entry.idx)) {
+                        key = 'chain:' + item.chain_prefix;
+                    } else if ((item.type === 'talk' || item.type === 'multitalk' || item.type === 'dubit') && this._si(entry.idx)?.name) {
+                        key = this._si(entry.idx).name;
+                    } else if (item.file && this.fileItemIsGreen(entry.idx)) {
+                        key = this.fileItemName(entry.idx);
+                    } else if (item.file && !this.fileItemIsGreen(entry.idx)) {
+                        key = item.file;
+                    }
+                    if (key && this.selectedClips.has(key)) items.push(item);
+                }
+            }
+            if (!items.length) {
+                this.logLine('sys', 'ℹ️ Brak zaznaczonych elementów do skopiowania');
+                return;
+            }
+            try {
+                await navigator.clipboard.writeText(JSON.stringify(items, null, 2));
+                this.logLine('sys', `📋 Skopiowano ${items.length} zaznaczon${items.length === 1 ? 'y' : 'ych'} element(ów) do schowka`);
+            } catch(e) {
+                this.logLine('sys', `❌ Schowek niedostępny — uruchom w trybie incognito`);
+            }
+        },
+
         async pasteFromClipboard(afterIdx) {
             this.addItemModal.open = false;
             let text;
@@ -16408,7 +17050,7 @@ function app() {
             this.openFsBrowser('image', projectFolder, 'Wybierz plik(i)', async (paths) => {
                 const newItems = paths.map(p => this._newFileItem(p));
                 await this._insertFlowItemsAt(newItems, afterIdx, 'plik', false);
-            }, false, false, true);
+            }, true, false, true);
         },
 
         // ── "Wstaw plik przed/po" na kafelku chain/multichain ──
@@ -16418,7 +17060,7 @@ function app() {
             this.openFsBrowser('image', projectFolder, position === 'before' ? 'Wstaw plik(i) przed' : 'Wstaw plik(i) po', async (paths) => {
                 const newItems = paths.map(p => this._newFileItem(p));
                 await this._insertFlowItemsAt(newItems, afterIdx, 'plik', false);
-            }, false, false, true);
+            }, true, false, true);
         },
 
         editAddChainStep() {
@@ -19770,6 +20412,19 @@ function app() {
         editAddStepLora(step) {
             if (!step.loras) step.loras = [];
             step.loras.push({ name: '', strength: 1 });
+        },
+        editAddLipsyncMultiRow(step) {
+            if (!Array.isArray(step.lipsync_multi)) step.lipsync_multi = [];
+            step.lipsync_multi.push({ audio: '', sync_lips: true, position_index: 0 });
+        },
+        editRemoveLipsyncMultiRow(step, ai) {
+            step.lipsync_multi.splice(ai, 1);
+        },
+        editMoveLipsyncMultiRow(step, ai, dir) {
+            const arr = step.lipsync_multi;
+            const ni = ai + dir;
+            if (!arr || ni < 0 || ni >= arr.length) return;
+            [arr[ai], arr[ni]] = [arr[ni], arr[ai]];
         },
         editRemoveStepLora(step, li) {
             step.loras.splice(li, 1);

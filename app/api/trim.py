@@ -84,11 +84,16 @@ def _apply_trim(src: Path, start_frame: int, end_frame: int, fps: float, dst: Pa
     out_end   = end_frame if end_frame >= 0 else total_frames
     out_frames = out_end - start_frame
 
+    # -ss/-to above are OUTPUT options, so ffmpeg applies the cut after the
+    # filter graph: `fade` still runs on the ORIGINAL timeline. Its st= must
+    # therefore be offset by the cut start, otherwise with start_frame > 0 the
+    # fade-out begins start_frame too early (rest of the clip black) and the
+    # fade-in lands inside the discarded part and never shows.
     vf = []
     if fade_in_frames > 0:
-        vf.append(f'fade=in:st=0:d={fade_in_frames / fps:.4f}')
+        vf.append(f'fade=in:st={ss:.4f}:d={fade_in_frames / fps:.4f}')
     if fade_out_frames > 0:
-        fade_out_st = max(0, (out_frames - fade_out_frames) / fps)
+        fade_out_st = ss + max(0, (out_frames - fade_out_frames) / fps)
         vf.append(f'fade=out:st={fade_out_st:.4f}:d={fade_out_frames / fps:.4f}')
 
     cmd += ['-vf', ','.join(vf)] if vf else []

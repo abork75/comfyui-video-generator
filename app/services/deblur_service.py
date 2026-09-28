@@ -552,8 +552,25 @@ async def _run_single_clip(
         _plain_fallback: Path | None = None
         _plain_fallback_polls = 0
 
-        for _ in range(max_polls):
+        for _poll_i in range(max_polls):
             await asyncio.sleep(3)
+
+            # 2026-09-28 (user-reported multi-hour stall, cause not pinned
+            # down): heartbeat every ~5min (100 x 3s) into the SAME persisted/
+            # UI-visible log the rest of generation uses, so a future stall
+            # is distinguishable after the fact - "still polling, ComfyUI
+            # just hasn't finished" (regular heartbeats) vs "one HTTP call
+            # got stuck past its own timeout" (heartbeats stop outright).
+            # See the matching heartbeat in workflow_base.py's
+            # _wait_for_completion (the WAN-generation equivalent of this loop).
+            if _poll_i > 0 and _poll_i % 100 == 0:
+                try:
+                    from app.services.process_service import process_service
+                    process_service.log_sys(
+                        f"  ⏳ Deblur {clip_source.name}: nadal czekam na ComfyUI ({_poll_i * 3 / 60:.1f} min)..."
+                    )
+                except Exception:
+                    pass
 
             try:
                 def _check_history():

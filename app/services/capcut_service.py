@@ -668,10 +668,23 @@ def generate_capcut_project(
     canvas_w = video_materials[0]["width"]
     canvas_h = video_materials[0]["height"]
 
-    # ── Load ambient audio files from podklad/ ───────────────────────────────
+    # ── Load ambient/narrator/FX audio → exactly 3 tracks total ──────────────
+    # (2026-09-16 fix: this used to append a BRAND NEW track per audio file,
+    # so a run with a dozen ambient/narrator/FX clips exported a dozen-plus
+    # separate CapCut tracks instead of one shared track per kind. Ambient
+    # and narrator files also live in the SAME transitions/podklad/ folder,
+    # distinguished only by filename prefix (sequence_ambient_* vs
+    # sequence_narrator_* - see app/api/audio.py) and were never told apart
+    # here at all. Segments within each kind don't overlap in time (the
+    # app's own overlap-detection keeps podklad assignments non-overlapping,
+    # and FX is clamped to its own clip's slot), so one track per kind with
+    # multiple positioned segments is both correct and exactly how CapCut's
+    # own track model expects multi-clip audio to be laid out.)
     podklad_dir = pf / "transitions" / "podklad"
     audio_materials: list[dict] = []
-    audio_tracks:    list[dict] = []
+    ambient_segments:  list[dict] = []
+    narrator_segments: list[dict] = []
+    fx_segments:       list[dict] = []
 
     if podklad_dir.exists():
         for sidecar in sorted(podklad_dir.glob("*.json")):
@@ -703,19 +716,17 @@ def generate_capcut_project(
             mat_id = _new_id()
             seg_id = _new_id()
             audio_materials.append(_audio_material(mp3_path, dur_us, mat_id))
-            audio_tracks.append({
-                "attribute": 0, "flag": 0, "id": _new_id(),
-                "is_default_name": True, "name": "",
-                "type": "audio",
-                "segments": [_audio_segment(mat_id, seg_id, 0, dur_us, timeline_start_us)],
-            })
+            segment = _audio_segment(mat_id, seg_id, 0, dur_us, timeline_start_us)
+            if mp3_path.name.startswith("sequence_narrator_"):
+                narrator_segments.append(segment)
+            else:
+                ambient_segments.append(segment)
 
-    # ── Load per-clip FX side files from fx/ ──────────────────────────────────
-    # Model A: a clip with lipsync applied keeps its dialogue baked into the
-    # video's own audio (CapCut plays that natively via the video material -
-    # no separate track needed for it). Any FX generated for that clip lives
-    # here as a standalone mp3 instead of being muxed in, so it gets its own
-    # track, aligned 1:1 with the clip's position on the timeline.
+    # Per-clip FX side files from fx/. Model A: a clip with lipsync applied
+    # keeps its dialogue baked into the video's own audio (CapCut plays that
+    # natively via the video material - no separate track needed for it).
+    # Any FX generated for that clip lives here as a standalone mp3 instead
+    # of being muxed in, aligned 1:1 with the clip's position on the timeline.
     fx_dir = pf / "transitions" / "fx"
     if fx_dir.exists():
         for name, timeline_start_us in clip_timeline.items():
@@ -732,12 +743,18 @@ def generate_capcut_project(
             mat_id = _new_id()
             seg_id = _new_id()
             audio_materials.append(_audio_material(fx_path, dur_us, mat_id))
-            audio_tracks.append({
-                "attribute": 0, "flag": 0, "id": _new_id(),
-                "is_default_name": True, "name": "",
-                "type": "audio",
-                "segments": [_audio_segment(mat_id, seg_id, 0, dur_us, timeline_start_us)],
-            })
+            fx_segments.append(_audio_segment(mat_id, seg_id, 0, dur_us, timeline_start_us))
+
+    audio_tracks: list[dict] = []
+    for track_name, segs in (("Ambient", ambient_segments), ("Narrator", narrator_segments), ("FX", fx_segments)):
+        if not segs:
+            continue
+        audio_tracks.append({
+            "attribute": 0, "flag": 0, "id": _new_id(),
+            "is_default_name": False, "name": track_name,
+            "type": "audio",
+            "segments": segs,
+        })
 
     # ── Clone TEMPLATE → project_dir ─────────────────────────────────────────
     shutil.copytree(str(template_dir), str(project_dir))
@@ -807,9 +824,12 @@ def generate_capcut_project(
 
     return {
         "ok": True,
-        "project_dir":  str(project_dir),
-        "project_name": project_name,
-        "clip_count":   len(segments),
-        "audio_count":  len(audio_tracks),
-        "duration_s":   round(total_us / 1_000_000, 1),
+        "project_dir":   str(project_dir),
+        "project_name":  project_name,
+        "clip_count":    len(segments),
+        "audio_track_count":   len(audio_tracks),
+        "ambient_count":  len(ambient_segments),
+        "narrator_count": len(narrator_segments),
+        "fx_count":       len(fx_segments),
+        "duration_s":    round(total_us / 1_000_000, 1),
     }
